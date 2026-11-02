@@ -24,6 +24,7 @@ android {
         targetSdk = 35
         versionCode = 4
         versionName = "2.2"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "PLACA_API_TOKEN", "\"${segredo("PLACA_API_TOKEN")}\"")
         buildConfigField("String", "FIPE_API_TOKEN", "\"${segredo("FIPE_API_TOKEN")}\"")
     }
@@ -91,4 +92,11 @@ dependencies {
     testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.36.0")
     testImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // Testes de ponta a ponta no emulador
+    androidTestImplementation(composeBom)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 }
