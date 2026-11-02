@@ -4,6 +4,9 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -87,7 +90,8 @@ fun TelaTrilha(
     Column(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(cor, Cores.Fundo))),
+            .background(Brush.verticalGradient(listOf(cor, Cores.Fundo)))
+            .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             BotaoRedondo("⬅️", "Voltar", onVoltar, tamanho = 52.dp)

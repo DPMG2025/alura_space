@@ -65,6 +65,12 @@ class JogoNoEmuladorTest {
         armazenamento.openOutputFile("$nome.png").use { imagem.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
+    /** Avança o relógio do Compose (as esperas do jogo usam esse relógio, não o tempo real). */
+    private fun avancar(ms: Long) {
+        regra.mainClock.advanceTimeBy(ms)
+        regra.waitForIdle()
+    }
+
     private fun esperar(descricao: String, timeout: Long = 10_000) =
         regra.waitUntilAtLeastOneExists(hasContentDescription(descricao, substring = true), timeout)
 
@@ -92,16 +98,16 @@ class JogoNoEmuladorTest {
         regra.waitUntilAtLeastOneExists(hasTestTag("opcao_certa"), 10_000)
         capturar("e04_pergunta")
         regra.onAllNodes(hasTestTag("opcao")).onFirst().performClick()
-        Thread.sleep(800)
+        avancar(800)
         capturar("e05_erro")
         repeat(5) { i ->
             regra.waitUntilAtLeastOneExists(hasTestTag("opcao_certa"), 10_000)
             regra.onAllNodes(hasTestTag("opcao_certa")).onFirst().performClick()
             if (i == 0) {
-                Thread.sleep(400)
+                avancar(400)
                 capturar("e06_acerto")
             }
-            Thread.sleep(5_500)
+            avancar(5_500)
         }
 
         // Prêmio: abrir o presente e levar para a casa
@@ -109,7 +115,7 @@ class JogoNoEmuladorTest {
         capturar("e07_presente")
         regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
         esperar("Colocar na casa")
-        Thread.sleep(1_000)
+        avancar(1_000)
         capturar("e08_premio_aberto")
         regra.onAllNodes(hasContentDescription("Colocar na casa")).onFirst().performClick()
 
@@ -117,7 +123,7 @@ class JogoNoEmuladorTest {
         esperar("Terreno. Toque para colocar na casa.")
         capturar("e09_casa_bau")
         regra.onAllNodes(hasContentDescription("Terreno. Toque para colocar na casa.")).onFirst().performClick()
-        Thread.sleep(1_500)
+        avancar(1_500)
         capturar("e10_casa_com_terreno")
         regra.waitUntil(5_000) { prefs.getString("colocados", "").orEmpty().contains("terreno") }
         assertTrue("fase vencida não foi salva", prefs.getString("estrelas", "").orEmpty().startsWith("MATEMATICA:0="))
@@ -146,7 +152,7 @@ class JogoNoEmuladorTest {
             swipe(center, center + Offset(width * 1.2f, height * 2.5f), durationMillis = 600)
         }
         regra.waitUntil(5_000) { prefs.getString("colocados", "") != antes }
-        Thread.sleep(600)
+        avancar(600)
         capturar("e12_casa_depois_de_arrastar")
         val cama = prefs.getString("colocados", "").orEmpty().split(";").first { it.startsWith("cama,") }.split(",")
         assertNotEquals("a cama não saiu do lugar", "0.528", cama[2])

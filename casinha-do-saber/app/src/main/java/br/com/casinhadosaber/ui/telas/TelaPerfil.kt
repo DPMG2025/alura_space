@@ -2,6 +2,9 @@ package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -68,6 +71,7 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
         Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(Cores.Ceu, Cores.Fundo)))
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

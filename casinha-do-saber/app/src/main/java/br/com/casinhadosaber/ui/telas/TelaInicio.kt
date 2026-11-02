@@ -1,6 +1,9 @@
 package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -72,7 +75,8 @@ fun TelaInicio(
     Column(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Cores.Ceu, Cores.Fundo, Cores.Fundo))),
+            .background(Brush.verticalGradient(listOf(Cores.Ceu, Cores.Fundo, Cores.Fundo)))
+            .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         // Cabeçalho
         Row(
