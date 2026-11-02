@@ -93,6 +93,10 @@ class RepositorioSalvos(context: Context) {
         else comRegistro(l, novo.copy(favorito = true))
     }
 
+    fun remover(id: String) = alterar { l -> l.filterNot { it.id == id } }
+
+    fun limparRecentes() = alterar { l -> l.filter { it.favorito } }
+
     /** Guarda no aparelho os valores mensais obtidos para um veiculo ja salvo. */
     fun guardarPontos(id: String, pontos: List<PontoHistorico>) {
         if (pontos.isEmpty()) return
