@@ -1,0 +1,9 @@
+    <failure>androidx.compose.ui.test.ComposeTimeoutException: Condition (at least one node matches (ContentDescription contains 'Presente. Toque para abrir.' (ignoreCase: false))) still not satisfied after 15000 ms
+at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+at androidx.compose.ui.test.ComposeUiTestKt.waitUntilAtLeastOneExists(ComposeUiTest.kt:236)
+at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntilAtLeastOneExists(AndroidComposeTestRule.android.kt:322)
+at br.com.casinhadosaber.JogoNoEmuladorTest.esperar(JogoNoEmuladorTest.kt:69)
+at br.com.casinhadosaber.JogoNoEmuladorTest.jogarUmaFaseEColocarOPremioNaCasa(JogoNoEmuladorTest.kt:108)
+</failure>
+  </testcase>
+</testsuite>

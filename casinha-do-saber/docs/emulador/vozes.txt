@@ -1,0 +1,3 @@
+Motor de voz iniciado: true (motor: com.google.android.tts)
+pt_BR: disponível
+en_US: disponível
