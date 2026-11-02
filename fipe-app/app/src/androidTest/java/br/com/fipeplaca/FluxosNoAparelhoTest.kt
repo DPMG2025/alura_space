@@ -26,30 +26,34 @@ import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.File
+import androidx.test.services.storage.TestStorage
 
 /**
  * Testes de ponta a ponta no emulador, com a internet real: o app e usado como um usuario usaria.
- * Grava capturas e um relatorio em files/telas (o CI copia para docs/emulador).
+ * Grava capturas e relatorios pelo TestStorage (o CI copia para docs/emulador).
  */
 @RunWith(AndroidJUnit4::class)
 class FluxosNoAparelhoTest {
     @get:Rule val regra = createAndroidComposeRule<MainActivity>()
 
     private val app get() = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as FipeApp
-    private val pasta: File by lazy {
-        File(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null), "telas").apply { mkdirs() }
-    }
+    /** Saida oficial dos testes: o Gradle copia para build/outputs/connected_android_test_additional_output. */
+    private val saida = TestStorage()
     private var servidor: MockWebServer? = null
 
     @After fun parar() { servidor?.shutdown() }
 
-    private fun relatorio(texto: String) = File(pasta, "relatorio.txt").appendText(texto + "\n")
+    private fun relatorio(texto: String) {
+        android.util.Log.i("FluxosNoAparelho", texto)
+        saida.openOutputFile("relatorio-${nomeTeste()}.txt", true).use { it.write((texto + "\n").toByteArray()) }
+    }
+
+    private fun nomeTeste() = Thread.currentThread().stackTrace.firstOrNull { it.methodName.startsWith("busca") }?.methodName ?: "geral"
 
     private fun captura(nome: String) {
         regra.waitForIdle()
         val bmp = regra.onRoot().captureToImage().asAndroidBitmap()
-        File(pasta, "$nome.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        saida.openOutputFile("$nome.png").use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     private fun esperar(descricao: String, ms: Long = 30_000, condicao: () -> Boolean) {
@@ -78,7 +82,8 @@ class FluxosNoAparelhoTest {
         captura("e01_marcas")
         regra.onAllNodesWithText("Fiat")[0].performClick()
 
-        esperar("lista de modelos") { existe(hasClickAction() and hasText("Mobi", substring = true, ignoreCase = true)) }
+        esperar("lista de modelos") { existe(hasText("Buscar modelo ou versão")) && !existe(hasText("Buscar marca")) }
+        regra.waitForIdle()
         regra.onNode(hasSetTextAction()).performTextInput("Mobi")
         esperar("modelo filtrado") { existe(hasClickAction() and hasText("Mobi", substring = true, ignoreCase = true) and !hasSetTextAction()) }
         captura("e02_modelos_filtrados")

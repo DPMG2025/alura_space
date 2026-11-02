@@ -132,13 +132,13 @@ jobs:
           working-directory: fipe-app
           script: |
             ./gradlew connectedDebugAndroidTest --no-daemon || echo "FALHA_TESTES" > emulador-falhou.txt
-            mkdir -p emulador-saida && adb pull /sdcard/Android/data/br.com.fipeplaca/files/telas emulador-saida/ || true
 
       - name: Versionar resultado do emulador
         if: github.event_name == 'push' && !cancelled()
         run: |
           rm -rf docs/emulador && mkdir -p docs/emulador
-          cp -r emulador-saida/telas/. docs/emulador/ 2>/dev/null || echo "sem capturas" > docs/emulador/relatorio.txt
+          find app/build/outputs/connected_android_test_additional_output -type f \( -name "*.png" -o -name "*.txt" \) -exec cp {} docs/emulador/ \; 2>/dev/null || true
+          ls docs/emulador/*.png >/dev/null 2>&1 || echo "sem capturas" > docs/emulador/relatorio.txt
           if [ -f emulador-falhou.txt ]; then echo "RESULTADO: FALHOU" >> docs/emulador/relatorio.txt; else echo "RESULTADO: TODOS OS TESTES PASSARAM" >> docs/emulador/relatorio.txt; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
