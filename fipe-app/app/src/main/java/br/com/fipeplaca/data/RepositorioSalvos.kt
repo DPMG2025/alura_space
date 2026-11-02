@@ -33,6 +33,7 @@ class RepositorioSalvos(context: Context) {
         })
         val item = nova.copy(
             favorito = antigo?.favorito ?: nova.favorito,
+            versao = nova.versao ?: antigo?.versao,
             historicoLocal = MesclarHistorico.acumular(antigo?.historicoLocal.orEmpty() + nova.historicoLocal.orEmpty(), pontoAtual),
         )
         gravar(OrganizarSalvos.inserir(atual, item, LIMITE_RECENTES))
@@ -54,6 +55,17 @@ class RepositorioSalvos(context: Context) {
         if (pontos.isEmpty() || _itens.value.none { it.id == id }) return
         gravar(_itens.value.map { if (it.id == id) it.copy(historicoLocal = MesclarHistorico.acumular(it.historicoLocal.orEmpty(), pontos)) else it })
     }
+
+    /** Guarda a versao FIPE escolhida e recomeca o historico local (que e por versao). */
+    @Synchronized
+    fun definirVersao(id: String, versao: Int) {
+        if (_itens.value.none { it.id == id && it.versao != versao }) return
+        gravar(_itens.value.map { if (it.id == id) it.copy(versao = versao, historicoLocal = emptyList()) else it })
+    }
+
+    /** Desfaz uma exclusao: devolve o item ao topo da lista. */
+    @Synchronized
+    fun restaurar(item: ConsultaSalva) = gravar(listOf(item) + _itens.value.filterNot { it.id == item.id })
 
     fun pontosLocais(id: String): List<PontoHistorico> = _itens.value.firstOrNull { it.id == id }?.historicoLocal.orEmpty()
 

@@ -24,7 +24,7 @@ data class ItemFipe(
 )
 
 data class ModelosResposta(
-    @SerializedName("modelos") val modelos: List<ItemFipe> = emptyList(),
+    @SerializedName("modelos") val modelos: List<ItemFipe>? = emptyList(),
     @SerializedName("anos") val anos: List<ItemFipe> = emptyList(),
 )
 

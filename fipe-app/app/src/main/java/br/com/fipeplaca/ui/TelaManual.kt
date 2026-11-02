@@ -125,7 +125,7 @@ fun TelaManual(estado: ManualUi, historico: HistoricoUi, favorito: Boolean, acoe
             Text(
                 when (s.etapa) {
                     Etapa.MARCAS -> "Escolha a marca"
-                    Etapa.MODELOS -> s.marca?.nome.orEmpty()
+                    Etapa.MODELOS -> s.marca?.nome?.let(Texto::marca).orEmpty()
                     Etapa.ANOS -> s.modelo?.nome.orEmpty()
                     Etapa.RESULTADO -> listOfNotNull(s.modelo?.nome, s.ano?.nome).joinToString(" · ")
                 },
@@ -179,7 +179,7 @@ private fun IndicadorEtapas(s: ManualUi, irPara: (Etapa) -> Unit) {
             ) {
                 Box(
                     Modifier.size(26.dp).clip(CircleShape)
-                        .background(if (feita || atual) Color.White else Color.White.copy(alpha = 0.2f)),
+                        .background(if (feita || atual) Color.White else Color.White.copy(alpha = 0.25f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(if (feita) "✓" else "${i + 1}", style = MaterialTheme.typography.labelMedium,
@@ -187,7 +187,7 @@ private fun IndicadorEtapas(s: ManualUi, irPara: (Etapa) -> Unit) {
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(e.rotulo, style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = if (feita || atual) 1f else 0.6f))
+                    color = Color.White.copy(alpha = if (feita || atual) 1f else 0.85f))
             }
         }
     }
@@ -267,7 +267,7 @@ private fun ListaItens(
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)) {
                             items(destaque, key = { "p" + it.codigo }) { m ->
                                 Column(
-                                    Modifier.width(72.dp).clip(RoundedCornerShape(12.dp)).clickable { onClick(m) },
+                                    Modifier.width(68.dp).clip(RoundedCornerShape(12.dp)).clickable { onClick(m) },
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     Avatar(nomeCurto(m.nome), tamanho = 52.dp)

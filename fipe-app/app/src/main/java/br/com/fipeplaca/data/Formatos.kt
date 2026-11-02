@@ -24,23 +24,47 @@ object Placa {
 object Dinheiro {
     private val formato: NumberFormat = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
-    /** Converte "R$ 45.320,00" em 45320.0. Retorna null quando nao houver numero. */
+    /**
+     * Converte valores no formato brasileiro em numero: "R$ 45.320,00" e "R$ 45.320" viram 45320.0.
+     * O ponto e sempre separador de milhar e a virgula, de centavos. Null quando nao houver numero.
+     */
     fun paraDouble(texto: String?): Double? {
         if (texto.isNullOrBlank()) return null
-        val limpo = texto.filter { it.isDigit() || it == ',' || it == '.' }
+        val limpo = texto.filter { it.isDigit() || it == ',' || it == '.' || it == '-' }
         if (limpo.none { it.isDigit() }) return null
-        val normal = if (limpo.contains(',')) limpo.replace(".", "").replace(',', '.') else limpo
-        return normal.toDoubleOrNull()
+        val inteiro = limpo.substringBefore(',').replace(".", "")
+        val centavos = limpo.substringAfter(',', "").filter { it.isDigit() }
+        return (if (centavos.isEmpty()) inteiro else "$inteiro.$centavos").toDoubleOrNull()
     }
 
-    fun formatar(valor: Double): String = formato.format(valor).replace(' ', ' ')
+    /** "R$ 45.320,00", mantendo o espaco nao separavel entre R$ e o numero. */
+    fun formatar(valor: Double): String = formato.format(valor)
+
+    /** Valor aproximado para estimativas: arredonda para a centena ("≈ R$ 45.400"). */
+    fun aproximado(valor: Double): String {
+        val f = NumberFormat.getCurrencyInstance(Locale("pt", "BR")).apply { maximumFractionDigits = 0 }
+        return "≈ " + f.format(Math.round(valor / 100.0) * 100.0)
+    }
 }
 
 object Texto {
     /** Minusculas e sem acentos, para filtros de busca. */
+    private val ACENTOS = Regex("\\p{Mn}+")
+
     fun chave(texto: String): String =
-        Normalizer.normalize(texto.lowercase(Locale.ROOT), Normalizer.Form.NFD)
-            .replace(Regex("\\p{Mn}+"), "")
+        Normalizer.normalize(texto.lowercase(Locale.ROOT), Normalizer.Form.NFD).replace(ACENTOS, "")
+
+    /** "GOL 1.0L MC4" vira "Gol 1.0L MC4": palavras so de letras em maiusculas ganham so a inicial maiuscula. */
+    fun modelo(texto: String): String {
+        if (texto.any { it.isLowerCase() }) return texto
+        return texto.split(' ').joinToString(" ") { p ->
+            if (p.length >= 3 && p.all { it.isLetter() } && p !in SIGLAS) p.lowercase(Locale("pt", "BR")).replaceFirstChar { it.titlecase(Locale("pt", "BR")) } else p
+        }
+    }
+
+    /** Siglas de versao que ficam em maiusculas. */
+    private val SIGLAS = setOf("TSI", "GTI", "GLS", "GLX", "LTZ", "CVT", "AMG", "TDI", "SUV", "DCT", "GSR", "ELX", "EXL",
+        "XEI", "GLI", "XLS", "LXS", "SRV", "SRX", "HGT", "TFSI", "MPI", "FSI", "VTEC", "AWD", "ABS")
 
     /**
      * Nome de marca para exibicao: "VW - VolksWagen" vira "Volkswagen" e
@@ -68,14 +92,15 @@ object Referencias {
      * Recebe as referencias em ordem da mais recente para a mais antiga e devolve
      * as que entram no periodo pedido, em ordem cronologica.
      */
-    fun filtrar(referencias: List<ReferenciaV2>, periodo: PeriodoHistorico): List<ReferenciaV2> {
+    fun filtrar(referencias: List<ReferenciaV2>, periodo: PeriodoHistorico, anoAtual: Int? = null): List<ReferenciaV2> {
         if (referencias.isEmpty()) return emptyList()
         val selecionadas = when (periodo) {
             PeriodoHistorico.MESES_12 -> referencias.take(12)
             PeriodoHistorico.MESES_24 -> referencias.take(24)
             PeriodoHistorico.ANO_ATUAL -> {
-                val anoAtual = ano(referencias.first().mes)
-                referencias.takeWhile { ano(it.mes) == anoAtual }
+                // O ano vem do valor atual: a lista de meses pode estar um mes atrasada (virada de ano).
+                val ano = anoAtual ?: ano(referencias.first().mes)
+                referencias.filter { ano(it.mes) == ano }
             }
         }
         return selecionadas.reversed()

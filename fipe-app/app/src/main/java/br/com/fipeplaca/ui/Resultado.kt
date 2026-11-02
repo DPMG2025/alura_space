@@ -34,6 +34,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -59,7 +61,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -118,17 +123,17 @@ fun CartaoValorFipe(
             Spacer(Modifier.height(10.dp))
             Text("${Texto.marca(r.marca)} ${r.modelo}".trim(), style = MaterialTheme.typography.titleMedium, color = Color.White)
             Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (r.anoModelo.isNotBlank()) Etiqueta(r.anoModelo)
                 if (r.combustivel.isNotBlank()) Etiqueta(r.combustivel)
-                if (r.codigoFipe.isNotBlank()) Etiqueta("FIPE ${r.codigoFipe}", onClick = onCopiarCodigo)
+                if (r.codigoFipe.isNotBlank()) Etiqueta("FIPE ${r.codigoFipe}", onClick = onCopiarCodigo, rotuloAcao = "Copiar código FIPE")
             }
         }
     }
 }
 
 @Composable
-private fun Etiqueta(texto: String, onClick: (() -> Unit)? = null) {
+private fun Etiqueta(texto: String, onClick: (() -> Unit)? = null, rotuloAcao: String? = null) {
     Text(
         texto,
         style = MaterialTheme.typography.labelMedium,
@@ -137,8 +142,12 @@ private fun Etiqueta(texto: String, onClick: (() -> Unit)? = null) {
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .background(Color.White.copy(alpha = 0.16f))
-            .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-            .padding(horizontal = 10.dp, vertical = 5.dp),
+            .let {
+                if (onClick != null) it.clickable(onClickLabel = rotuloAcao, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
+                    .minimumInteractiveComponentSize()
+                else it
+            }
+            .padding(horizontal = 12.dp, vertical = 6.dp),
     )
 }
 
@@ -180,12 +189,16 @@ fun CartaoHistorico(
             when (fase) {
                 0 -> Column {
                     Text(
-                        "Consultando ${(estado.progresso * 100).roundToInt()}% dos meses de referência…",
+                        if (estado.total == 0) "Buscando o histórico…" else "Buscando o histórico (${estado.feitos} de ${estado.total} meses)",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(8.dp))
-                    val prog by animateFloatAsState(estado.progresso, label = "progresso")
-                    LinearProgressIndicator(progress = { prog }, modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(50)))
+                    if (estado.feitos == 0) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(50)))
+                    } else {
+                        val prog by animateFloatAsState(estado.progresso, label = "progresso")
+                        LinearProgressIndicator(progress = { prog }, modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(50)))
+                    }
                     Spacer(Modifier.height(16.dp))
                     Esqueleto(Modifier.fillMaxWidth().height(170.dp))
                 }
@@ -229,7 +242,7 @@ private fun ConteudoHistorico(pontos: List<PontoHistorico>) {
     val e = Estatisticas.de(pontos) ?: return
     Column {
         Row(Modifier.fillMaxWidth()) {
-            Indicador("Variação", Estatisticas.percentual(e.variacaoPercentual, 2), corVariacao(e.variacaoPercentual), Modifier.weight(1f))
+            Indicador("Variação", Estatisticas.percentual(e.variacaoPercentual), corVariacao(e.variacaoPercentual), Modifier.weight(1f))
             Indicador("Diferença", (if (e.diferenca > 0) "+" else "") + Dinheiro.formatar(e.diferenca), corVariacao(e.diferenca), Modifier.weight(1.3f))
         }
         Spacer(Modifier.height(16.dp))
@@ -241,7 +254,7 @@ private fun ConteudoHistorico(pontos: List<PontoHistorico>) {
         }
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MiniIndicador("Média", Dinheiro.formatar(e.media), "${pontos.size} meses", Modifier.weight(1f))
+            MiniIndicador("Média", Dinheiro.formatar(e.media), "${pontos.size} meses com dados", Modifier.weight(1f))
             MiniIndicador("Por mês", Estatisticas.percentual(e.variacaoMensalMedia, 2), "variação média", Modifier.weight(1f))
         }
         Projecao.estimar(pontos)?.let { estimado ->
@@ -260,7 +273,7 @@ private fun ConteudoHistorico(pontos: List<PontoHistorico>) {
                 }
                 Spacer(Modifier.width(8.dp))
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(Dinheiro.formatar(estimado), style = MaterialTheme.typography.titleMedium,
+                    Text(Dinheiro.aproximado(estimado), style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer, fontWeight = FontWeight.Bold)
                     Text(Estatisticas.percentual(delta), style = MaterialTheme.typography.labelMedium, color = corVariacao(delta))
                 }
@@ -291,7 +304,8 @@ private fun ConteudoHistorico(pontos: List<PontoHistorico>) {
 private fun Indicador(rotulo: String, valor: String, cor: Color, modifier: Modifier) {
     Column(modifier) {
         Text(rotulo, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(valor, style = MaterialTheme.typography.headlineSmall, color = cor, maxLines = 1)
+        Text(valor, style = MaterialTheme.typography.headlineSmall, color = cor, maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
 }
 
@@ -301,7 +315,8 @@ private fun MiniIndicador(rotulo: String, valor: String, apoio: String, modifier
         modifier.clip(MaterialTheme.shapes.medium).background(MaterialTheme.colorScheme.surfaceVariant).padding(12.dp),
     ) {
         Text(rotulo, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(valor, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text(valor, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         Text(apoio, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -326,16 +341,32 @@ fun Grafico(pontos: List<PontoHistorico>) {
     var selecionado by remember(pontos) { mutableIntStateOf(pontos.lastIndex) }
     val max = pontos.maxOf { it.valor }
     val min = pontos.minOf { it.valor }
-    val folga = ((max - min) * 0.12).takeIf { it > 0 } ?: (max * 0.02).coerceAtLeast(1.0)
-    val topo = max + folga
-    val base = min - folga
+    // Escala minima de +-2,5% do valor medio: variacoes pequenas nao viram montanhas no grafico.
+    val centro = (max + min) / 2
+    val meiaFaixa = maxOf((max - min) / 2 * 1.25, centro * 0.025, 1.0)
+    val topo = centro + meiaFaixa
+    val base = centro - meiaFaixa
+    // Eixo X em meses reais: meses faltando ocupam o espaco certo.
+    val xs = remember(pontos) { pontos.mapIndexed { i, p -> (Meses.indice(p.mesReferencia) ?: i).toFloat() } }
+    val x0 = xs.first()
+    val vao = (xs.last() - x0).takeIf { it > 0f } ?: 1f
     val animacao = remember(pontos) { Animatable(0f) }
     LaunchedEffect(pontos) { animacao.animateTo(1f, tween(700)) }
 
-    fun indicePorX(x: Float, largura: Float): Int =
-        if (pontos.size < 2) 0 else (x / largura * (pontos.size - 1)).roundToInt().coerceIn(0, pontos.lastIndex)
+    fun indicePorX(x: Float, largura: Float): Int {
+        if (pontos.size < 2) return 0
+        val alvo = x0 + (x / largura).coerceIn(0f, 1f) * vao
+        return xs.indices.minBy { kotlin.math.abs(xs[it] - alvo) }
+    }
 
     val sel = pontos.getOrNull(selecionado) ?: pontos.last()
+    val e = Estatisticas.de(pontos)
+    val descricao = buildString {
+        append("Gráfico de ${pontos.size} meses com dados, de ${Meses.capitalizar(pontos.first().mesReferencia)} ")
+        append("(${Dinheiro.formatar(pontos.first().valor)}) a ${Meses.capitalizar(pontos.last().mesReferencia)} ")
+        append("(${Dinheiro.formatar(pontos.last().valor)}).")
+        if (e != null) append(" Máximo ${Dinheiro.formatar(e.maximo.valor)}, mínimo ${Dinheiro.formatar(e.minimo.valor)}.")
+    }
     Column {
         Row(verticalAlignment = Alignment.Bottom) {
             Text(Dinheiro.formatar(sel.valor), style = MaterialTheme.typography.titleLarge, color = cor)
@@ -349,7 +380,14 @@ fun Grafico(pontos: List<PontoHistorico>) {
                 Modifier
                     .fillMaxWidth()
                     .height(180.dp)
-                    .semantics { contentDescription = "Gráfico da evolução do preço em ${pontos.size} meses" }
+                    .semantics {
+                        contentDescription = descricao
+                        stateDescription = "Selecionado: ${Meses.capitalizar(sel.mesReferencia)}, ${Dinheiro.formatar(sel.valor)}"
+                        customActions = listOf(
+                            CustomAccessibilityAction("Mês anterior") { selecionado = (selecionado - 1).coerceAtLeast(0); true },
+                            CustomAccessibilityAction("Próximo mês") { selecionado = (selecionado + 1).coerceAtMost(pontos.lastIndex); true },
+                        )
+                    }
                     .pointerInput(pontos) {
                         detectTapGestures { o ->
                             selecionado = indicePorX(o.x, size.width.toFloat())
@@ -368,7 +406,7 @@ fun Grafico(pontos: List<PontoHistorico>) {
             ) {
                 val faixa = (topo - base).takeIf { it > 0 } ?: 1.0
                 fun pos(i: Int): Offset {
-                    val x = if (pontos.size > 1) i * size.width / (pontos.size - 1) else size.width / 2
+                    val x = if (pontos.size > 1) (xs[i] - x0) / vao * size.width else size.width / 2
                     val y = size.height - ((pontos[i].valor - base) / faixa * size.height).toFloat()
                     return Offset(x, y)
                 }
@@ -389,12 +427,16 @@ fun Grafico(pontos: List<PontoHistorico>) {
                 area.close()
                 drawPath(area, Brush.verticalGradient(listOf(cor.copy(alpha = 0.28f), cor.copy(alpha = 0f))))
                 drawPath(linha, cor, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+                for (i in 0 until visiveis) drawCircle(cor, radius = 3.dp.toPx(), center = pos(i))
                 val ps = pos(selecionado.coerceIn(0, pontos.lastIndex))
                 drawLine(cor.copy(alpha = 0.5f), Offset(ps.x, 0f), Offset(ps.x, size.height), strokeWidth = 1.5f,
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f)))
                 drawCircle(cor, radius = 7.dp.toPx(), center = ps)
                 drawCircle(fundo, radius = 3.5.dp.toPx(), center = ps)
             }
+            // Eixo Y: valores do topo e da base da escala
+            RotuloEixo(milhares(topo), Modifier.align(Alignment.TopStart))
+            RotuloEixo(milhares(base), Modifier.align(Alignment.BottomStart))
         }
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -406,3 +448,20 @@ fun Grafico(pontos: List<PontoHistorico>) {
         }
     }
 }
+
+@Composable
+private fun RotuloEixo(texto: String, modifier: Modifier) {
+    Text(
+        texto,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+            .padding(horizontal = 4.dp, vertical = 1.dp),
+    )
+}
+
+/** "R$ 46,9 mil" para os rotulos do eixo. */
+private fun milhares(v: Double): String =
+    if (v >= 1000) "R$ " + "%.1f".format(java.util.Locale("pt", "BR"), v / 1000) + " mil" else Dinheiro.formatar(v)

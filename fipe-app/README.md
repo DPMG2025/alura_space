@@ -54,7 +54,7 @@ Cada mês do histórico é uma consulta à BrasilAPI (com novas tentativas autom
 
 O workflow `.github/workflows/fipe-android.yml` compila o app a cada push que altera `fipe-app/`. Abra a aba **Actions** do repositório, entre na execução mais recente de "App Android FIPE" e baixe o artefato `fipe-pela-placa-apk`. Instale o `app-release.apk` no celular (é preciso permitir instalação de fontes desconhecidas).
 
-Para embutir os tokens no APK, cadastre os segredos `PLACA_API_TOKEN` e `FIPE_API_TOKEN` em Settings, Secrets and variables, Actions. Sem eles, basta informar os tokens na tela de Configurações do app.
+Os tokens nunca são embutidos no APK (poderiam ser extraídos dele): o usuário informa os seus na tela Ajustes. Eles ficam só no aparelho e não entram em backup.
 
 ## Compilar localmente
 
@@ -66,12 +66,7 @@ cd fipe-app
 ./gradlew testDebugUnitTest    # testes unitários
 ```
 
-Os tokens também podem ir no arquivo `fipe-app/local.properties` (não versionado):
 
-```
-PLACA_API_TOKEN=seu_token
-FIPE_API_TOKEN=seu_token_opcional
-```
 
 ## Estrutura
 

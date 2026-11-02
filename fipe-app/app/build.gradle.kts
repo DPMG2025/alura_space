@@ -1,18 +1,10 @@
-import java.util.Properties
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-// Tokens opcionais: local.properties (PLACA_API_TOKEN, FIPE_API_TOKEN) ou variaveis de ambiente.
-val localProps = Properties().apply {
-    val f = rootProject.file("local.properties")
-    if (f.exists()) f.inputStream().use { load(it) }
-}
-fun segredo(nome: String): String =
-    (localProps.getProperty(nome) ?: System.getenv(nome) ?: "").replace("\"", "")
+// Tokens nao sao embutidos no APK (seriam extraiveis): o usuario informa em Ajustes.
 
 android {
     namespace = "br.com.fipeplaca"
@@ -22,17 +14,16 @@ android {
         applicationId = "br.com.fipeplaca"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "2.2"
+        versionCode = 5
+        versionName = "3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["useTestStorageService"] = "true"
-        buildConfigField("String", "PLACA_API_TOKEN", "\"${segredo("PLACA_API_TOKEN")}\"")
-        buildConfigField("String", "FIPE_API_TOKEN", "\"${segredo("FIPE_API_TOKEN")}\"")
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Assina com a chave debug para gerar um APK instalavel sem configuracao extra.
             signingConfig = signingConfigs.getByName("debug")

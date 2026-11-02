@@ -25,10 +25,11 @@ data class PlacaUi(
     val doSalvo: Boolean = false,
 )
 
-class PlacaViewModel(app: Application) : AndroidViewModel(app) {
+class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.SavedStateHandle) : AndroidViewModel(app) {
     private val repo = (app as FipeApp).repositorio
     private val salvos = (app as FipeApp).salvos
-    private val _estado = MutableStateFlow(PlacaUi())
+    // A placa digitada sobrevive se o sistema encerrar o app em segundo plano.
+    private val _estado = MutableStateFlow(PlacaUi(placa = salvo.get<String>(CHAVE_PLACA).orEmpty()))
     val estado: StateFlow<PlacaUi> = _estado
     val itensSalvos: StateFlow<List<ConsultaSalva>> = salvos.itens
     private fun idAtual(): String? = _estado.value.veiculo?.let { ConsultaSalva.idPlaca(it.placa) }
@@ -36,12 +37,16 @@ class PlacaViewModel(app: Application) : AndroidViewModel(app) {
     /** Historico local por veiculo e versao FIPE (a placa pode ter mais de uma versao). */
     val historico = HistoricoController(
         viewModelScope, repo,
-        locais = { r -> if (r == _estado.value.veiculo?.fipe?.firstOrNull()) idAtual()?.let(salvos::pontosLocais).orEmpty() else emptyList() },
-        aoCarregar = { r, pontos -> if (r == _estado.value.veiculo?.fipe?.firstOrNull()) idAtual()?.let { salvos.guardarPontos(it, pontos) } },
+        locais = { r -> if (r == versaoAtual()) idAtual()?.let(salvos::pontosLocais).orEmpty() else emptyList() },
+        aoCarregar = { r, pontos -> if (r == versaoAtual()) idAtual()?.let { salvos.guardarPontos(it, pontos) } },
     )
     private var job: Job? = null
 
+    private fun versaoAtual() = _estado.value.let { e -> e.veiculo?.fipe?.getOrNull(e.selecionado) }
+
     fun alterarPlaca(texto: String) {
+        if (_estado.value.carregando) return
+        salvo[CHAVE_PLACA] = Placa.normalizar(texto)
         _estado.update { it.copy(placa = Placa.normalizar(texto), erro = null, semToken = false) }
     }
 
@@ -76,13 +81,16 @@ class PlacaViewModel(app: Application) : AndroidViewModel(app) {
     fun abrirSalvo(c: ConsultaSalva) {
         val v = c.veiculo ?: return
         job?.cancel()
-        _estado.value = PlacaUi(placa = v.placa, veiculo = v, doSalvo = true)
+        val versao = (c.versao ?: 0).coerceIn(0, (v.fipe.size - 1).coerceAtLeast(0))
+        salvo[CHAVE_PLACA] = v.placa
+        _estado.value = PlacaUi(placa = v.placa, veiculo = v, doSalvo = true, selecionado = versao)
         historico.limpar()
-        v.fipe.firstOrNull()?.let { historico.carregar(it) }
+        v.fipe.getOrNull(versao)?.let { historico.carregar(it) }
     }
 
     fun limpar() {
         job?.cancel()
+        salvo[CHAVE_PLACA] = ""
         historico.limpar()
         _estado.value = PlacaUi()
     }
@@ -99,6 +107,11 @@ class PlacaViewModel(app: Application) : AndroidViewModel(app) {
         val v = _estado.value.veiculo ?: return
         val alvo = v.fipe.getOrNull(indice) ?: return
         _estado.update { it.copy(selecionado = indice) }
+        salvos.definirVersao(ConsultaSalva.idPlaca(v.placa), indice)
         historico.carregar(alvo)
+    }
+
+    private companion object {
+        const val CHAVE_PLACA = "placa"
     }
 }

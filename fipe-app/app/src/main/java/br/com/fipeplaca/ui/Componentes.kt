@@ -115,13 +115,14 @@ fun PlacaMercosul(placa: String, modifier: Modifier = Modifier, altura: Dp = 56.
 
 /** Campo de digitacao com aparencia de placa Mercosul. */
 @Composable
-fun CampoPlaca(valor: String, onValor: (String) -> Unit, onBuscar: () -> Unit, modifier: Modifier = Modifier) {
+fun CampoPlaca(valor: String, onValor: (String) -> Unit, onBuscar: () -> Unit, modifier: Modifier = Modifier, habilitado: Boolean = true) {
     val altura = 76.dp
     MolduraPlaca(modifier.semantics { contentDescription = "Campo da placa" }, altura) {
         val estilo = estiloPlaca(altura, maxWidth, 7)
         BasicTextField(
             value = valor,
             onValueChange = onValor,
+            enabled = habilitado,
             singleLine = true,
             textStyle = estilo.copy(color = Color(0xFF111111), textAlign = TextAlign.Center),
             keyboardOptions = KeyboardOptions(
@@ -135,7 +136,7 @@ fun CampoPlaca(valor: String, onValor: (String) -> Unit, onBuscar: () -> Unit, m
             decorationBox = { campo ->
                 Box(contentAlignment = Alignment.Center) {
                     if (valor.isEmpty()) {
-                        Text("ABC1D23", style = estilo, color = Color(0x33111111),
+                        Text("ABC1D23", style = estilo, color = Color(0x73111111),
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
                     campo()
@@ -326,7 +327,7 @@ fun EstadoVazio(icone: ImageVector, titulo: String, texto: String, modifier: Mod
 }
 
 /** Paleta suave para avatares; a cor e fixa para cada nome. */
-private val TONS = listOf(0xFF1E5BD8, 0xFF00897B, 0xFF7B4DFF, 0xFFE0672B, 0xFFD81B60, 0xFF2E7D32, 0xFF00838F, 0xFF8D6E63)
+private val TONS = listOf(0xFF1747B0, 0xFF00695C, 0xFF5E35B1, 0xFFB4501A, 0xFFAD1457, 0xFF2E7D32, 0xFF00695F, 0xFF6D4C41)
 
 /** Avatar circular com as iniciais (marcas e salvos). */
 @Composable
@@ -335,7 +336,7 @@ fun Avatar(texto: String, modifier: Modifier = Modifier, tamanho: Dp = 40.dp) {
         .take(2).joinToString("") { it.take(1) }.uppercase().ifBlank { "?" }
     val tom = Color(TONS[(texto.lowercase().hashCode() and 0x7fffffff) % TONS.size])
     Box(
-        modifier.size(tamanho).clip(CircleShape).background(tom.copy(alpha = 0.14f)),
+        modifier.size(tamanho).clip(CircleShape).background(tom.copy(alpha = 0.12f)),
         contentAlignment = Alignment.Center,
     ) {
         Text(iniciais, color = tom, fontWeight = FontWeight.Bold, fontSize = (tamanho.value * 0.36f).sp)

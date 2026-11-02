@@ -25,7 +25,7 @@ class FipeApp : Application() {
     override fun onCreate() {
         super.onCreate()
         prefs = Preferencias(this)
-        repositorio = FipeRepositorio(prefs)
+        repositorio = FipeRepositorio(prefs, diretorioCache = java.io.File(cacheDir, "http"))
         salvos = RepositorioSalvos(this)
         tema.value = prefs.tema
     }

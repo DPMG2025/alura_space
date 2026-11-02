@@ -17,6 +17,8 @@ data class HistoricoUi(
     val periodo: PeriodoHistorico = PeriodoHistorico.MESES_12,
     val carregando: Boolean = false,
     val progresso: Float = 0f,
+    val feitos: Int = 0,
+    val total: Int = 0,
     val pontos: List<PontoHistorico> = emptyList(),
     val erro: String? = null,
     /** Meses pedidos e meses que exigem token (para avisar quando o historico vier parcial). */
@@ -56,7 +58,7 @@ class HistoricoController(
         job = escopo.launch {
             runCatching {
                 repo.historico(alvo, periodo, progresso = { feitos, total ->
-                    _estado.update { it.copy(progresso = if (total == 0) 0f else feitos.toFloat() / total) }
+                    _estado.update { it.copy(progresso = if (total == 0) 0f else feitos.toFloat() / total, feitos = feitos, total = total) }
                 })
             }.onSuccess { res ->
                 cache[chave] = res

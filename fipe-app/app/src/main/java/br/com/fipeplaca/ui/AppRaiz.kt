@@ -19,6 +19,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -61,6 +66,7 @@ fun AppRaiz() {
     val escopo = rememberCoroutineScope()
     var aba by rememberSaveable { mutableIntStateOf(0) }
     var ajustesSalvos by remember { mutableIntStateOf(0) }
+    var confirmarLimpeza by remember { mutableStateOf(false) }
 
     val placaVm: PlacaViewModel = viewModel()
     val manualVm: ManualViewModel = viewModel()
@@ -85,8 +91,21 @@ fun AppRaiz() {
     }
     fun favoritou(id: String, antes: Boolean) = aviso(if (antes) "Removido dos favoritos" else "Salvo nos favoritos")
 
+    BackHandler(enabled = aba == 0 && placa.veiculo != null) { placaVm.limpar() }
     BackHandler(enabled = aba == 1 && manual.etapa != Etapa.MARCAS) { manualVm.voltar() }
     BackHandler(enabled = aba != 0 && !(aba == 1 && manual.etapa != Etapa.MARCAS)) { aba = 0 }
+
+    if (confirmarLimpeza) {
+        AlertDialog(
+            onDismissRequest = { confirmarLimpeza = false },
+            title = { Text("Limpar recentes?") },
+            text = { Text("As consultas recentes serão apagadas. Os favoritos continuam salvos.") },
+            confirmButton = {
+                TextButton(onClick = { confirmarLimpeza = false; app.salvos.limparRecentes(); aviso("Recentes apagados") }) { Text("Limpar") }
+            },
+            dismissButton = { TextButton(onClick = { confirmarLimpeza = false }) { Text("Cancelar") } },
+        )
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
@@ -148,8 +167,16 @@ fun AppRaiz() {
                             if (c.porPlaca) { placaVm.abrirSalvo(c); aba = 0 } else { manualVm.abrirSalvo(c); aba = 1 }
                         },
                         alternarFavorito = { app.salvos.alternarFavorito(it) },
-                        remover = { app.salvos.remover(it); aviso("Consulta excluída") },
-                        limparRecentes = { app.salvos.limparRecentes(); aviso("Recentes apagados") },
+                        remover = { id ->
+                            val item = salvos.firstOrNull { it.id == id }
+                            app.salvos.remover(id)
+                            escopo.launch {
+                                snackbar.currentSnackbarData?.dismiss()
+                                val r = snackbar.showSnackbar("Consulta excluída", actionLabel = "Desfazer", duration = SnackbarDuration.Short)
+                                if (r == SnackbarResult.ActionPerformed && item != null) app.salvos.restaurar(item)
+                            }
+                        },
+                        limparRecentes = { confirmarLimpeza = true },
                     ),
                 )
                 else -> androidx.compose.runtime.key(ajustesSalvos) { TelaConfiguracoes(

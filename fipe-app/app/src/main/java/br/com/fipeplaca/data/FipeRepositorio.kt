@@ -21,13 +21,37 @@ class FipeRepositorio(
     baseV1: String = "https://parallelum.com.br/fipe/api/v1/",
     baseV2: String = "https://fipe.parallelum.com.br/api/v2/",
     baseBrasilApi: String = "https://brasilapi.com.br/api/",
+    /** Pasta do cache HTTP em disco (permite usar a Tabela sem internet). Null desliga o cache. */
+    diretorioCache: java.io.File? = null,
 ) {
     private val hostV2 = baseV2.toHttpUrl().host
 
 
+    private val hostV1 = baseV1.toHttpUrl().host
+
     private val http = OkHttpClient.Builder()
-        .connectTimeout(20, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(20, TimeUnit.SECONDS)
+        .callTimeout(25, TimeUnit.SECONDS)
+        .apply { if (diretorioCache != null) cache(okhttp3.Cache(diretorioCache, 20L * 1024 * 1024)) }
+        // Listas e valores da FIPE mudam uma vez por mes: guarda no cache por 6 horas.
+        .addNetworkInterceptor { chain ->
+            val resp = chain.proceed(chain.request())
+            if (chain.request().url.host == hostV1 && resp.isSuccessful) {
+                resp.newBuilder().header("Cache-Control", "public, max-age=21600").removeHeader("Pragma").build()
+            } else resp
+        }
+        // Sem internet: tenta a ultima resposta guardada da Tabela FIPE.
+        .addInterceptor { chain ->
+            val req = chain.request()
+            try {
+                chain.proceed(req)
+            } catch (e: IOException) {
+                if (req.method != "GET" || req.url.host != hostV1) throw e
+                val guardada = chain.proceed(req.newBuilder().cacheControl(okhttp3.CacheControl.FORCE_CACHE).build())
+                if (guardada.code == 504) { guardada.close(); throw e } else guardada
+            }
+        }
         .addInterceptor { chain ->
             val req = chain.request()
             val token = prefs.tokenFipe
@@ -53,20 +77,27 @@ class FipeRepositorio(
 
     private val cacheMarcas = mutableMapOf<TipoVeiculo, List<ItemFipe>>()
     private var cacheReferencias: List<ReferenciaV2>? = null
-    @Volatile private var brasilApiIndisponivel = false
+    private var referenciasEm = 0L
+    @Volatile private var brasilApiIndisponivelAte = 0L
+    /** Relogio (substituivel nos testes). */
+    internal var agora: () -> Long = System::currentTimeMillis
     private val travaRef = Mutex()
 
     // ---------- Busca manual (marca, modelo, ano) ----------
 
+    /** Descarta itens incompletos (o Gson ignora a nulidade do Kotlin e pode entregar null). */
+    @Suppress("SENSELESS_COMPARISON")
+    private fun List<ItemFipe>.validos() = filter { it.codigo != null && it.nome != null }
+
     suspend fun marcas(tipo: TipoVeiculo): List<ItemFipe> =
-        cacheMarcas[tipo] ?: v1.marcas(tipo.caminhoV1).sortedBy { Texto.chave(it.nome) }
+        cacheMarcas[tipo] ?: v1.marcas(tipo.caminhoV1).validos().sortedBy { Texto.chave(it.nome) }
             .also { cacheMarcas[tipo] = it }
 
     suspend fun modelos(tipo: TipoVeiculo, marca: String): List<ItemFipe> =
-        v1.modelos(tipo.caminhoV1, marca).modelos
+        v1.modelos(tipo.caminhoV1, marca).modelos.orEmpty().validos()
 
     suspend fun anos(tipo: TipoVeiculo, marca: String, modelo: String): List<ItemFipe> =
-        v1.anos(tipo.caminhoV1, marca, modelo).map { it.copy(nome = Texto.nomeAno(it.nome)) }
+        v1.anos(tipo.caminhoV1, marca, modelo).validos().map { it.copy(nome = Texto.nomeAno(it.nome)) }
 
     suspend fun valor(tipo: TipoVeiculo, marca: String, modelo: String, ano: String): FipeResultado {
         val r = v1.valor(tipo.caminhoV1, marca, modelo, ano)
@@ -107,7 +138,7 @@ class FipeRepositorio(
         }
         val veiculo = PlacaParser.parse(corpo, placa)
         // Completa valor e codigo do ano pela propria tabela FIPE, quando possivel.
-        val fipe = veiculo.fipe.map { r -> runCatching { completar(r, veiculo.anoModelo) }.getOrDefault(r) }
+        val fipe = veiculo.fipe.map { r -> tentar { completar(r, veiculo.anoModelo) }.getOrDefault(r) }
         return veiculo.copy(fipe = fipe)
     }
 
@@ -144,17 +175,18 @@ class FipeRepositorio(
      * a lista da API v2. Os codigos sao os mesmos nas duas fontes.
      */
     private suspend fun referencias(): List<ReferenciaV2> = travaRef.withLock {
-        cacheReferencias ?: (
-            runCatching { comNovasTentativas(tentativas = 2) { brasilApi.referencias() }.map { ReferenciaV2(it.codigo.toString(), it.mes.trim()) } }
+        // Lista de meses vale por 6 horas (na virada do mes surge uma referencia nova)
+        cacheReferencias?.takeIf { agora() - referenciasEm < 6 * HORA } ?: (
+            tentar { comNovasTentativas(tentativas = 2) { brasilApi.referencias() }.map { ReferenciaV2(it.codigo.toString(), it.mes.trim()) } }
                 .getOrNull()?.takeIf { it.isNotEmpty() }
                 ?: run {
-                    // BrasilAPI fora do ar: nao sera consultada mes a mes nesta sessao (consulta mais rapida)
-                    brasilApiIndisponivel = true
+                    // BrasilAPI fora do ar: nao sera consultada mes a mes por 1 hora (consulta mais rapida)
+                    brasilApiIndisponivelAte = agora() + HORA
                     v2.referencias()
                 }
             )
             .sortedByDescending { it.codigo.toIntOrNull() ?: 0 }
-            .also { cacheReferencias = it }
+            .also { cacheReferencias = it; referenciasEm = agora() }
     }
 
     /** Valor de um mes: BrasilAPI e, se falhar, API v2. Null se o mes nao existir. */
@@ -168,7 +200,7 @@ class FipeRepositorio(
         val ano = codigoAno.substringBefore('-')
 
         // Se a BrasilAPI ja falhou com erro de servidor nesta busca, nao insiste (falha rapida).
-        (if (estado.brasilApiForaDoAr.get()) null else runCatching { comNovasTentativas(tentativas = 2) { brasilApi.precos(r.codigoFipe, ref.codigo) } }
+        (if (estado.brasilApiForaDoAr.get()) null else tentar { comNovasTentativas(tentativas = 2) { brasilApi.precos(r.codigoFipe, ref.codigo) } }
             .onFailure {
                 diagnostico("${ref.codigo} ${ref.mes} brasilapi: ${descrever(it)}")
                 if (it is IOException || (it is HttpException && it.code() >= 500)) estado.brasilApiForaDoAr.set(true)
@@ -180,7 +212,7 @@ class FipeRepositorio(
                 if (num != null) return PontoHistorico((p.mesReferencia ?: ref.mes).trim(), p.valor.orEmpty(), num)
             }
 
-        val doV2 = runCatching { comNovasTentativas { v2.valorPorCodigo(r.tipo.caminhoV2, r.codigoFipe, codigoAno, ref.codigo) } }
+        val doV2 = tentar { comNovasTentativas { v2.valorPorCodigo(r.tipo.caminhoV2, r.codigoFipe, codigoAno, ref.codigo) } }
             .onFailure {
                 diagnostico("${ref.codigo} ${ref.mes} v2: ${descrever(it)}")
                 if (it is HttpException && it.code() == 402) estado.exigemToken.incrementAndGet()
@@ -209,23 +241,29 @@ class FipeRepositorio(
         periodo: PeriodoHistorico,
         diagnostico: (String) -> Unit = {},
         progresso: (feitos: Int, total: Int) -> Unit = { _, _ -> },
-    ): ResultadoHistorico = coroutineScope {
+    ): ResultadoHistorico = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val codigoAno = resolverCodigoAno(r)
             ?: throw PlacaParser.ErroProvedor("Ano modelo não encontrado na tabela FIPE para este código.")
         val limite = Semaphore(4)
-        val meses = Referencias.filtrar(referencias(), periodo)
-        val estado = EstadoBusca().apply { brasilApiForaDoAr.set(brasilApiIndisponivel) }
+        val meses = Referencias.filtrar(referencias(), periodo, Referencias.ano(r.mesReferencia))
+        val estado = EstadoBusca().apply { brasilApiForaDoAr.set(agora() < brasilApiIndisponivelAte) }
         var feitos = 0
-        val pontos = meses.map { ref ->
-            async {
-                limite.withPermit {
-                    val ponto = valorNoMes(r, codigoAno, ref, estado, diagnostico)
-                    synchronized(this@FipeRepositorio) { feitos++ }
-                    progresso(feitos, meses.size)
-                    ponto
+        progresso(0, meses.size)
+        val obtidos = java.util.concurrent.ConcurrentHashMap<String, PontoHistorico>()
+        // Tempo limite total: depois dele, mostra o que ja chegou em vez de esperar indefinidamente.
+        kotlinx.coroutines.withTimeoutOrNull(tempoLimiteHistoricoMs) {
+            // Do mais recente para o mais antigo: se o tempo acabar, ficam os meses que mais importam.
+            meses.asReversed().map { ref ->
+                async {
+                    limite.withPermit {
+                        valorNoMes(r, codigoAno, ref, estado, diagnostico)?.let { obtidos[ref.codigo] = it }
+                        synchronized(this@FipeRepositorio) { feitos++ }
+                        progresso(feitos, meses.size)
+                    }
                 }
-            }
-        }.awaitAll().filterNotNull().toMutableList()
+            }.awaitAll()
+        } ?: diagnostico("tempo limite do historico atingido")
+        val pontos = meses.mapNotNull { obtidos[it.codigo] }.toMutableList() // ordem cronologica
         // O valor atual (ja conhecido) entra como ultimo ponto quando a lista de meses ainda nao o inclui.
         val atual = Dinheiro.paraDouble(r.valor)?.takeIf { r.mesReferencia.isNotBlank() }
             ?.let { PontoHistorico(r.mesReferencia.trim(), r.valor.orEmpty(), it) }
@@ -271,7 +309,31 @@ class FipeRepositorio(
     /** Espera antes da primeira nova tentativa (menor nos testes). */
     internal var esperaInicialMs = 1_000L
 
+    /** Tempo maximo de uma busca de historico inteira. */
+    internal var tempoLimiteHistoricoMs = 20_000L
+
+    /**
+     * Como runCatching, mas sem engolir o cancelamento: uma consulta cancelada (o usuario limpou
+     * a tela ou abriu outra) nao pode terminar "com sucesso" e sobrescrever o estado novo.
+     */
+    private inline fun <T> tentar(bloco: () -> T): Result<T> = try {
+        Result.success(bloco())
+    } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+    } catch (e: Throwable) {
+        Result.failure(e)
+    }
+
     companion object {
+        private const val HORA = 3_600_000L
+
+        /** Valida o modelo de URL do provedor de placas; devolve o problema ou null se estiver ok. */
+        fun validarUrlPlaca(url: String): String? = when {
+            !url.trim().startsWith("https://") -> "Use um endereço https://"
+            "{placa}" !in url -> "Inclua {placa} onde entra a placa"
+            else -> null
+        }
+
         fun mensagemErro(t: Throwable): String = when (t) {
             is PlacaParser.ErroProvedor -> t.message ?: "Erro na consulta."
             is HttpException -> when (t.code()) {
@@ -280,8 +342,12 @@ class FipeRepositorio(
                 401, 403 -> "Token da FIPE inválido. Confira em Configurações."
                 else -> "Erro no servidor (HTTP ${t.code()})."
             }
+            is java.net.UnknownServiceException -> "O endereço do serviço precisa usar https. Confira em Ajustes."
+            is com.google.gson.JsonParseException -> "O serviço respondeu num formato inesperado. Confira o endereço em Ajustes."
+            is IllegalArgumentException -> "Endereço do serviço inválido. Confira em Ajustes."
+            is java.io.InterruptedIOException -> "O serviço demorou demais para responder. Tente novamente."
             is IOException -> "Sem conexão com a internet ou servidor indisponível."
-            else -> t.message ?: "Erro inesperado."
+            else -> "Não foi possível concluir a consulta. Tente novamente."
         }
     }
 }

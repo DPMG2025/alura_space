@@ -43,6 +43,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.com.fipeplaca.data.ConsultaSalva
@@ -91,7 +93,7 @@ fun TelaPlaca(
             Text("Placa antiga ou Mercosul", style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(14.dp))
-            CampoPlaca(estado.placa, acoes.alterarPlaca, buscar, Modifier.fillMaxWidth())
+            CampoPlaca(estado.placa, acoes.alterarPlaca, buscar, Modifier.fillMaxWidth(), habilitado = !estado.carregando)
             Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Button(
@@ -158,7 +160,11 @@ private fun ConteudoInicial(recentes: List<ConsultaSalva>, abrir: (ConsultaSalva
         FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             placas.forEach { c ->
                 Column(
-                    Modifier.width(150.dp).clickable { abrir(c) },
+                    Modifier.width(150.dp)
+                        .clickable(onClickLabel = "Abrir consulta") { abrir(c) }
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = "Placa ${c.veiculo!!.placa}, ${c.titulo}, ${c.principal?.valor.orEmpty()}"
+                        },
                 ) {
                     PlacaMercosul(c.veiculo!!.placa, Modifier.fillMaxWidth(), altura = 44.dp)
                     Spacer(Modifier.height(4.dp))
@@ -219,7 +225,7 @@ private fun ResultadoPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: Historic
                 PlacaMercosul(v.placa, Modifier.width(148.dp), altura = 48.dp)
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(listOfNotNull(v.marca?.let(Texto::marca), v.modelo).joinToString(" "), style = MaterialTheme.typography.titleMedium, maxLines = 2)
+                    Text(listOfNotNull(v.marca?.let(Texto::marca), v.modelo?.let(Texto::modelo)).joinToString(" "), style = MaterialTheme.typography.titleMedium, maxLines = 2)
                     if (estado.doSalvo) {
                         Text("Aberto dos salvos", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
                     }

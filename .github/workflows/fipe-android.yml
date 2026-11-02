@@ -82,10 +82,6 @@ jobs:
           path: fipe-app/app/build/reports/tests/
 
       - name: Gerar APK
-        env:
-          # Opcional: cadastre os segredos no repositorio para embutir os tokens no APK.
-          PLACA_API_TOKEN: ${{ secrets.PLACA_API_TOKEN }}
-          FIPE_API_TOKEN: ${{ secrets.FIPE_API_TOKEN }}
         run: ./gradlew assembleDebug assembleRelease --no-daemon
 
       - uses: actions/upload-artifact@v5

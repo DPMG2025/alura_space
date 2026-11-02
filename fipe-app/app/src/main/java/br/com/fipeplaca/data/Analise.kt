@@ -17,7 +17,8 @@ data class Estatisticas(
             val primeiro = pontos.first().valor
             val ultimo = pontos.last().valor
             val variacao = if (primeiro > 0) (ultimo - primeiro) / primeiro * 100 else 0.0
-            val meses = (pontos.size - 1).coerceAtLeast(1)
+            // Meses reais entre o primeiro e o ultimo ponto (pode haver meses faltando no meio)
+            val meses = (Meses.distancia(pontos.first().mesReferencia, pontos.last().mesReferencia) ?: (pontos.size - 1)).coerceAtLeast(1)
             return Estatisticas(
                 maximo = pontos.maxBy { it.valor },
                 minimo = pontos.minBy { it.valor },
@@ -30,7 +31,12 @@ data class Estatisticas(
 
         fun percentual(v: Double, casas: Int = 1): String {
             val s = "%.${casas}f".format(Locale("pt", "BR"), v)
-            return if (v > 0 && s.any { it in '1'..'9' }) "+$s%" else "$s%"
+            val zero = s.none { it in '1'..'9' }
+            return when {
+                zero -> s.removePrefix("-") + "%" // sem "-0,0%"
+                v > 0 -> "+$s%"
+                else -> "$s%"
+            }
         }
     }
 }
@@ -43,14 +49,16 @@ object Projecao {
     /** Valor estimado daqui a [meses] meses; null com menos de 6 pontos. */
     fun estimar(pontos: List<PontoHistorico>, meses: Int = 12): Double? {
         if (pontos.size < 6) return null
+        // Eixo X em meses reais (indice absoluto); sem data reconhecivel, usa a posicao.
+        val xs = pontos.mapIndexed { i, p -> (Meses.indice(p.mesReferencia) ?: i).toDouble() }
         val n = pontos.size
-        val xm = (n - 1) / 2.0
+        val xm = xs.sum() / n
         val ym = pontos.sumOf { it.valor } / n
         var num = 0.0
         var den = 0.0
-        pontos.forEachIndexed { i, p -> num += (i - xm) * (p.valor - ym); den += (i - xm) * (i - xm) }
+        pontos.forEachIndexed { i, p -> num += (xs[i] - xm) * (p.valor - ym); den += (xs[i] - xm) * (xs[i] - xm) }
         val inclinacao = if (den == 0.0) 0.0 else num / den
-        val valor = ym + inclinacao * ((n - 1 + meses) - xm)
+        val valor = ym + inclinacao * ((xs.last() + meses) - xm)
         return valor.coerceAtLeast(0.0)
     }
 }
@@ -78,6 +86,13 @@ object Meses {
             ?: return null
         val ano = Referencias.ano(mes) ?: return null
         return ano * 12 + m
+    }
+
+    /** Meses entre duas referencias ("janeiro de 2026" a "novembro de 2026" = 10). */
+    fun distancia(de: String, ate: String): Int? {
+        val a = indice(de) ?: return null
+        val b = indice(ate) ?: return null
+        return b - a
     }
 
     fun capitalizar(mes: String): String = mes.trim().replaceFirstChar { it.titlecase(Locale("pt", "BR")) }

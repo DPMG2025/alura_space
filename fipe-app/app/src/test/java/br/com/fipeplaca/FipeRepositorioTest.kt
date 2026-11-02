@@ -4,6 +4,7 @@ import br.com.fipeplaca.data.ConfigConexao
 import br.com.fipeplaca.data.FipeRepositorio
 import br.com.fipeplaca.data.PeriodoHistorico
 import br.com.fipeplaca.data.TipoVeiculo
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -25,7 +26,7 @@ class FipeRepositorioTest {
     private fun json(corpo: String, codigo: Int = 200) =
         MockResponse().setResponseCode(codigo).setHeader("Content-Type", "application/json").setBody(corpo)
 
-    private fun repo(token: String = "tok", tokenFipe: String = "") = FipeRepositorio(
+    private fun repo(token: String = "tok", tokenFipe: String = "", cache: java.io.File? = null) = FipeRepositorio(
         object : ConfigConexao {
             override val tokenPlaca = token
             override val urlPlaca = "http://${servidor.hostName}:${servidor.port}/placa/{placa}/{token}"
@@ -34,6 +35,7 @@ class FipeRepositorioTest {
         baseV1 = servidor.url("/v1/").toString(),
         baseV2 = servidor.url("/v2/").toString(),
         baseBrasilApi = servidor.url("/brasil/").toString(),
+        diretorioCache = cache,
     )
 
     @Before fun iniciar() {
@@ -206,6 +208,58 @@ class FipeRepositorioTest {
         val alvo = br.com.fipeplaca.data.FipeResultado(TipoVeiculo.CARROS, "", "", "2019", "", "X", "", null, codigoAno = "2019-1")
         val e = runCatching { repo().historico(alvo, PeriodoHistorico.MESES_12) }.exceptionOrNull()!!
         assertTrue(FipeRepositorio.mensagemErro(e).contains("histórico"))
+    }
+
+    @Test fun consultaCanceladaNaoTerminaComSucesso() = kotlinx.coroutines.runBlocking {
+        rotas = { p ->
+            when {
+                p.startsWith("/placa/") -> json("""{"MARCA":"VW","MODELO":"GOL","anoModelo":"2019","fipe":{"dados":[{"codigo_fipe":"X","ano_modelo":"2019"}]}}""")
+                p.startsWith("/v2/cars/X/years") -> json("""[{"code":"2019-1","name":"2019"}]""").setBodyDelay(3, java.util.concurrent.TimeUnit.SECONDS)
+                else -> MockResponse().setResponseCode(404)
+            }
+        }
+        var terminou = false
+        val job = launch(kotlinx.coroutines.Dispatchers.IO) { repo().consultarPlaca("ABC1234"); terminou = true }
+        kotlinx.coroutines.delay(500)
+        job.cancel()
+        job.join()
+        assertTrue(job.isCancelled)
+        assertTrue("consulta cancelada nao pode concluir", !terminou)
+    }
+
+    @Test fun historicoRespeitaTempoLimiteEDevolveParcial() = kotlinx.coroutines.runBlocking {
+        rotas = { p ->
+            when {
+                p == "/v2/references" -> json((112 downTo 101).joinToString(",", "[", "]") { "{\"code\":\"$it\",\"month\":\"${it - 100}/2026\"}" })
+                p.endsWith("reference=112") -> json("""{"price":"R$ 9.000,00","referenceMonth":"12/2026"}""")
+                p.contains("reference=") -> json("""{"price":"R$ 1,00"}""").setBodyDelay(5, java.util.concurrent.TimeUnit.SECONDS)
+                else -> MockResponse().setResponseCode(404)
+            }
+        }
+        val r = repo().apply { tempoLimiteHistoricoMs = 1_500 }
+        val alvo = br.com.fipeplaca.data.FipeResultado(TipoVeiculo.CARROS, "", "", "2026", "", "X", "", null, codigoAno = "2026-1")
+        val inicio = System.currentTimeMillis()
+        val res = r.historico(alvo, PeriodoHistorico.MESES_12)
+        assertTrue("demorou ${System.currentTimeMillis() - inicio} ms", System.currentTimeMillis() - inicio < 4_000)
+        assertEquals(listOf(9000.0), res.map { it.valor })
+    }
+
+    @Test fun tabelaFuncionaSemInternetPeloCache() = runTest {
+        val pasta = java.nio.file.Files.createTempDirectory("cache-fipe").toFile()
+        rotas = { p -> if (p == "/v1/carros/marcas") json("""[{"codigo":"21","nome":"Fiat"}]""") else MockResponse().setResponseCode(404) }
+        assertEquals("Fiat", repo(cache = pasta).marcas(TipoVeiculo.CARROS).single().nome)
+        val url = servidor.url("/").toString()
+        servidor.shutdown() // sem internet
+        val offline = FipeRepositorio(
+            object : ConfigConexao { override val tokenPlaca = ""; override val urlPlaca = ""; override val tokenFipe = "" },
+            baseV1 = url + "v1/", baseV2 = url + "v2/", baseBrasilApi = url + "brasil/", diretorioCache = pasta,
+        )
+        assertEquals("Fiat", offline.marcas(TipoVeiculo.CARROS).single().nome)
+    }
+
+    @Test fun itensIncompletosSaoDescartados() = runTest {
+        rotas = { p -> if (p == "/v1/carros/marcas") json("""[{"codigo":"1"},{"codigo":"21","nome":"Fiat"}]""") else MockResponse().setResponseCode(404) }
+        assertEquals(listOf("Fiat"), repo().marcas(TipoVeiculo.CARROS).map { it.nome })
     }
 
     @Test fun errosAmigaveis() = runTest {

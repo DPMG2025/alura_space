@@ -120,3 +120,50 @@ class MesclarHistoricoTest {
         assertEquals(50.0, r[r.size - 2].valor, 0.0) // novo valor do mes substitui o antigo
     }
 }
+
+class RevisaoIndependenteTest {
+    private fun p(mes: String, v: Double) = PontoHistorico(mes, "", v)
+
+    @Test fun dinheiroSemCentavosEFormatos() {
+        assertEquals(45320.0, br.com.fipeplaca.data.Dinheiro.paraDouble("R$ 45.320")!!, 0.0)
+        assertEquals(45320.5, br.com.fipeplaca.data.Dinheiro.paraDouble("R$ 45.320,50")!!, 0.0)
+        assertEquals(1500000.0, br.com.fipeplaca.data.Dinheiro.paraDouble("R$ 1.500.000,00")!!, 0.0)
+        assertTrue(br.com.fipeplaca.data.Dinheiro.formatar(1234.5).contains('\u00A0')) // R$ nao quebra de linha
+        assertEquals("≈ R$\u00A045.400", br.com.fipeplaca.data.Dinheiro.aproximado(45388.68))
+    }
+
+    @Test fun semZeroNegativo() {
+        assertEquals("0,0%", Estatisticas.percentual(-0.02))
+        assertEquals("0,00%", Estatisticas.percentual(-0.001, 2))
+    }
+
+    @Test fun variacaoMensalUsaMesesReais() {
+        val e = Estatisticas.de(listOf(p("janeiro de 2026", 100.0), p("junho de 2026", 95.0), p("novembro de 2026", 90.0)))!!
+        assertEquals(-1.0, e.variacaoMensalMedia, 0.0001) // -10% em 10 meses, nao em 2 pontos
+    }
+
+    @Test fun projecaoUsaMesesReais() {
+        // Queda de 100 por mes com meses faltando no meio
+        val pts = listOf(1, 2, 3, 6, 7, 10).map { p("$it/2026", 10000.0 - it * 100) }
+        assertEquals(10000.0 - 22 * 100, br.com.fipeplaca.data.Projecao.estimar(pts)!!, 0.01)
+    }
+
+    @Test fun nomesEmMaiusculas() {
+        assertEquals("Gol 1.0L MC4", br.com.fipeplaca.data.Texto.modelo("GOL 1.0L MC4"))
+        assertEquals("Onix Plus 1.0 LT", br.com.fipeplaca.data.Texto.modelo("ONIX PLUS 1.0 LT"))
+        assertEquals("Mobi Like 1.0", br.com.fipeplaca.data.Texto.modelo("Mobi Like 1.0"))
+    }
+
+    @Test fun anoAtualPeloValorNaViradaDoAno() {
+        val refs = listOf("dezembro/2025", "novembro/2025", "outubro/2025").mapIndexed { i, m -> br.com.fipeplaca.data.ReferenciaV2("${300 - i}", m) }
+        // Valor atual ja e de janeiro de 2026, mas a lista de meses ainda para em dezembro
+        assertTrue(br.com.fipeplaca.data.Referencias.filtrar(refs, br.com.fipeplaca.data.PeriodoHistorico.ANO_ATUAL, 2026).isEmpty())
+        assertEquals(3, br.com.fipeplaca.data.Referencias.filtrar(refs, br.com.fipeplaca.data.PeriodoHistorico.ANO_ATUAL, 2025).size)
+    }
+
+    @Test fun validaUrlDoProvedor() {
+        assertEquals(null, br.com.fipeplaca.data.FipeRepositorio.validarUrlPlaca("https://x.com/{placa}/{token}"))
+        assertTrue(br.com.fipeplaca.data.FipeRepositorio.validarUrlPlaca("http://x.com/{placa}") != null)
+        assertTrue(br.com.fipeplaca.data.FipeRepositorio.validarUrlPlaca("https://x.com/") != null)
+    }
+}

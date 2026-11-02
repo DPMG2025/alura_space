@@ -1,14 +1,13 @@
 package br.com.fipeplaca.data
 
 import android.content.Context
-import br.com.fipeplaca.BuildConfig
 
 /** Configuracoes do usuario: token e URL do provedor de placas, token da FIPE v2. */
 class Preferencias(context: Context) : ConfigConexao {
     private val sp = context.getSharedPreferences("config", Context.MODE_PRIVATE)
 
     override var tokenPlaca: String
-        get() = sp.getString(K_TOKEN_PLACA, null) ?: BuildConfig.PLACA_API_TOKEN
+        get() = sp.getString(K_TOKEN_PLACA, null).orEmpty()
         set(v) = sp.edit().putString(K_TOKEN_PLACA, v.trim()).apply()
 
     override var urlPlaca: String
@@ -16,7 +15,7 @@ class Preferencias(context: Context) : ConfigConexao {
         set(v) = sp.edit().putString(K_URL_PLACA, v.trim()).apply()
 
     override var tokenFipe: String
-        get() = sp.getString(K_TOKEN_FIPE, null) ?: BuildConfig.FIPE_API_TOKEN
+        get() = sp.getString(K_TOKEN_FIPE, null).orEmpty()
         set(v) = sp.edit().putString(K_TOKEN_FIPE, v.trim()).apply()
 
     /** Tema do app: "sistema", "claro" ou "escuro". */

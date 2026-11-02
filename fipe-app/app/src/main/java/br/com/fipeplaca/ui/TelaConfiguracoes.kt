@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,9 +49,11 @@ fun TelaConfiguracoes(
     tema: String = "sistema",
     onTema: (String) -> Unit = {},
 ) {
-    var tokenPlaca by remember { mutableStateOf(inicial.tokenPlaca) }
-    var urlPlaca by remember { mutableStateOf(inicial.urlPlaca) }
-    var tokenFipe by remember { mutableStateOf(inicial.tokenFipe) }
+    // rememberSaveable: o que foi digitado e ainda nao salvo sobrevive ao girar a tela
+    var tokenPlaca by rememberSaveable { mutableStateOf(inicial.tokenPlaca) }
+    var urlPlaca by rememberSaveable { mutableStateOf(inicial.urlPlaca) }
+    var tokenFipe by rememberSaveable { mutableStateOf(inicial.tokenFipe) }
+    val erroUrl = br.com.fipeplaca.data.FipeRepositorio.validarUrlPlaca(urlPlaca)
     val links = LocalUriHandler.current
     val alterado = Configuracoes(tokenPlaca, urlPlaca, tokenFipe) != inicial
 
@@ -78,7 +81,8 @@ fun TelaConfiguracoes(
                 OutlinedTextField(
                     value = urlPlaca, onValueChange = { urlPlaca = it },
                     label = { Text("URL da consulta") },
-                    supportingText = { Text("Use {placa} e {token} onde entram a placa e o token.") },
+                    supportingText = { Text(erroUrl ?: "Use {placa} e {token} onde entram a placa e o token.") },
+                    isError = erroUrl != null,
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -89,11 +93,11 @@ fun TelaConfiguracoes(
             }
 
             Secao(titulo = "Tabela FIPE") {
-                Status(true, "API pública conectada")
-                Spacer(Modifier.height(8.dp))
                 Text(
-                    "Marcas, modelos, anos e valores vêm da API pública da FIPE, sem custo. O histórico mês a mês vem da BrasilAPI, " +
-                        "também gratuita. O token abaixo é opcional e serve de alternativa quando a BrasilAPI não responde.",
+                    "Marcas, modelos, anos e o valor atual vêm da API pública da FIPE, sem custo e sem token. " +
+                        "Sem token, o histórico mês a mês cobre só os 2 ou 3 meses mais recentes. Para 12 ou 24 meses completos " +
+                        "é preciso um token da FIPE de um plano com acesso ao histórico. Os valores dos veículos salvos também " +
+                        "ficam guardados neste aparelho, mês a mês.",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(12.dp))
@@ -105,12 +109,12 @@ fun TelaConfiguracoes(
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                TextButton(onClick = { links.openUri("https://fipe.online") }) { Text("Obter token gratuito") }
+                TextButton(onClick = { links.openUri("https://fipe.online") }) { Text("Ver planos com histórico") }
             }
 
             Button(
                 onClick = { onSalvar(Configuracoes(tokenPlaca, urlPlaca.trim(), tokenFipe)) },
-                enabled = alterado,
+                enabled = alterado && erroUrl == null,
                 shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
             ) { Text("Salvar alterações") }
