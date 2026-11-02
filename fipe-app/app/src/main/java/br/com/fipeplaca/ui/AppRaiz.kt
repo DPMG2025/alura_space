@@ -237,9 +237,7 @@ fun AppRaiz() {
     // Faixa fixa atras da barra de status: os icones (claros) continuam legiveis quando o conteudo rola
     Spacer(
         Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars)
-            .background(androidx.compose.ui.graphics.Brush.horizontalGradient(
-                listOf(Extras.cores.gradienteInicio, androidx.compose.ui.graphics.lerp(Extras.cores.gradienteInicio, Extras.cores.gradienteFim, 0.65f)),
-            )),
+            .background(degradeMarca()),
     )
   }
 }

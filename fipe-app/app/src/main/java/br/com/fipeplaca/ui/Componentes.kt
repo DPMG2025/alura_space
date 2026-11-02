@@ -85,7 +85,7 @@ fun Cabecalho(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
-            .background(Brush.linearGradient(listOf(c.gradienteInicio, c.gradienteFim)))
+            .background(degradeMarca())
             .statusBarsPadding()
             .padding(start = 20.dp, end = 12.dp, top = if (compacto) 4.dp else 12.dp, bottom = if (compacto) 12.dp else 20.dp),
     ) {

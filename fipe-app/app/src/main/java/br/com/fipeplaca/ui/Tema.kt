@@ -130,3 +130,17 @@ object Extras {
     val cores: CoresExtras
         @Composable get() = LocalCoresExtras.current
 }
+
+/**
+ * Degrade da marca com geometria fixa a partir do topo da tela: o cabecalho e a faixa da barra de
+ * status usam o mesmo pincel, entao as cores coincidem sem emenda.
+ */
+@Composable
+fun degradeMarca(): androidx.compose.ui.graphics.Brush {
+    val c = Extras.cores
+    return androidx.compose.ui.graphics.Brush.linearGradient(
+        listOf(c.gradienteInicio, c.gradienteFim),
+        start = androidx.compose.ui.geometry.Offset.Zero,
+        end = androidx.compose.ui.geometry.Offset(1200f, 900f),
+    )
+}
