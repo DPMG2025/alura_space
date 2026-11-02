@@ -147,20 +147,20 @@ class FipeRepositorio(
     suspend fun historico(
         r: FipeResultado,
         periodo: PeriodoHistorico,
-        progresso: (feitos: Int, total: Int) -> Unit = { _, _ -> },
         diagnostico: (String) -> Unit = {},
+        progresso: (feitos: Int, total: Int) -> Unit = { _, _ -> },
     ): List<PontoHistorico> = coroutineScope {
         val codigoAno = resolverCodigoAno(r)
             ?: throw PlacaParser.ErroProvedor("Ano modelo não encontrado na tabela FIPE para este código.")
         val meses = Referencias.filtrar(referencias(), periodo)
-        val limite = Semaphore(4)
+        val limite = Semaphore(2)
         var feitos = 0
         var ultimoErro: Throwable? = null
         val pontos = meses.map { ref ->
             async {
                 limite.withPermit {
                     val ponto = runCatching {
-                        val v = v2.valorPorCodigo(r.tipo.caminhoV2, r.codigoFipe, codigoAno, ref.codigo)
+                        val v = comNovasTentativas { v2.valorPorCodigo(r.tipo.caminhoV2, r.codigoFipe, codigoAno, ref.codigo) }
                         val num = Dinheiro.paraDouble(v.valor)
                         if (num == null) null else PontoHistorico(
                             mesReferencia = (v.mesReferencia ?: ref.mes).trim(),
@@ -177,6 +177,29 @@ class FipeRepositorio(
         if (pontos.isEmpty() && ultimoErro != null) throw ultimoErro!!
         pontos
     }
+
+    /**
+     * Repete a chamada quando a falha e passageira (limite de requisicoes, erro do servidor
+     * ou rede), esperando um pouco mais a cada vez. Erros definitivos (404) sobem na hora.
+     */
+    private suspend fun <T> comNovasTentativas(tentativas: Int = 4, bloco: suspend () -> T): T {
+        var espera = esperaInicialMs
+        repeat(tentativas - 1) {
+            try {
+                return bloco()
+            } catch (e: HttpException) {
+                if (e.code() != 429 && e.code() < 500) throw e
+            } catch (e: IOException) {
+                // falha de rede passageira: tenta de novo
+            }
+            kotlinx.coroutines.delay(espera)
+            espera *= 2
+        }
+        return bloco()
+    }
+
+    /** Espera antes da primeira nova tentativa (menor nos testes). */
+    internal var esperaInicialMs = 1_000L
 
     companion object {
         fun mensagemErro(t: Throwable): String = when (t) {

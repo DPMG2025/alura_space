@@ -45,9 +45,9 @@ class HistoricoController(
         _estado.value = HistoricoUi(alvo = alvo, periodo = periodo, carregando = true)
         job = escopo.launch {
             runCatching {
-                repo.historico(alvo, periodo) { feitos, total ->
+                repo.historico(alvo, periodo, progresso = { feitos, total ->
                     _estado.update { it.copy(progresso = if (total == 0) 0f else feitos.toFloat() / total) }
-                }
+                })
             }.onSuccess { pontos ->
                 cache[chave] = pontos
                 _estado.update { it.copy(carregando = false, pontos = pontos, erro = if (pontos.isEmpty()) "Sem histórico para o período." else null) }

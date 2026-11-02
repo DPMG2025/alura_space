@@ -61,7 +61,7 @@ jobs:
         run: |
           mkdir -p docs/capturas
           rm -f docs/capturas/*.png
-          cp app/build/outputs/roborazzi/*.png docs/capturas/
+          cp app/build/outputs/roborazzi/*.png docs/capturas/ 2>/dev/null || git checkout -- docs/capturas
           if [ -f app/build/outputs/api-real.txt ]; then cp app/build/outputs/api-real.txt docs/verificacao-api-real.txt; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

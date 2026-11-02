@@ -127,6 +127,24 @@ class FipeRepositorioTest {
         assertEquals(1, pedidos.count { it.path == "/v2/references" }) // referencias em cache
     }
 
+    @Test fun historicoRecuperaLimitePassageiro() = runTest {
+        val tentativas = java.util.concurrent.ConcurrentHashMap<String, Int>()
+        rotas = { p ->
+            when {
+                p == "/v2/references" -> json((112 downTo 101).joinToString(",", "[", "]") { "{\"code\":\"$it\",\"month\":\"${it - 100}/2026\"}" })
+                p.startsWith("/v2/cars/X/years/2019-1?reference=") -> {
+                    val n = tentativas.merge(p, 1, Int::plus)!!
+                    if (n < 3) json("{}", 429) else json("{\"price\":\"R$ 10.000,00\",\"referenceMonth\":\"m\"}")
+                }
+                else -> MockResponse().setResponseCode(404)
+            }
+        }
+        val r = repo().apply { esperaInicialMs = 1 }
+        val alvo = br.com.fipeplaca.data.FipeResultado(TipoVeiculo.CARROS, "", "", "2019", "", "X", "", null, codigoAno = "2019-1")
+        val pontos = r.historico(alvo, PeriodoHistorico.MESES_12)
+        assertEquals(12, pontos.size) // todos recuperados apos duas respostas 429
+    }
+
     @Test fun errosAmigaveis() = runTest {
         rotas = { p -> if (p.startsWith("/placa/")) json("""{"message":"x"}""", 401) else json("{}", 429) }
         val e1 = runCatching { repo().consultarPlaca("ABC1234") }.exceptionOrNull()!!
