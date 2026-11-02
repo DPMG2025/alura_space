@@ -4,9 +4,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.sync.withPermit
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import retrofit2.HttpException
@@ -273,7 +271,6 @@ class FipeRepositorio(
     ): ResultadoHistorico = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val codigoAno = resolverCodigoAno(r)
             ?: throw PlacaParser.ErroProvedor("Ano modelo não encontrado na tabela FIPE para este código.")
-        val limite = Semaphore(4)
         val meses = Referencias.filtrar(referencias(), periodo, Referencias.ano(r.mesReferencia))
         val estado = EstadoBusca().apply { brasilApiForaDoAr.set(agora() < brasilApiIndisponivelAte) }
         var feitos = 0
@@ -281,10 +278,13 @@ class FipeRepositorio(
         val obtidos = java.util.concurrent.ConcurrentHashMap<String, PontoHistorico>()
         // Tempo limite total: depois dele, mostra o que ja chegou em vez de esperar indefinidamente.
         kotlinx.coroutines.withTimeoutOrNull(tempoLimiteHistoricoMs) {
-            // Do mais recente para o mais antigo: se o tempo acabar, ficam os meses que mais importam.
-            meses.asReversed().map { ref ->
+            // Fila ordenada do mais recente para o mais antigo, consumida por 4 trabalhadores:
+            // se o tempo acabar, ficam garantidamente os meses que mais importam.
+            val fila = ArrayDeque(meses.asReversed())
+            List(4) {
                 async {
-                    limite.withPermit {
+                    while (true) {
+                        val ref = synchronized(fila) { fila.removeFirstOrNull() } ?: break
                         valorNoMes(r, codigoAno, ref, estado, diagnostico)?.let { obtidos[ref.codigo] = it }
                         synchronized(this@FipeRepositorio) { feitos++ }
                         progresso(feitos, meses.size)

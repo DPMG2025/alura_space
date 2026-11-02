@@ -125,22 +125,23 @@ fun CartaoValorFipe(
             Text("${Texto.marca(r.marca)} ${Texto.modelo(r.modelo)}".trim(), style = MaterialTheme.typography.titleMedium, color = Color.White)
             Spacer(Modifier.height(12.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (r.anoModelo.isNotBlank()) Etiqueta(r.anoModelo)
-                if (r.combustivel.isNotBlank()) Etiqueta(r.combustivel)
-                if (r.codigoFipe.isNotBlank()) Etiqueta("FIPE ${r.codigoFipe}", onClick = onCopiarCodigo, rotuloAcao = "Copiar código FIPE")
+                val centro = Modifier.align(Alignment.CenterVertically)
+                if (r.anoModelo.isNotBlank()) Etiqueta(r.anoModelo, modifier = centro)
+                if (r.combustivel.isNotBlank()) Etiqueta(r.combustivel, modifier = centro)
+                if (r.codigoFipe.isNotBlank()) Etiqueta("FIPE ${r.codigoFipe}", onClick = onCopiarCodigo, rotuloAcao = "Copiar código FIPE", modifier = centro)
             }
         }
     }
 }
 
 @Composable
-private fun Etiqueta(texto: String, onClick: (() -> Unit)? = null, rotuloAcao: String? = null) {
+private fun Etiqueta(texto: String, onClick: (() -> Unit)? = null, rotuloAcao: String? = null, modifier: Modifier = Modifier) {
     Text(
         texto,
         style = MaterialTheme.typography.labelMedium,
         color = Color.White,
         maxLines = 1,
-        modifier = Modifier
+        modifier = modifier
             .let {
                 if (onClick != null) it.minimumInteractiveComponentSize()
                     .clip(RoundedCornerShape(50))

@@ -156,6 +156,8 @@ class RevisaoIndependenteTest {
         assertEquals("Mobi Like 1.0", br.com.fipeplaca.data.Texto.modelo("Mobi Like 1.0"))
         assertEquals("Mobi Drive 1.0 Flex 6V 5p", br.com.fipeplaca.data.Texto.modelo("MOBI DRIVE 1.0 Flex 6V 5p"))
         assertEquals("Polo Highline 200 TSI 1.0", br.com.fipeplaca.data.Texto.modelo("POLO HIGHLINE 200 TSI 1.0"))
+        assertEquals("Gol 1.6 MSI Flex 8V 5p", br.com.fipeplaca.data.Texto.modelo("Gol 1.6 MSI Flex 8V 5p"))
+        assertEquals("Fusca GTS 1.6", br.com.fipeplaca.data.Texto.modelo("Fusca GTS 1.6"))
     }
 
     @Test fun anoAtualPeloValorNaViradaDoAno() {

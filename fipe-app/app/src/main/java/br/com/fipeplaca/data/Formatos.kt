@@ -59,8 +59,12 @@ object Texto {
      * letras, com 3 ou mais letras e todas maiusculas, ganham so a inicial maiuscula (siglas conhecidas ficam).
      */
     fun modelo(texto: String): String {
+        // Nome ja com minusculas (padrao FIPE): so palavras longas em caixa alta mudam; 3 letras costumam ser siglas (MSI, GTS)
+        val minimo = if (texto.any { it.isLowerCase() }) 4 else 3
         return texto.split(' ').joinToString(" ") { p ->
-            if (p.length >= 3 && p.all { it.isLetter() } && p !in SIGLAS) p.lowercase(Locale("pt", "BR")).replaceFirstChar { it.titlecase(Locale("pt", "BR")) } else p
+            if (p.length >= minimo && p.all { it.isLetter() && it.isUpperCase() } && p !in SIGLAS)
+                p.lowercase(Locale("pt", "BR")).replaceFirstChar { it.titlecase(Locale("pt", "BR")) }
+            else p
         }
     }
 
