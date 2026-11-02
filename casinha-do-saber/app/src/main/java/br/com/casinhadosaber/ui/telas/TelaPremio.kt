@@ -1,6 +1,20 @@
 package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import kotlin.math.cos
+import kotlin.math.sin
+import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -103,7 +117,7 @@ fun TelaPremio(
     LaunchedEffect(Unit) {
         sons.acerto()
         val parabens = if (nome.isBlank()) "Parabéns! Você terminou a fase!" else "Parabéns, $nome! Você terminou a fase!"
-        narrador.falar(if (item != null) "$parabens Toque no presente para abrir!" else parabens)
+        narrador.falar(if (item != null) "$parabens Toque no presente três vezes para abrir!" else parabens)
         for (i in 1..estrelas) {
             delay(380)
             estrelasVisiveis = i
@@ -156,7 +170,7 @@ fun TelaPremio(
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Spacer(Modifier.height(8.dp))
-                Presente(item, aberto, onAbrir = ::abrir)
+                Presente(item, aberto, onToque = { sons.toque(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) }, onAbrir = ::abrir)
                 if (aberto) {
                     Text(item.nome, style = MaterialTheme.typography.headlineLarge)
                     Text("Em inglês: ${item.nomeEn}", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)
@@ -184,22 +198,19 @@ fun TelaPremio(
                                 "🏠 Colocar na casa",
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = Color.White,
-                                modifier = Modifier.padding(horizontal = 28.dp, vertical = 14.dp),
+                                modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
                             )
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        BotaoFofo(onClick = onVoltar, cor = Color.White, corBase = Color(0xFFD9CFF0), descricao = "Voltar para o caminho") {
-                            Text("↩ Caminho", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp))
-                        }
+                    Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                        BotaoRedondo("🗺️", "Voltar para o caminho", onVoltar, tamanho = 60.dp)
                         if (temProxima) {
-                            BotaoFofo(onClick = onProxima, cor = Color(fase.trilha.corArgb), corBase = Color(fase.trilha.corEscuraArgb), descricao = "Próxima fase") {
-                                Text(
-                                    "Próxima ▶",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
-                                )
+                            if (item == null) {
+                                BotaoFofo(onClick = onProxima, cor = Color(fase.trilha.corArgb), corBase = Color(fase.trilha.corEscuraArgb), modifier = Modifier.pulsando(), descricao = "Próxima fase") {
+                                    Text("Próxima ▶", style = MaterialTheme.typography.headlineMedium, color = Color.White, modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp))
+                                }
+                            } else {
+                                BotaoRedondo("▶️", "Próxima fase", onProxima, tamanho = 60.dp)
                             }
                         }
                     }
@@ -211,28 +222,90 @@ fun TelaPremio(
 }
 
 @Composable
-private fun Presente(item: ItemCasa, aberto: Boolean, onAbrir: () -> Unit) {
+private fun Presente(item: ItemCasa, aberto: Boolean, onToque: () -> Unit, onAbrir: () -> Unit) {
+    var toques by remember { mutableIntStateOf(0) }
     val escala = remember { Animatable(1f) }
+    val giro = remember { Animatable(0f) }
+    val escopo = rememberCoroutineScope()
+    val raios = rememberInfiniteTransition(label = "raios")
+    val anguloRaios by raios.animateFloat(0f, 360f, infiniteRepeatable(tween(9000, easing = LinearEasing)), label = "angulo")
+    // Mesmo sem tocar, a caixa dá pulinhos chamando a criança.
+    val chamar by raios.animateFloat(-4f, 4f, infiniteRepeatable(tween(260), RepeatMode.Reverse), label = "chamar")
+
     LaunchedEffect(aberto) {
         if (aberto) {
             escala.snapTo(0.2f)
             escala.animateTo(1f, spring(dampingRatio = 0.35f, stiffness = Spring.StiffnessLow))
         }
     }
+
+    fun tocar() {
+        if (aberto) return
+        toques++
+        if (toques >= 3) {
+            onAbrir()
+            return
+        }
+        onToque()
+        escopo.launch {
+            val forca = 8f * toques
+            for (x in listOf(forca, -forca, forca * 0.6f, -forca * 0.6f, 0f)) giro.animateTo(x, tween(60))
+        }
+        escopo.launch { escala.animateTo(1f + 0.12f * toques, spring(dampingRatio = 0.4f)) }
+    }
+
     Box(
         Modifier
-            .size(190.dp)
-            .background(Color.White.copy(alpha = 0.85f), CircleShape)
+            .size(230.dp)
             .semantics { contentDescription = if (aberto) item.nome else "Presente. Toque para abrir." }
-            .clickable(enabled = !aberto, role = Role.Button, onClick = onAbrir),
+            .clickable(enabled = !aberto, role = Role.Button, onClick = ::tocar),
         contentAlignment = Alignment.Center,
     ) {
         if (aberto) {
+            Canvas(Modifier.fillMaxSize()) {
+                val c = center
+                val r = size.minDimension / 2
+                rotate(anguloRaios, c) {
+                    for (k in 0 until 12) {
+                        val a1 = Math.toRadians(k * 30.0)
+                        val a2 = Math.toRadians(k * 30.0 + 14)
+                        val raio = Path().apply {
+                            moveTo(c.x, c.y)
+                            lineTo(c.x + (cos(a1) * r).toFloat(), c.y + (sin(a1) * r).toFloat())
+                            lineTo(c.x + (cos(a2) * r).toFloat(), c.y + (sin(a2) * r).toFloat())
+                            close()
+                        }
+                        drawPath(raio, Color(0x66FFE680))
+                    }
+                }
+                drawCircle(Color.White.copy(alpha = 0.9f), r * 0.68f, c)
+            }
             IconeDoItem(item, 130.dp, Modifier.graphicsLayer { scaleX = escala.value; scaleY = escala.value })
         } else {
+            Box(
+                Modifier
+                    .size(170.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.85f)),
+            )
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("🎁", style = MaterialTheme.typography.displayLarge.copy(fontSize = 96.sp, lineHeight = 108.sp), modifier = Modifier.pulsando())
-                Text("Toque para abrir!", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "🎁",
+                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 96.sp, lineHeight = 108.sp),
+                    modifier = Modifier.graphicsLayer {
+                        rotationZ = giro.value + if (toques == 0) chamar else 0f
+                        scaleX = escala.value
+                        scaleY = escala.value
+                    },
+                )
+                Text(
+                    when (toques) {
+                        0 -> "Toque 3 vezes!"
+                        1 -> "Mais 2!"
+                        else -> "Mais 1!"
+                    },
+                    style = MaterialTheme.typography.titleLarge,
+                )
             }
         }
     }

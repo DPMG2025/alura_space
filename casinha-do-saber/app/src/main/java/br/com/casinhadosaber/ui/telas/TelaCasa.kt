@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Estrutura
 import br.com.casinhadosaber.dominio.ItemCasa
@@ -71,6 +72,8 @@ fun TelaCasa(
     onVoltar: () -> Unit,
     onJogar: () -> Unit,
     noiteInicial: Boolean = false,
+    /** Item recém ganho: entra na casa sozinho, logo que a tela abre. */
+    colocarAoAbrir: String? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -86,6 +89,7 @@ fun TelaCasa(
     val vibracao = LocalHapticFeedback.current
 
     LaunchedEffect(Unit) {
+        if (colocarAoAbrir != null) return@LaunchedEffect
         narrador.falar(
             when {
                 bau.isNotEmpty() -> "Toque num presente do baú para colocar na casa!"
@@ -117,6 +121,14 @@ fun TelaCasa(
         if (estado.colocados.size + 1 == ItensDaCasa.total) {
             confete++
             narrador.falar("Uau! A casa está completinha! Parabéns!")
+        }
+    }
+
+    LaunchedEffect(colocarAoAbrir) {
+        val item = colocarAoAbrir?.let { ItensDaCasa.porId[it] } ?: return@LaunchedEffect
+        if (item.id !in estado.colocados) {
+            delay(500)
+            colocarDoBau(item)
         }
     }
 

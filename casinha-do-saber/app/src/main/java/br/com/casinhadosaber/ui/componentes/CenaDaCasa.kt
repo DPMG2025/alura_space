@@ -1,6 +1,7 @@
 package br.com.casinhadosaber.ui.componentes
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
@@ -187,7 +188,12 @@ fun CenaDaCasa(
                 noite = noite,
                 onTocar = { onTocarItem(item) },
                 onSoltar = { nova ->
-                    if (nova.y > 1.04f) onGuardarItem(item) else onMoverItem(item, limitar(nova))
+                    if (nova.y > 1.04f) {
+                        onGuardarItem(item)
+                        null
+                    } else {
+                        encaixar(item.id, limitar(nova), estado).also { onMoverItem(item, it) }
+                    }
                 },
             ) { w ->
                 if (noite && item.id == "sol") EmojiGrande("🌙", w) else ConteudoDoItem(item, w)
@@ -210,7 +216,7 @@ fun CenaDaCasa(
                 tempo = t,
                 descricao = perfil.nome.ifBlank { "Você" },
                 onTocar = onTocarCrianca,
-                onSoltar = { onMoverCrianca(limitar(it)) },
+                onSoltar = { nova -> encaixar("crianca", limitar(nova), estado).also(onMoverCrianca) },
             ) { _ ->
                 Crianca(perfil, Modifier.fillMaxSize(), acenando = true)
             }
@@ -266,6 +272,25 @@ private fun androidx.compose.ui.graphics.GraphicsLayerScope.aplicarVida(
     }
 }
 
+/** Objetos que podem ficar em qualquer lugar (no céu, na parede, em cima de outro objeto). */
+private val objetosLivres = setOf(
+    "sol", "nuvem", "arcoiris", "pipa", "estrela", "borboleta", "passarinho", "balao",
+    "abajur", "quadro", "espelho", "livros", "bolo", "ursinho",
+)
+
+/** Os outros objetos (e a criança) pousam no chão: piso de cima, piso de baixo ou grama. */
+fun encaixar(id: String, p: Posicao, estado: EstadoJogo): Posicao {
+    if (id in objetosLivres) return p
+    val dentroDaCasa = estado.temEstrutura(Estrutura.PAREDES) && p.x in 0.11f..0.89f
+    val y = when {
+        dentroDaCasa && p.y in 0.28f..0.535f -> 0.528f
+        dentroDaCasa && p.y in 0.535f..0.80f -> 0.775f
+        p.y < 0.82f -> 0.84f
+        else -> p.y
+    }
+    return Posicao(p.x, y)
+}
+
 private fun limitar(p: Posicao) = Posicao(p.x.coerceIn(0.03f, 0.97f), p.y.coerceIn(0.08f, 1f))
 
 /** Um objeto posicionado pelo pé, que pode ser tocado e arrastado. */
@@ -278,7 +303,8 @@ private fun ObjetoNaCena(
     interativo: Boolean,
     aparecer: Boolean,
     onTocar: () -> Unit,
-    onSoltar: (Posicao) -> Unit,
+    /** Recebe onde o objeto foi solto e devolve onde ele fica (ou null se foi guardado no baú). */
+    onSoltar: (Posicao) -> Posicao?,
     larguraRelativa: Float = item?.tamanho ?: 0.1f,
     proporcao: Float = proporcaoDoItem(item),
     pulo: Int = 0,
@@ -294,7 +320,7 @@ private fun ObjetoNaCena(
     val densidade = LocalDensity.current
     val w = larguraRelativa * larguraCena
     val h = w * proporcao
-    var arrasto by remember(pos) { mutableStateOf(Offset.Zero) }
+    var arrasto by remember { mutableStateOf(Offset.Zero) }
     var arrastando by remember { mutableStateOf(false) }
     val escala = remember { Animatable(if (aparecer) 0f else 1f) }
     val salto = remember { Animatable(0f) }
@@ -356,13 +382,20 @@ private fun ObjetoNaCena(
                                 onDragStart = { arrastando = true },
                                 onDragEnd = {
                                     arrastando = false
-                                    onSoltar(
-                                        Posicao(
-                                            pos.x + arrasto.x / larguraCena,
-                                            pos.y + arrasto.y / alturaCena,
-                                        ),
-                                    )
-                                    arrasto = Offset.Zero
+                                    val solto = Posicao(pos.x + arrasto.x / larguraCena, pos.y + arrasto.y / alturaCena)
+                                    val final = onSoltar(solto)
+                                    if (final == null) {
+                                        arrasto = Offset.Zero
+                                    } else {
+                                        // O objeto "cai" de onde foi solto até o chão do cômodo, com um quique.
+                                        val diferenca = Offset((solto.x - final.x) * larguraCena, (solto.y - final.y) * alturaCena)
+                                        arrasto = diferenca
+                                        escopo.launch {
+                                            animate(0f, 1f, animationSpec = spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow)) { f, _ ->
+                                                arrasto = diferenca * (1f - f)
+                                            }
+                                        }
+                                    }
                                 },
                                 onDragCancel = {
                                     arrastando = false

@@ -18,7 +18,16 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         modelos(trilha).mapIndexed { i, m -> Fase(trilha, i, m.titulo, m.emoji) }
 
     fun perguntas(fase: Fase, quantidade: Int = PERGUNTAS_POR_FASE): List<Pergunta> {
-        val modelo = modelos(fase.trilha)[fase.numero]
+        val lista = perguntasDoModelo(modelos(fase.trilha)[fase.numero], quantidade)
+        // Revisão: a partir da 2ª fase, a pergunta do meio vem de uma fase anterior do mesmo caminho.
+        if (fase.numero > 0 && lista.size == quantidade) {
+            val anterior = modelos(fase.trilha)[random.nextInt(fase.numero)]
+            lista[quantidade / 2] = anterior.criar()
+        }
+        return lista
+    }
+
+    private fun perguntasDoModelo(modelo: Modelo, quantidade: Int): MutableList<Pergunta> {
         val lista = mutableListOf<Pergunta>()
         val chaves = mutableSetOf<String>()
         var tentativas = 0
@@ -114,7 +123,11 @@ class GeradorDeFases(private val random: Random = Random.Default) {
     private fun maisOuMenos(): Pergunta {
         val obj = Vocabulario.objetosParaContar.um()
         val mais = random.nextBoolean()
-        val qtds = (1..6).toList().sorteia(3)
+        // Uma das opções erradas sempre fica a 1 de distância da certa, para a criança comparar de verdade.
+        val base = (2..5).random(random)
+        val vizinho = if (random.nextBoolean()) base + 1 else base - 1
+        val terceiro = (1..6).filter { it != base && it != vizinho }.random(random)
+        val qtds = listOf(base, vizinho, terceiro)
         val certo = if (mais) qtds.max() else qtds.min()
         val grupo = { k: Int -> Opcao(Visual.Emoji(obj.emoji.repeat(k)), listOf(pt(porExtenso(k, obj.feminino)))) }
         val palavra = if (mais) "mais" else "menos"
@@ -231,13 +244,18 @@ class GeradorDeFases(private val random: Random = Random.Default) {
     }
 
     private fun silabaInicial(): Pergunta {
-        val p = Vocabulario.todasAsPalavras.filter { it.silabas.size >= 2 }.um()
+        // Só palavras que começam com consoante + vogal (GA, BO, MA...), e opções bem parecidas:
+        // mesma consoante com outra vogal (GO) e outra consoante com a mesma vogal (PA).
+        val p = Vocabulario.todasAsPalavras.filter { pal ->
+            val s = pal.silabas.first()
+            pal.silabas.size >= 2 && s.length == 2 && s[0].toString() in Vocabulario.consoantes && s[1].toString() in Vocabulario.vogais
+        }.um()
         val primeira = p.silabas.first()
-        val erradas = Vocabulario.todasAsPalavras
-            .map { it.silabas.first() }
-            .distinct()
-            .filter { it != primeira && it.first() != primeira.first() }
-            .sorteia(2)
+        val consoante = primeira[0].toString()
+        val vogal = primeira[1].toString()
+        val outraVogal = Vocabulario.vogais.filter { it != vogal }.um()
+        val outraConsoante = listOf("B", "D", "F", "L", "M", "N", "P", "T", "V").filter { it != consoante }.um()
+        val erradas = listOf(consoante + outraVogal, outraConsoante + vogal)
         val op = { s: String -> Opcao(Visual.Texto(s), listOf(pt(s.lowercase()))) }
         return montar(
             instrucao = "Com que pedacinho começa?",

@@ -65,6 +65,9 @@ class Repositorio(context: Context) {
             colocados = Serializacao.textoParaPosicoes(prefs.getString(COLOCADOS, null)),
             coresComodos = Serializacao.textoParaCores(prefs.getString(CORES, null)),
             posicaoCrianca = Posicao(prefs.getFloat(CRIANCA_X, 0.47f), prefs.getFloat(CRIANCA_Y, 0.99f)),
+            respondidas = Serializacao.textoParaTrilhas(prefs.getString(RESPONDIDAS, null)),
+            acertosDePrimeira = Serializacao.textoParaTrilhas(prefs.getString(ACERTOS, null)),
+            segundosJogados = prefs.getLong(SEGUNDOS, 0),
         )
     }
 
@@ -81,6 +84,9 @@ class Repositorio(context: Context) {
         putString(CORES, Serializacao.coresParaTexto(e.coresComodos))
         putFloat(CRIANCA_X, e.posicaoCrianca.x)
         putFloat(CRIANCA_Y, e.posicaoCrianca.y)
+        putString(RESPONDIDAS, Serializacao.trilhasParaTexto(e.respondidas))
+        putString(ACERTOS, Serializacao.trilhasParaTexto(e.acertosDePrimeira))
+        putLong(SEGUNDOS, e.segundosJogados)
     }
 
     private companion object {
@@ -95,6 +101,9 @@ class Repositorio(context: Context) {
         const val CRIANCA_X = "crianca_x"
         const val CRIANCA_Y = "crianca_y"
         const val SOM = "som"
+        const val RESPONDIDAS = "respondidas"
+        const val ACERTOS = "acertos"
+        const val SEGUNDOS = "segundos"
         const val MUSICA = "musica"
     }
 }

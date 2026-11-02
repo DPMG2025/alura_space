@@ -17,7 +17,7 @@ object Vocabulario {
 
     val objetosParaContar = listOf(
         Objeto("🍎", "maçã", "maçãs", true),
-        Objeto("⭐", "estrela", "estrelas", true),
+        Objeto("🐢", "tartaruga", "tartarugas", true),
         Objeto("🐟", "peixinho", "peixinhos", false),
         Objeto("🎈", "balão", "balões", false),
         Objeto("🐥", "pintinho", "pintinhos", false),

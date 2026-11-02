@@ -41,7 +41,7 @@ class GeradorDeFasesTest {
         // A resposta certa não pode aparecer de novo entre as erradas.
         val iguais = p.opcoes.count { it.visual == certa }
         assertEquals("$fase: resposta certa duplicada em ${p.instrucao} ${p.opcoes}", 1, iguais)
-        if (fase.trilha != Trilha.LOGICA || fase.numero != 1) {
+        if (p.instrucao != "Qual é diferente?") {
             // Fora da fase "o diferente", as opções devem ser todas distintas.
             assertEquals("$fase: opções repetidas ${p.opcoes}", p.opcoes.size, p.opcoes.map { it.visual }.toSet().size)
         }
@@ -55,12 +55,38 @@ class GeradorDeFasesTest {
     }
 
     @Test
+    fun `silabas erradas sao parecidas com a certa`() {
+        val g = GeradorDeFases(Random(11))
+        val fase = g.fases(Trilha.PORTUGUES)[6]
+        repeat(40) {
+            for (p in g.perguntas(fase).filter { it.instrucao == "Com que pedacinho começa?" }) {
+                val textos = p.opcoes.map { (it.visual as Visual.Texto).texto }
+                assertTrue("tamanhos diferentes: $textos", textos.all { it.length == 2 })
+                val certa = textos[p.indiceCorreto]
+                assertTrue("distratores longe demais: $textos", textos.count { it[0] == certa[0] || it[1] == certa[1] } == 3)
+            }
+        }
+    }
+
+    @Test
+    fun `mais ou menos sempre tem quantidades vizinhas`() {
+        val g = GeradorDeFases(Random(5))
+        val fase = g.fases(Trilha.MATEMATICA)[4]
+        repeat(40) {
+            for (p in g.perguntas(fase).filter { it.instrucao.startsWith("Onde tem") }) {
+                val qtds = p.opcoes.map { (it.visual as Visual.Emoji).emoji.codePointCount(0, (it.visual as Visual.Emoji).emoji.length) }.sorted()
+                assertTrue("sem vizinhos: $qtds", qtds.zipWithNext().any { (a, b) -> b - a == 1 })
+            }
+        }
+    }
+
+    @Test
     fun `contas tem resultado correto`() {
         val g = GeradorDeFases(Random(7))
         val fases = g.fases(Trilha.MATEMATICA)
         repeat(30) {
             for (n in listOf(5, 6, 7, 8)) for (p in g.perguntas(fases[n])) {
-                val c = p.cena as Cena.Conta
+                val c = p.cena as? Cena.Conta ?: continue
                 val esperado = if (c.soma) c.a + c.b else c.a - c.b
                 assertEquals((p.opcoes[p.indiceCorreto].visual as Visual.Texto).texto, esperado.toString())
                 assertTrue("resultado fora da faixa", esperado in 0..10)
@@ -72,7 +98,7 @@ class GeradorDeFasesTest {
     fun `contagem mostra a quantidade certa de figuras`() {
         val g = GeradorDeFases(Random(3))
         for (p in g.perguntas(g.fases(Trilha.MATEMATICA)[1])) {
-            val cena = p.cena as Cena.Emojis
+            val cena = p.cena as? Cena.Emojis ?: continue
             val resposta = (p.opcoes[p.indiceCorreto].visual as Visual.Texto).texto.toInt()
             val emoji = Vocabulario.objetosParaContar.first { cena.texto.startsWith(it.emoji) }.emoji
             assertEquals(cena.texto, emoji.repeat(resposta))
@@ -138,10 +164,27 @@ class EstadoJogoTest {
     }
 
     @Test
-    fun `estrelas por erros`() {
-        assertEquals(3, EstadoJogo.estrelasPorErros(0))
-        assertEquals(2, EstadoJogo.estrelasPorErros(2))
-        assertEquals(1, EstadoJogo.estrelasPorErros(5))
+    fun `estrelas por acertos de primeira`() {
+        assertEquals(3, EstadoJogo.estrelasPorAcertos(5, 5))
+        assertEquals(2, EstadoJogo.estrelasPorAcertos(4, 5))
+        assertEquals(1, EstadoJogo.estrelasPorAcertos(3, 5))
+        assertEquals(0, EstadoJogo.estrelasPorAcertos(2, 5))
+    }
+
+    @Test
+    fun `chutar nao vence a fase nem da presente`() {
+        val fase = g.fases(Trilha.MATEMATICA)[0]
+        val r = EstadoJogo().registrarPartida(fase, acertos = 2, total = 5)
+        assertFalse(r.venceu)
+        assertNull(r.item)
+        assertEquals(0, r.estado.fasesVencidas)
+        assertFalse(r.estado.liberada(g.fases(Trilha.MATEMATICA)[1]))
+        // Mas a estatística para os pais é guardada.
+        assertEquals(40, r.estado.precisao(Trilha.MATEMATICA))
+        val r2 = r.estado.registrarPartida(fase, acertos = 4, total = 5)
+        assertTrue(r2.venceu)
+        assertEquals("terreno", r2.item?.id)
+        assertEquals(60, r2.estado.precisao(Trilha.MATEMATICA))
     }
 }
 

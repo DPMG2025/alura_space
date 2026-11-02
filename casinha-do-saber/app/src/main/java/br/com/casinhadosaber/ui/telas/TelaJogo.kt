@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import br.com.casinhadosaber.ui.componentes.escurecer
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -24,7 +26,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -75,7 +76,6 @@ import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Confete
 import br.com.casinhadosaber.ui.componentes.Crianca
-import br.com.casinhadosaber.ui.componentes.Estrela
 import br.com.casinhadosaber.ui.componentes.Humor
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
@@ -89,14 +89,15 @@ fun TelaJogo(
     fase: Fase,
     perfil: Perfil?,
     onSair: () -> Unit,
-    onConcluir: (erros: Int) -> Unit,
+    onConcluir: (acertosDePrimeira: Int, total: Int) -> Unit,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     val escopo = rememberCoroutineScope()
     val perguntas = remember(fase) { GeradorDeFases().perguntas(fase) }
     var indice by remember { mutableIntStateOf(0) }
-    var erros by remember { mutableIntStateOf(0) }
+    var acertosDePrimeira by remember { mutableIntStateOf(0) }
+    var pulo by remember { mutableIntStateOf(0) }
     var erradas by remember { mutableStateOf(setOf<Int>()) }
     var acertou by remember { mutableStateOf(false) }
     var humor by remember { mutableStateOf(Humor.FELIZ) }
@@ -114,7 +115,9 @@ fun TelaJogo(
         if (acertou || i in erradas) return
         if (i == pergunta.indiceCorreto) {
             acertou = true
+            if (erradas.isEmpty()) acertosDePrimeira++
             humor = Humor.FELIZ
+            pulo++
             vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
             confete++
             sons.acerto()
@@ -128,15 +131,19 @@ fun TelaJogo(
                     erradas = emptySet()
                     acertou = false
                 } else {
-                    onConcluir(erros)
+                    onConcluir(acertosDePrimeira, perguntas.size)
                 }
             }
         } else {
-            erros++
             erradas = erradas + i
             humor = Humor.PENSANDO
             sons.erro()
-            narrador.falar(pergunta.opcoes[i].fala + pt("Tente outra vez!"))
+            if (erradas.size >= 2) {
+                // Ajuda: depois de dois erros, a resposta certa brilha e a pergunta é repetida.
+                narrador.falar(pergunta.opcoes[i].fala + pt("Vamos juntos? Olhe a que está brilhando.") + pergunta.fala)
+            } else {
+                narrador.falar(pergunta.opcoes[i].fala + pt("Tente outra vez!"))
+            }
         }
     }
 
@@ -156,7 +163,14 @@ fun TelaJogo(
                 ) {
                     for (i in perguntas.indices) {
                         val feita = i < indice || (i == indice && acertou)
-                        Estrela(feita, Modifier.padding(horizontal = 3.dp), tamanho = if (i == indice) 30.dp else 24.dp)
+                        val tamanho = if (i == indice) 22.dp else 16.dp
+                        Box(
+                            Modifier
+                                .padding(horizontal = 4.dp)
+                                .size(tamanho)
+                                .background(if (feita) cor else Color.White, CircleShape)
+                                .border(3.dp, if (feita) escurecer(cor) else Color(0x33000000), CircleShape),
+                        )
                     }
                 }
                 BotaoRedondo("🔊", "Ouvir de novo", { narrador.falar(pergunta.fala) }, tamanho = 48.dp)
@@ -169,10 +183,7 @@ fun TelaJogo(
                     .padding(top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Sem figura na pergunta, a criança aparece grande no meio da tela (abaixo).
-                if (pergunta.cena != Cena.Nenhuma) {
-                    perfil?.let { Crianca(it, Modifier.height(96.dp), acenando = acertou, humor = humor) }
-                }
+                perfil?.let { CriancaQuePula(it, pulo, acertou, humor) }
                 Spacer(Modifier.width(8.dp))
                 BalaoDeFala(
                     "🔊 " + pergunta.instrucao,
@@ -191,6 +202,14 @@ fun TelaJogo(
                 label = "pergunta",
             ) { i ->
                 val p = perguntas[i]
+                val opcoes = @Composable {
+                    Opcoes(
+                        pergunta = p,
+                        erradas = if (i == indice) erradas else emptySet(),
+                        acertou = i == indice && acertou,
+                        onTocar = ::responder,
+                    )
+                }
                 Column(Modifier.fillMaxSize()) {
                     Box(
                         Modifier
@@ -199,23 +218,34 @@ fun TelaJogo(
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (p.cena == Cena.Nenhuma) {
-                            perfil?.let { Crianca(it, Modifier.fillMaxHeight(0.9f), acenando = acertou, humor = humor) }
-                        } else {
-                            CenaDaPergunta(p.cena)
-                        }
+                        // Sem figura, as opções ocupam o meio da tela (são elas a pergunta).
+                        if (p.cena == Cena.Nenhuma) opcoes() else CenaDaPergunta(p.cena)
                     }
-                    Opcoes(
-                        pergunta = p,
-                        erradas = if (i == indice) erradas else emptySet(),
-                        acertou = i == indice && acertou,
-                        onTocar = ::responder,
-                    )
+                    if (p.cena != Cena.Nenhuma) opcoes()
                 }
             }
         }
         Confete(confete)
     }
+}
+
+@Composable
+private fun CriancaQuePula(perfil: Perfil, pulo: Int, acertou: Boolean, humor: Humor) {
+    val salto = remember { Animatable(0f) }
+    LaunchedEffect(pulo) {
+        if (pulo > 0) {
+            salto.animateTo(-28f, tween(150))
+            salto.animateTo(0f, spring(dampingRatio = 0.35f))
+        }
+    }
+    Crianca(
+        perfil,
+        Modifier
+            .height(96.dp)
+            .graphicsLayer { translationY = salto.value * density },
+        acenando = acertou,
+        humor = humor,
+    )
 }
 
 // ------------------------------------------------------------------------------------- cena
@@ -364,8 +394,10 @@ private fun Opcoes(pergunta: Pergunta, erradas: Set<Int>, acertou: Boolean, onTo
     val n = pergunta.opcoes.size
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         when {
-            grupos -> pergunta.opcoes.forEachIndexed { i, o ->
-                CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.fillMaxWidth(), altura = 84.dp)
+            grupos -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                pergunta.opcoes.forEachIndexed { i, o ->
+                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = 150.dp)
+                }
             }
             n == 4 -> for (linha in 0 until 2) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -396,11 +428,13 @@ private fun CartaoOpcao(
 ) {
     val certa = acertou && i == pergunta.indiceCorreto
     val errada = i in erradas
+    val ajuda = !acertou && erradas.size >= 2 && i == pergunta.indiceCorreto
     val apagada = acertou && !certa
     val cor by animateColorAsState(
         when {
             certa -> Cores.Certo
             errada -> Color(0xFFFFE1E1)
+            ajuda -> Color(0xFFFFF3C4)
             else -> Color.White
         },
         label = "cor",
@@ -408,12 +442,12 @@ private fun CartaoOpcao(
     val tremida = remember { Animatable(0f) }
     val pulo = remember { Animatable(1f) }
     LaunchedEffect(errada) {
-        if (errada) for (x in listOf(14f, -14f, 9f, -9f, 4f, 0f)) tremida.animateTo(x, tween(45))
+        if (errada) for (x in listOf(7f, -7f, 5f, -5f, 2f, 0f)) tremida.animateTo(x, tween(50))
     }
     LaunchedEffect(certa) {
         if (certa) {
-            pulo.animateTo(1.12f, tween(120))
-            pulo.animateTo(1f, tween(160))
+            pulo.animateTo(1.15f, tween(110))
+            pulo.animateTo(1f, spring(dampingRatio = 0.35f))
         }
     }
     BotaoFofo(
@@ -424,8 +458,9 @@ private fun CartaoOpcao(
         modifier = modifier
             // Marca usada só pelos testes automáticos no emulador (não aparece para a criança).
             .testTag(if (i == pergunta.indiceCorreto) "opcao_certa" else "opcao")
+            .then(if (ajuda) Modifier.pulsando() else Modifier)
             .graphicsLayer {
-                translationX = tremida.value
+                rotationZ = tremida.value
                 scaleX = pulo.value
                 scaleY = pulo.value
                 alpha = if (apagada || errada) 0.45f else 1f
@@ -457,6 +492,7 @@ private fun descreverOpcao(o: Opcao): String = when (val v = o.visual) {
     is Visual.Cor -> o.fala.joinToString(" ") { it.texto }.ifBlank { "Cor" }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun VisualDaOpcao(v: Visual, certa: Boolean) {
     when (v) {
@@ -469,7 +505,13 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean) {
         is Visual.Emoji -> {
             val figuras = separarFiguras(v.emoji)
             if (figuras.size > 1) {
-                Text(v.emoji, fontSize = if (figuras.size > 4) 30.sp else 38.sp, textAlign = TextAlign.Center)
+                // Quantidades em grade (como num dado), fáceis de contar de olhada.
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                    maxItemsInEachRow = 3,
+                ) {
+                    for (f in figuras) Text(f, fontSize = 26.sp)
+                }
             } else {
                 Text(v.emoji, fontSize = (54f * v.escala).sp, lineHeight = (60f * v.escala).sp)
             }

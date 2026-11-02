@@ -113,17 +113,19 @@ class JogoNoEmuladorTest {
         // Prêmio: abrir o presente e levar para a casa
         esperar("Presente. Toque para abrir.", 15_000)
         capturar("e07_presente")
-        regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
+        // O presente abre com três toques
+        repeat(3) {
+            regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
+            avancar(400)
+        }
         esperar("Colocar na casa")
         avancar(1_000)
         capturar("e08_premio_aberto")
         regra.onAllNodes(hasContentDescription("Colocar na casa")).onFirst().performClick()
 
-        // Casa: tocar no terreno no baú constrói o terreno
-        esperar("Terreno. Toque para colocar na casa.")
-        capturar("e09_casa_bau")
-        regra.onAllNodes(hasContentDescription("Terreno. Toque para colocar na casa.")).onFirst().performClick()
-        avancar(1_500)
+        // Casa: o terreno ganho entra sozinho
+        regra.waitUntilAtLeastOneExists(hasText("Minha casinha"), 10_000)
+        avancar(2_500)
         capturar("e10_casa_com_terreno")
         regra.waitUntil(5_000) { prefs.getString("colocados", "").orEmpty().contains("terreno") }
         assertTrue("fase vencida não foi salva", prefs.getString("estrelas", "").orEmpty().startsWith("MATEMATICA:0="))

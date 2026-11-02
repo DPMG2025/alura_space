@@ -47,7 +47,7 @@ object ItensDaCasa {
 
     /** Ordem dos prêmios: o primeiro vem na primeira fase vencida, em qualquer trilha. */
     val ordem: List<ItemCasa> = listOf(
-        estrutura("terreno", "Terreno", "o terreno com grama", "garden", "🌱", Estrutura.TERRENO),
+        estrutura("terreno", "Terreno", "o terreno com grama", "yard", "🌱", Estrutura.TERRENO),
         estrutura("paredes", "Paredes", "as paredes", "walls", "🧱", Estrutura.PAREDES),
         estrutura("telhado", "Telhado", "o telhado", "roof", "🏠", Estrutura.TELHADO),
         estrutura("porta", "Porta", "a porta", "door", "🚪", Estrutura.PORTA),

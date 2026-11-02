@@ -26,8 +26,6 @@ import br.com.casinhadosaber.audio.Sons
 import br.com.casinhadosaber.dados.Repositorio
 import br.com.casinhadosaber.dominio.Fase
 import br.com.casinhadosaber.dominio.GeradorDeFases
-import br.com.casinhadosaber.dominio.ItemCasa
-import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
@@ -39,6 +37,7 @@ import br.com.casinhadosaber.ui.telas.TelaJogo
 import br.com.casinhadosaber.ui.telas.TelaPais
 import br.com.casinhadosaber.ui.telas.TelaPerfil
 import br.com.casinhadosaber.ui.telas.TelaPremio
+import br.com.casinhadosaber.ui.telas.TelaQuase
 import br.com.casinhadosaber.ui.telas.TelaTrilha
 
 /** As telas do app. A navegação é simples e fica toda aqui. */
@@ -48,7 +47,9 @@ sealed interface Tela {
     data class Caminho(val trilha: Trilha) : Tela
     data class Jogo(val fase: Fase) : Tela
     data class Premio(val fase: Fase, val estrelas: Int, val item: ItemCasa?) : Tela
-    data object Casa : Tela
+    /** [colocar]: item que acabou de ser ganho e já vai direto para a casa. */
+    data class Casa(val colocar: String? = null) : Tela
+    data class Quase(val fase: Fase, val acertos: Int) : Tela
     data object Pais : Tela
 }
 
@@ -58,6 +59,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var sons: Sons
     private val musica = Musica()
     private var musicaPermitida = false
+    private var inicioDaSessao = 0L
     private lateinit var repositorio: Repositorio
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,10 +82,17 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         narrador.parar()
         musica.pausar()
+        // Tempo de uso, só para a área dos pais (fica no aparelho).
+        if (inicioDaSessao > 0) {
+            val segundos = (System.currentTimeMillis() - inicioDaSessao) / 1000
+            repositorio.atualizar { it.copy(segundosJogados = it.segundosJogados + segundos) }
+            inicioDaSessao = 0
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        inicioDaSessao = System.currentTimeMillis()
         if (musicaPermitida) musica.tocar()
     }
 
@@ -120,6 +129,7 @@ class MainActivity : ComponentActivity() {
                 when (val t = tela) {
                     is Tela.Jogo -> Tela.Caminho(t.fase.trilha)
                     is Tela.Premio -> Tela.Caminho(t.fase.trilha)
+                    is Tela.Quase -> Tela.Caminho(t.fase.trilha)
                     else -> Tela.Inicio
                 },
             )
@@ -145,7 +155,7 @@ class MainActivity : ComponentActivity() {
                         estado = estado,
                         somLigado = repo.somLigado,
                         onAlternarSom = repo::alternarSom,
-                        onAbrirCasa = { irPara(Tela.Casa) },
+                        onAbrirCasa = { irPara(Tela.Casa()) },
                         onAbrirTrilha = { irPara(Tela.Caminho(it)) },
                         onAreaDosPais = { irPara(Tela.Pais) },
                     )
@@ -161,16 +171,25 @@ class MainActivity : ComponentActivity() {
                         fase = atual.fase,
                         perfil = estado.perfil,
                         onSair = { irPara(Tela.Caminho(atual.fase.trilha)) },
-                        onConcluir = { erros ->
-                            val estrelas = EstadoJogo.estrelasPorErros(erros)
-                            var premio: ItemCasa? = null
-                            repo.atualizar { e ->
-                                val (novo, item) = e.registrarVitoria(atual.fase, estrelas)
-                                premio = item
-                                novo
-                            }
-                            irPara(Tela.Premio(atual.fase, estrelas, premio))
+                        onConcluir = { acertos, total ->
+                            val resultado = repo.estado.registrarPartida(atual.fase, acertos, total)
+                            repo.atualizar { resultado.estado }
+                            irPara(
+                                if (resultado.venceu) {
+                                    Tela.Premio(atual.fase, resultado.estrelas, resultado.item)
+                                } else {
+                                    Tela.Quase(atual.fase, acertos)
+                                },
+                            )
                         },
+                    )
+
+                    is Tela.Quase -> TelaQuase(
+                        fase = atual.fase,
+                        acertos = atual.acertos,
+                        perfil = estado.perfil,
+                        onTentarDeNovo = { irPara(Tela.Jogo(atual.fase)) },
+                        onVoltar = { irPara(Tela.Caminho(atual.fase.trilha)) },
                     )
 
                     is Tela.Premio -> {
@@ -181,14 +200,15 @@ class MainActivity : ComponentActivity() {
                             item = atual.item,
                             perfil = estado.perfil,
                             temProxima = proxima != null,
-                            onColocarNaCasa = { irPara(Tela.Casa) },
+                            onColocarNaCasa = { irPara(Tela.Casa(atual.item?.id)) },
                             onProxima = { proxima?.let { irPara(Tela.Jogo(it)) } },
                             onVoltar = { irPara(Tela.Caminho(atual.fase.trilha)) },
                         )
                     }
 
-                    Tela.Casa -> TelaCasa(
+                    is Tela.Casa -> TelaCasa(
                         estado = estado,
+                        colocarAoAbrir = atual.colocar,
                         onAtualizar = repo::atualizar,
                         onVoltar = { irPara(Tela.Inicio) },
                         onJogar = { irPara(Tela.Inicio) },

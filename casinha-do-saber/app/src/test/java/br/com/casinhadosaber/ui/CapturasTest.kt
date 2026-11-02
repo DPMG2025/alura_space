@@ -89,31 +89,35 @@ class CapturasTest {
     }
 
     @Test fun jogoContar() = capturar("05_jogo_contar") {
-        TelaJogo(gerador.fases(Trilha.MATEMATICA)[1], menina, {}, {})
+        TelaJogo(gerador.fases(Trilha.MATEMATICA)[1], menina, {}, { _, _ -> })
     }
 
     @Test fun jogoSubtrair() = capturar("06_jogo_subtrair") {
-        TelaJogo(gerador.fases(Trilha.MATEMATICA)[8], menino, {}, {})
+        TelaJogo(gerador.fases(Trilha.MATEMATICA)[8], menino, {}, { _, _ -> })
     }
 
     @Test fun jogoMaisOuMenos() = capturar("07_jogo_mais_ou_menos") {
-        TelaJogo(gerador.fases(Trilha.MATEMATICA)[4], menina, {}, {})
+        TelaJogo(gerador.fases(Trilha.MATEMATICA)[4], menina, {}, { _, _ -> })
     }
 
     @Test fun jogoLetras() = capturar("08_jogo_silabas") {
-        TelaJogo(gerador.fases(Trilha.PORTUGUES)[6], menino, {}, {})
+        TelaJogo(gerador.fases(Trilha.PORTUGUES)[6], menino, {}, { _, _ -> })
     }
 
     @Test fun jogoIngles() = capturar("09_jogo_cores_ingles") {
-        TelaJogo(gerador.fases(Trilha.INGLES)[4], menina, {}, {})
+        TelaJogo(gerador.fases(Trilha.INGLES)[4], menina, {}, { _, _ -> })
     }
 
     @Test fun jogoLogica() = capturar("10_jogo_sequencia") {
-        TelaJogo(gerador.fases(Trilha.LOGICA)[6], menino, {}, {})
+        TelaJogo(gerador.fases(Trilha.LOGICA)[6], menino, {}, { _, _ -> })
     }
 
     @Test fun premio() = capturar("11_premio") {
         TelaPremio(gerador.fases(Trilha.INGLES)[2], 3, ItensDaCasa.porId.getValue("cama"), menina, true, {}, {}, {})
+    }
+
+    @Test fun quase() = capturar("11b_quase") {
+        br.com.casinhadosaber.ui.telas.TelaQuase(gerador.fases(Trilha.LOGICA)[3], 2, menino, {}, {})
     }
 
     @Test fun casaComeco() = capturar("12_casa_comeco") {
@@ -145,6 +149,6 @@ class CapturasTest {
 
     @Config(qualifiers = "w360dp-h640dp-xhdpi")
     @Test fun jogoCelularPequeno() = capturar("17_jogo_celular_pequeno") {
-        TelaJogo(gerador.fases(Trilha.INGLES)[7], menino, {}, {})
+        TelaJogo(gerador.fases(Trilha.INGLES)[7], menino, {}, { _, _ -> })
     }
 }
