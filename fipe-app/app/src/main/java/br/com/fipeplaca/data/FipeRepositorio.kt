@@ -148,6 +148,7 @@ class FipeRepositorio(
         r: FipeResultado,
         periodo: PeriodoHistorico,
         progresso: (feitos: Int, total: Int) -> Unit = { _, _ -> },
+        diagnostico: (String) -> Unit = {},
     ): List<PontoHistorico> = coroutineScope {
         val codigoAno = resolverCodigoAno(r)
             ?: throw PlacaParser.ErroProvedor("Ano modelo não encontrado na tabela FIPE para este código.")
@@ -166,7 +167,7 @@ class FipeRepositorio(
                             valorTexto = v.valor.orEmpty(),
                             valor = num,
                         )
-                    }.onFailure { ultimoErro = it }.getOrNull()
+                    }.onFailure { ultimoErro = it; diagnostico("${ref.codigo} ${ref.mes}: ${it::class.java.simpleName} ${(it as? HttpException)?.code() ?: ""} ${it.message}") }.getOrNull()
                     synchronized(this@FipeRepositorio) { feitos++ }
                     progresso(feitos, meses.size)
                     ponto

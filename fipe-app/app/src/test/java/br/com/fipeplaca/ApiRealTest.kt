@@ -59,7 +59,14 @@ class ApiRealTest {
         assertTrue(r.valor!!.startsWith("R$"))
         assertTrue(r.codigoFipe.matches(Regex("\\d{6}-\\d")))
 
-        val hist = repo.historico(r, PeriodoHistorico.MESES_12)
+        // Respostas brutas da API v2, para conferir o formato
+        val http = okhttp3.OkHttpClient()
+        fun bruto(url: String) = http.newCall(okhttp3.Request.Builder().url(url).build()).execute().use { "HTTP ${it.code} " + it.body?.string()?.take(1500) }
+        log("references: " + bruto("https://fipe.parallelum.com.br/api/v2/references").take(400))
+        log("anos por codigo: " + bruto("https://fipe.parallelum.com.br/api/v2/cars/${r.codigoFipe}/years"))
+        log("valor por codigo: " + bruto("https://fipe.parallelum.com.br/api/v2/cars/${r.codigoFipe}/years/${r.codigoAno}"))
+
+        val hist = repo.historico(r, PeriodoHistorico.MESES_12, diagnostico = { log("  falha mes $it") })
         log("Historico 12 meses: ${hist.size} pontos")
         hist.forEach { log("  ${it.mesReferencia}: ${it.valorTexto}") }
         assertTrue(hist.size >= 6)
