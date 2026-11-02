@@ -238,7 +238,7 @@ fun TelaJogo(
                                 .padding(top = 12.dp),
                             contentAlignment = Alignment.BottomCenter,
                         ) {
-                            opcoes(maxHeight * 0.85f)
+                            opcoes(minOf(maxHeight * 0.85f, 320.dp))
                         }
                     } else {
                         Box(
@@ -446,7 +446,7 @@ private fun Opcoes(
         when {
             grupos -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 pergunta.opcoes.forEachIndexed { i, o ->
-                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaGrande ?: 150.dp, mostrarCerta = mostrarCerta)
+                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaGrande ?: 150.dp, mostrarCerta = mostrarCerta, comoGrupo = true)
                 }
             }
             n == 4 -> for (linha in 0 until 2) {
@@ -476,6 +476,8 @@ private fun CartaoOpcao(
     modifier: Modifier,
     altura: androidx.compose.ui.unit.Dp = 112.dp,
     mostrarCerta: Boolean = false,
+    /** Opção de quantidade: até 1 figura vai na grade, do mesmo tamanho das outras. */
+    comoGrupo: Boolean = false,
 ) {
     val certa = acertou && i == pergunta.indiceCorreto
     val errada = i in erradas
@@ -524,7 +526,7 @@ private fun CartaoOpcao(
                 .padding(8.dp),
             contentAlignment = Alignment.Center,
         ) {
-            VisualDaOpcao(opcao.visual, certa, altura)
+            VisualDaOpcao(opcao.visual, certa, altura, comoGrupo)
             if (certa || errada) {
                 Text(
                     if (certa) "✔" else "✖",
@@ -545,7 +547,7 @@ private fun descreverOpcao(o: Opcao): String = when (val v = o.visual) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui.unit.Dp = 150.dp) {
+private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui.unit.Dp = 150.dp, comoGrupo: Boolean = false) {
     when (v) {
         is Visual.Texto -> Text(
             v.texto,
@@ -555,7 +557,7 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui
         )
         is Visual.Emoji -> {
             val figuras = separarFiguras(v.emoji)
-            if (figuras.size > 1) {
+            if (figuras.size > 1 || comoGrupo) {
                 // Todas as quantidades na mesma grade de 2 colunas, com o mesmo tamanho de casinha:
                 // "mais" sempre parece maior, sem a altura enganar.
                 BoxWithConstraints(contentAlignment = Alignment.Center) {
