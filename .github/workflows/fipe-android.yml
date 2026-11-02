@@ -37,6 +37,14 @@ jobs:
       - name: Testes unitarios e capturas de tela
         run: ./gradlew testDebugUnitTest --no-daemon
 
+      # Confere os formatos das APIs reais da FIPE (nao bloqueia o build se a API estiver fora do ar).
+      - name: Verificar APIs reais da FIPE
+        continue-on-error: true
+        env:
+          FIPE_ONLINE: "true"
+          FIPE_API_TOKEN: ${{ secrets.FIPE_API_TOKEN }}
+        run: ./gradlew testDebugUnitTest --tests "br.com.fipeplaca.ApiRealTest" --rerun-tasks --no-daemon -q
+
       - name: Publicar capturas de tela
         if: always()
         uses: actions/upload-artifact@v5

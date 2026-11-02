@@ -48,6 +48,12 @@ android {
                 it.systemProperty("roborazzi.test.record", "true")
                 it.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
                 it.maxHeapSize = "2g"
+                it.systemProperty("fipe.online", System.getenv("FIPE_ONLINE") ?: "false")
+                it.testLogging {
+                    events("failed")
+                    showStandardStreams = System.getenv("FIPE_ONLINE") == "true"
+                    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                }
             }
         }
     }

@@ -266,7 +266,7 @@ private fun ListaItens(
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)) {
                             items(destaque, key = { "p" + it.codigo }) { m ->
                                 Column(
-                                    Modifier.width(76.dp).clip(RoundedCornerShape(12.dp)).clickable { onClick(m) },
+                                    Modifier.width(72.dp).clip(RoundedCornerShape(12.dp)).clickable { onClick(m) },
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     Avatar(nomeCurto(m.nome), tamanho = 52.dp)

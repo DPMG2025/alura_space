@@ -325,18 +325,30 @@ fun EstadoVazio(icone: ImageVector, titulo: String, texto: String, modifier: Mod
     }
 }
 
+/** Paleta suave para avatares; a cor e fixa para cada nome. */
+private val TONS = listOf(0xFF1E5BD8, 0xFF00897B, 0xFF7B4DFF, 0xFFE0672B, 0xFFD81B60, 0xFF2E7D32, 0xFF00838F, 0xFF8D6E63)
+
 /** Avatar circular com as iniciais (marcas e salvos). */
 @Composable
 fun Avatar(texto: String, modifier: Modifier = Modifier, tamanho: Dp = 40.dp) {
     val iniciais = texto.split(' ', '-', '/').filter { it.isNotBlank() && it[0].isLetterOrDigit() }
         .take(2).joinToString("") { it.take(1) }.uppercase().ifBlank { "?" }
+    val tom = Color(TONS[(texto.lowercase().hashCode() and 0x7fffffff) % TONS.size])
     Box(
-        modifier.size(tamanho).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+        modifier.size(tamanho).clip(CircleShape).background(tom.copy(alpha = 0.14f)),
         contentAlignment = Alignment.Center,
     ) {
-        Text(iniciais, color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold,
-            fontSize = (tamanho.value * 0.36f).sp)
+        Text(iniciais, color = tom, fontWeight = FontWeight.Bold, fontSize = (tamanho.value * 0.36f).sp)
     }
+}
+
+/** Icone dentro de um circulo na cor da marca. */
+@Composable
+fun IconeCirculo(icone: ImageVector, tamanho: Dp = 44.dp) {
+    Box(
+        Modifier.size(tamanho).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icone, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(tamanho * 0.5f)) }
 }
 
 /** Bloco cinza pulsante usado como esqueleto de carregamento. */
