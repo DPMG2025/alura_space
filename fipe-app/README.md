@@ -29,7 +29,13 @@ As capturas são geradas automaticamente pelo CI a cada alteração (Robolectric
 1. Testes de unidade: validação de placa, formatos, leitor da resposta de placa, estatísticas, projeção, datas e regras dos salvos.
 2. Testes de integração com servidor HTTP simulado (MockWebServer): busca manual completa, placa até o valor FIPE, histórico ignorando meses ausentes, uso do token e mensagens de erro (401, 429, sem conexão).
 3. Testes de captura de tela de todas as telas, em tema claro e escuro.
-4. CI no GitHub Actions: roda os testes, publica as capturas e gera os APKs debug e release (com R8).
+4. Teste contra as APIs reais da FIPE no CI, com relatório em `docs/verificacao-api-real.txt`.
+5. Testes de ponta a ponta num emulador Android 14 no CI, com internet real: busca por marca, modelo e ano até o histórico, e busca pela placa (provedor de placas simulado no aparelho, valor FIPE real) até favoritar e conferir em Salvos. Capturas do aparelho e relatório em `docs/emulador/`.
+6. CI no GitHub Actions: roda tudo isso, publica as capturas e gera os APKs debug e release (com R8).
+
+| No emulador: placa | No emulador: modelos | No emulador: histórico real |
+|---|---|---|
+| ![Placa](docs/emulador/p02_resultado_placa.png) | ![Modelos](docs/emulador/e02_modelos_filtrados.png) | ![Histórico](docs/emulador/e05_historico.png) |
 
 ## De onde vêm os dados
 
