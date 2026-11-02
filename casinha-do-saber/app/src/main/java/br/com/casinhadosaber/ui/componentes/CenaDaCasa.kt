@@ -28,6 +28,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -103,6 +106,7 @@ fun CenaDaCasa(
     novaEstrutura: Estrutura? = null,
     destaqueId: String? = null,
     puloDaCrianca: Int = 0,
+    noite: Boolean = false,
     onTocarItem: (ItemCasa) -> Unit = {},
     onMoverItem: (ItemCasa, Posicao) -> Unit = { _, _ -> },
     onGuardarItem: (ItemCasa) -> Unit = {},
@@ -148,7 +152,7 @@ fun CenaDaCasa(
                     },
                 ),
         ) {
-            desenharCasa(estado, t, novaEstrutura, construcao.value)
+            desenharCasa(estado, t, novaEstrutura, construcao.value, noite)
         }
 
         if (!estado.temEstrutura(Estrutura.TERRENO)) {
@@ -178,12 +182,15 @@ fun CenaDaCasa(
                 alturaCena = alturaPx,
                 interativo = interativa && !pintando,
                 aparecer = item.id == destaqueId,
+                vida = vidaDo(item.id),
+                tempo = t,
+                noite = noite,
                 onTocar = { onTocarItem(item) },
                 onSoltar = { nova ->
                     if (nova.y > 1.04f) onGuardarItem(item) else onMoverItem(item, limitar(nova))
                 },
             ) { w ->
-                ConteudoDoItem(item, w)
+                if (noite && item.id == "sol") EmojiGrande("🌙", w) else ConteudoDoItem(item, w)
             } }
         }
 
@@ -199,12 +206,62 @@ fun CenaDaCasa(
                 interativo = interativa && !pintando,
                 aparecer = false,
                 pulo = puloDaCrianca,
+                noite = noite,
+                tempo = t,
                 descricao = perfil.nome.ifBlank { "Você" },
                 onTocar = onTocarCrianca,
                 onSoltar = { onMoverCrianca(limitar(it)) },
             ) { _ ->
                 Crianca(perfil, Modifier.fillMaxSize(), acenando = true)
             }
+        }
+    }
+}
+
+/** Pequenas animações que deixam a casa viva. */
+enum class Vida { PARADO, BALANCAR, RESPIRAR, BOIAR, VOAR, DERIVAR, BRILHAR, DANCAR }
+
+fun vidaDo(id: String): Vida = when (id) {
+    "arvore", "flores", "planta", "girassol" -> Vida.BALANCAR
+    "cachorro", "gato", "ursinho" -> Vida.RESPIRAR
+    "pato" -> Vida.BOIAR
+    "borboleta", "passarinho" -> Vida.VOAR
+    "nuvem", "arcoiris" -> Vida.DERIVAR
+    "estrela", "abajur", "sol" -> Vida.BRILHAR
+    "pipa", "balao" -> Vida.DANCAR
+    else -> Vida.PARADO
+}
+
+private fun androidx.compose.ui.graphics.GraphicsLayerScope.aplicarVida(
+    vida: Vida,
+    fase: Float,
+    larguraCena: Float,
+    alturaCena: Float,
+    densidade: Float,
+) {
+    val a = fase * 2f * Math.PI.toFloat()
+    val seno = kotlin.math.sin(a)
+    when (vida) {
+        Vida.PARADO -> Unit
+        Vida.BALANCAR -> rotationZ = 3f * seno
+        Vida.RESPIRAR -> scaleY *= 1f + 0.05f * kotlin.math.sin(a * 2f)
+        Vida.BOIAR -> {
+            translationY = 3f * densidade * seno
+            rotationZ = 5f * kotlin.math.cos(a)
+        }
+        Vida.VOAR -> {
+            translationX = 0.04f * larguraCena * seno
+            translationY = 0.025f * alturaCena * kotlin.math.sin(a * 2f)
+            scaleX *= 0.75f + 0.25f * kotlin.math.abs(kotlin.math.cos(a * 6f))
+        }
+        Vida.DERIVAR -> translationX = 0.03f * larguraCena * seno
+        Vida.BRILHAR -> {
+            scaleX *= 1f + 0.06f * seno
+            scaleY *= 1f + 0.06f * seno
+        }
+        Vida.DANCAR -> {
+            rotationZ = 10f * seno
+            translationY = 4f * densidade * kotlin.math.cos(a * 2f)
         }
     }
 }
@@ -225,9 +282,15 @@ private fun ObjetoNaCena(
     larguraRelativa: Float = item?.tamanho ?: 0.1f,
     proporcao: Float = proporcaoDoItem(item),
     pulo: Int = 0,
+    vida: Vida = Vida.PARADO,
+    tempo: Float = 0f,
+    noite: Boolean = false,
     descricao: String = item?.nome ?: "",
     conteudo: @Composable (larguraPx: Float) -> Unit,
 ) {
+    val faisca = remember { Animatable(1f) }
+    // Cada objeto começa a animação num ponto diferente, para não mexerem todos juntos.
+    val defasagem = remember(item?.id) { ((item?.id?.hashCode() ?: 7) and 0xFF) / 255f }
     val densidade = LocalDensity.current
     val w = larguraRelativa * larguraCena
     val h = w * proporcao
@@ -266,6 +329,7 @@ private fun ObjetoNaCena(
                 scaleX = s
                 scaleY = s
                 transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
+                if (!arrastando) aplicarVida(vida, (tempo + defasagem) % 1f, larguraCena, alturaCena, densidade.density)
             }
             .semantics {
                 contentDescription = descricao
@@ -277,6 +341,10 @@ private fun ObjetoNaCena(
                         .pointerInput(pos) {
                             detectTapGestures {
                                 onTocar()
+                                escopo.launch {
+                                    faisca.snapTo(0f)
+                                    faisca.animateTo(1f, tween(700))
+                                }
                                 escopo.launch {
                                     escala.animateTo(1.25f, tween(90))
                                     escala.animateTo(1f, spring(dampingRatio = 0.3f))
@@ -311,8 +379,30 @@ private fun ObjetoNaCena(
             ),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        Box(Modifier.size(with(densidade) { w.toDp() }, with(densidade) { h.toDp() }), contentAlignment = Alignment.BottomCenter) {
+        Box(
+            Modifier
+                .size(with(densidade) { w.toDp() }, with(densidade) { h.toDp() })
+                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                .drawWithContent {
+                    drawContent()
+                    // À noite tudo fica azulado, menos o que brilha (as janelas, desenhadas na cena).
+                    if (noite) drawRect(Color(0x70142045), blendMode = BlendMode.SrcAtop)
+                },
+            contentAlignment = Alignment.BottomCenter,
+        ) {
             conteudo(w)
+        }
+        if (faisca.value < 1f) {
+            Canvas(Modifier.matchParentSize()) {
+                val p = faisca.value
+                val centro = Offset(size.width / 2, size.height / 2)
+                val raio = size.minDimension * (0.4f + 0.6f * p)
+                for (k in 0 until 6) {
+                    val ang = k * (Math.PI.toFloat() / 3f) + p
+                    val c = Offset(centro.x + kotlin.math.cos(ang) * raio, centro.y + kotlin.math.sin(ang) * raio)
+                    drawPath(caminhoEstrela(c, 5.dp.toPx() * (1f - p * 0.5f)), Color(0xFFFFD84D).copy(alpha = 1f - p))
+                }
+            }
         }
     }
 }
@@ -373,8 +463,9 @@ private val CorTelhadoEscuro = Color(0xFFC7365A)
 private val CorMadeira = Color(0xFFC98B5A)
 private val CorMoldura = Color(0xFFE8C9A0)
 private val CorVidro = Color(0xFFA9E1FF)
+private val CorLuz = Color(0xFFFFE08A)
 
-private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, progresso: Float) {
+private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, progresso: Float, noite: Boolean) {
     val W = size.width
     val H = size.height
     fun X(v: Float) = v * W
@@ -391,14 +482,28 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
     }
 
     // céu
-    drawRect(Brush.verticalGradient(listOf(Color(0xFF7EC8FF), Color(0xFFCDEBFF)), endY = Y(0.8f)))
+    val ceu = if (noite) listOf(Color(0xFF16204A), Color(0xFF3B4C8C)) else listOf(Color(0xFF7EC8FF), Color(0xFFCDEBFF))
+    drawRect(Brush.verticalGradient(ceu, endY = Y(0.8f)))
+    if (noite) {
+        for (i in 0 until 28) {
+            val x = ((i * 0.137f + 0.05f) % 1f)
+            val y = ((i * 0.071f + 0.02f) % 0.62f)
+            val brilho = 0.45f + 0.55f * kotlin.math.abs(kotlin.math.sin((t + i * 0.13f) * Math.PI.toFloat()))
+            drawCircle(Color.White.copy(alpha = brilho), radius = X(0.004f + (i % 3) * 0.002f), center = Offset(X(x), Y(y)))
+        }
+    }
     // morros
-    drawOval(Color(0xFFA8DD8F), topLeft = Offset(X(-0.2f), Y(0.68f)), size = Size(X(0.7f), Y(0.24f)))
-    drawOval(Color(0xFF98D47E), topLeft = Offset(X(0.45f), Y(0.70f)), size = Size(X(0.8f), Y(0.2f)))
+    drawOval(if (noite) Color(0xFF4C7F55) else Color(0xFFA8DD8F), topLeft = Offset(X(-0.2f), Y(0.68f)), size = Size(X(0.7f), Y(0.24f)))
+    drawOval(if (noite) Color(0xFF447549) else Color(0xFF98D47E), topLeft = Offset(X(0.45f), Y(0.70f)), size = Size(X(0.8f), Y(0.2f)))
 
     // chão
     val temTerreno = e.temEstrutura(Estrutura.TERRENO)
-    val chao = if (temTerreno) listOf(Color(0xFF7CC56B), Color(0xFF5FAE52)) else listOf(Color(0xFFC9A27A), Color(0xFFA97F57))
+    val chao = when {
+        temTerreno && noite -> listOf(Color(0xFF3F7A45), Color(0xFF2F5E35))
+        temTerreno -> listOf(Color(0xFF7CC56B), Color(0xFF5FAE52))
+        noite -> listOf(Color(0xFF7A6450), Color(0xFF5E4C3C))
+        else -> listOf(Color(0xFFC9A27A), Color(0xFFA97F57))
+    }
     drawRect(Brush.verticalGradient(chao, startY = Y(0.78f), endY = H), topLeft = Offset(0f, Y(0.78f)), size = Size(W, H - Y(0.78f)))
     if (temTerreno) {
         for (i in 0 until 14) {
@@ -476,15 +581,21 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
         drawRect(CorMadeira, Offset(X(L), Y(M - 0.012f)), Size(X(R - L), Y(0.024f)))
         drawRect(CorMadeira, Offset(X(L), Y(B - 0.008f)), Size(X(R - L), Y(0.012f)))
         drawRect(Color(0xFFE9D8C4), Offset(X(Planta.DIVISAO_CIMA - 0.005f), Y(T)), Size(X(0.01f), Y(M - T - 0.012f)))
+        if (noite) {
+            // Com o abajur, a casa fica mais clarinha por dentro.
+            val escuro = if ("abajur" in e.colocados) Color(0x33101A40) else Color(0x66101A40)
+            drawRect(escuro, Offset(X(L), Y(T)), Size(X(R - L), Y(B - T)))
+        }
         drawRect(CorMoldura, Offset(X(L), Y(T)), Size(X(R - L), Y(B - T)), style = Stroke(X(0.018f)))
     }
 
     if (e.temEstrutura(Estrutura.PAREDES)) {
         camada(Estrutura.JANELAS) {
-            janela(X(0.39f), Y(0.35f), X(0.08f), Y(0.08f))
-            janela(X(0.45f), Y(0.585f), X(0.08f), Y(0.075f))
-            janela(X(0.66f), Y(0.585f), X(0.08f), Y(0.075f))
-            drawCircle(CorVidro, X(0.035f), Offset(X(0.82f), Y(0.39f)))
+            val vidro = if (noite) CorLuz else CorVidro
+            janela(X(0.39f), Y(0.35f), X(0.08f), Y(0.08f), vidro)
+            janela(X(0.45f), Y(0.585f), X(0.08f), Y(0.075f), vidro)
+            janela(X(0.66f), Y(0.585f), X(0.08f), Y(0.075f), vidro)
+            drawCircle(vidro, X(0.035f), Offset(X(0.82f), Y(0.39f)))
             drawCircle(Color.White, X(0.035f), Offset(X(0.82f), Y(0.39f)), style = Stroke(X(0.012f)))
         }
         camada(Estrutura.PORTA) {
@@ -520,23 +631,24 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
         val telhado = Path().apply {
             moveTo(X(0.04f), Y(0.315f)); lineTo(X(0.5f), Y(0.075f)); lineTo(X(0.96f), Y(0.315f)); close()
         }
-        drawPath(telhado, CorTelhado)
-        drawPath(telhado, CorTelhadoEscuro, style = Stroke(X(0.012f), join = StrokeJoin.Round))
+        drawPath(telhado, if (noite) Color(0xFFA8344F) else CorTelhado)
+        drawPath(telhado, if (noite) Color(0xFF7E2238) else CorTelhadoEscuro, style = Stroke(X(0.012f), join = StrokeJoin.Round))
         for (k in 1 until 5) {
             val y = 0.075f + k * 0.048f
             val metade = (y - 0.075f) / 0.24f * 0.46f
             drawLine(Color(0x14000000), Offset(X(0.5f - metade), Y(y)), Offset(X(0.5f + metade), Y(y)), 3f)
         }
         drawCircle(Color.White, X(0.04f), Offset(X(0.5f), Y(0.215f)))
-        drawCircle(CorVidro, X(0.03f), Offset(X(0.5f), Y(0.215f)))
+        drawCircle(if (noite) CorLuz else CorVidro, X(0.03f), Offset(X(0.5f), Y(0.215f)))
     }
 }
 
-private fun DrawScope.janela(x: Float, y: Float, w: Float, h: Float) {
+private fun DrawScope.janela(x: Float, y: Float, w: Float, h: Float, vidro: Color = CorVidro) {
+    if (vidro == CorLuz) drawCircle(CorLuz.copy(alpha = 0.25f), w * 1.1f, Offset(x + w / 2, y + h / 2))
     val r = CornerRadius(w * 0.08f)
     drawRect(Color(0xFFFF8FAB), Offset(x - w * 0.15f, y - h * 0.15f), Size(w * 0.15f, h * 1.3f))
     drawRect(Color(0xFFFF8FAB), Offset(x + w, y - h * 0.15f), Size(w * 0.15f, h * 1.3f))
-    drawRoundRect(CorVidro, Offset(x, y), Size(w, h), r)
+    drawRoundRect(vidro, Offset(x, y), Size(w, h), r)
     drawRoundRect(Color.White, Offset(x, y), Size(w, h), r, style = Stroke(w * 0.15f))
     drawLine(Color.White, Offset(x + w / 2, y), Offset(x + w / 2, y + h), w * 0.075f)
     drawLine(Color.White, Offset(x, y + h / 2), Offset(x + w, y + h / 2), w * 0.075f)

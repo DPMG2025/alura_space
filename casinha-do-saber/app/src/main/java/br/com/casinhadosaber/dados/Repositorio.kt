@@ -22,6 +22,14 @@ class Repositorio(context: Context) {
     var somLigado by mutableStateOf(prefs.getBoolean(SOM, true))
         private set
 
+    var musicaLigada by mutableStateOf(prefs.getBoolean(MUSICA, true))
+        private set
+
+    fun alternarMusica() {
+        musicaLigada = !musicaLigada
+        prefs.edit { putBoolean(MUSICA, musicaLigada) }
+    }
+
     fun atualizar(mudanca: (EstadoJogo) -> EstadoJogo) {
         estado = mudanca(estado)
         salvar(estado)
@@ -36,6 +44,7 @@ class Repositorio(context: Context) {
         prefs.edit { clear() }
         estado = EstadoJogo()
         somLigado = true
+        musicaLigada = true
     }
 
     private fun carregar(): EstadoJogo {
@@ -86,5 +95,6 @@ class Repositorio(context: Context) {
         const val CRIANCA_X = "crianca_x"
         const val CRIANCA_Y = "crianca_y"
         const val SOM = "som"
+        const val MUSICA = "musica"
     }
 }

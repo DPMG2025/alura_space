@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import br.com.casinhadosaber.audio.Musica
 import br.com.casinhadosaber.audio.Narrador
 import br.com.casinhadosaber.audio.Sons
 import br.com.casinhadosaber.dados.Repositorio
@@ -55,6 +56,8 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var narrador: Narrador
     private lateinit var sons: Sons
+    private val musica = Musica()
+    private var musicaPermitida = false
     private lateinit var repositorio: Repositorio
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,10 +79,17 @@ class MainActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
         narrador.parar()
+        musica.pausar()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (musicaPermitida) musica.tocar()
     }
 
     override fun onDestroy() {
         narrador.desligar()
+        musica.liberar()
         sons.desligar()
         super.onDestroy()
     }
@@ -94,6 +104,10 @@ class MainActivity : ComponentActivity() {
             narrador.ativo = repo.somLigado
             sons.ativo = repo.somLigado
             if (!repo.somLigado) narrador.parar()
+        }
+        LaunchedEffect(repo.somLigado, repo.musicaLigada) {
+            musicaPermitida = repo.somLigado && repo.musicaLigada
+            if (musicaPermitida) musica.tocar() else musica.pausar()
         }
 
         fun irPara(nova: Tela) {
@@ -184,6 +198,8 @@ class MainActivity : ComponentActivity() {
                         estado = estado,
                         somLigado = repo.somLigado,
                         onAlternarSom = repo::alternarSom,
+                        musicaLigada = repo.musicaLigada,
+                        onAlternarMusica = repo::alternarMusica,
                         onEditarPersonagem = { irPara(Tela.Perfil) },
                         onApagarTudo = {
                             repo.apagarTudo()

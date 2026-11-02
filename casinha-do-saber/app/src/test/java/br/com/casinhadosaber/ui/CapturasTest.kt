@@ -130,8 +130,12 @@ class CapturasTest {
         TelaCasa(e, {}, {}, {})
     }
 
+    @Test fun casaDeNoite() = capturar("14b_casa_de_noite") {
+        TelaCasa(estado(40, 40), {}, {}, {}, noiteInicial = true)
+    }
+
     @Test fun pais() = capturar("15_area_dos_pais") {
-        TelaPais(estado(12, 12), true, {}, {}, {}, {})
+        TelaPais(estado(12, 12), true, {}, true, {}, {}, {}, {})
     }
 
     @Config(qualifiers = "w360dp-h640dp-xhdpi")

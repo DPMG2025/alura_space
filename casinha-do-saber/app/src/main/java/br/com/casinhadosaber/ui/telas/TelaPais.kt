@@ -49,6 +49,8 @@ fun TelaPais(
     estado: EstadoJogo,
     somLigado: Boolean,
     onAlternarSom: () -> Unit,
+    musicaLigada: Boolean,
+    onAlternarMusica: () -> Unit,
     onEditarPersonagem: () -> Unit,
     onApagarTudo: () -> Unit,
     onVoltar: () -> Unit,
@@ -71,7 +73,7 @@ fun TelaPais(
         if (!liberado) {
             Portao(onLiberar = { liberado = true })
         } else {
-            Painel(estado, somLigado, onAlternarSom, onEditarPersonagem, onApagarTudo)
+            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo)
         }
     }
 }
@@ -105,6 +107,8 @@ private fun Painel(
     estado: EstadoJogo,
     somLigado: Boolean,
     onAlternarSom: () -> Unit,
+    musicaLigada: Boolean,
+    onAlternarMusica: () -> Unit,
     onEditarPersonagem: () -> Unit,
     onApagarTudo: () -> Unit,
 ) {
@@ -138,9 +142,13 @@ private fun Painel(
             BotaoFofo(onClick = onAlternarSom, cor = Color.White, corBase = Color(0xFFD9CFF0)) {
                 Text(if (somLigado) "🔊 Som ligado" else "🔇 Som desligado", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
             }
-            BotaoFofo(onClick = onEditarPersonagem, cor = Color.White, corBase = Color(0xFFD9CFF0)) {
-                Text("🧒 Personagem", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
+            BotaoFofo(onClick = onAlternarMusica, cor = Color.White, corBase = Color(0xFFD9CFF0)) {
+                Text(if (musicaLigada) "🎵 Música ligada" else "🎵 Música desligada", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
             }
+        }
+        Spacer(Modifier.height(12.dp))
+        BotaoFofo(onClick = onEditarPersonagem, cor = Color.White, corBase = Color(0xFFD9CFF0)) {
+            Text("🧒 Trocar o personagem", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
         }
         Spacer(Modifier.height(12.dp))
         BotaoFofo(onClick = { confirmar = true }, cor = Cores.Errado) {

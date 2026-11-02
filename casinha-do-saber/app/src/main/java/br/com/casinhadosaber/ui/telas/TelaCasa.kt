@@ -70,10 +70,12 @@ fun TelaCasa(
     onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit,
     onVoltar: () -> Unit,
     onJogar: () -> Unit,
+    noiteInicial: Boolean = false,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     var pintando by remember { mutableStateOf(false) }
+    var noite by remember { mutableStateOf(noiteInicial) }
     var novaEstrutura by remember { mutableStateOf<Estrutura?>(null) }
     var destaque by remember { mutableStateOf<String?>(null) }
     var pulo by remember { mutableIntStateOf(0) }
@@ -145,6 +147,18 @@ fun TelaCasa(
                         color = Color.White,
                     )
                 }
+                BotaoRedondo(
+                    emoji = if (noite) "☀️" else "🌙",
+                    descricao = if (noite) "Virar dia" else "Virar noite",
+                    onClick = {
+                        noite = !noite
+                        sons.colocar()
+                        narrador.falar(if (noite) listOf(pt("Boa noite!"), en("Good night!")) else listOf(pt("Bom dia!"), en("Good morning!")))
+                    },
+                    cor = if (noite) Color(0xFF3B4C8C) else Color.White,
+                    tamanho = 52.dp,
+                )
+                Spacer(Modifier.width(8.dp))
                 if (estado.temEstrutura(Estrutura.PAREDES)) {
                     BotaoRedondo(
                         emoji = "🎨",
@@ -179,6 +193,7 @@ fun TelaCasa(
                     novaEstrutura = novaEstrutura,
                     destaqueId = destaque,
                     puloDaCrianca = pulo,
+                    noite = noite,
                     onTocarItem = { item ->
                         sons.toque()
                         narrador.falar(listOf(pt("${item.nome}!"), en(item.nomeEn)))
