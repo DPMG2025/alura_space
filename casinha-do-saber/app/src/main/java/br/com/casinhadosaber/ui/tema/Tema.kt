@@ -30,7 +30,7 @@ object Cores {
     val Certo = Color(0xFF3DBE6B)
     val Errado = Color(0xFFFF6B6B)
     val Estrela = Color(0xFFFFC93C)
-    val EstrelaApagada = Color(0xFFE6DCCB)
+    val EstrelaApagada = Color(0x40000000)
     val Cartao = Color(0xFFFFFFFF)
     val Madeira = Color(0xFFB9784A)
     val MadeiraClara = Color(0xFFE6B98F)

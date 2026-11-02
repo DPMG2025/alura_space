@@ -157,6 +157,10 @@ fun TelaPremio(
                     Text(item.nome, style = MaterialTheme.typography.headlineLarge)
                     Text("Em inglês: ${item.nomeEn}", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)
                 }
+                perfil?.let {
+                    Spacer(Modifier.height(12.dp))
+                    Crianca(it, Modifier.height(if (aberto) 110.dp else 160.dp), acenando = true)
+                }
             } else {
                 perfil?.let { Crianca(it, Modifier.height(170.dp), acenando = true) }
                 Spacer(Modifier.height(8.dp))

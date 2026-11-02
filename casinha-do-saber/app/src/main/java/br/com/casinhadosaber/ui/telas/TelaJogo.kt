@@ -14,6 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -231,13 +232,20 @@ private fun CenaDaPergunta(cena: Cena) {
         Cena.Nenhuma -> Unit
         is Cena.Emojis -> {
             val n = contarFiguras(cena.texto)
-            Text(
-                cena.texto,
-                fontSize = tamanhoParaFiguras(n),
-                lineHeight = tamanhoParaFiguras(n) * 1.15f,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.pulsando(n == 1),
-            )
+            Box(
+                Modifier
+                    .background(Color.White.copy(alpha = 0.75f), RoundedCornerShape(32.dp))
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    cena.texto,
+                    fontSize = tamanhoParaFiguras(n),
+                    lineHeight = tamanhoParaFiguras(n) * 1.15f,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.pulsando(n == 1),
+                )
+            }
         }
         is Cena.Palavra -> Text(
             cena.texto,
@@ -248,27 +256,28 @@ private fun CenaDaPergunta(cena: Cena) {
                 .padding(horizontal = 24.dp, vertical = 8.dp),
         )
         is Cena.Conta -> Conta(cena)
-        is Cena.Sequencia -> FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            val tamanho = if (cena.itens.size > 6) 52.dp else 62.dp
-            for (item in cena.itens) {
-                val pergunta = item == "?"
-                Box(
-                    Modifier
-                        .size(tamanho)
-                        .then(if (pergunta) Modifier.pulsando() else Modifier)
-                        .background(if (pergunta) Cores.Estrela else Color.White, RoundedCornerShape(16.dp))
-                        .border(3.dp, if (pergunta) Color(0xFFE0A800) else Color(0xFFEDE6FF), RoundedCornerShape(16.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        item,
-                        fontSize = (tamanho.value * 0.55f).sp,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.headlineMedium,
-                    )
+        is Cena.Sequencia -> BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            // Todas as figuras numa linha só, para a fila ficar clara.
+            val n = cena.itens.size
+            val tamanho = ((maxWidth - 6.dp * (n - 1)) / n).coerceAtMost(64.dp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (item in cena.itens) {
+                    val pergunta = item == "?"
+                    Box(
+                        Modifier
+                            .size(tamanho)
+                            .then(if (pergunta) Modifier.pulsando() else Modifier)
+                            .background(if (pergunta) Cores.Estrela else Color.White, RoundedCornerShape(16.dp))
+                            .border(3.dp, if (pergunta) Color(0xFFE0A800) else Color(0xFFEDE6FF), RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            item,
+                            fontSize = (tamanho.value * 0.55f).sp,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                    }
                 }
             }
         }

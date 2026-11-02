@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,6 +31,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItensDaCasa
@@ -110,7 +110,6 @@ fun TelaInicio(
         ) {
             Box(
                 Modifier
-                    .fillMaxHeight()
                     .shadow(8.dp, RoundedCornerShape(28.dp))
                     .clip(RoundedCornerShape(28.dp))
                     .semantics {
@@ -120,7 +119,7 @@ fun TelaInicio(
                     }
                     .clickable { sons.toque(); onAbrirCasa() },
             ) {
-                CenaDaCasa(estado, Modifier.fillMaxHeight())
+                CenaDaCasa(estado)
                 if (noBau > 0) {
                     Box(
                         Modifier
@@ -171,10 +170,10 @@ private fun BotaoTrilha(trilha: Trilha, vencidas: Int, modifier: Modifier, onCli
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(trilha.emoji, style = MaterialTheme.typography.displayMedium)
-            Spacer(Modifier.width(8.dp))
+            Text(trilha.emoji, style = MaterialTheme.typography.headlineLarge)
+            Spacer(Modifier.width(6.dp))
             Column(Modifier.weight(1f)) {
-                Text(trilha.titulo, style = MaterialTheme.typography.titleLarge, color = Color.White, maxLines = 1)
+                Text(trilha.titulo, style = MaterialTheme.typography.titleMedium.copy(fontSize = 19.sp), color = Color.White, maxLines = 1, softWrap = false)
                 Spacer(Modifier.height(4.dp))
                 Box(
                     Modifier
