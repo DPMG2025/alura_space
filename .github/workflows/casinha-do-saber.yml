@@ -10,6 +10,13 @@ on:
       - "casinha-do-saber/**"
   workflow_dispatch:
 
+concurrency:
+  group: casinha-android-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,8 +33,36 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Testes de unidade
+      - name: Testes de unidade e capturas de tela
         run: ./gradlew --no-daemon testDebugUnitTest
+
+      - name: Publicar capturas de tela
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-de-tela
+          path: casinha-do-saber/app/build/outputs/roborazzi/*.png
+          if-no-files-found: warn
+
+      # Guarda as capturas no próprio branch (docs/capturas) para revisão e para o README.
+      - name: Versionar capturas de tela
+        if: github.event_name == 'push' && !cancelled()
+        run: |
+          mkdir -p docs/capturas
+          if ls app/build/outputs/roborazzi/*.png >/dev/null 2>&1; then
+            rm -f docs/capturas/*.png
+            cp app/build/outputs/roborazzi/*.png docs/capturas/
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          if git diff --cached --quiet; then
+            echo "Capturas sem alteração"
+          else
+            git commit -m "Atualiza capturas de tela [skip ci]"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
 
       - name: Lint
         run: ./gradlew --no-daemon lintDebug
