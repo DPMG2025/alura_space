@@ -2,6 +2,18 @@
 
 App Android educativo para crianças a partir de 4 anos. A criança escolhe ser um **menino ou uma menina**, joga nos quatro caminhos de aprendizado e, a cada fase nova vencida, ganha uma peça para **montar a sua casinha**: primeiro o terreno, as paredes, o telhado e a porta; depois a cama, o sofá, a geladeira, o cachorrinho, o laguinho com patinho e muito mais, até a estrela de campeão.
 
+## Telas
+
+| Escolha do personagem | Início | Caminho |
+|---|---|---|
+| ![](docs/capturas/01_perfil.png) | ![](docs/capturas/03_inicio_presentes.png) | ![](docs/capturas/04_caminho_numeros.png) |
+
+| Jogo | Prêmio | Casa completa |
+|---|---|---|
+| ![](docs/capturas/06_jogo_subtrair.png) | ![](docs/capturas/11_premio.png) | ![](docs/capturas/14_casa_completa.png) |
+
+As imagens de `docs/capturas/` são geradas automaticamente pelo CI a cada mudança (testes `CapturasTest`).
+
 ## Como funciona
 
 **Quatro caminhos, dez fases cada, do mais fácil ao mais difícil:**

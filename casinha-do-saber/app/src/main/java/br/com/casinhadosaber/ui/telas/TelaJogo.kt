@@ -11,6 +11,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -162,9 +164,17 @@ fun TelaJogo(
                     .padding(top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                perfil?.let { Crianca(it, Modifier.height(96.dp), acenando = acertou, humor = humor) }
+                // Sem figura na pergunta, a criança aparece grande no meio da tela (abaixo).
+                if (pergunta.cena != Cena.Nenhuma) {
+                    perfil?.let { Crianca(it, Modifier.height(96.dp), acenando = acertou, humor = humor) }
+                }
                 Spacer(Modifier.width(8.dp))
-                BalaoDeFala(pergunta.instrucao, Modifier.weight(1f))
+                BalaoDeFala(
+                    "🔊 " + pergunta.instrucao,
+                    Modifier
+                        .weight(1f)
+                        .clickable(onClickLabel = "Ouvir de novo") { narrador.falar(pergunta.fala) },
+                )
             }
 
             AnimatedContent(
@@ -184,7 +194,11 @@ fun TelaJogo(
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        CenaDaPergunta(p.cena)
+                        if (p.cena == Cena.Nenhuma) {
+                            perfil?.let { Crianca(it, Modifier.fillMaxHeight(0.9f), acenando = acertou, humor = humor) }
+                        } else {
+                            CenaDaPergunta(p.cena)
+                        }
                     }
                     Opcoes(
                         pergunta = p,
