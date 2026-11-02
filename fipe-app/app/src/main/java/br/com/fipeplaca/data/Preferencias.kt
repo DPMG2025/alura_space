@@ -4,18 +4,18 @@ import android.content.Context
 import br.com.fipeplaca.BuildConfig
 
 /** Configuracoes do usuario: token e URL do provedor de placas, token da FIPE v2. */
-class Preferencias(context: Context) {
+class Preferencias(context: Context) : ConfigConexao {
     private val sp = context.getSharedPreferences("config", Context.MODE_PRIVATE)
 
-    var tokenPlaca: String
+    override var tokenPlaca: String
         get() = sp.getString(K_TOKEN_PLACA, null) ?: BuildConfig.PLACA_API_TOKEN
         set(v) = sp.edit().putString(K_TOKEN_PLACA, v.trim()).apply()
 
-    var urlPlaca: String
+    override var urlPlaca: String
         get() = sp.getString(K_URL_PLACA, null)?.takeIf { it.isNotBlank() } ?: URL_PADRAO
         set(v) = sp.edit().putString(K_URL_PLACA, v.trim()).apply()
 
-    var tokenFipe: String
+    override var tokenFipe: String
         get() = sp.getString(K_TOKEN_FIPE, null) ?: BuildConfig.FIPE_API_TOKEN
         set(v) = sp.edit().putString(K_TOKEN_FIPE, v.trim()).apply()
 

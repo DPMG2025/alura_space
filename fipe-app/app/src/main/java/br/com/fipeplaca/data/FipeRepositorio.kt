@@ -7,6 +7,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import retrofit2.HttpException
 import retrofit2.Retrofit
@@ -15,7 +16,13 @@ import java.io.IOException
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
-class FipeRepositorio(private val prefs: Preferencias) {
+class FipeRepositorio(
+    private val prefs: ConfigConexao,
+    baseV1: String = "https://parallelum.com.br/fipe/api/v1/",
+    baseV2: String = "https://fipe.parallelum.com.br/api/v2/",
+) {
+    private val hostV2 = baseV2.toHttpUrl().host
+
 
     private val http = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
@@ -24,7 +31,7 @@ class FipeRepositorio(private val prefs: Preferencias) {
             val req = chain.request()
             val token = prefs.tokenFipe
             // Token opcional da FIPE v2 (aumenta o limite diario de consultas).
-            if (req.url.host == "fipe.parallelum.com.br" && token.isNotBlank()) {
+            if (req.url.host == hostV2 && req.url.toString().startsWith(baseV2) && token.isNotBlank()) {
                 chain.proceed(req.newBuilder().header("X-Subscription-Token", token).build())
             } else chain.proceed(req)
         }
@@ -36,8 +43,8 @@ class FipeRepositorio(private val prefs: Preferencias) {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    private val v1 = retrofit("https://parallelum.com.br/fipe/api/v1/").create(FipeV1Api::class.java)
-    private val v2 = retrofit("https://fipe.parallelum.com.br/api/v2/").create(FipeV2Api::class.java)
+    private val v1 = retrofit(baseV1).create(FipeV1Api::class.java)
+    private val v2 = retrofit(baseV2).create(FipeV2Api::class.java)
     private val placaApi = retrofit("https://localhost/").create(PlacaApi::class.java)
 
     private val cacheMarcas = mutableMapOf<TipoVeiculo, List<ItemFipe>>()

@@ -2,11 +2,33 @@
 
 Aplicativo Android (Kotlin + Jetpack Compose) que consulta o valor de mercado de veículos pela tabela FIPE.
 
+## Telas
+
+| Busca pela placa | Resultado | Modo escuro |
+|---|---|---|
+| ![Placa](docs/capturas/01_placa_inicial.png) | ![Resultado](docs/capturas/03_placa_resultado.png) | ![Escuro](docs/capturas/04_placa_resultado_escuro.png) |
+
+| Tabela FIPE | Valor e histórico | Salvos | Ajustes |
+|---|---|---|---|
+| ![Marcas](docs/capturas/06_tabela_marcas.png) | ![Tabela](docs/capturas/08_tabela_resultado.png) | ![Salvos](docs/capturas/09_salvos.png) | ![Ajustes](docs/capturas/11_ajustes.png) |
+
+As capturas são geradas automaticamente pelo CI a cada alteração (Robolectric + Roborazzi), então sempre mostram a versão atual.
+
 ## Funcionalidades
 
-1. **Busca pela placa**: digite a placa (antiga `ABC1234` ou Mercosul `ABC1D23`). O app identifica marca, modelo, ano, cor e cidade, encontra o código FIPE e mostra o valor de mercado. Quando a placa corresponde a mais de uma versão na FIPE, todas aparecem, ordenadas pela compatibilidade.
-2. **Busca por marca, modelo e ano**: todas as marcas da tabela FIPE para carros, motos e caminhões, com filtro por texto em cada etapa.
-3. **Histórico do preço**: evolução do valor FIPE no ano atual, nos últimos 12 meses ou nos últimos 24 meses, com gráfico, variação percentual, diferença em reais e tabela mês a mês. Funciona tanto na busca pela placa quanto na busca manual.
+1. **Busca pela placa**: campo no formato de placa Mercosul, aceita placa antiga (`ABC1234`) e Mercosul (`ABC1D23`). Mostra marca, modelo, ano, cor, cidade e situação, encontra o código FIPE e o valor de mercado. Quando a placa corresponde a mais de uma versão na FIPE, todas aparecem com o grau de compatibilidade para o usuário escolher.
+2. **Tabela FIPE completa**: todas as marcas, modelos e anos de carros, motos e caminhões, com busca por texto (vários termos, sem acento), marcas populares em destaque, indicador de etapas clicável e destaque para veículos zero km.
+3. **Histórico do preço**: evolução no ano atual, em 12 ou em 24 meses, com gráfico interativo (toque ou arraste para ver cada mês), variação percentual, diferença em reais, máximo, mínimo, média, variação mensal média, tabela mês a mês e projeção para 12 meses pela tendência.
+4. **Salvos**: favoritos e consultas recentes guardados no aparelho. Reabrir uma placa salva não gasta crédito do serviço de placas.
+5. **Compartilhar e copiar**: envia o resultado (com a variação do período) por WhatsApp, e-mail etc.; toque no código FIPE para copiar.
+6. **Acabamento**: tema claro e escuro (ou do sistema), tela de abertura, animações, esqueleto de carregamento, mensagens de erro claras, retorno tátil no gráfico e descrições de acessibilidade.
+
+## Qualidade
+
+1. Testes de unidade: validação de placa, formatos, leitor da resposta de placa, estatísticas, projeção, datas e regras dos salvos.
+2. Testes de integração com servidor HTTP simulado (MockWebServer): busca manual completa, placa até o valor FIPE, histórico ignorando meses ausentes, uso do token e mensagens de erro (401, 429, sem conexão).
+3. Testes de captura de tela de todas as telas, em tema claro e escuro.
+4. CI no GitHub Actions: roda os testes, publica as capturas e gera os APKs debug e release (com R8).
 
 ## De onde vêm os dados
 
