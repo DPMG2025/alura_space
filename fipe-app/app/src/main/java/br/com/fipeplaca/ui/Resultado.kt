@@ -70,6 +70,8 @@ import br.com.fipeplaca.data.FipeResultado
 import br.com.fipeplaca.data.Meses
 import br.com.fipeplaca.data.PeriodoHistorico
 import br.com.fipeplaca.data.PontoHistorico
+import br.com.fipeplaca.data.Projecao
+import br.com.fipeplaca.data.Texto
 import kotlin.math.roundToInt
 
 /** Cartao principal com o valor FIPE e as acoes (favoritar, compartilhar, copiar codigo). */
@@ -114,7 +116,7 @@ fun CartaoValorFipe(
                 modifier = Modifier.semantics { contentDescription = "Valor FIPE ${r.valor ?: "indisponível"}" },
             )
             Spacer(Modifier.height(10.dp))
-            Text("${r.marca} ${r.modelo}".trim(), style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Text("${Texto.marca(r.marca)} ${r.modelo}".trim(), style = MaterialTheme.typography.titleMedium, color = Color.White)
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (r.anoModelo.isNotBlank()) Etiqueta(r.anoModelo)
@@ -149,6 +151,12 @@ fun CartaoHistorico(estado: HistoricoUi, onPeriodo: (PeriodoHistorico) -> Unit, 
                     selected = estado.periodo == p,
                     onClick = { onPeriodo(p) },
                     shape = SegmentedButtonDefaults.itemShape(i, PeriodoHistorico.entries.size),
+                    colors = SegmentedButtonDefaults.colors(
+                        activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        activeBorderColor = MaterialTheme.colorScheme.outline,
+                        inactiveBorderColor = MaterialTheme.colorScheme.outline,
+                    ),
                     icon = {},
                 ) { Text(p.rotulo, maxLines = 1) }
             }
@@ -203,6 +211,28 @@ private fun ConteudoHistorico(pontos: List<PontoHistorico>) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             MiniIndicador("Média", Dinheiro.formatar(e.media), "${pontos.size} meses", Modifier.weight(1f))
             MiniIndicador("Por mês", Estatisticas.percentual(e.variacaoMensalMedia, 2), "variação média", Modifier.weight(1f))
+        }
+        Projecao.estimar(pontos)?.let { estimado ->
+            Spacer(Modifier.height(8.dp))
+            val delta = if (pontos.last().valor > 0) (estimado - pontos.last().valor) / pontos.last().valor * 100 else 0.0
+            Row(
+                Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.secondaryContainer).padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Projeção para 12 meses", style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    Text("Estimativa pela tendência do período, não é garantia de preço.",
+                        style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f))
+                }
+                Spacer(Modifier.width(8.dp))
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(Dinheiro.formatar(estimado), style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer, fontWeight = FontWeight.Bold)
+                    Text(Estatisticas.percentual(delta), style = MaterialTheme.typography.labelMedium, color = corVariacao(delta))
+                }
+            }
         }
         Spacer(Modifier.height(18.dp))
         Text("Mês a mês", style = MaterialTheme.typography.titleSmall)

@@ -138,10 +138,10 @@ class TelasCapturaTest {
         Moldura(2) { TelaSalvos(emptyList(), AcoesSalvos(), it) }
     }
 
-    @Config(qualifiers = "w393dp-h1700dp-xhdpi")
+    @Config(qualifiers = "w393dp-h1900dp-xhdpi")
     @Test fun ajustes() = captura("11_ajustes") {
         Moldura(3) {
-            TelaConfiguracoes(Configuracoes("abc123", "https://wdapi2.com.br/consulta/{placa}/{token}", ""), "2.0", {}, it)
+            TelaConfiguracoes(Configuracoes("abc123", "https://wdapi2.com.br/consulta/{placa}/{token}", ""), "2.1", {}, it, tema = "claro")
         }
     }
 }

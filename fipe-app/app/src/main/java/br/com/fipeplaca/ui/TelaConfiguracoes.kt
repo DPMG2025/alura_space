@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package br.com.fipeplaca.ui
 
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +20,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -40,6 +45,8 @@ fun TelaConfiguracoes(
     versao: String,
     onSalvar: (Configuracoes) -> Unit,
     modifier: Modifier = Modifier,
+    tema: String = "sistema",
+    onTema: (String) -> Unit = {},
 ) {
     var tokenPlaca by remember { mutableStateOf(inicial.tokenPlaca) }
     var urlPlaca by remember { mutableStateOf(inicial.urlPlaca) }
@@ -107,6 +114,24 @@ fun TelaConfiguracoes(
                 shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
             ) { Text("Salvar alterações") }
+
+            Secao(titulo = "Aparência") {
+                val opcoes = listOf("sistema" to "Sistema", "claro" to "Claro", "escuro" to "Escuro")
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    opcoes.forEachIndexed { i, (valor, rotulo) ->
+                        SegmentedButton(
+                            selected = tema == valor,
+                            onClick = { onTema(valor) },
+                            shape = SegmentedButtonDefaults.itemShape(i, opcoes.size),
+                            colors = SegmentedButtonDefaults.colors(
+                                activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            ),
+                            icon = {},
+                        ) { Text(rotulo) }
+                    }
+                }
+            }
 
             Secao(titulo = "Sobre") {
                 Text(

@@ -14,6 +14,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -67,6 +69,7 @@ fun AppRaiz() {
     val manual by manualVm.estado.collectAsStateWithLifecycle()
     val histManual by manualVm.historico.estado.collectAsStateWithLifecycle()
     val salvos by placaVm.itensSalvos.collectAsStateWithLifecycle()
+    val tema by app.tema.collectAsStateWithLifecycle()
 
     fun aviso(texto: String) = escopo.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(texto) }
     fun compartilhar(r: FipeResultado, v: VeiculoPlaca?, pontos: List<PontoHistorico>) {
@@ -110,6 +113,7 @@ fun AppRaiz() {
                             mudarPeriodo = placaVm.historico::mudarPeriodo,
                             abrirConfiguracoes = { aba = 3 },
                             buscarManual = { tipo, marca -> manualVm.preencherPorPlaca(tipo, marca); aba = 1 },
+                            abrirTabela = { aba = 1 },
                         ),
                     )
                 }
@@ -150,6 +154,8 @@ fun AppRaiz() {
                 else -> androidx.compose.runtime.key(ajustesSalvos) { TelaConfiguracoes(
                     inicial = Configuracoes(app.prefs.tokenPlaca, app.prefs.urlPlaca, app.prefs.tokenFipe),
                     versao = BuildConfig.VERSION_NAME,
+                    tema = tema,
+                    onTema = app::definirTema,
                     onSalvar = { cfg ->
                         app.prefs.tokenPlaca = cfg.tokenPlaca
                         app.prefs.urlPlaca = cfg.urlPlaca
@@ -165,13 +171,18 @@ fun AppRaiz() {
 
 @Composable
 fun BarraNavegacao(aba: Int, onAba: (Int) -> Unit) {
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
         ABAS.forEachIndexed { i, a ->
             NavigationBarItem(
                 selected = aba == i,
                 onClick = { onAba(i) },
                 icon = { Icon(a.icone, contentDescription = null) },
                 label = { Text(a.titulo) },
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                ),
             )
         }
     }

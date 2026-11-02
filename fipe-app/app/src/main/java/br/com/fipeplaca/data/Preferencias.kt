@@ -19,7 +19,13 @@ class Preferencias(context: Context) {
         get() = sp.getString(K_TOKEN_FIPE, null) ?: BuildConfig.FIPE_API_TOKEN
         set(v) = sp.edit().putString(K_TOKEN_FIPE, v.trim()).apply()
 
+    /** Tema do app: "sistema", "claro" ou "escuro". */
+    var tema: String
+        get() = sp.getString(K_TEMA, null) ?: "sistema"
+        set(v) = sp.edit().putString(K_TEMA, v).apply()
+
     companion object {
+        private const val K_TEMA = "tema"
         /** Modelo da API Placas (apiplacas.com.br). {placa} e {token} sao substituidos. */
         const val URL_PADRAO = "https://wdapi2.com.br/consulta/{placa}/{token}"
         private const val K_TOKEN_PLACA = "token_placa"

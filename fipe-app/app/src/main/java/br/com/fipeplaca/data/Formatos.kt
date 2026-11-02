@@ -42,6 +42,18 @@ object Texto {
         Normalizer.normalize(texto.lowercase(Locale.ROOT), Normalizer.Form.NFD)
             .replace(Regex("\\p{Mn}+"), "")
 
+    /**
+     * Nome de marca para exibicao: "VW - VolksWagen" vira "Volkswagen" e
+     * "GM - Chevrolet" vira "Chevrolet". Siglas (BMW, BYD) ficam como estao.
+     */
+    fun marca(nome: String): String {
+        val base = (if (" - " in nome) nome.substringAfter(" - ") else nome).trim()
+        return base.split(' ').joinToString(" ") { p ->
+            val misto = p.drop(1).any { it.isUpperCase() } && p.any { it.isLowerCase() }
+            if (misto) p.lowercase(Locale("pt", "BR")).replaceFirstChar { it.titlecase(Locale("pt", "BR")) } else p
+        }
+    }
+
     /** A FIPE usa 32000 para veiculos zero km. */
     fun nomeAno(nome: String): String = nome.replace("32000", "Zero KM")
 }
@@ -67,5 +79,21 @@ object Referencias {
             }
         }
         return selecionadas.reversed()
+    }
+}
+
+object Datas {
+    private val hora = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+    private val data = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy")
+
+    /** "Hoje, 14:05", "Ontem, 09:10" ou "28/10/26". */
+    fun relativa(epochMs: Long, agoraMs: Long = System.currentTimeMillis(), zona: java.time.ZoneId = java.time.ZoneId.systemDefault()): String {
+        val quando = java.time.Instant.ofEpochMilli(epochMs).atZone(zona)
+        val hoje = java.time.Instant.ofEpochMilli(agoraMs).atZone(zona).toLocalDate()
+        return when (quando.toLocalDate()) {
+            hoje -> "Hoje, ${quando.format(hora)}"
+            hoje.minusDays(1) -> "Ontem, ${quando.format(hora)}"
+            else -> quando.format(data)
+        }
     }
 }

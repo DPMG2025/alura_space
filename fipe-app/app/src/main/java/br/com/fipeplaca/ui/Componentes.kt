@@ -13,7 +13,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -36,7 +37,8 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -51,6 +53,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -95,14 +99,16 @@ fun Cabecalho(
 /** Placa no padrao Mercosul (faixa azul com BRASIL), apenas exibicao. */
 @Composable
 fun PlacaMercosul(placa: String, modifier: Modifier = Modifier, altura: Dp = 56.dp) {
+    val texto = Placa.formatar(placa).ifBlank { "ABC1D23" }
     MolduraPlaca(modifier, altura) {
         Text(
-            Placa.formatar(placa).ifBlank { "ABC1D23" },
-            style = estiloPlaca(altura),
+            texto,
+            style = estiloPlaca(altura, maxWidth, texto.length),
             color = Color(0xFF111111),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
             maxLines = 1,
+            softWrap = false,
         )
     }
 }
@@ -112,22 +118,24 @@ fun PlacaMercosul(placa: String, modifier: Modifier = Modifier, altura: Dp = 56.
 fun CampoPlaca(valor: String, onValor: (String) -> Unit, onBuscar: () -> Unit, modifier: Modifier = Modifier) {
     val altura = 76.dp
     MolduraPlaca(modifier.semantics { contentDescription = "Campo da placa" }, altura) {
+        val estilo = estiloPlaca(altura, maxWidth, 7)
         BasicTextField(
             value = valor,
             onValueChange = onValor,
             singleLine = true,
-            textStyle = estiloPlaca(altura).copy(color = Color(0xFF111111), textAlign = TextAlign.Center),
+            textStyle = estilo.copy(color = Color(0xFF111111), textAlign = TextAlign.Center),
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Characters,
                 autoCorrectEnabled = false,
                 imeAction = ImeAction.Search,
             ),
             keyboardActions = KeyboardActions(onSearch = { onBuscar() }),
+            cursorBrush = androidx.compose.ui.graphics.SolidColor(Extras.cores.placaAzul),
             modifier = Modifier.fillMaxWidth(),
             decorationBox = { campo ->
                 Box(contentAlignment = Alignment.Center) {
                     if (valor.isEmpty()) {
-                        Text("ABC1D23", style = estiloPlaca(altura), color = Color(0x33111111),
+                        Text("ABC1D23", style = estilo, color = Color(0x33111111),
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
                     campo()
@@ -137,37 +145,91 @@ fun CampoPlaca(valor: String, onValor: (String) -> Unit, onBuscar: () -> Unit, m
     }
 }
 
-private fun estiloPlaca(altura: Dp) = TextStyle(
-    fontFamily = FontFamily.Monospace,
+/** Fonte monoespacada que cabe na largura disponivel (cada caractere ocupa cerca de 0,7 em). */
+private fun estiloPlaca(altura: Dp, largura: Dp, caracteres: Int): TextStyle {
+    val porAltura = altura.value * 0.46f
+    val porLargura = largura.value / (caracteres.coerceAtLeast(1) * 0.70f)
+    val tamanho = minOf(porAltura, porLargura)
+    return TextStyle(
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Bold,
+        fontSize = tamanho.sp,
+        letterSpacing = (tamanho * 0.08f).sp,
+        platformStyle = PlatformTextStyle(includeFontPadding = false),
+    )
+}
+
+private fun estiloFaixa(tamanho: Float) = TextStyle(
+    color = Color.White,
     fontWeight = FontWeight.Bold,
-    fontSize = (altura.value * 0.46f).sp,
-    letterSpacing = (altura.value * 0.05f).sp,
+    fontSize = tamanho.sp,
+    lineHeight = tamanho.sp,
+    platformStyle = PlatformTextStyle(includeFontPadding = false),
 )
 
 @Composable
-private fun MolduraPlaca(modifier: Modifier, altura: Dp, conteudo: @Composable BoxScope.() -> Unit) {
+private fun MolduraPlaca(modifier: Modifier, altura: Dp, conteudo: @Composable BoxWithConstraintsScope.() -> Unit) {
     val faixa = altura * 0.26f
+    val compacta = altura < 44.dp
     Column(
         modifier
             .clip(RoundedCornerShape(altura * 0.14f))
             .background(Color.White)
-            .border(2.dp, Color(0xFF1A1A1A), RoundedCornerShape(altura * 0.14f)),
+            .border(if (compacta) 1.5.dp else 2.dp, Color(0xFF1A1A1A), RoundedCornerShape(altura * 0.14f)),
     ) {
         Row(
-            Modifier.fillMaxWidth().height(faixa).background(Extras.cores.placaAzul).padding(horizontal = 10.dp),
+            Modifier.fillMaxWidth().height(faixa).background(Extras.cores.placaAzul).padding(horizontal = altura * 0.14f),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("BR", color = Color.White, fontSize = (faixa.value * 0.5f).sp, fontWeight = FontWeight.Bold)
+            if (!compacta) Text("BR", style = estiloFaixa(faixa.value * 0.55f))
             Text(
-                "BRASIL", color = Color.White, fontSize = (faixa.value * 0.55f).sp, fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp, textAlign = TextAlign.Center, modifier = Modifier.weight(1f),
+                "BRASIL", style = estiloFaixa(faixa.value * 0.6f).copy(letterSpacing = (faixa.value * 0.12f).sp),
+                textAlign = TextAlign.Center, modifier = Modifier.weight(1f), maxLines = 1, softWrap = false,
             )
             // Bandeira estilizada
-            Box(Modifier.size(width = faixa * 0.9f, height = faixa * 0.62f).background(Color(0xFF009C3B)), contentAlignment = Alignment.Center) {
-                Box(Modifier.size(faixa * 0.32f).clip(CircleShape).background(Color(0xFF002776)))
+            Box(Modifier.size(width = faixa * 0.95f, height = faixa * 0.64f).background(Color(0xFF009C3B)), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(faixa * 0.34f).clip(CircleShape).background(Color(0xFF002776)))
             }
         }
-        Box(Modifier.fillMaxWidth().height(altura - faixa).padding(horizontal = 8.dp), contentAlignment = Alignment.Center, content = conteudo)
+        BoxWithConstraints(
+            Modifier.fillMaxWidth().height(altura - faixa).padding(horizontal = altura * 0.12f),
+            contentAlignment = Alignment.Center,
+            content = conteudo,
+        )
+    }
+}
+
+/**
+ * Desenha o elemento [deslocamento] acima da sua posicao e devolve esse espaco ao layout,
+ * para sobrepor cartoes ao cabecalho sem deixar sobra no fim da tela.
+ */
+fun Modifier.subir(deslocamento: Dp): Modifier = layout { medida, restricoes ->
+    val p = medida.measure(restricoes)
+    val dy = deslocamento.roundToPx()
+    layout(p.width, (p.height - dy).coerceAtLeast(0)) { p.place(0, -dy) }
+}
+
+/** Orientacao neutra (nao e erro), com acao opcional. */
+@Composable
+fun CartaoAviso(icone: ImageVector, titulo: String, mensagem: String, acao: String? = null, onAcao: () -> Unit = {}) {
+    Surface(
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
+            Icon(icone, null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(titulo, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Spacer(Modifier.height(2.dp))
+                Text(mensagem, color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.bodyMedium)
+                if (acao != null) {
+                    Spacer(Modifier.height(12.dp))
+                    Button(onClick = onAcao, shape = MaterialTheme.shapes.medium) { Text(acao) }
+                }
+            }
+        }
     }
 }
 
@@ -234,7 +296,14 @@ fun CartaoErro(mensagem: String, acao: String? = null, onAcao: () -> Unit = {}) 
                 Text(mensagem, color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodyMedium)
                 if (acao != null) {
                     Spacer(Modifier.height(10.dp))
-                    FilledTonalButton(onClick = onAcao) { Text(acao) }
+                    Button(
+                        onClick = onAcao,
+                        shape = MaterialTheme.shapes.medium,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        ),
+                    ) { Text(acao) }
                 }
             }
         }

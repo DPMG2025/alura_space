@@ -4,6 +4,7 @@ import android.app.Application
 import br.com.fipeplaca.data.FipeRepositorio
 import br.com.fipeplaca.data.Preferencias
 import br.com.fipeplaca.data.RepositorioSalvos
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class FipeApp : Application() {
     lateinit var prefs: Preferencias
@@ -13,10 +14,19 @@ class FipeApp : Application() {
     lateinit var salvos: RepositorioSalvos
         private set
 
+    /** Tema escolhido em Ajustes; a Activity observa e aplica na hora. */
+    val tema = MutableStateFlow("sistema")
+
+    fun definirTema(valor: String) {
+        prefs.tema = valor
+        tema.value = valor
+    }
+
     override fun onCreate() {
         super.onCreate()
         prefs = Preferencias(this)
         repositorio = FipeRepositorio(prefs)
         salvos = RepositorioSalvos(this)
+        tema.value = prefs.tema
     }
 }

@@ -63,3 +63,30 @@ class AnaliseTest {
         assertEquals(listOf("e", "c", "a"), lista.map { it.id })
     }
 }
+
+class FormatosExtrasTest {
+    @Test fun marcas() {
+        assertEquals("Volkswagen", br.com.fipeplaca.data.Texto.marca("VW - VolksWagen"))
+        assertEquals("Chevrolet", br.com.fipeplaca.data.Texto.marca("GM - Chevrolet"))
+        assertEquals("BMW", br.com.fipeplaca.data.Texto.marca("BMW"))
+        assertEquals("CAOA Chery", br.com.fipeplaca.data.Texto.marca("CAOA Chery"))
+        assertEquals("Kia Motors", br.com.fipeplaca.data.Texto.marca("Kia Motors"))
+    }
+
+    @Test fun datas() {
+        val z = java.time.ZoneId.of("America/Sao_Paulo")
+        val agora = java.time.ZonedDateTime.of(2026, 11, 2, 15, 0, 0, 0, z).toInstant().toEpochMilli()
+        val h = 3_600_000L
+        assertEquals("Hoje, 12:00", br.com.fipeplaca.data.Datas.relativa(agora - 3 * h, agora, z))
+        assertEquals("Ontem, 15:00", br.com.fipeplaca.data.Datas.relativa(agora - 24 * h, agora, z))
+        assertEquals("30/10/26", br.com.fipeplaca.data.Datas.relativa(agora - 72 * h, agora, z))
+    }
+
+    @Test fun projecao() {
+        val queda = (0 until 12).map { PontoHistorico("m$it", "", 50000.0 - it * 500) }
+        assertEquals(50000.0 - 23 * 500, br.com.fipeplaca.data.Projecao.estimar(queda)!!, 0.01)
+        assertNull(br.com.fipeplaca.data.Projecao.estimar(queda.take(5)))
+        val estavel = (0 until 8).map { PontoHistorico("m$it", "", 30000.0) }
+        assertEquals(30000.0, br.com.fipeplaca.data.Projecao.estimar(estavel)!!, 0.01)
+    }
+}

@@ -35,6 +35,26 @@ data class Estatisticas(
     }
 }
 
+/**
+ * Projecao simples pela tendencia (regressao linear dos ultimos meses).
+ * E apenas uma estimativa: a FIPE pode mudar de rumo a qualquer mes.
+ */
+object Projecao {
+    /** Valor estimado daqui a [meses] meses; null com menos de 6 pontos. */
+    fun estimar(pontos: List<PontoHistorico>, meses: Int = 12): Double? {
+        if (pontos.size < 6) return null
+        val n = pontos.size
+        val xm = (n - 1) / 2.0
+        val ym = pontos.sumOf { it.valor } / n
+        var num = 0.0
+        var den = 0.0
+        pontos.forEachIndexed { i, p -> num += (i - xm) * (p.valor - ym); den += (i - xm) * (i - xm) }
+        val inclinacao = if (den == 0.0) 0.0 else num / den
+        val valor = ym + inclinacao * ((n - 1 + meses) - xm)
+        return valor.coerceAtLeast(0.0)
+    }
+}
+
 object Meses {
     private val NOMES = listOf("jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez")
 

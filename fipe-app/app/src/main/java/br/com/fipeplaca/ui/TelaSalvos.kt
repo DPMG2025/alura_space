@@ -40,9 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.com.fipeplaca.data.ConsultaSalva
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import br.com.fipeplaca.data.Datas
 
 data class AcoesSalvos(
     val abrir: (ConsultaSalva) -> Unit = {},
@@ -101,7 +99,6 @@ fun TelaSalvos(itens: List<ConsultaSalva>, acoes: AcoesSalvos, modifier: Modifie
     }
 }
 
-private val formatoData = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
 
 @Composable
 private fun ItemSalvo(c: ConsultaSalva, acoes: AcoesSalvos) {
@@ -114,7 +111,7 @@ private fun ItemSalvo(c: ConsultaSalva, acoes: AcoesSalvos) {
     ) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             if (c.veiculo != null) PlacaMercosul(c.veiculo.placa, Modifier.width(96.dp), altura = 34.dp)
-            else Avatar(c.principal?.marca.orEmpty(), tamanho = 44.dp)
+            else Avatar(br.com.fipeplaca.data.Texto.marca(c.principal?.marca.orEmpty()), tamanho = 44.dp)
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(c.titulo, style = MaterialTheme.typography.titleSmall, maxLines = 2)
@@ -125,7 +122,7 @@ private fun ItemSalvo(c: ConsultaSalva, acoes: AcoesSalvos) {
                 )
                 Text(c.principal?.valor ?: "Sem valor", style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                Text("Consultado em ${formatoData.format(Date(c.data))}", style = MaterialTheme.typography.labelSmall,
+                Text(Datas.relativa(c.data), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {

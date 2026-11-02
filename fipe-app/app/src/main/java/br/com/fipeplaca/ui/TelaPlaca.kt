@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,6 +25,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.com.fipeplaca.data.ConsultaSalva
 import br.com.fipeplaca.data.FipeResultado
+import br.com.fipeplaca.data.Texto
 import br.com.fipeplaca.data.TipoVeiculo
 import br.com.fipeplaca.data.VeiculoPlaca
 
@@ -61,6 +63,7 @@ data class AcoesPlaca(
     val mudarPeriodo: (br.com.fipeplaca.data.PeriodoHistorico) -> Unit = {},
     val abrirConfiguracoes: () -> Unit = {},
     val buscarManual: (TipoVeiculo, String?) -> Unit = { _, _ -> },
+    val abrirTabela: () -> Unit = {},
 )
 
 @Composable
@@ -82,7 +85,7 @@ fun TelaPlaca(
         ) { Spacer(Modifier.height(56.dp)) }
 
         // Cartao de busca sobreposto ao cabecalho
-        Secao(Modifier.padding(horizontal = 16.dp).offset(y = (-48).dp)) {
+        Secao(Modifier.padding(horizontal = 16.dp).subir(48.dp)) {
             Text("Digite a placa do veículo", style = MaterialTheme.typography.titleMedium)
             Text("Placa antiga ou Mercosul", style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -114,11 +117,13 @@ fun TelaPlaca(
         }
 
         Column(
-            Modifier.padding(horizontal = 16.dp).offset(y = (-32).dp),
+            Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             if (estado.semToken) {
-                CartaoErro(
+                CartaoAviso(
+                    Icons.Filled.Settings,
+                    "Falta conectar o serviço de placas",
                     "Para buscar pela placa, informe o token do serviço de consulta veicular (por exemplo, API Placas). " +
                         "A busca por marca e modelo funciona sem token.",
                     "Configurar agora",
@@ -134,6 +139,7 @@ fun TelaPlaca(
             val v = estado.veiculo
             if (v == null && !estado.carregando) {
                 ConteudoInicial(recentes, acoes.abrirSalvo)
+                AtalhoTabela(acoes.abrirTabela)
             }
 
             AnimatedVisibility(visible = v != null, enter = fadeIn() + slideInVertically { it / 8 }) {
@@ -171,6 +177,28 @@ private fun ConteudoInicial(recentes: List<ConsultaSalva>, abrir: (ConsultaSalva
 }
 
 @Composable
+private fun AtalhoTabela(abrir: () -> Unit) {
+    Surface(
+        onClick = abrir,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Avatar("FIPE", tamanho = 44.dp)
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Não tem a placa?", style = MaterialTheme.typography.titleSmall)
+                Text("Consulte qualquer carro, moto ou caminhão pela marca, modelo e ano.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.primary)
+        }
+    }
+}
+
+@Composable
 private fun Passo(numero: String, titulo: String, texto: String) {
     Row(Modifier.padding(vertical = 6.dp)) {
         Avatar(numero, tamanho = 32.dp)
@@ -190,7 +218,7 @@ private fun ResultadoPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: Historic
                 PlacaMercosul(v.placa, Modifier.width(148.dp), altura = 48.dp)
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(listOfNotNull(v.marca, v.modelo).joinToString(" "), style = MaterialTheme.typography.titleMedium, maxLines = 2)
+                    Text(listOfNotNull(v.marca?.let(Texto::marca), v.modelo).joinToString(" "), style = MaterialTheme.typography.titleMedium, maxLines = 2)
                     if (estado.doSalvo) {
                         Text("Aberto dos salvos", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
                     }

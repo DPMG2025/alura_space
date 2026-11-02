@@ -200,7 +200,7 @@ private fun CampoFiltro(filtro: String, etapa: Etapa, onFiltro: (String) -> Unit
         placeholder = {
             Text(when (etapa) {
                 Etapa.MARCAS -> "Buscar marca"
-                Etapa.MODELOS -> "Buscar modelo (ex.: Onix, 1.0, Flex)"
+                Etapa.MODELOS -> "Buscar modelo ou versão"
                 else -> "Buscar ano"
             })
         },
@@ -266,12 +266,13 @@ private fun ListaItens(
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)) {
                             items(destaque, key = { "p" + it.codigo }) { m ->
                                 Column(
-                                    Modifier.width(64.dp).clip(RoundedCornerShape(12.dp)).clickable { onClick(m) },
+                                    Modifier.width(76.dp).clip(RoundedCornerShape(12.dp)).clickable { onClick(m) },
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     Avatar(nomeCurto(m.nome), tamanho = 52.dp)
                                     Spacer(Modifier.height(6.dp))
-                                    Text(nomeCurto(m.nome), style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                                    Text(nomeCurto(m.nome), style = MaterialTheme.typography.labelSmall, maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                                 }
                             }
                         }
@@ -297,8 +298,8 @@ private fun ListaItens(
     }
 }
 
-/** "GM - Chevrolet" vira "Chevrolet"; "VW - VolksWagen" vira "VolksWagen". */
-private fun nomeCurto(nome: String): String = nome.substringAfter(" - ").trim()
+/** "GM - Chevrolet" vira "Chevrolet"; "VW - VolksWagen" vira "Volkswagen". */
+private fun nomeCurto(nome: String): String = Texto.marca(nome)
 
 @Composable
 private fun ResultadoManual(s: ManualUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesManual) {
