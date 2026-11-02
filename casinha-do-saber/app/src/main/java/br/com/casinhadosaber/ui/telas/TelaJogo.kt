@@ -546,7 +546,7 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean) {
                     horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                     maxItemsInEachRow = 3,
                 ) {
-                    for (f in figuras) Text(f, fontSize = 26.sp)
+                    for (f in figuras) Text(f, fontSize = if (figuras.size <= 4) 40.sp else 32.sp)
                 }
             } else {
                 Text(v.emoji, fontSize = (54f * v.escala).sp, lineHeight = (60f * v.escala).sp)
