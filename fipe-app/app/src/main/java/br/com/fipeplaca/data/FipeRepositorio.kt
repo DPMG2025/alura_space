@@ -53,6 +53,7 @@ class FipeRepositorio(
 
     private val cacheMarcas = mutableMapOf<TipoVeiculo, List<ItemFipe>>()
     private var cacheReferencias: List<ReferenciaV2>? = null
+    @Volatile private var brasilApiIndisponivel = false
     private val travaRef = Mutex()
 
     // ---------- Busca manual (marca, modelo, ano) ----------
@@ -144,9 +145,13 @@ class FipeRepositorio(
      */
     private suspend fun referencias(): List<ReferenciaV2> = travaRef.withLock {
         cacheReferencias ?: (
-            runCatching { comNovasTentativas { brasilApi.referencias() }.map { ReferenciaV2(it.codigo.toString(), it.mes.trim()) } }
+            runCatching { comNovasTentativas(tentativas = 2) { brasilApi.referencias() }.map { ReferenciaV2(it.codigo.toString(), it.mes.trim()) } }
                 .getOrNull()?.takeIf { it.isNotEmpty() }
-                ?: v2.referencias()
+                ?: run {
+                    // BrasilAPI fora do ar: nao sera consultada mes a mes nesta sessao (consulta mais rapida)
+                    brasilApiIndisponivel = true
+                    v2.referencias()
+                }
             )
             .sortedByDescending { it.codigo.toIntOrNull() ?: 0 }
             .also { cacheReferencias = it }
@@ -207,9 +212,9 @@ class FipeRepositorio(
     ): ResultadoHistorico = coroutineScope {
         val codigoAno = resolverCodigoAno(r)
             ?: throw PlacaParser.ErroProvedor("Ano modelo não encontrado na tabela FIPE para este código.")
-        val meses = Referencias.filtrar(referencias(), periodo)
         val limite = Semaphore(4)
-        val estado = EstadoBusca()
+        val meses = Referencias.filtrar(referencias(), periodo)
+        val estado = EstadoBusca().apply { brasilApiForaDoAr.set(brasilApiIndisponivel) }
         var feitos = 0
         val pontos = meses.map { ref ->
             async {
