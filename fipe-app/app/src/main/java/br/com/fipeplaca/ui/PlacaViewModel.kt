@@ -27,7 +27,7 @@ data class PlacaUi(
 
 class PlacaViewModel(app: Application) : AndroidViewModel(app) {
     private val repo = (app as FipeApp).repositorio
-    private val salvos = app.salvos
+    private val salvos = (app as FipeApp).salvos
     private val _estado = MutableStateFlow(PlacaUi())
     val estado: StateFlow<PlacaUi> = _estado
     val itensSalvos: StateFlow<List<ConsultaSalva>> = salvos.itens

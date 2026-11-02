@@ -34,7 +34,7 @@ data class ManualUi(
 
 class ManualViewModel(app: Application) : AndroidViewModel(app) {
     private val repo = (app as FipeApp).repositorio
-    private val salvos = app.salvos
+    private val salvos = (app as FipeApp).salvos
     private val _estado = MutableStateFlow(ManualUi())
     val estado: StateFlow<ManualUi> = _estado
     val itensSalvos: StateFlow<List<ConsultaSalva>> = salvos.itens
