@@ -48,7 +48,7 @@ sealed interface Tela {
     data object Inicio : Tela
     data class Caminho(val trilha: Trilha) : Tela
     data class Jogo(val fase: Fase) : Tela
-    data class Premio(val fase: Fase, val estrelas: Int, val item: ItemCasa?) : Tela
+    data class Premio(val fase: Fase, val estrelas: Int, val item: ItemCasa?, val moedas: Int = 0) : Tela
     /** [colocar]: item que acabou de ser ganho e já vai direto para a casa. */
     data class Casa(val colocar: String? = null) : Tela
     data class Quase(val fase: Fase, val acertos: Int) : Tela
@@ -192,12 +192,13 @@ class MainActivity : ComponentActivity() {
                         perfil = estado.perfil,
                         facilitada = estado.facilitada(atual.fase),
                         onSair = { irPara(Tela.Caminho(atual.fase.trilha)) },
-                        onConcluir = { acertos, total ->
-                            val resultado = repo.estado.registrarPartida(atual.fase, acertos, total)
+                        onConcluir = { resultados ->
+                            val acertos = resultados.count { it }
+                            val resultado = repo.estado.registrarPartida(atual.fase, acertos, resultados.size, repo.hoje(), resultados)
                             repo.atualizar { resultado.estado }
                             irPara(
                                 if (resultado.venceu) {
-                                    Tela.Premio(atual.fase, resultado.estrelas, resultado.item)
+                                    Tela.Premio(atual.fase, resultado.estrelas, resultado.item, resultado.moedasGanhas)
                                 } else {
                                     Tela.Quase(atual.fase, acertos)
                                 },
@@ -219,6 +220,7 @@ class MainActivity : ComponentActivity() {
                             fase = atual.fase,
                             estrelas = atual.estrelas,
                             item = atual.item,
+                            moedas = atual.moedas,
                             perfil = estado.perfil,
                             temProxima = proxima != null,
                             onColocarNaCasa = { irPara(Tela.Casa(atual.item?.id)) },

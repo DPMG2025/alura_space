@@ -12,7 +12,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.Loja
-import br.com.casinhadosaber.dominio.ProdutoDaLoja
+import br.com.casinhadosaber.dominio.Produto
+import br.com.casinhadosaber.dominio.Categoria
 import br.com.casinhadosaber.ui.componentes.pulsando
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
@@ -287,20 +288,22 @@ fun TelaCasa(
                 onEscolher = ::colocarDoBau,
                 onJogar = onJogar,
                 onComprar = { produto ->
-                    val comprado = estado.comprar(produto)
-                    if (comprado == null) {
+                    val jaTinha = produto.id in estado.comprados
+                    val novo = estado.usar(produto)
+                    if (novo == null) {
                         sons.erro()
-                        narrador.falar("Faltam estrelas! Jogue mais fases para ganhar estrelas.")
+                        narrador.falar("Faltam moedinhas! Cada acerto de primeira vale uma moedinha.")
                     } else {
-                        onAtualizar { it.comprar(produto) ?: it }
-                        confete++
-                        sons.premio()
-                        narrador.falar(
-                            when (produto) {
-                                is ProdutoDaLoja.CorDoTelhado -> "Telhado novo, ${Loja.nomesDasCores[produto.indice]}!"
-                                is ProdutoDaLoja.Visitante -> "${produto.nome} veio passear no seu jardim!"
-                            },
-                        )
+                        onAtualizar { it.usar(produto) ?: it }
+                        if (!jaTinha) {
+                            confete++
+                            sons.premio()
+                            narrador.falar(
+                                if (produto.categoria == Categoria.VISITANTE) "${produto.nome} veio passear no seu jardim!" else "Oba! ${produto.nome}!",
+                            )
+                        } else {
+                            sons.colocar()
+                        }
                     }
                 },
             )
@@ -322,7 +325,7 @@ private fun Bau(
     estado: EstadoJogo,
     onEscolher: (ItemCasa) -> Unit,
     onJogar: () -> Unit,
-    onComprar: (ProdutoDaLoja) -> Unit,
+    onComprar: (Produto) -> Unit,
 ) {
     var naLoja by remember { mutableStateOf(false) }
     Column(
@@ -338,12 +341,7 @@ private fun Bau(
         // Abas: baú de presentes e loja de estrelas.
         Row(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Aba("🧺" + if (itens.isNotEmpty()) " ${itens.size}" else "", "Baú de presentes", selecionada = !naLoja) { naLoja = false }
-            Aba("⭐ ${estado.saldo}", "Loja de estrelas, você tem ${estado.saldo} estrelas", selecionada = naLoja) { naLoja = true }
-            Spacer(Modifier.weight(1f))
-            if (!naLoja && itens.isEmpty() && estado.colocados.isNotEmpty()) {
-                // Dica sem texto: arrastar para arrumar, levar ao baú para guardar.
-                Text("✋➡️🏠  🏠➡️🧺", style = MaterialTheme.typography.titleMedium)
-            }
+            Aba("🪙 ${estado.moedas}", "Loja, você tem ${estado.moedas} moedinhas", selecionada = naLoja) { naLoja = true }
         }
         Spacer(Modifier.height(8.dp))
         if (naLoja) {
@@ -352,17 +350,27 @@ private fun Bau(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(Loja.vitrine(estado), key = { it.id }) { produto ->
-                    val podeComprar = estado.saldo >= produto.preco
+                    val tem = produto.id in estado.comprados
+                    val preco = Loja.preco(produto, estado)
+                    val podeComprar = tem || estado.moedas >= preco
+                    val usando = Loja.emUso(produto, estado)
                     BotaoFofo(
                         onClick = { onComprar(produto) },
-                        cor = Color.White,
+                        cor = if (usando) Color(0xFFDFF7E6) else Color.White,
                         corBase = Color(0xFF8E5A34),
-                        descricao = "${produto.nome}, ${produto.preco} estrelas",
-                        modifier = Modifier.graphicsLayer { alpha = if (podeComprar) 1f else 0.55f },
+                        descricao = produto.nome + if (tem) ", é seu" else ", $preco moedinhas",
+                        modifier = Modifier.graphicsLayer { alpha = if (podeComprar) 1f else 0.5f },
                     ) {
                         Column(Modifier.width(92.dp).padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(produto.icone, fontSize = 40.sp)
-                            Text("⭐ ${produto.preco}", style = MaterialTheme.typography.titleMedium)
+                            Text(produto.icone, fontSize = 34.sp, maxLines = 1)
+                            Text(
+                                when {
+                                    usando -> "✔"
+                                    tem -> "♻️"
+                                    else -> "🪙 $preco"
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                            )
                         }
                     }
                 }
@@ -413,10 +421,10 @@ private fun Aba(texto: String, descricao: String, selecionada: Boolean, onClick:
     Text(
         texto,
         style = MaterialTheme.typography.titleLarge,
-        color = if (selecionada) Cores.Texto else Color.White,
+        color = Cores.Texto,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .background(if (selecionada) Color.White else Color(0x33FFFFFF))
+            .background(if (selecionada) Color.White else Color(0xFFFFD27A))
             .semantics { contentDescription = descricao }
             .clickable(onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 6.dp),

@@ -10,6 +10,8 @@ data class Perfil(
     val cabelo: Int = 0,
     /** Cor da roupa; -1 usa a cor padrão do menino (azul) ou da menina (rosa). */
     val roupa: Int = -1,
+    /** Chapéu comprado na loja (emoji), ou vazio. */
+    val chapeu: String = "",
 ) {
     val corDaRoupa: Long
         get() = Aparencia.roupas.getOrNull(roupa) ?: if (genero == Genero.MENINA) Aparencia.roupas[1] else Aparencia.roupas[0]
@@ -39,23 +41,46 @@ data class EstadoJogo(
     val segundosJogados: Long = 0,
     /** Derrotas seguidas em cada fase ("TRILHA:fase"). Com 2 ou mais, a fase fica mais fácil. */
     val tentativasSemVencer: Map<String, Int> = emptyMap(),
-    /** Loja de estrelas. */
-    val estrelasGastas: Int = 0,
+    /** Loja: moedinhas, o que já foi comprado e o que está em uso. */
+    val moedas: Int = 0,
+    val moedasHoje: Int = 0,
+    val diaDasMoedas: Long = -1,
+    val comprados: Set<String> = emptySet(),
     val corTelhado: Int = 0,
+    val corPorta: Int = 0,
+    val papelDeParede: Int = 0,
+    val clima: Int = 0,
     val visitantes: Set<String> = emptySet(),
+    /** Últimos resultados de primeira por fase ("TRILHA:fase" -> "1101..."), no máximo 10. */
+    val historico: Map<String, String> = emptyMap(),
 ) {
     val totalDeEstrelas: Int get() = estrelas.values.sum()
-    val saldo: Int get() = totalDeEstrelas - estrelasGastas
 
-    /** Compra um produto, se der. Devolve null quando faltam estrelas. */
-    fun comprar(p: ProdutoDaLoja): EstadoJogo? {
-        if (saldo < p.preco) return null
-        val pago = copy(estrelasGastas = estrelasGastas + p.preco)
-        return when (p) {
-            is ProdutoDaLoja.CorDoTelhado -> pago.copy(corTelhado = p.indice)
-            is ProdutoDaLoja.Visitante -> pago.copy(visitantes = visitantes + p.icone)
+    /**
+     * Toca num produto da loja: se já é seu, só passa a usar (ou tira, no caso de chapéu e visitante);
+     * se não é, compra com moedinhas. Devolve null quando faltam moedas.
+     */
+    fun usar(p: Produto): EstadoJogo? {
+        val base = if (p.id in comprados) {
+            this
+        } else {
+            val preco = Loja.preco(p, this)
+            if (moedas < preco) return null
+            copy(moedas = moedas - preco, comprados = comprados + p.id)
+        }
+        val v = p.valor
+        return when (p.categoria) {
+            Categoria.TELHADO -> base.copy(corTelhado = if (corTelhado.toString() == v && p.id in comprados) 0 else v.toInt())
+            Categoria.PORTA -> base.copy(corPorta = if (corPorta.toString() == v && p.id in comprados) 0 else v.toInt())
+            Categoria.PAREDE -> base.copy(papelDeParede = if (papelDeParede.toString() == v && p.id in comprados) 0 else v.toInt())
+            Categoria.CLIMA -> base.copy(clima = if (clima.toString() == v && p.id in comprados) 0 else v.toInt())
+            Categoria.CHAPEU -> base.copy(perfil = base.perfil?.copy(chapeu = if (base.perfil.chapeu == v) "" else v))
+            Categoria.VISITANTE -> base.copy(visitantes = if (v in visitantes && p.id in comprados) visitantes - v else visitantes + v)
         }
     }
+
+    /** Fase em que a criança mais erra de primeira, entre as já liberadas (para os pais). */
+    fun precisaoDaFase(chave: String): Int? = historico[chave]?.takeIf { it.isNotEmpty() }?.let { 100 * it.count { c -> c == '1' } / it.length }
 
     /** Depois de 2 tentativas sem vencer, a fase vem com só 2 opções por pergunta. */
     fun facilitada(fase: Fase): Boolean = (tentativasSemVencer[chave(fase.trilha, fase.numero)] ?: 0) >= 2
@@ -70,19 +95,28 @@ data class EstadoJogo(
      * Registra uma partida. A fase só é vencida com pelo menos [MINIMO_PARA_VENCER] acertos de primeira:
      * assim o presente da casa vem do aprendizado, não de tocar em tudo.
      */
-    fun registrarPartida(fase: Fase, acertos: Int, total: Int): ResultadoPartida {
+    fun registrarPartida(fase: Fase, acertos: Int, total: Int, dia: Long = 0, resultados: List<Boolean> = emptyList()): ResultadoPartida {
+        // Moedinhas: uma por acerto de primeira, até MOEDAS_POR_DIA por dia (incentiva voltar, sem maratona).
+        val hojeJa = if (diaDasMoedas == dia) moedasHoje else 0
+        val ganhas = acertos.coerceAtMost((MOEDAS_POR_DIA - hojeJa).coerceAtLeast(0))
+        val k0 = chave(fase.trilha, fase.numero)
+        val novoHistorico = ((historico[k0] ?: "") + resultados.joinToString("") { if (it) "1" else "0" }).takeLast(10)
         val comEstatistica = copy(
             respondidas = respondidas + (fase.trilha to (respondidas[fase.trilha] ?: 0) + total),
             acertosDePrimeira = acertosDePrimeira + (fase.trilha to (acertosDePrimeira[fase.trilha] ?: 0) + acertos),
+            moedas = moedas + ganhas,
+            moedasHoje = hojeJa + ganhas,
+            diaDasMoedas = dia,
+            historico = if (resultados.isEmpty()) historico else historico + (k0 to novoHistorico),
         )
         val estrelas = estrelasPorAcertos(acertos, total)
         val k = chave(fase.trilha, fase.numero)
         if (estrelas == 0) {
             val derrotas = comEstatistica.copy(tentativasSemVencer = tentativasSemVencer + (k to (tentativasSemVencer[k] ?: 0) + 1))
-            return ResultadoPartida(derrotas, 0, null)
+            return ResultadoPartida(derrotas, 0, null, ganhas)
         }
         val (novo, item) = comEstatistica.copy(tentativasSemVencer = tentativasSemVencer - k).registrarVitoria(fase, estrelas)
-        return ResultadoPartida(novo, estrelas, item)
+        return ResultadoPartida(novo, estrelas, item, ganhas)
     }
     val fasesVencidas: Int get() = estrelas.size
     val itensGanhos: List<ItemCasa> get() = ItensDaCasa.ganhos(fasesVencidas)
@@ -126,6 +160,8 @@ data class EstadoJogo(
     companion object {
         fun chave(trilha: Trilha, fase: Int) = "${trilha.name}:$fase"
 
+        const val MOEDAS_POR_DIA = 30
+
         /** 4 de 5 de primeira: chutando ao acaso, quase nunca se vence (cerca de 4%). */
         const val MINIMO_PARA_VENCER = 4
 
@@ -138,7 +174,7 @@ data class EstadoJogo(
     }
 }
 
-data class ResultadoPartida(val estado: EstadoJogo, val estrelas: Int, val item: ItemCasa?) {
+data class ResultadoPartida(val estado: EstadoJogo, val estrelas: Int, val item: ItemCasa?, val moedasGanhas: Int = 0) {
     val venceu get() = estrelas > 0
 }
 
@@ -179,6 +215,14 @@ object Serializacao {
     fun textoParaMapa(s: String?): Map<String, Int> = s.orEmpty().split(";").mapNotNull { parte ->
         val (k, v) = parte.split("=").takeIf { it.size == 2 } ?: return@mapNotNull null
         k to (v.toIntOrNull() ?: return@mapNotNull null)
+    }.toMap()
+
+    fun mapaDeTextoParaTexto(m: Map<String, String>): String = m.entries.joinToString(";") { "${it.key}=${it.value}" }
+
+    fun textoParaMapaDeTexto(s: String?): Map<String, String> = s.orEmpty().split(";").mapNotNull { parte ->
+        val (k, v) = parte.split("=").takeIf { it.size == 2 } ?: return@mapNotNull null
+        if (v.any { it != '0' && it != '1' }) return@mapNotNull null
+        k to v
     }.toMap()
 
     fun coresParaTexto(m: Map<Comodo, Int>): String = m.entries.joinToString(";") { "${it.key.name}=${it.value}" }

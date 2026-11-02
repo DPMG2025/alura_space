@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
@@ -138,18 +139,36 @@ fun CenaDaCasa(
     }
 
     if (preencherAltura) {
-        BoxWithConstraints(modifier.clipToBounds(), contentAlignment = Alignment.BottomCenter) {
+        BoxWithConstraints(modifier.clipToBounds(), contentAlignment = Alignment.TopCenter) {
             val alturaCena = minOf(maxWidth * PROPORCAO_CENA, maxHeight)
-            val corteDoChao = alturaCena * 0.22f
+            // A sobra de altura vai mais para o jardim (65%) do que para o céu (35%).
+            val sobra = maxHeight - alturaCena
+            val ceuExtra = sobra * 0.35f
+            val corteDoChao = alturaCena * 0.22f + sobra * 0.65f
             Canvas(Modifier.fillMaxSize()) {
                 val ceu = if (noite) listOf(Color(0xFF0F1838), Color(0xFF16204A)) else listOf(Color(0xFF5DB6F5), Color(0xFF7EC8FF))
-                drawRect(Brush.verticalGradient(ceu, endY = size.height - alturaCena.toPx()))
-                // Grama dos lados, quando a casa fica mais estreita que a tela.
-                val chao = if (noite) Color(0xFF3F7A45) else Color(0xFF7CC56B)
-                drawRect(chao, Offset(0f, size.height - corteDoChao.toPx()), Size(size.width, corteDoChao.toPx()))
+                val ceuInteiro = ceu + if (noite) Color(0xFF3B4C8C) else Color(0xFFCDEBFF)
+                drawRect(Brush.verticalGradient(ceuInteiro, endY = size.height - corteDoChao.toPx()))
+                // Grama: dos lados da casa e o jardim que continua para baixo, com tufinhos e flores.
+                val chao = if (noite) listOf(Color(0xFF3F7A45), Color(0xFF2F5E35)) else listOf(Color(0xFF7CC56B), Color(0xFF4F9B44))
+                val topoChao = size.height - corteDoChao.toPx()
+                drawRect(Brush.verticalGradient(chao, startY = topoChao, endY = size.height), Offset(0f, topoChao), Size(size.width, corteDoChao.toPx()))
+                val baseCena = ceuExtra.toPx() + alturaCena.toPx()
+                for (i in 0 until 24) {
+                    val x = ((i * 0.137f + 0.03f) % 1f) * size.width
+                    val y = baseCena + ((i * 0.29f) % 1f) * (size.height - baseCena)
+                    if (y < baseCena + 4f) continue
+                    if (i % 4 == 0) {
+                        drawCircle(Color(0xFFFFE066), 5f, Offset(x, y))
+                        drawCircle(Color.White, 3f, Offset(x - 6f, y))
+                        drawCircle(Color.White, 3f, Offset(x + 6f, y))
+                    } else {
+                        drawOval(if (noite) Color(0xFF356B3B) else Color(0xFF6BB85C), Offset(x - 14f, y - 4f), Size(28f, 8f))
+                    }
+                }
             }
             CenaDaCasa(
-                estado, Modifier.height(alturaCena), interativa, pintando, novaEstrutura, destaqueId, puloDaCrianca, noite, false,
+                estado, Modifier.padding(top = ceuExtra).height(alturaCena), interativa, pintando, novaEstrutura, destaqueId, puloDaCrianca, noite, false,
                 onTocarItem, onMoverItem, onGuardarItem, onRecusarItem, onPintar, onTocarCrianca, onMoverCrianca,
             )
         }
@@ -613,6 +632,20 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
             drawCircle(Color.White.copy(alpha = brilho), radius = X(0.004f + (i % 3) * 0.002f), center = Offset(X(x), Y(y)))
         }
     }
+    // Nuvens e passarinhos de enfeite, sempre passeando (a cena nunca fica parada).
+    if (!noite) {
+        for (k in 0 until 2) {
+            val x = ((t * 0.5f + k * 0.55f) % 1.3f) - 0.15f
+            nuvemDeFundo(X(x), Y(0.05f + k * 0.07f), X(0.09f))
+        }
+        for (k in 0 until 3) {
+            val bx = X(((t + k * 0.31f) % 1f) * 1.1f - 0.05f)
+            val by = Y(0.22f + k * 0.03f) + kotlin.math.sin((t * 6f + k) * Math.PI.toFloat()) * X(0.006f)
+            val asa = X(0.012f)
+            drawLine(Color(0xFF3D2C5E), Offset(bx - asa, by - asa * 0.5f), Offset(bx, by), 3f)
+            drawLine(Color(0xFF3D2C5E), Offset(bx, by), Offset(bx + asa, by - asa * 0.5f), 3f)
+        }
+    }
     // morros
     drawOval(if (noite) Color(0xFF4C7F55) else Color(0xFFA8DD8F), topLeft = Offset(X(-0.2f), Y(0.68f)), size = Size(X(0.7f), Y(0.24f)))
     drawOval(if (noite) Color(0xFF447549) else Color(0xFF98D47E), topLeft = Offset(X(0.45f), Y(0.70f)), size = Size(X(0.8f), Y(0.2f)))
@@ -667,6 +700,16 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
         }
     }
 
+    // Terreno ainda vazio: o contorno pontilhado da casa que vai nascer ali.
+    if (!e.temEstrutura(Estrutura.PAREDES)) {
+        val tracejado = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(X(0.025f), X(0.018f)))
+        val contorno = Path().apply {
+            moveTo(X(Planta.ESQ), Y(Planta.BASE)); lineTo(X(Planta.ESQ), Y(Planta.TOPO)); lineTo(X(0.04f), Y(0.315f))
+            lineTo(X(0.5f), Y(0.075f)); lineTo(X(0.96f), Y(0.315f)); lineTo(X(Planta.DIR), Y(Planta.TOPO)); lineTo(X(Planta.DIR), Y(Planta.BASE))
+        }
+        drawPath(contorno, Color.White.copy(alpha = 0.75f), style = Stroke(X(0.008f), pathEffect = tracejado, join = StrokeJoin.Round))
+    }
+
     // chaminé fica atrás do telhado
     if (e.temEstrutura(Estrutura.TELHADO)) {
         camada(Estrutura.CHAMINE) {
@@ -689,6 +732,7 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
         drawRect(Color(e.corDo(Comodo.BANHEIRO)), Offset(X(Planta.DIVISAO_CIMA), Y(T)), Size(X(R - Planta.DIVISAO_CIMA), Y(M - T)))
         drawRect(Color(e.corDo(Comodo.SALA)), Offset(X(L), Y(M)), Size(X(Planta.DIVISAO_BAIXO - L), Y(B - M)))
         drawRect(Color(e.corDo(Comodo.COZINHA)), Offset(X(Planta.DIVISAO_BAIXO), Y(M)), Size(X(R - Planta.DIVISAO_BAIXO), Y(B - M)))
+        papelDeParede(e.papelDeParede, X(L), Y(T), X(R - L), Y(B - T))
 
         // azulejos do banheiro e da cozinha
         val linha = Color(0x0F000000)
@@ -730,8 +774,9 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
                     ),
                 )
             }
-            drawPath(porta, Color(0xFFA0522D))
-            drawPath(porta, Color(0xFF7A3E22), style = Stroke(3f))
+            val corPorta = Color(Loja.coresDaPorta.getOrElse(e.corPorta) { Loja.coresDaPorta[0] })
+            drawPath(porta, corPorta)
+            drawPath(porta, escurecer(corPorta, 0.7f), style = Stroke(3f))
             drawCircle(Color(0xFFFFD166), X(0.009f), Offset(X(0.335f), Y(0.70f)))
             drawCircle(Color(0xFFFFE9A8), X(0.017f), Offset(X(0.3075f), Y(0.645f)))
         }
@@ -748,6 +793,7 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
         }
     }
 
+    // (o clima é desenhado por cima de tudo, no fim)
     camada(Estrutura.TELHADO) {
         val telhado = Path().apply {
             moveTo(X(0.04f), Y(0.315f)); lineTo(X(0.5f), Y(0.075f)); lineTo(X(0.96f), Y(0.315f)); close()
@@ -763,6 +809,58 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
         }
         drawCircle(Color.White, X(0.04f), Offset(X(0.5f), Y(0.215f)))
         drawCircle(if (noite) CorLuz else CorVidro, X(0.03f), Offset(X(0.5f), Y(0.215f)))
+    }
+
+    // Chuva ou neve compradas na loja.
+    when (e.clima) {
+        1 -> for (i in 0 until 40) {
+            val x = ((i * 0.173f) % 1f)
+            val y = ((i * 0.071f + t * 2f) % 1f)
+            drawLine(Color(0xAA7FB8FF), Offset(X(x), Y(y)), Offset(X(x - 0.008f), Y(y + 0.03f)), 3f)
+        }
+        2 -> for (i in 0 until 36) {
+            val x = ((i * 0.173f) % 1f) + 0.01f * kotlin.math.sin((t * 4f + i) * Math.PI.toFloat())
+            val y = ((i * 0.071f + t * 0.8f) % 1f)
+            drawCircle(Color.White.copy(alpha = 0.9f), X(0.006f + (i % 3) * 0.002f), Offset(X(x), Y(y)))
+        }
+    }
+}
+
+private fun DrawScope.nuvemDeFundo(x: Float, y: Float, r: Float) {
+    val c = Color.White.copy(alpha = 0.75f)
+    drawCircle(c, r * 0.6f, Offset(x, y))
+    drawCircle(c, r * 0.8f, Offset(x + r * 0.7f, y - r * 0.2f))
+    drawCircle(c, r * 0.6f, Offset(x + r * 1.4f, y))
+}
+
+/** Desenhos do papel de parede (comprados na loja): listras, bolinhas ou estrelinhas. */
+private fun DrawScope.papelDeParede(tipo: Int, x0: Float, y0: Float, w: Float, h: Float) {
+    if (tipo == 0) return
+    val cor = Color(0x14000000)
+    val passo = w / 18f
+    when (tipo) {
+        1 -> {
+            var x = x0
+            while (x < x0 + w) { drawRect(cor, Offset(x, y0), Size(passo / 2, h)); x += passo }
+        }
+        2 -> {
+            var y = y0 + passo / 2
+            var linha = 0
+            while (y < y0 + h) {
+                var x = x0 + if (linha % 2 == 0) passo / 2 else passo
+                while (x < x0 + w) { drawCircle(cor, passo * 0.18f, Offset(x, y)); x += passo }
+                y += passo; linha++
+            }
+        }
+        else -> {
+            var y = y0 + passo
+            var linha = 0
+            while (y < y0 + h) {
+                var x = x0 + if (linha % 2 == 0) passo else passo * 2
+                while (x < x0 + w) { drawPath(caminhoEstrela(Offset(x, y), passo * 0.3f), Color(0x26FFC93C)); x += passo * 2 }
+                y += passo * 1.5f; linha++
+            }
+        }
     }
 }
 

@@ -7,7 +7,13 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -58,12 +64,27 @@ fun Crianca(
         label = "piscar",
     )
     val descricao = if (perfil.genero == Genero.MENINA) "Menina" else "Menino"
-    Canvas(
+    BoxWithConstraints(
         modifier
             .aspectRatio(PROPORCAO_CRIANCA)
             .semantics { contentDescription = perfil.nome.ifBlank { descricao } },
     ) {
-        desenharCrianca(perfil, if (acenando) balanco else null, olhosFechados = piscar > 0.96f, humor = humor)
+        Canvas(Modifier.fillMaxSize()) {
+            desenharCrianca(perfil, if (acenando) balanco else null, olhosFechados = piscar > 0.96f, humor = humor)
+        }
+        // Chapéu comprado na loja, em cima da cabeça.
+        if (perfil.chapeu.isNotEmpty()) {
+            val tamanho = maxWidth * 0.62f
+            val densidade = LocalDensity.current
+            Text(
+                perfil.chapeu,
+                fontSize = with(densidade) { tamanho.toSp() },
+                lineHeight = with(densidade) { (tamanho * 1.1f).toSp() },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = -tamanho * 0.42f),
+            )
+        }
     }
 }
 

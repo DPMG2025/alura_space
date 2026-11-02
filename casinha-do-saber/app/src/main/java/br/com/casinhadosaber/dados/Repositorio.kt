@@ -54,7 +54,7 @@ class Repositorio(context: Context) {
         prefs.edit { putBoolean(DORMINDO, false); putLong(SEGUNDOS_HOJE, 0) }
     }
 
-    private fun hoje(): Long = System.currentTimeMillis().let { it + java.util.TimeZone.getDefault().getOffset(it) } / 86_400_000L
+    fun hoje(): Long = System.currentTimeMillis().let { it + java.util.TimeZone.getDefault().getOffset(it) } / 86_400_000L
 
     var musicaLigada by mutableStateOf(prefs.getBoolean(MUSICA, true))
         private set
@@ -91,6 +91,7 @@ class Repositorio(context: Context) {
                 pele = prefs.getInt(PELE, 0),
                 cabelo = prefs.getInt(CABELO, 0),
                 roupa = prefs.getInt(ROUPA, -1),
+                chapeu = prefs.getString(CHAPEU, "").orEmpty(),
             )
         } else {
             null
@@ -105,9 +106,16 @@ class Repositorio(context: Context) {
             acertosDePrimeira = Serializacao.textoParaTrilhas(prefs.getString(ACERTOS, null)),
             segundosJogados = prefs.getLong(SEGUNDOS, 0),
             tentativasSemVencer = Serializacao.textoParaMapa(prefs.getString(TENTATIVAS, null)),
-            estrelasGastas = prefs.getInt(GASTAS, 0),
+            moedas = prefs.getInt(MOEDAS, 0),
+            moedasHoje = prefs.getInt(MOEDAS_HOJE, 0),
+            diaDasMoedas = prefs.getLong(DIA_MOEDAS, -1),
+            comprados = prefs.getString(COMPRADOS, "").orEmpty().split(",").filter { it.isNotBlank() }.toSet(),
             corTelhado = prefs.getInt(COR_TELHADO, 0),
+            corPorta = prefs.getInt(COR_PORTA, 0),
+            papelDeParede = prefs.getInt(PAPEL, 0),
+            clima = prefs.getInt(CLIMA, 0),
             visitantes = prefs.getString(VISITANTES, "").orEmpty().split(",").filter { it.isNotBlank() }.toSet(),
+            historico = Serializacao.textoParaMapaDeTexto(prefs.getString(HISTORICO, null)),
         )
     }
 
@@ -118,6 +126,7 @@ class Repositorio(context: Context) {
             putInt(PELE, it.pele)
             putInt(CABELO, it.cabelo)
             putInt(ROUPA, it.roupa)
+            putString(CHAPEU, it.chapeu)
         }
         putString(ESTRELAS, Serializacao.estrelasParaTexto(e.estrelas))
         putString(COLOCADOS, Serializacao.posicoesParaTexto(e.colocados))
@@ -128,8 +137,15 @@ class Repositorio(context: Context) {
         putString(ACERTOS, Serializacao.trilhasParaTexto(e.acertosDePrimeira))
         putLong(SEGUNDOS, e.segundosJogados)
         putString(TENTATIVAS, Serializacao.mapaParaTexto(e.tentativasSemVencer))
-        putInt(GASTAS, e.estrelasGastas)
+        putInt(MOEDAS, e.moedas)
+        putInt(MOEDAS_HOJE, e.moedasHoje)
+        putLong(DIA_MOEDAS, e.diaDasMoedas)
+        putString(COMPRADOS, e.comprados.joinToString(","))
         putInt(COR_TELHADO, e.corTelhado)
+        putInt(COR_PORTA, e.corPorta)
+        putInt(PAPEL, e.papelDeParede)
+        putInt(CLIMA, e.clima)
+        putString(HISTORICO, Serializacao.mapaDeTextoParaTexto(e.historico))
         putString(VISITANTES, e.visitantes.joinToString(","))
     }
 
@@ -153,7 +169,15 @@ class Repositorio(context: Context) {
         const val DORMINDO = "dormindo"
         const val DIA = "dia"
         const val SEGUNDOS_HOJE = "segundos_hoje"
-        const val GASTAS = "estrelas_gastas"
+        const val MOEDAS = "moedas"
+        const val MOEDAS_HOJE = "moedas_hoje"
+        const val DIA_MOEDAS = "dia_moedas"
+        const val COMPRADOS = "comprados"
+        const val COR_PORTA = "cor_porta"
+        const val PAPEL = "papel"
+        const val CLIMA = "clima"
+        const val HISTORICO = "historico"
+        const val CHAPEU = "chapeu"
         const val COR_TELHADO = "cor_telhado"
         const val VISITANTES = "visitantes"
         const val MUSICA = "musica"

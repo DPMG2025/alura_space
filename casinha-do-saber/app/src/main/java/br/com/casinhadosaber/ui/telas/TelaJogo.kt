@@ -89,7 +89,8 @@ fun TelaJogo(
     fase: Fase,
     perfil: Perfil?,
     onSair: () -> Unit,
-    onConcluir: (acertosDePrimeira: Int, total: Int) -> Unit,
+    /** Um item por pergunta (sem contar o exemplo): acertou de primeira? */
+    onConcluir: (resultados: List<Boolean>) -> Unit,
     /** Depois de duas tentativas sem vencer, cada pergunta vem com só duas opções. */
     facilitada: Boolean = false,
 ) {
@@ -102,7 +103,7 @@ fun TelaJogo(
         if (facilitada) listOf(GeradorDeFases().perguntas(fase, 1).first()) + normais else normais
     }
     var indice by remember { mutableIntStateOf(0) }
-    var acertosDePrimeira by remember { mutableIntStateOf(0) }
+    var resultados by remember { mutableStateOf(listOf<Boolean>()) }
     var pulo by remember { mutableIntStateOf(0) }
     var erradas by remember { mutableStateOf(setOf<Int>()) }
     var acertou by remember { mutableStateOf(false) }
@@ -129,7 +130,7 @@ fun TelaJogo(
         if (acertou || i in erradas) return
         if (i == pergunta.indiceCorreto) {
             acertou = true
-            if (erradas.isEmpty() && !exemplo) acertosDePrimeira++
+            if (!exemplo) resultados = resultados + erradas.isEmpty()
             humor = Humor.FELIZ
             pulo++
             vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -145,7 +146,7 @@ fun TelaJogo(
                     erradas = emptySet()
                     acertou = false
                 } else {
-                    onConcluir(acertosDePrimeira, if (facilitada) perguntas.size - 1 else perguntas.size)
+                    onConcluir(resultados)
                 }
             }
         } else {
@@ -216,28 +217,41 @@ fun TelaJogo(
                 label = "pergunta",
             ) { i ->
                 val p = perguntas[i]
-                val opcoes = @Composable {
+                val opcoes = @Composable { alturaGrande: androidx.compose.ui.unit.Dp? ->
                     Opcoes(
                         pergunta = p,
                         erradas = if (i == indice) erradas else emptySet(),
                         acertou = i == indice && acertou,
                         onTocar = ::responder,
                         mostrarCerta = facilitada && i == 0,
-                        grande = p.cena == Cena.Nenhuma,
+                        alturaGrande = alturaGrande,
                     )
                 }
                 // Mesmo esqueleto em todos os jogos: figura no meio, respostas sempre embaixo.
                 Column(Modifier.fillMaxSize()) {
-                    Box(
-                        Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        if (p.cena != Cena.Nenhuma) CenaDaPergunta(p.cena)
+                    if (p.cena == Cena.Nenhuma) {
+                        // Sem figura: as respostas (que são a própria pergunta) ocupam toda a altura livre.
+                        BoxWithConstraints(
+                            Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .padding(top = 12.dp),
+                            contentAlignment = Alignment.BottomCenter,
+                        ) {
+                            opcoes(maxHeight * 0.85f)
+                        }
+                    } else {
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CenaDaPergunta(p.cena)
+                        }
+                        opcoes(null)
                     }
-                    opcoes()
                 }
             }
         }
@@ -423,7 +437,8 @@ private fun Opcoes(
     acertou: Boolean,
     onTocar: (Int) -> Unit,
     mostrarCerta: Boolean = false,
-    grande: Boolean = false,
+    /** Altura disponível quando as respostas ocupam a tela toda (jogos sem figura). */
+    alturaGrande: androidx.compose.ui.unit.Dp? = null,
 ) {
     val grupos = pergunta.opcoes.any { (it.visual as? Visual.Emoji)?.let { v -> contarFiguras(v.emoji) > 1 } == true }
     val n = pergunta.opcoes.size
@@ -431,19 +446,19 @@ private fun Opcoes(
         when {
             grupos -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 pergunta.opcoes.forEachIndexed { i, o ->
-                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = if (grande) 260.dp else 150.dp, mostrarCerta = mostrarCerta)
+                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaGrande ?: 150.dp, mostrarCerta = mostrarCerta)
                 }
             }
             n == 4 -> for (linha in 0 until 2) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     for (i in linha * 2 until linha * 2 + 2) {
-                        CartaoOpcao(pergunta.opcoes[i], i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = if (grande) 170.dp else 112.dp, mostrarCerta = mostrarCerta)
+                        CartaoOpcao(pergunta.opcoes[i], i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaGrande?.let { (it - 10.dp) / 2 } ?: 112.dp, mostrarCerta = mostrarCerta)
                     }
                 }
             }
             else -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 pergunta.opcoes.forEachIndexed { i, o ->
-                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = if (grande) 240.dp else 130.dp, mostrarCerta = mostrarCerta)
+                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaGrande ?: 130.dp, mostrarCerta = mostrarCerta)
                 }
             }
         }
@@ -509,7 +524,7 @@ private fun CartaoOpcao(
                 .padding(8.dp),
             contentAlignment = Alignment.Center,
         ) {
-            VisualDaOpcao(opcao.visual, certa)
+            VisualDaOpcao(opcao.visual, certa, altura)
             if (certa || errada) {
                 Text(
                     if (certa) "✔" else "✖",
@@ -530,7 +545,7 @@ private fun descreverOpcao(o: Opcao): String = when (val v = o.visual) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun VisualDaOpcao(v: Visual, certa: Boolean) {
+private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui.unit.Dp = 150.dp) {
     when (v) {
         is Visual.Texto -> Text(
             v.texto,
@@ -541,15 +556,25 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean) {
         is Visual.Emoji -> {
             val figuras = separarFiguras(v.emoji)
             if (figuras.size > 1) {
-                // Quantidades em grade (como num dado), fáceis de contar de olhada.
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                    maxItemsInEachRow = 3,
-                ) {
-                    for (f in figuras) Text(f, fontSize = if (figuras.size <= 4) 40.sp else 32.sp)
+                // Todas as quantidades na mesma grade de 2 colunas, com o mesmo tamanho de casinha:
+                // "mais" sempre parece maior, sem a altura enganar.
+                BoxWithConstraints(contentAlignment = Alignment.Center) {
+                    val celula = minOf(maxWidth / 2.3f, altura / 3.6f, 72.dp)
+                    Column(horizontalAlignment = Alignment.Start) {
+                        for (linha in figuras.chunked(2)) {
+                            Row {
+                                for (f in linha) {
+                                    Box(Modifier.size(celula), contentAlignment = Alignment.Center) {
+                                        Text(f, fontSize = (celula.value * 0.78f).sp, lineHeight = (celula.value * 0.9f).sp)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
-                Text(v.emoji, fontSize = (54f * v.escala).sp, lineHeight = (60f * v.escala).sp)
+                val base = minOf(altura.value * 0.42f, 100f)
+                Text(v.emoji, fontSize = (base * v.escala).sp, lineHeight = (base * 1.12f * v.escala).sp)
             }
         }
         is Visual.Cor -> Box(

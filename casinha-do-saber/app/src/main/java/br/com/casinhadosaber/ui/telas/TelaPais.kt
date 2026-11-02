@@ -32,7 +32,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import android.speech.tts.TextToSpeech
+import androidx.compose.ui.platform.LocalContext
 import br.com.casinhadosaber.dominio.EstadoJogo
+import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Trilha
@@ -142,13 +146,44 @@ private fun Painel(
                 "Itens da casa: ${estado.itensGanhos.size} de ${ItensDaCasa.total}.",
             style = MaterialTheme.typography.bodyLarge,
         )
+        // A fase liberada em que mais erra de primeira (últimas 10 respostas).
+        val praticando = Trilha.entries.flatMap { gerador.fases(it) }
+            .filter { estado.liberada(it) }
+            .mapNotNull { f -> estado.precisaoDaFase(EstadoJogo.chave(f.trilha, f.numero))?.let { f to it } }
+            .filter { it.second < 80 }
+            .minByOrNull { it.second }
+        if (praticando != null) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Praticando agora: ${praticando.first.trilha.emoji} ${praticando.first.titulo} (${praticando.second}% de primeira). " +
+                    dicaOffline(praticando.first.trilha),
+                style = MaterialTheme.typography.bodyLarge,
+                color = Cores.Texto,
+            )
+        }
         for (t in Trilha.entries) {
             Spacer(Modifier.height(10.dp))
             Text("${t.emoji} ${t.titulo}: ${estado.vencidasNa(t)}/${GeradorDeFases.FASES_POR_TRILHA}", style = MaterialTheme.typography.titleMedium)
             for (f in gerador.fases(t)) {
                 val e = estado.estrelasDa(f)
+                val p = estado.precisaoDaFase(EstadoJogo.chave(f.trilha, f.numero))
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 8.dp, top = 2.dp)) {
+                    // Bolinha colorida: verde (80% ou mais de primeira), amarela (aprendendo), cinza (não jogou).
+                    Box(
+                        Modifier
+                            .size(12.dp)
+                            .background(
+                                when {
+                                    p == null -> Color(0xFFD0D0D0)
+                                    p >= 80 -> Cores.Certo
+                                    else -> Cores.Estrela
+                                },
+                                RoundedCornerShape(50),
+                            ),
+                    )
+                    Spacer(Modifier.width(8.dp))
                     Text("${f.numero + 1}. ${f.titulo}", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    if (p != null) Text("$p%  ", style = MaterialTheme.typography.bodyMedium, color = Cores.TextoSuave)
                     if (e > 0) FileiraDeEstrelas(e, tamanho = 16.dp) else Text("ainda não", style = MaterialTheme.typography.bodyMedium, color = Cores.TextoSuave)
                 }
             }
@@ -183,6 +218,23 @@ private fun Painel(
         BotaoFofo(onClick = onEditarPersonagem, cor = Color.White, corBase = Color(0xFFD9CFF0)) {
             Text("🧒 Trocar o personagem", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
         }
+        if (!LocalNarrador.current.vozesBoas) {
+            Spacer(Modifier.height(12.dp))
+            val contexto = LocalContext.current
+            BotaoFofo(
+                onClick = {
+                    runCatching {
+                        contexto.startActivity(
+                            Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                        )
+                    }
+                },
+                cor = Color.White,
+                corBase = Color(0xFFD9CFF0),
+            ) {
+                Text("🗣️ Instalar vozes melhores (português e inglês)", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
+            }
+        }
         Spacer(Modifier.height(12.dp))
         BotaoFofo(onClick = { confirmar = true }, cor = Cores.Errado) {
             Text("Apagar todo o progresso", color = Color.White, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
@@ -215,6 +267,13 @@ private fun Painel(
             dismissButton = { TextButton(onClick = { confirmar = false }) { Text("Cancelar") } },
         )
     }
+}
+
+private fun dicaOffline(t: Trilha): String = when (t) {
+    Trilha.MATEMATICA -> "Fora da tela: contem juntos os degraus da escada ou as frutas na mesa."
+    Trilha.PORTUGUES -> "Fora da tela: brinquem de achar coisas da casa que começam com a mesma letra."
+    Trilha.INGLES -> "Fora da tela: digam juntos o nome das cores das roupas em inglês."
+    Trilha.LOGICA -> "Fora da tela: façam filas de brinquedos (carrinho, bola, carrinho, bola...) e peça o próximo."
 }
 
 @Composable

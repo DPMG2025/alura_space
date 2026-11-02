@@ -90,6 +90,7 @@ fun TelaPremio(
     estrelas: Int,
     item: ItemCasa?,
     perfil: Perfil?,
+    moedas: Int = 0,
     temProxima: Boolean,
     onColocarNaCasa: () -> Unit,
     onProxima: () -> Unit,
@@ -163,6 +164,10 @@ fun TelaPremio(
                         tamanho = 64.dp,
                     )
                 }
+            }
+            if (moedas > 0) {
+                Spacer(Modifier.height(6.dp))
+                Text("+$moedas 🪙", style = MaterialTheme.typography.headlineMedium, color = Color.White)
             }
             Spacer(Modifier.height(16.dp))
 

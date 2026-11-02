@@ -130,20 +130,42 @@ class EstadoJogoTest {
     }
 
     @Test
-    fun `loja usa as estrelas como moeda`() {
+    fun `moedinhas vem de acertos de primeira com limite por dia`() {
+        val fase = g.fases(Trilha.MATEMATICA)[0]
         var e = EstadoJogo()
-        for (f in g.fases(Trilha.MATEMATICA).take(3)) e = e.registrarVitoria(f, 3).first
-        assertEquals(9, e.saldo)
-        val cor = Loja.vitrine(e).first()
-        e = e.comprar(cor)!!
-        assertEquals(4, e.saldo)
+        repeat(7) { e = e.registrarPartida(fase, 5, 5, dia = 100).estado }
+        assertEquals(EstadoJogo.MOEDAS_POR_DIA, e.moedas)
+        e = e.registrarPartida(fase, 4, 5, dia = 101).estado
+        assertEquals(EstadoJogo.MOEDAS_POR_DIA + 4, e.moedas)
+    }
+
+    @Test
+    fun `loja compra com moedas e o que foi comprado continua seu`() {
+        val telhado = Loja.porId.getValue("telhado1")
+        var e = EstadoJogo(moedas = 6)
+        e = e.usar(telhado)!!
+        assertEquals(0, e.moedas)
         assertEquals(1, e.corTelhado)
-        val bicho = Loja.vitrine(e)[1]
-        assertNull("sem estrelas suficientes", e.comprar(bicho))
-        e = e.registrarVitoria(g.fases(Trilha.LOGICA)[0], 3).first.registrarVitoria(g.fases(Trilha.INGLES)[0], 3).first
-        e = e.comprar(bicho)!!
-        assertTrue(bicho.icone in e.visitantes)
-        assertFalse("visitante já comprado sai da vitrine", Loja.vitrine(e).contains(bicho))
+        // Tocar de novo no que já é seu não cobra: volta ao padrão e depois usa outra vez.
+        e = e.usar(telhado)!!
+        assertEquals(0, e.corTelhado)
+        e = e.usar(telhado)!!
+        assertEquals(1, e.corTelhado)
+        assertEquals(0, e.moedas)
+        // O preço sobe a cada compra.
+        val porta = Loja.porId.getValue("porta1")
+        assertEquals(porta.precoBase + 1, Loja.preco(porta, e))
+        assertNull("sem moedas", e.usar(porta))
+    }
+
+    @Test
+    fun `historico guarda os ultimos dez resultados da fase`() {
+        val fase = g.fases(Trilha.LOGICA)[2]
+        var e = EstadoJogo()
+        repeat(3) { e = e.registrarPartida(fase, 4, 5, resultados = listOf(true, true, false, true, true)).estado }
+        val k = EstadoJogo.chave(fase.trilha, fase.numero)
+        assertEquals(10, e.historico[k]?.length)
+        assertEquals(80, e.precisaoDaFase(k))
     }
 
     @Test
