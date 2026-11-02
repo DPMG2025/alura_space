@@ -30,6 +30,10 @@ data class ManualUi(
     val filtro: String = "",
     val carregando: Boolean = false,
     val erro: String? = null,
+    /** true enquanto confere o valor atual de um salvo reaberto. */
+    val atualizando: Boolean = false,
+    /** Motivo quando nao foi possivel conferir o valor atual (mostra o guardado). */
+    val avisoAtualizacao: String? = null,
 )
 
 class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.SavedStateHandle) : AndroidViewModel(app) {
@@ -127,7 +131,14 @@ class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.Sa
         historico.carregar(r)
     }
 
-    fun selecionarTipo(tipo: TipoVeiculo, filtro: String = "") {
+    /** Toque no seletor de tipo: o tipo ja ativo nao apaga a consulta em andamento. */
+    fun selecionarTipo(tipo: TipoVeiculo) {
+        if (tipo == _estado.value.tipo && _estado.value.etapa != Etapa.MARCAS) return
+        iniciar(tipo)
+    }
+
+    /** Recomeca a busca pela escolha da marca (com filtro opcional). */
+    private fun iniciar(tipo: TipoVeiculo, filtro: String = "") {
         historico.limpar()
         _estado.value = ManualUi(tipo = tipo, filtro = filtro)
         carregarMarcas()
@@ -192,16 +203,14 @@ class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.Sa
         }
     }
 
-    fun novaConsulta() = selecionarTipo(_estado.value.tipo)
+    fun novaConsulta() = iniciar(_estado.value.tipo)
 
     fun alternarFavorito() {
         val s = _estado.value
         val r = s.resultado ?: return
         val id = ConsultaSalva.idManual(r)
-        if (salvos.itens.value.none { it.id == id }) {
-            salvos.registrar(ConsultaSalva(id, System.currentTimeMillis(), favorito = true, resultado = r,
-                marca = s.marca, modelo = s.modelo, ano = s.ano))
-        } else salvos.alternarFavorito(id)
+        salvos.alternarOuCriarFavorito(ConsultaSalva(id, System.currentTimeMillis(), resultado = r,
+            marca = s.marca, modelo = s.modelo, ano = s.ano))
     }
 
     /** Reabre um salvo e atualiza o valor em seguida (o valor guardado aparece ate chegar o novo). */
@@ -212,16 +221,26 @@ class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.Sa
         _estado.value = ManualUi(tipo = r.tipo, etapa = Etapa.RESULTADO, marca = c.marca, modelo = c.modelo, ano = c.ano, resultado = r)
         historico.carregar(r)
         val (marca, modelo, ano) = Triple(c.marca ?: return, c.modelo ?: return, c.ano ?: return)
+        _estado.update { it.copy(atualizando = true) }
         job = viewModelScope.launch {
-            val novo = runCatching { repo.valor(r.tipo, marca.codigo, modelo.codigo, ano.codigo) }.getOrNull() ?: return@launch
-            if (_estado.value.resultado?.codigoFipe != r.codigoFipe || novo.valor == r.valor) return@launch
-            _estado.update { it.copy(resultado = novo) }
-            salvos.registrar(ConsultaSalva(c.id, System.currentTimeMillis(), resultado = novo, marca = marca, modelo = modelo, ano = ano))
+            val tentativa = runCatching { repo.valor(r.tipo, marca.codigo, modelo.codigo, ano.codigo) }
+                .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+            if (_estado.value.resultado?.codigoFipe != r.codigoFipe) return@launch
+            val novo = tentativa.getOrNull()
+            if (novo == null) {
+                _estado.update { it.copy(atualizando = false, avisoAtualizacao = FipeRepositorio.mensagemErro(tentativa.exceptionOrNull()!!) + " Mostrando o valor guardado.") }
+                return@launch
+            }
+            _estado.update { it.copy(resultado = novo, atualizando = false, avisoAtualizacao = null) }
+            if (novo.valor != r.valor || novo.mesReferencia != r.mesReferencia) {
+                salvos.registrar(ConsultaSalva(c.id, System.currentTimeMillis(), resultado = novo, marca = marca, modelo = modelo, ano = ano))
+                historico.carregar(novo)
+            }
         }
     }
 
     /** Abre a busca manual ja filtrando pela marca vinda da placa (ex.: "VW", "I/FIAT"). */
     fun preencherPorPlaca(tipo: TipoVeiculo, marca: String?) {
-        selecionarTipo(tipo, marca?.let(br.com.fipeplaca.data.Texto::marca).orEmpty())
+        iniciar(tipo, marca?.let(br.com.fipeplaca.data.Texto::marca).orEmpty())
     }
 }

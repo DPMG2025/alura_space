@@ -215,6 +215,7 @@ fun CartaoHistorico(
                 1 -> CartaoErro(estado.erro.orEmpty(), "Tentar novamente", onTentar)
                 2 -> if (estado.pontos.size < 2) {
                     val mes = Meses.capitalizar(estado.pontos.first().mesReferencia)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     EstadoVazio(
                         Icons.Filled.Info, "Ainda não há meses suficientes",
                         if (estado.exigemToken > 0) {
@@ -222,9 +223,11 @@ fun CartaoHistorico(
                                 "ao histórico; os veículos salvos também acumulam o valor de cada mês neste aparelho."
                         } else {
                             "Só o valor de $mes está disponível agora. Pode ser um veículo recente na tabela ou uma falha " +
-                                "temporária de conexão; tente de novo mais tarde."
+                                "temporária de conexão."
                         },
                     )
+                    if (estado.exigemToken == 0) androidx.compose.material3.OutlinedButton(onClick = onTentar) { Text("Tentar novamente") }
+                    }
                 } else Column {
                     if (estado.offline) {
                         Text("Sem conexão: mostrando os valores guardados neste aparelho.",

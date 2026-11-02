@@ -14,6 +14,10 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -78,6 +82,7 @@ data class AcoesPlaca(
     val abrirConfiguracoes: () -> Unit = {},
     val buscarManual: (TipoVeiculo, String?) -> Unit = { _, _ -> },
     val abrirTabela: () -> Unit = {},
+    val recarregarHistorico: () -> Unit = {},
 )
 
 @Composable
@@ -89,6 +94,7 @@ fun TelaPlaca(
     acoes: AcoesPlaca,
     modifier: Modifier = Modifier,
     semTokenFipe: Boolean = false,
+    placaConfigurada: Boolean = true,
 ) {
     val foco = LocalFocusManager.current
     val buscar = { foco.clearFocus(); acoes.consultar() }
@@ -96,11 +102,14 @@ fun TelaPlaca(
     val rolagem = rememberScrollState()
     val resultadoVisivel = remember { BringIntoViewRequester() }
     // Quando o resultado chega, rola ate ele (o valor nao fica escondido abaixo da busca)
+    var ultimoRolado by rememberSaveable { mutableStateOf<String?>(null) }
     LaunchedEffect(estado.veiculo?.placa, estado.carregando) {
-        if (estado.veiculo != null && !estado.carregando) {
+        val chave = estado.veiculo?.placa
+        if (chave != null && !estado.carregando && chave != ultimoRolado) {
+            ultimoRolado = chave
             kotlinx.coroutines.delay(150)
             resultadoVisivel.bringIntoView()
-        }
+        } else if (chave == null) ultimoRolado = null
     }
     Column(modifier.fillMaxSize().verticalScroll(rolagem)) {
         Cabecalho(
@@ -161,6 +170,14 @@ fun TelaPlaca(
             }
 
             val v = estado.veiculo
+            if (v == null && !estado.carregando && !placaConfigurada && !estado.semToken) {
+                CartaoAviso(
+                    Icons.Filled.Info, "Busca pela placa precisa de configuração",
+                    "A placa é identificada por um serviço de consulta veicular (pago). Sem ele, consulte pela Tabela FIPE, " +
+                        "que é gratuita e tem todas as marcas e modelos.",
+                    "Abrir a Tabela", acoes.abrirTabela,
+                )
+            }
             if (v == null && !estado.carregando) {
                 ConteudoInicial(recentes, acoes.abrirSalvo)
                 AtalhoTabela(acoes.abrirTabela)
@@ -252,7 +269,7 @@ private fun ResultadoPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: Historic
                 Column(Modifier.weight(1f)) {
                     Text(listOfNotNull(v.marca?.let(Texto::marca), v.modelo?.let(Texto::modelo)).joinToString(" "), style = MaterialTheme.typography.titleMedium, maxLines = 2)
                     when {
-                        estado.atualizacaoFalhou -> Text("Sem conexão: mostrando o valor guardado",
+                        estado.avisoAtualizacao != null -> Text(estado.avisoAtualizacao,
                             style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
                         estado.doSalvo -> Text("Atualizando o valor…", style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.secondary)
@@ -330,7 +347,7 @@ private fun ValoresPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: HistoricoU
             }
         }
 
-        CartaoHistorico(historico, acoes.mudarPeriodo, { acoes.selecionarVersao(estado.selecionado) }, acoes.abrirConfiguracoes, semTokenFipe)
+        CartaoHistorico(historico, acoes.mudarPeriodo, acoes.recarregarHistorico, acoes.abrirConfiguracoes, semTokenFipe)
 
         OutlinedButton(
             onClick = { acoes.buscarManual(v.tipo, v.marca) },

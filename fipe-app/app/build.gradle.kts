@@ -8,14 +8,14 @@ plugins {
 
 android {
     namespace = "br.com.fipeplaca"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "br.com.fipeplaca"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 7
-        versionName = "3.2"
+        targetSdk = 36
+        versionCode = 8
+        versionName = "3.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["useTestStorageService"] = "true"
     }

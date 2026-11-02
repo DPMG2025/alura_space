@@ -332,6 +332,13 @@ private fun nomeCurto(nome: String): String = Texto.marca(nome)
 @Composable
 private fun ResultadoManual(s: ManualUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesManual, semTokenFipe: Boolean) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxSize()) {
+        if (s.atualizando || s.avisoAtualizacao != null) item {
+            Text(
+                s.avisoAtualizacao ?: "Atualizando o valor…",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (s.avisoAtualizacao != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary,
+            )
+        }
         item {
             val r = s.resultado
             when {

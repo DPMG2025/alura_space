@@ -19,14 +19,40 @@ class RepositorioSalvos(context: Context) {
     private val fila = Executors.newSingleThreadExecutor { r -> Thread(r, "salvos").apply { isDaemon = true } }
     private val _itens = MutableStateFlow<List<ConsultaSalva>>(emptyList())
     val itens: StateFlow<List<ConsultaSalva>> = _itens
+    private val _carregado = MutableStateFlow(false)
+    /** false ate a primeira leitura terminar (a tela nao mostra "vazio" antes disso). */
+    val carregado: StateFlow<Boolean> = _carregado
 
-    init { fila.execute { _itens.value = ler() } }
+    init { fila.execute { _itens.value = ler(); _carregado.value = true } }
 
-    private fun ler(): List<ConsultaSalva> = runCatching {
+    /**
+     * Le os salvos sem nunca perder dados: se o JSON nao puder ser lido (corrompido ou de um formato
+     * incompativel), o conteudo bruto e guardado numa chave de seguranca antes de qualquer gravacao.
+     * Itens incompletos (registros antigos) sao descartados um a um, sem perder os demais.
+     */
+    private fun ler(): List<ConsultaSalva> {
         val json = sp.getString(CHAVE, null) ?: return emptyList()
-        val tipo = object : TypeToken<List<ConsultaSalva>>() {}.type
-        gson.fromJson<List<ConsultaSalva>>(json, tipo).orEmpty()
-    }.getOrDefault(emptyList())
+        return try {
+            val tipo = object : TypeToken<List<ConsultaSalva?>>() {}.type
+            gson.fromJson<List<ConsultaSalva?>>(json, tipo).orEmpty().mapNotNull(::validar)
+        } catch (e: Exception) {
+            sp.edit().putString("${CHAVE}_seguranca_${System.currentTimeMillis()}", json).apply()
+            android.util.Log.w("RepositorioSalvos", "Salvos ilegiveis guardados em copia de seguranca", e)
+            emptyList()
+        }
+    }
+
+    /** O Gson ignora a nulidade do Kotlin: confere os campos obrigatorios de cada item. */
+    @Suppress("SENSELESS_COMPARISON")
+    private fun validar(c: ConsultaSalva?): ConsultaSalva? {
+        if (c == null || c.id == null) return null
+        val r = c.resultado
+        if (r != null && (r.tipo == null || r.codigoFipe == null)) return null
+        val v = c.veiculo
+        if (v != null && (v.placa == null || v.tipo == null || v.fipe == null || v.fipe.any { it == null || it.tipo == null })) return null
+        if (r == null && v == null) return null
+        return c
+    }
 
     /** Aplica uma alteracao na fila: le o estado atual, calcula o novo e grava. */
     private fun alterar(bloco: (List<ConsultaSalva>) -> List<ConsultaSalva>) = fila.execute {
@@ -37,23 +63,35 @@ class RepositorioSalvos(context: Context) {
         }
     }
 
-    fun registrar(nova: ConsultaSalva) = alterar { atual ->
+    fun registrar(nova: ConsultaSalva) = alterar { atual -> comRegistro(atual, nova) }
+
+    /** Insere ou atualiza um item, mantendo favorito, versao, historico local e o valor do dia em que foi salvo. */
+    private fun comRegistro(atual: List<ConsultaSalva>, nova: ConsultaSalva): List<ConsultaSalva> {
         val antigo = atual.firstOrNull { it.id == nova.id }
         val versao = nova.versao ?: antigo?.versao
         // Historico local e por versao: se a versao mudou, recomeca
         val base = if (antigo != null && antigo.versao == versao) antigo.historicoLocal.orEmpty() else emptyList()
         val item = nova.copy(favorito = antigo?.favorito ?: nova.favorito, versao = versao)
-        val pontoAtual = listOfNotNull(item.principal?.let { r ->
-            Dinheiro.paraDouble(r.valor)?.let { PontoHistorico(r.mesReferencia, r.valor.orEmpty(), it) }
-        })
-        OrganizarSalvos.inserir(atual, item.copy(historicoLocal = MesclarHistorico.acumular(base + nova.historicoLocal.orEmpty(), pontoAtual)), LIMITE_RECENTES)
+        val ponto = item.principal?.let { r -> Dinheiro.paraDouble(r.valor)?.let { PontoHistorico(r.mesReferencia, r.valor.orEmpty(), it) } }
+        // Valor do dia em que foi salvo: fica fixo (recomeca so se a versao mudar)
+        val aoSalvar = (if (antigo != null && antigo.versao == versao) antigo.valorAoSalvar else null) ?: ponto
+        return OrganizarSalvos.inserir(
+            atual,
+            item.copy(historicoLocal = MesclarHistorico.acumular(base + nova.historicoLocal.orEmpty(), listOfNotNull(ponto)), valorAoSalvar = aoSalvar),
+            LIMITE_RECENTES,
+        )
     }
 
     fun alternarFavorito(id: String) = alterar { l -> l.map { if (it.id == id) it.copy(favorito = !it.favorito) else it } }
 
-    fun remover(id: String) = alterar { l -> l.filterNot { it.id == id } }
-
-    fun limparRecentes() = alterar { l -> l.filter { it.favorito } }
+    /**
+     * Alterna o favorito decidindo dentro da fila (sem corrida com uma gravacao ainda pendente):
+     * se o item ainda nao existe, cria ja como favorito.
+     */
+    fun alternarOuCriarFavorito(novo: ConsultaSalva) = alterar { l ->
+        if (l.any { it.id == novo.id }) l.map { if (it.id == novo.id) it.copy(favorito = !it.favorito) else it }
+        else comRegistro(l, novo.copy(favorito = true))
+    }
 
     /** Guarda no aparelho os valores mensais obtidos para um veiculo ja salvo. */
     fun guardarPontos(id: String, pontos: List<PontoHistorico>) {
@@ -63,7 +101,13 @@ class RepositorioSalvos(context: Context) {
 
     /** Guarda a versao FIPE escolhida e recomeca o historico local (que e por versao). */
     fun definirVersao(id: String, versao: Int) = alterar { l ->
-        l.map { if (it.id == id && it.versao != versao) it.copy(versao = versao, historicoLocal = emptyList()) else it }
+        l.map {
+            if (it.id == id && it.versao != versao) {
+                val nova = it.copy(versao = versao, historicoLocal = emptyList())
+                val r = nova.principal
+                nova.copy(valorAoSalvar = r?.let { x -> Dinheiro.paraDouble(x.valor)?.let { PontoHistorico(x.mesReferencia, x.valor.orEmpty(), it) } })
+            } else it
+        }
     }
 
     /** Desfaz uma exclusao: devolve o item ao topo, respeitando o limite de recentes. */

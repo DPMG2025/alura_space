@@ -109,6 +109,8 @@ data class ResultadoHistorico(
     val pontos: List<PontoHistorico>,
     val solicitados: Int,
     val exigemToken: Int,
+    /** false quando faltaram meses por falha passageira ou tempo limite (nao deve ir para o cache). */
+    val completo: Boolean = true,
 ) : List<PontoHistorico> by pontos
 
 enum class PeriodoHistorico(val rotulo: String) {

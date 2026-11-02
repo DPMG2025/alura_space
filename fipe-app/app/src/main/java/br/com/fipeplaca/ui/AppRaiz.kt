@@ -152,6 +152,7 @@ fun AppRaiz() {
                     TelaPlaca(
                         estado = placa, historico = histPlaca, recentes = salvos, favorito = fav,
                         semTokenFipe = app.prefs.tokenFipe.isBlank(),
+                        placaConfigurada = app.repositorio.temTokenPlaca(),
                         acoes = AcoesPlaca(
                             alterarPlaca = placaVm::alterarPlaca,
                             consultar = placaVm::consultar,
@@ -165,6 +166,7 @@ fun AppRaiz() {
                             abrirConfiguracoes = { aba = 3 },
                             buscarManual = { tipo, marca -> manualVm.preencherPorPlaca(tipo, marca); aba = 1 },
                             abrirTabela = { aba = 1 },
+                            recarregarHistorico = placaVm::recarregarHistorico,
                         ),
                     )
                 }
@@ -188,7 +190,7 @@ fun AppRaiz() {
                             compartilhar = { r -> compartilhar(r, null, histManual.pontos) },
                             copiarCodigo = ::copiar,
                             mudarPeriodo = manualVm.historico::mudarPeriodo,
-                            recarregarHistorico = { manual.resultado?.let { manualVm.historico.carregar(it) } },
+                            recarregarHistorico = { manualVm.historico.recarregar() },
                             abrirConfiguracoes = { aba = 3 },
                         ),
                     )
@@ -235,7 +237,9 @@ fun AppRaiz() {
     // Faixa fixa atras da barra de status: os icones (claros) continuam legiveis quando o conteudo rola
     Spacer(
         Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars)
-            .background(Extras.cores.gradienteInicio),
+            .background(androidx.compose.ui.graphics.Brush.horizontalGradient(
+                listOf(Extras.cores.gradienteInicio, androidx.compose.ui.graphics.lerp(Extras.cores.gradienteInicio, Extras.cores.gradienteFim, 0.65f)),
+            )),
     )
   }
 }

@@ -17,6 +17,8 @@ data class ConsultaSalva(
     val historicoLocal: List<PontoHistorico>? = null,
     /** Versao FIPE escolhida pelo usuario quando a placa tem mais de uma (anulavel: registros antigos). */
     val versao: Int? = null,
+    /** Valor e mes no momento em que o veiculo foi salvo (base da "variacao desde que salvou"). */
+    val valorAoSalvar: PontoHistorico? = null,
 ) {
     val porPlaca: Boolean get() = veiculo != null
     val principal: FipeResultado? get() = resultado ?: veiculo?.fipe?.let { it.getOrNull(versao ?: 0) ?: it.firstOrNull() }

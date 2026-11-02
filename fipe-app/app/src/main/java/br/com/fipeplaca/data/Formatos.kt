@@ -82,7 +82,9 @@ object Texto {
         val base = (if (" - " in limpo) limpo.substringAfter(" - ") else limpo).trim()
         return base.split(' ').joinToString(" ") { p ->
             val misto = p.drop(1).any { it.isUpperCase() } && p.any { it.isLowerCase() }
-            if (misto) p.lowercase(Locale("pt", "BR")).replaceFirstChar { it.titlecase(Locale("pt", "BR")) } else p
+            // "ARROW" vira "Arrow"; siglas curtas (BMW, BYD, GWM) ficam
+            val caixaAlta = p.length >= 4 && p.all { it.isLetter() && it.isUpperCase() }
+            if (misto || caixaAlta) p.lowercase(Locale("pt", "BR")).replaceFirstChar { it.titlecase(Locale("pt", "BR")) } else p
         }
     }
 

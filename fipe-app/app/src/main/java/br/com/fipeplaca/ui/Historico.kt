@@ -62,12 +62,15 @@ class HistoricoController(
         )
     }
 
-    fun carregar(alvo: FipeResultado, periodo: PeriodoHistorico = _estado.value.periodo) {
+    /** Busca de novo ignorando o cache ("Tentar novamente"). */
+    fun recarregar() { _estado.value.alvo?.let { carregar(it, _estado.value.periodo, forcar = true) } }
+
+    fun carregar(alvo: FipeResultado, periodo: PeriodoHistorico = _estado.value.periodo, forcar: Boolean = false) {
         job?.cancel()
         val minha = ++geracao
         // O mes de referencia entra na chave: na virada do mes o historico e buscado de novo
         val chave = "${alvo.tipo}|${alvo.codigoFipe}|${alvo.codigoAno ?: alvo.anoModelo}|${alvo.combustivel}|${alvo.mesReferencia}" to periodo
-        cache[chave]?.let {
+        if (!forcar) cache[chave]?.let {
             _estado.value = aplicar(alvo, periodo, it)
             return
         }
@@ -81,7 +84,8 @@ class HistoricoController(
                 })
             }.onSuccess { res ->
                 if (minha != geracao) return@onSuccess
-                cache[chave] = res
+                // So resultados completos vao para o cache: parcial por falha passageira e buscado de novo
+                if (res.completo) cache[chave] = res else cache.remove(chave)
                 aoCarregar(alvo, res.pontos)
                 _estado.value = aplicar(alvo, periodo, res)
             }.onFailure { e ->

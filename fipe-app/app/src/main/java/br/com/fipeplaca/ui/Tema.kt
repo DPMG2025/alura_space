@@ -60,7 +60,7 @@ private val Claro = lightColorScheme(
     onSurfaceVariant = Color(0xFF586174),
     surfaceContainer = Color(0xFFF0F3F9),
     surfaceContainerHigh = Color(0xFFE9EDF5),
-    outline = Color(0xFFB5BDCC),
+    outline = Color(0xFF8C95A6), // contraste >= 3:1 para bordas de componentes
     outlineVariant = Color(0xFFDDE2EC),
     error = Color(0xFFC62828),
     errorContainer = Color(0xFFFFE3E0),

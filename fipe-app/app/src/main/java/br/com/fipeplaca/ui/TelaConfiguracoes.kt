@@ -36,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import br.com.fipeplaca.data.Preferencias
 
@@ -56,6 +58,12 @@ fun TelaConfiguracoes(
     var tokenFipe by rememberSaveable { mutableStateOf(inicial.tokenFipe) }
     val erroUrl = br.com.fipeplaca.data.FipeRepositorio.validarUrlPlaca(urlPlaca)
     val links = LocalUriHandler.current
+    fun abrir(url: String) = runCatching { links.openUri(url) } // sem navegador instalado, nao fecha o app
+    var mostrarTokens by rememberSaveable { mutableStateOf(false) }
+    val teclado = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false)
+    val olho: @Composable () -> Unit = {
+        TextButton(onClick = { mostrarTokens = !mostrarTokens }) { Text(if (mostrarTokens) "Ocultar" else "Mostrar") }
+    }
     val alterado = Configuracoes(tokenPlaca, urlPlaca, tokenFipe) != inicial
 
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
@@ -76,7 +84,9 @@ fun TelaConfiguracoes(
                     value = tokenPlaca, onValueChange = { tokenPlaca = it.trim() },
                     label = { Text("Token do serviço de placas") },
                     leadingIcon = { Icon(Icons.Filled.Lock, null) },
-                    singleLine = true, visualTransformation = PasswordVisualTransformation(),
+                    singleLine = true,
+                    visualTransformation = if (mostrarTokens) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = teclado, trailingIcon = olho,
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -90,7 +100,7 @@ fun TelaConfiguracoes(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Row {
-                    TextButton(onClick = { links.openUri("https://apiplacas.com.br") }) { Text("Obter token") }
+                    TextButton(onClick = { abrir("https://apiplacas.com.br") }) { Text("Obter token") }
                     TextButton(onClick = { urlPlaca = Preferencias.URL_PADRAO }) { Text("Restaurar URL padrão") }
                 }
             }
@@ -108,11 +118,13 @@ fun TelaConfiguracoes(
                     value = tokenFipe, onValueChange = { tokenFipe = it.trim() },
                     label = { Text("Token da FIPE (opcional)") },
                     leadingIcon = { Icon(Icons.Filled.Lock, null) },
-                    singleLine = true, visualTransformation = PasswordVisualTransformation(),
+                    singleLine = true,
+                    visualTransformation = if (mostrarTokens) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = teclado, trailingIcon = olho,
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                TextButton(onClick = { links.openUri("https://fipe.online") }) { Text("Ver planos com histórico") }
+                TextButton(onClick = { abrir("https://fipe.online") }) { Text("Ver planos com histórico") }
             }
 
             Button(

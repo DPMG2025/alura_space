@@ -220,7 +220,10 @@ class FipeRepositorio(
         (if (estado.brasilApiForaDoAr.get()) null else tentar { comNovasTentativas(tentativas = 2) { brasilApi.precos(r.codigoFipe, ref.codigo) } }
             .onFailure {
                 diagnostico("${ref.codigo} ${ref.mes} brasilapi: ${descrever(it)}")
-                if (it is IOException || (it is HttpException && it.code() >= 500)) estado.brasilApiForaDoAr.set(true)
+                if (it is IOException || (it is HttpException && it.code() >= 500)) {
+                    estado.brasilApiForaDoAr.set(true)
+                    brasilApiIndisponivelAte = agora() + HORA // renova: nao tenta de novo nas proximas buscas
+                }
             }
             .getOrNull())
             ?.let { lista -> escolherPreco(lista, ano.toIntOrNull(), r.combustivel) }
@@ -238,6 +241,8 @@ class FipeRepositorio(
         val doV2 = tentar { comNovasTentativas { v2.valorPorCodigo(r.tipo.caminhoV2, r.codigoFipe, codigoAno, ref.codigo) } }
             .onFailure {
                 diagnostico("${ref.codigo} ${ref.mes} v2: ${descrever(it)}")
+                if (it is HttpException && it.code() == 429) estado.limiteAtingido.set(true)
+                if (!(it is HttpException && it.code() in setOf(402, 404))) estado.falhasPassageiras.incrementAndGet()
                 if (it is HttpException && it.code() == 402) {
                     estado.exigemToken.incrementAndGet()
                     if (prefs.tokenFipe.isBlank() && codigoRef != null) synchronized(this) {
@@ -279,7 +284,7 @@ class FipeRepositorio(
         progresso(0, meses.size)
         val obtidos = java.util.concurrent.ConcurrentHashMap<String, PontoHistorico>()
         // Tempo limite total: depois dele, mostra o que ja chegou em vez de esperar indefinidamente.
-        kotlinx.coroutines.withTimeoutOrNull(tempoLimiteHistoricoMs) {
+        val terminou = kotlinx.coroutines.withTimeoutOrNull(tempoLimiteHistoricoMs) {
             // Fila ordenada do mais recente para o mais antigo, consumida por 4 trabalhadores:
             // se o tempo acabar, ficam garantidamente os meses que mais importam.
             val fila = ArrayDeque(meses.asReversed())
@@ -293,7 +298,8 @@ class FipeRepositorio(
                     }
                 }
             }.awaitAll()
-        } ?: diagnostico("tempo limite do historico atingido")
+        } != null
+        if (!terminou) diagnostico("tempo limite do historico atingido")
         val pontos = meses.mapNotNull { obtidos[it.codigo] }.toMutableList() // ordem cronologica
         // O valor atual (ja conhecido) entra como ultimo ponto quando a lista de meses ainda nao o inclui.
         val atual = Dinheiro.paraDouble(r.valor)?.takeIf { r.mesReferencia.isNotBlank() }
@@ -301,20 +307,26 @@ class FipeRepositorio(
         if (atual != null && pontos.none { Texto.chave(it.mesReferencia) == Texto.chave(atual.mesReferencia) }) pontos += atual
         if (pontos.isEmpty() && meses.isNotEmpty()) {
             throw PlacaParser.ErroProvedor(
-                if (estado.exigemToken.get() > 0) "O histórico deste período exige um token da FIPE com acesso ao histórico (veja Ajustes)."
-                else "Não foi possível obter o histórico agora. Verifique a conexão e tente novamente."
+                when {
+                    estado.exigemToken.get() > 0 -> "O histórico deste período exige um token da FIPE com acesso ao histórico (veja Ajustes)."
+                    estado.limiteAtingido.get() -> "Limite de consultas da FIPE atingido por agora. Tente novamente mais tarde."
+                    !terminou -> "A FIPE demorou demais para responder. Tente novamente."
+                    else -> "Não foi possível obter o histórico agora. Verifique a conexão e tente novamente."
+                }
             )
         }
         // Mesmo mes vindo das duas fontes nao deve repetir
         val unicos = pontos.distinctBy { Meses.indice(it.mesReferencia) ?: Texto.chave(it.mesReferencia).hashCode() }
             .sortedBy { Meses.indice(it.mesReferencia) ?: Int.MAX_VALUE }
-        ResultadoHistorico(unicos, meses.size, estado.exigemToken.get())
+        ResultadoHistorico(unicos, meses.size, estado.exigemToken.get(), completo = terminou && estado.falhasPassageiras.get() == 0)
     }
 
     /** Estado compartilhado entre as consultas mensais de uma mesma busca. */
     private class EstadoBusca {
         val brasilApiForaDoAr = java.util.concurrent.atomic.AtomicBoolean(false)
         val exigemToken = java.util.concurrent.atomic.AtomicInteger(0)
+        val falhasPassageiras = java.util.concurrent.atomic.AtomicInteger(0)
+        val limiteAtingido = java.util.concurrent.atomic.AtomicBoolean(false)
     }
 
     /**

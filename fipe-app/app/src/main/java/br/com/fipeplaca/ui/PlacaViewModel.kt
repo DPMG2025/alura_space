@@ -24,8 +24,8 @@ data class PlacaUi(
     val selecionado: Int = 0,
     /** true quando o resultado veio dos salvos, sem nova consulta. */
     val doSalvo: Boolean = false,
-    /** true quando nao foi possivel conferir o valor atual de um salvo (mostra o guardado). */
-    val atualizacaoFalhou: Boolean = false,
+    /** Motivo quando nao foi possivel conferir o valor atual de um salvo (mostra o guardado). */
+    val avisoAtualizacao: String? = null,
 )
 
 class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.SavedStateHandle) : AndroidViewModel(app) {
@@ -114,17 +114,24 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
         v.fipe.getOrNull(versao)?.let { historico.carregar(it) }
         if (!atualizar) return
         job = viewModelScope.launch {
-            val novo = runCatching { repo.atualizarValores(v) }
+            val tentativa = runCatching { repo.atualizarValores(v) }
                 .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
-                .getOrNull()
             if (_estado.value.veiculo?.placa != v.placa) return@launch
+            val novo = tentativa.getOrNull()
             if (novo == null) {
-                // Nao deu para conferir o valor agora: a tela avisa que mostra o valor guardado
-                _estado.update { it.copy(atualizacaoFalhou = true) }
+                // Nao deu para conferir o valor agora: a tela diz o motivo e que mostra o valor guardado
+                val motivo = FipeRepositorio.mensagemErro(tentativa.exceptionOrNull()!!)
+                _estado.update { it.copy(avisoAtualizacao = "$motivo Mostrando o valor guardado.", doSalvo = false) }
                 return@launch
             }
-            _estado.update { it.copy(veiculo = novo, doSalvo = false, atualizacaoFalhou = false) }
-            if (novo != v) salvos.registrar(ConsultaSalva(c.id, System.currentTimeMillis(), veiculo = novo, versao = versao))
+            _estado.update { it.copy(veiculo = novo, doSalvo = false, avisoAtualizacao = null) }
+            // Versao do momento (o usuario pode ter trocado enquanto atualizava)
+            val versaoAgora = _estado.value.selecionado
+            if (novo != v) salvos.registrar(ConsultaSalva(c.id, System.currentTimeMillis(), veiculo = novo, versao = versaoAgora))
+            // O historico foi carregado com o valor antigo: recarrega para o ultimo ponto bater com o cartao
+            if (novo.fipe.getOrNull(versaoAgora)?.mesReferencia != v.fipe.getOrNull(versaoAgora)?.mesReferencia) {
+                novo.fipe.getOrNull(versaoAgora)?.let { historico.carregar(it) }
+            }
         }
     }
 
@@ -139,9 +146,7 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
     fun alternarFavorito() {
         val v = _estado.value.veiculo ?: return
         val id = ConsultaSalva.idPlaca(v.placa)
-        if (salvos.itens.value.none { it.id == id }) {
-            salvos.registrar(ConsultaSalva(id, System.currentTimeMillis(), favorito = true, veiculo = v, versao = _estado.value.selecionado))
-        } else salvos.alternarFavorito(id)
+        salvos.alternarOuCriarFavorito(ConsultaSalva(id, System.currentTimeMillis(), veiculo = v, versao = _estado.value.selecionado))
     }
 
     fun selecionarVersao(indice: Int) {
@@ -151,6 +156,9 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
         salvos.definirVersao(ConsultaSalva.idPlaca(v.placa), indice)
         historico.carregar(alvo)
     }
+
+    /** "Tentar novamente" do historico: busca de novo ignorando o cache. */
+    fun recarregarHistorico() = historico.recarregar()
 
     private companion object {
         const val CHAVE_PLACA = "placa"

@@ -146,12 +146,13 @@ object MesclarHistorico {
     }
 }
 
-/** Variacao desde que o veiculo foi salvo (primeiro e ultimo valor guardados no aparelho). */
+/** Variacao desde que o veiculo foi salvo: valor no dia em que foi salvo contra o valor atual. */
 object VariacaoSalvo {
     fun de(c: ConsultaSalva): Double? {
-        val pts = c.historicoLocal.orEmpty()
-        if (pts.size < 2) return null
-        val primeiro = pts.first().valor
-        return if (primeiro > 0) (pts.last().valor - primeiro) / primeiro * 100 else null
+        val base = c.valorAoSalvar ?: return null
+        val atual = Dinheiro.paraDouble(c.principal?.valor) ?: return null
+        // So faz sentido quando o mes de referencia mudou desde que foi salvo
+        if (Texto.chave(base.mesReferencia) == Texto.chave(c.principal?.mesReferencia.orEmpty())) return null
+        return if (base.valor > 0) (atual - base.valor) / base.valor * 100 else null
     }
 }
