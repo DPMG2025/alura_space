@@ -288,7 +288,7 @@ private fun ValoresPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: HistoricoU
             }
         }
 
-        CartaoHistorico(historico, acoes.mudarPeriodo) { acoes.selecionarVersao(estado.selecionado) }
+        CartaoHistorico(historico, acoes.mudarPeriodo, { acoes.selecionarVersao(estado.selecionado) }, acoes.abrirConfiguracoes)
 
         OutlinedButton(
             onClick = { acoes.buscarManual(v.tipo, v.marca) },

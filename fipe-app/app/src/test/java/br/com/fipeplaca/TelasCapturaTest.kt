@@ -125,7 +125,7 @@ class TelasCapturaTest {
             TelaManual(
                 ManualUi(etapa = Etapa.RESULTADO, marca = marcas.last(), modelo = ItemFipe("10", gol.modelo),
                     ano = ItemFipe("2019-1", "2019 Gasolina"), resultado = gol),
-                historico.copy(periodo = PeriodoHistorico.ANO_ATUAL, pontos = historico.pontos.drop(1)), true, AcoesManual(), it,
+                historico.copy(periodo = PeriodoHistorico.MESES_24, pontos = historico.pontos.drop(1), solicitados = 24, exigemToken = 13), true, AcoesManual(), it,
             )
         }
     }

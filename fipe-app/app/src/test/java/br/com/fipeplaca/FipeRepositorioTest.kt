@@ -178,6 +178,29 @@ class FipeRepositorioTest {
         assertTrue(pedidos.none { it.path!!.startsWith("/v2/") })
     }
 
+    @Test fun cenarioRealSemTokenFalhaRapidoEExplicaParcial() = runTest {
+        rotas = { p ->
+            when {
+                p.startsWith("/brasil/") -> json("{}", 500) // proxy fora do ar
+                p == "/v2/references" -> json((112 downTo 101).joinToString(",", "[", "]") { "{\"code\":\"$it\",\"month\":\"${it - 100}/2026\"}" })
+                p.startsWith("/v2/cars/X/years/2019-1?reference=") -> {
+                    val ref = p.substringAfter("=").toInt()
+                    if (ref >= 110) json("""{"price":"R$ 9.000,00","referenceMonth":"r$ref"}""") else json("{}", 402)
+                }
+                else -> MockResponse().setResponseCode(404)
+            }
+        }
+        val alvo = br.com.fipeplaca.data.FipeResultado(TipoVeiculo.CARROS, "", "", "2019", "", "X", "", null, codigoAno = "2019-1")
+        val res = repo().apply { esperaInicialMs = 1 }.historico(alvo, PeriodoHistorico.MESES_12)
+        assertEquals(3, res.size)
+        assertEquals(12, res.solicitados)
+        assertEquals(9, res.exigemToken)
+        // Depois do primeiro erro 500, a BrasilAPI nao e mais consultada (2 tentativas x ate 2 em paralelo)
+        assertTrue(pedidos.count { it.path!!.startsWith("/brasil/fipe/preco") } <= 4)
+        // 402 nao e repetido
+        assertEquals(12, pedidos.count { it.path!!.startsWith("/v2/cars/X/years/2019-1?reference=") })
+    }
+
     @Test fun historicoSemNenhumaFonteDaMensagemClara() = runTest {
         rotas = { p -> if (p == "/v2/references") json("""[{"code":"1","month":"jan/2026"},{"code":"2","month":"fev/2026"}]""") else json("{}", 402) }
         val alvo = br.com.fipeplaca.data.FipeResultado(TipoVeiculo.CARROS, "", "", "2019", "", "X", "", null, codigoAno = "2019-1")

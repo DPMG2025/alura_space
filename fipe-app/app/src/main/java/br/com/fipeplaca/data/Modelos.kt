@@ -101,6 +101,16 @@ data class PontoHistorico(
     val valor: Double,
 )
 
+/**
+ * Historico obtido: os pontos (como lista) e quantos meses foram pedidos e quantos
+ * ficaram de fora por exigirem token com acesso ao historico (HTTP 402).
+ */
+data class ResultadoHistorico(
+    val pontos: List<PontoHistorico>,
+    val solicitados: Int,
+    val exigemToken: Int,
+) : List<PontoHistorico> by pontos
+
 enum class PeriodoHistorico(val rotulo: String) {
     ANO_ATUAL("No ano"),
     MESES_12("12 meses"),

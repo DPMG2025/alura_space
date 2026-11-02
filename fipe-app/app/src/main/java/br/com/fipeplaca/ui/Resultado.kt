@@ -143,7 +143,12 @@ private fun Etiqueta(texto: String, onClick: (() -> Unit)? = null) {
 }
 
 @Composable
-fun CartaoHistorico(estado: HistoricoUi, onPeriodo: (PeriodoHistorico) -> Unit, onTentar: () -> Unit) {
+fun CartaoHistorico(
+    estado: HistoricoUi,
+    onPeriodo: (PeriodoHistorico) -> Unit,
+    onTentar: () -> Unit,
+    onAbrirAjustes: () -> Unit = {},
+) {
     Secao(titulo = "Evolução do preço") {
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
             PeriodoHistorico.entries.forEachIndexed { i, p ->
@@ -185,10 +190,33 @@ fun CartaoHistorico(estado: HistoricoUi, onPeriodo: (PeriodoHistorico) -> Unit, 
                     Esqueleto(Modifier.fillMaxWidth().height(170.dp))
                 }
                 1 -> CartaoErro(estado.erro.orEmpty(), "Tentar novamente", onTentar)
-                2 -> ConteudoHistorico(estado.pontos)
+                2 -> Column {
+                    if (estado.exigemToken > 0 && estado.pontos.size < estado.solicitados) {
+                        AvisoParcial(estado.pontos.size, estado.solicitados, onAbrirAjustes)
+                        Spacer(Modifier.height(14.dp))
+                    }
+                    ConteudoHistorico(estado.pontos)
+                }
                 else -> Spacer(Modifier.height(1.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun AvisoParcial(disponiveis: Int, solicitados: Int, onAbrirAjustes: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.primaryContainer).padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("$disponiveis de $solicitados meses disponíveis", style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer)
+            Text("Os meses mais antigos exigem um token da FIPE com acesso ao histórico.",
+                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+        }
+        androidx.compose.material3.TextButton(onClick = onAbrirAjustes) { Text("Ajustes") }
     }
 }
 

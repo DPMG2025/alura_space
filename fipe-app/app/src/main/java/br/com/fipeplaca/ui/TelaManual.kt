@@ -78,6 +78,7 @@ data class AcoesManual(
     val copiarCodigo: (String) -> Unit = {},
     val mudarPeriodo: (PeriodoHistorico) -> Unit = {},
     val recarregarHistorico: () -> Unit = {},
+    val abrirConfiguracoes: () -> Unit = {},
 )
 
 private val POPULARES = mapOf(
@@ -316,7 +317,7 @@ private fun ResultadoManual(s: ManualUi, historico: HistoricoUi, favorito: Boole
             }
         }
         if (s.resultado != null) {
-            item { CartaoHistorico(historico, acoes.mudarPeriodo, acoes.recarregarHistorico) }
+            item { CartaoHistorico(historico, acoes.mudarPeriodo, acoes.recarregarHistorico, acoes.abrirConfiguracoes) }
         }
         item {
             OutlinedButton(onClick = acoes.novaConsulta, modifier = Modifier.fillMaxWidth().height(50.dp), shape = MaterialTheme.shapes.medium) {

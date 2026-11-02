@@ -66,10 +66,14 @@ class ApiRealTest {
         log("anos por codigo: " + bruto("https://fipe.parallelum.com.br/api/v2/cars/${r.codigoFipe}/years"))
         log("valor por codigo: " + bruto("https://fipe.parallelum.com.br/api/v2/cars/${r.codigoFipe}/years/${r.codigoAno}"))
 
+        val inicio = System.currentTimeMillis()
         val hist = repo.historico(r, PeriodoHistorico.MESES_12, diagnostico = { log("  falha mes $it") })
-        log("Historico 12 meses: ${hist.size} pontos")
+        val segundos = (System.currentTimeMillis() - inicio) / 1000.0
+        log("Historico 12 meses: ${hist.size} de ${hist.solicitados} pontos, ${hist.exigemToken} exigem token, em $segundos s")
         hist.forEach { log("  ${it.mesReferencia}: ${it.valorTexto}") }
-        assertTrue(hist.size >= 6)
+        assertTrue(hist.size >= 2) // sem token, a v2 libera ao menos os meses recentes
+        assertTrue(hist.size == hist.solicitados || hist.exigemToken > 0) // parcial sempre explicado
+        assertTrue("historico lento: $segundos s", segundos < 30)
         val noAno = repo.historico(r, PeriodoHistorico.ANO_ATUAL)
         log("No ano: ${noAno.size} pontos")
         assertTrue(noAno.isNotEmpty())

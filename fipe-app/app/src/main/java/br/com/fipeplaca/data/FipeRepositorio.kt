@@ -153,12 +153,22 @@ class FipeRepositorio(
     }
 
     /** Valor de um mes: BrasilAPI e, se falhar, API v2. Null se o mes nao existir. */
-    private suspend fun valorNoMes(r: FipeResultado, codigoAno: String, ref: ReferenciaV2, diagnostico: (String) -> Unit): PontoHistorico? {
+    private suspend fun valorNoMes(
+        r: FipeResultado,
+        codigoAno: String,
+        ref: ReferenciaV2,
+        estado: EstadoBusca,
+        diagnostico: (String) -> Unit,
+    ): PontoHistorico? {
         val ano = codigoAno.substringBefore('-')
 
-        runCatching { comNovasTentativas { brasilApi.precos(r.codigoFipe, ref.codigo) } }
-            .onFailure { diagnostico("${ref.codigo} ${ref.mes} brasilapi: ${descrever(it)}") }
-            .getOrNull()
+        // Se a BrasilAPI ja falhou com erro de servidor nesta busca, nao insiste (falha rapida).
+        (if (estado.brasilApiForaDoAr.get()) null else runCatching { comNovasTentativas(tentativas = 2) { brasilApi.precos(r.codigoFipe, ref.codigo) } }
+            .onFailure {
+                diagnostico("${ref.codigo} ${ref.mes} brasilapi: ${descrever(it)}")
+                if (it is IOException || (it is HttpException && it.code() >= 500)) estado.brasilApiForaDoAr.set(true)
+            }
+            .getOrNull())
             ?.let { lista -> escolherPreco(lista, ano.toIntOrNull(), r.combustivel) }
             ?.let { p ->
                 val num = Dinheiro.paraDouble(p.valor)
@@ -166,7 +176,10 @@ class FipeRepositorio(
             }
 
         val doV2 = runCatching { comNovasTentativas { v2.valorPorCodigo(r.tipo.caminhoV2, r.codigoFipe, codigoAno, ref.codigo) } }
-            .onFailure { diagnostico("${ref.codigo} ${ref.mes} v2: ${descrever(it)}") }
+            .onFailure {
+                diagnostico("${ref.codigo} ${ref.mes} v2: ${descrever(it)}")
+                if (it is HttpException && it.code() == 402) estado.exigemToken.incrementAndGet()
+            }
             .getOrNull() ?: return null
         val num = Dinheiro.paraDouble(doV2.valor) ?: return null
         return PontoHistorico((doV2.mesReferencia ?: ref.mes).trim(), doV2.valor.orEmpty(), num)
@@ -191,16 +204,17 @@ class FipeRepositorio(
         periodo: PeriodoHistorico,
         diagnostico: (String) -> Unit = {},
         progresso: (feitos: Int, total: Int) -> Unit = { _, _ -> },
-    ): List<PontoHistorico> = coroutineScope {
+    ): ResultadoHistorico = coroutineScope {
         val codigoAno = resolverCodigoAno(r)
             ?: throw PlacaParser.ErroProvedor("Ano modelo não encontrado na tabela FIPE para este código.")
         val meses = Referencias.filtrar(referencias(), periodo)
         val limite = Semaphore(2)
+        val estado = EstadoBusca()
         var feitos = 0
         val pontos = meses.map { ref ->
             async {
                 limite.withPermit {
-                    val ponto = valorNoMes(r, codigoAno, ref, diagnostico)
+                    val ponto = valorNoMes(r, codigoAno, ref, estado, diagnostico)
                     synchronized(this@FipeRepositorio) { feitos++ }
                     progresso(feitos, meses.size)
                     ponto
@@ -208,10 +222,19 @@ class FipeRepositorio(
             }
         }.awaitAll().filterNotNull()
         if (pontos.isEmpty() && meses.isNotEmpty()) {
-            throw PlacaParser.ErroProvedor("Não foi possível obter o histórico agora. Verifique a conexão e tente novamente.")
+            throw PlacaParser.ErroProvedor(
+                if (estado.exigemToken.get() > 0) "O histórico deste período exige um token da FIPE com acesso ao histórico (veja Ajustes)."
+                else "Não foi possível obter o histórico agora. Verifique a conexão e tente novamente."
+            )
         }
         // Mesmo mes vindo das duas fontes nao deve repetir
-        pontos.distinctBy { Texto.chave(it.mesReferencia) }
+        ResultadoHistorico(pontos.distinctBy { Texto.chave(it.mesReferencia) }, meses.size, estado.exigemToken.get())
+    }
+
+    /** Estado compartilhado entre as consultas mensais de uma mesma busca. */
+    private class EstadoBusca {
+        val brasilApiForaDoAr = java.util.concurrent.atomic.AtomicBoolean(false)
+        val exigemToken = java.util.concurrent.atomic.AtomicInteger(0)
     }
 
     /**

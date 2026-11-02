@@ -137,6 +137,7 @@ fun AppRaiz() {
                             copiarCodigo = ::copiar,
                             mudarPeriodo = manualVm.historico::mudarPeriodo,
                             recarregarHistorico = { manual.resultado?.let { manualVm.historico.carregar(it) } },
+                            abrirConfiguracoes = { aba = 3 },
                         ),
                     )
                 }
@@ -161,6 +162,8 @@ fun AppRaiz() {
                         app.prefs.urlPlaca = cfg.urlPlaca
                         app.prefs.tokenFipe = cfg.tokenFipe
                         ajustesSalvos++
+                        placaVm.historico.esquecerCache()
+                        manualVm.historico.esquecerCache()
                         aviso("Ajustes salvos")
                     },
                 ) }
