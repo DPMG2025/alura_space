@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -117,6 +118,7 @@ fun TelaInicio(
         ) {
             Box(
                 Modifier
+                    .fillMaxSize()
                     .shadow(8.dp, RoundedCornerShape(28.dp))
                     .clip(RoundedCornerShape(28.dp))
                     .semantics {
@@ -126,22 +128,23 @@ fun TelaInicio(
                     }
                     .clickable { sons.toque(); onAbrirCasa() },
             ) {
-                CenaDaCasa(estado)
+                CenaDaCasa(estado, Modifier.fillMaxSize(), preencherAltura = true)
                 if (noBau > 0) {
-                    Box(
-                        Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 10.dp)
-                            .pulsando()
-                            .background(Cores.Estrela, RoundedCornerShape(50))
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                    ) {
-                        Text(
-                            if (noBau == 1) "🎁 1 presente!" else "🎁 $noBau presentes!",
-                            style = MaterialTheme.typography.titleMedium,
-                        )
+                    // O aviso e a mãozinha ficam juntos: a mão aponta para o aviso.
+                    Box(Modifier.align(Alignment.TopCenter).padding(top = 10.dp)) {
+                        Box(
+                            Modifier
+                                .pulsando()
+                                .background(Cores.Estrela, RoundedCornerShape(50))
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
+                            Text(
+                                if (noBau == 1) "🎁 1 presente!" else "🎁 $noBau presentes!",
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                        }
+                        MaoGuia(Modifier.align(Alignment.BottomEnd).offset(x = 28.dp, y = 40.dp), espera = 2500)
                     }
-                    MaoGuia(Modifier.align(Alignment.Center), espera = 2500)
                 }
             }
         }

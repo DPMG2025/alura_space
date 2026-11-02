@@ -39,6 +39,7 @@ import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.FileiraDeEstrelas
+import br.com.casinhadosaber.ui.componentes.PortaoDeAdulto
 import br.com.casinhadosaber.ui.tema.Cores
 import kotlin.random.Random
 
@@ -72,60 +73,9 @@ fun TelaPais(
         }
         Spacer(Modifier.height(16.dp))
         if (!liberado) {
-            Portao(onLiberar = { liberado = true })
+            PortaoDeAdulto(onLiberar = { liberado = true })
         } else {
             Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite)
-        }
-    }
-}
-
-@Composable
-private fun Portao(onLiberar: () -> Unit) {
-    val (a, b) = remember { Random.nextInt(6, 10) to Random.nextInt(5, 10) }
-    var resposta by rememberSaveable { mutableStateOf("") }
-    var errou by remember { mutableStateOf(false) }
-    fun conferir() {
-        if (resposta.toIntOrNull() == a * b) onLiberar() else { errou = true; resposta = "" }
-    }
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(24.dp))
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text("Só para adultos", style = MaterialTheme.typography.titleLarge)
-        Text("Quanto é $a × $b?", style = MaterialTheme.typography.headlineLarge)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            resposta.ifEmpty { if (errou) "Tente de novo" else "?" },
-            style = MaterialTheme.typography.displayMedium,
-            color = if (errou && resposta.isEmpty()) Cores.Errado else Cores.Texto,
-        )
-        Spacer(Modifier.height(12.dp))
-        val teclas = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "OK")
-        for (linha in teclas.chunked(3)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 10.dp)) {
-                for (t in linha) {
-                    BotaoFofo(
-                        onClick = {
-                            errou = false
-                            when (t) {
-                                "⌫" -> resposta = resposta.dropLast(1)
-                                "OK" -> conferir()
-                                else -> if (resposta.length < 3) resposta += t
-                            }
-                        },
-                        cor = if (t == "OK") Cores.Roxo else Color(0xFFF3EEFF),
-                        corBase = if (t == "OK") Color(0xFF4038C2) else Color(0xFFD9CFF0),
-                        descricao = if (t == "⌫") "Apagar" else t,
-                    ) {
-                        Box(Modifier.size(72.dp, 56.dp), contentAlignment = Alignment.Center) {
-                            Text(t, style = MaterialTheme.typography.headlineMedium, color = if (t == "OK") Color.White else Cores.Texto)
-                        }
-                    }
-                }
-            }
         }
     }
 }
@@ -219,13 +169,13 @@ private fun Painel(
         Spacer(Modifier.height(12.dp))
         BotaoFofo(onClick = onAlternarLimite, cor = Color.White, corBase = Color(0xFFD9CFF0)) {
             Text(
-                if (limiteMinutos == 0) "⏰ Tempo de jogo: livre" else "⏰ Tempo de jogo: $limiteMinutos min por vez",
+                if (limiteMinutos == 0) "⏰ Tempo de jogo: livre" else "⏰ Tempo de jogo: $limiteMinutos min por dia",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(12.dp),
             )
         }
         Text(
-            "Com limite, a casinha \"vai dormir\" no fim do tempo e só um adulto libera de novo.",
+            "Com limite, a casinha \"vai dormir\" quando o tempo do dia acaba. Ela acorda sozinha no dia seguinte, ou antes, se um adulto responder a continha.",
             style = MaterialTheme.typography.bodyMedium,
             color = Cores.TextoSuave,
         )

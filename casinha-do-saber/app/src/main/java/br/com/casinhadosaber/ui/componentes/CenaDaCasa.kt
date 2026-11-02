@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
@@ -64,6 +65,7 @@ import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Estrutura
 import br.com.casinhadosaber.dominio.ItemCasa
 import br.com.casinhadosaber.dominio.ItensDaCasa
+import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.dominio.Lugar
 import br.com.casinhadosaber.dominio.Posicao
 import kotlinx.coroutines.launch
@@ -109,6 +111,8 @@ fun CenaDaCasa(
     destaqueId: String? = null,
     puloDaCrianca: Int = 0,
     noite: Boolean = false,
+    /** Ocupa toda a altura dada: a casa fica embaixo e o céu continua para cima (sem faixas vazias). */
+    preencherAltura: Boolean = false,
     onTocarItem: (ItemCasa) -> Unit = {},
     onMoverItem: (ItemCasa, Posicao) -> Unit = { _, _ -> },
     onGuardarItem: (ItemCasa) -> Unit = {},
@@ -133,6 +137,24 @@ fun CenaDaCasa(
         }
     }
 
+    if (preencherAltura) {
+        BoxWithConstraints(modifier.clipToBounds(), contentAlignment = Alignment.BottomCenter) {
+            val alturaCena = minOf(maxWidth * PROPORCAO_CENA, maxHeight)
+            val corteDoChao = alturaCena * 0.22f
+            Canvas(Modifier.fillMaxSize()) {
+                val ceu = if (noite) listOf(Color(0xFF0F1838), Color(0xFF16204A)) else listOf(Color(0xFF5DB6F5), Color(0xFF7EC8FF))
+                drawRect(Brush.verticalGradient(ceu, endY = size.height - alturaCena.toPx()))
+                // Grama dos lados, quando a casa fica mais estreita que a tela.
+                val chao = if (noite) Color(0xFF3F7A45) else Color(0xFF7CC56B)
+                drawRect(chao, Offset(0f, size.height - corteDoChao.toPx()), Size(size.width, corteDoChao.toPx()))
+            }
+            CenaDaCasa(
+                estado, Modifier.height(alturaCena), interativa, pintando, novaEstrutura, destaqueId, puloDaCrianca, noite, false,
+                onTocarItem, onMoverItem, onGuardarItem, onRecusarItem, onPintar, onTocarCrianca, onMoverCrianca,
+            )
+        }
+        return
+    }
     BoxWithConstraints(
         modifier
             .aspectRatio(1f / PROPORCAO_CENA)
@@ -209,6 +231,25 @@ fun CenaDaCasa(
             ) { w ->
                 if (noite && item.id == "sol") EmojiGrande("🌙", w) else ConteudoDoItem(item, w)
             } }
+        }
+
+        // Visitantes comprados na loja passeiam pelo jardim, cada um no seu ritmo.
+        estado.visitantes.forEachIndexed { i, bicho ->
+            val volta = ((t + i * 0.37f) % 1f)
+            val ida = volta < 0.5f
+            val fracao = if (ida) volta * 2f else (1f - volta) * 2f
+            val x = 0.08f + 0.84f * fracao
+            val y = 0.86f + (i % 3) * 0.045f
+            val tamanho = larguraPx * 0.065f
+            val densidade = LocalDensity.current
+            Box(
+                Modifier
+                    .offset { IntOffset((x * larguraPx - tamanho / 2).roundToInt(), (y * alturaPx - tamanho).roundToInt()) }
+                    .size(with(densidade) { tamanho.toDp() })
+                    .graphicsLayer { scaleX = if (ida) -1f else 1f },
+            ) {
+                EmojiGrande(bicho, tamanho)
+            }
         }
 
         val perfil = estado.perfil
@@ -300,12 +341,34 @@ fun encaixar(id: String, p: Posicao, estado: EstadoJogo): Posicao? {
         Lugar.CEU -> p
         Lugar.DENTRO -> when {
             !dentro -> null
-            id in objetosDeParede -> p
+            id in objetosDeParede -> desviarDasJanelas(id, p)
             else -> pousar(p, dentro = true)
         }
         Lugar.FORA -> if (dentro) null else pousar(p, dentro = false)
         Lugar.QUALQUER -> if (id in objetosDeParede) p else pousar(p, dentro)
     }
+}
+
+/** Janelas (x1, y1, x2, y2), em frações da cena. */
+private val janelas = listOf(
+    floatArrayOf(0.37f, 0.33f, 0.49f, 0.45f),
+    floatArrayOf(0.43f, 0.565f, 0.55f, 0.68f),
+    floatArrayOf(0.64f, 0.565f, 0.76f, 0.68f),
+    floatArrayOf(0.78f, 0.35f, 0.86f, 0.43f),
+)
+
+/** Quadros, espelhos e livros não cobrem as janelas: são empurrados para o lado mais perto. */
+private fun desviarDasJanelas(id: String, p: Posicao): Posicao {
+    val meia = (ItensDaCasa.porId[id]?.tamanho ?: 0.06f) / 2
+    val cy = p.y - meia
+    for (j in janelas) {
+        if (p.x + meia > j[0] && p.x - meia < j[2] && cy > j[1] && cy < j[3]) {
+            val esquerda = j[0] - meia - 0.005f
+            val direita = j[2] + meia + 0.005f
+            return Posicao(if (p.x - esquerda < direita - p.x) esquerda else direita, p.y)
+        }
+    }
+    return p
 }
 
 private fun pousar(p: Posicao, dentro: Boolean): Posicao {
@@ -518,8 +581,6 @@ fun EmojiGrande(emoji: String, larguraPx: Float, modifier: Modifier = Modifier) 
 
 // ---------------------------------------------------------------------------------------- desenho
 
-private val CorTelhado = Color(0xFFEF476F)
-private val CorTelhadoEscuro = Color(0xFFC7365A)
 private val CorMadeira = Color(0xFFC98B5A)
 private val CorMoldura = Color(0xFFE8C9A0)
 private val CorVidro = Color(0xFFA9E1FF)
@@ -691,8 +752,10 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
         val telhado = Path().apply {
             moveTo(X(0.04f), Y(0.315f)); lineTo(X(0.5f), Y(0.075f)); lineTo(X(0.96f), Y(0.315f)); close()
         }
-        drawPath(telhado, if (noite) Color(0xFFA8344F) else CorTelhado)
-        drawPath(telhado, if (noite) Color(0xFF7E2238) else CorTelhadoEscuro, style = Stroke(X(0.012f), join = StrokeJoin.Round))
+        val cor = Color(Loja.coresDoTelhado.getOrElse(e.corTelhado) { Loja.coresDoTelhado[0] })
+        val borda = Color(Loja.coresDoTelhadoEscuras.getOrElse(e.corTelhado) { Loja.coresDoTelhadoEscuras[0] })
+        drawPath(telhado, if (noite) escurecer(cor, 0.7f) else cor)
+        drawPath(telhado, if (noite) escurecer(borda, 0.7f) else borda, style = Stroke(X(0.012f), join = StrokeJoin.Round))
         for (k in 1 until 5) {
             val y = 0.075f + k * 0.048f
             val metade = (y - 0.075f) / 0.24f * 0.46f

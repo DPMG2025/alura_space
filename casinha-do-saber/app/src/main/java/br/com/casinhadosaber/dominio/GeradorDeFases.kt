@@ -20,7 +20,7 @@ class GeradorDeFases(private val random: Random = Random.Default) {
     fun perguntas(fase: Fase, quantidade: Int = PERGUNTAS_POR_FASE): List<Pergunta> {
         val lista = perguntasDoModelo(modelos(fase.trilha)[fase.numero], quantidade)
         // Revisão: a partir da 2ª fase, a pergunta do meio vem de uma fase anterior do mesmo caminho.
-        if (fase.numero > 0 && lista.size == quantidade) {
+        if (fase.numero > 0 && quantidade >= 3 && lista.size == quantidade) {
             val anterior = modelos(fase.trilha)[random.nextInt(fase.numero)]
             lista[quantidade / 2] = anterior.criar()
         }

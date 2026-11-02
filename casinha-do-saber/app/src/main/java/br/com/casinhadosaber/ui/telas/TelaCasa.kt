@@ -6,6 +6,14 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.sp
+import br.com.casinhadosaber.dominio.Loja
+import br.com.casinhadosaber.dominio.ProdutoDaLoja
+import br.com.casinhadosaber.ui.componentes.pulsando
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -66,7 +74,6 @@ import br.com.casinhadosaber.dominio.Lugar
 import br.com.casinhadosaber.ui.componentes.Confete
 import br.com.casinhadosaber.ui.componentes.IconeDoItem
 import br.com.casinhadosaber.ui.componentes.MaoGuia
-import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 
 @Composable
@@ -202,8 +209,10 @@ fun TelaCasa(
                 CenaDaCasa(
                     estado = estado,
                     modifier = Modifier
+                        .fillMaxSize()
                         .shadow(6.dp, RoundedCornerShape(24.dp))
                         .clip(RoundedCornerShape(24.dp)),
+                    preencherAltura = true,
                     interativa = true,
                     pintando = pintando,
                     novaEstrutura = novaEstrutura,
@@ -218,9 +227,13 @@ fun TelaCasa(
                         onAtualizar { it.colocar(item, pos) }
                         // Elogio de arrumação: o móvel foi para o cômodo dele.
                         val comodo = comodoEm(pos.x, pos.y - 0.02f)
-                        if (comodo != null && comodo == item.comodo) {
+                        val certo = item.comodo
+                        if (comodo != null && comodo == certo) {
                             sons.acerto()
                             narrador.falar("Isso! ${item.comArtigo.replaceFirstChar { it.uppercase() }} fica ${preposicao(comodo)}!")
+                        } else if (comodo != null && certo != null) {
+                            // Não proíbe (casa engraçada também vale), só dá a dica.
+                            narrador.falar("${item.comArtigo.replaceFirstChar { it.uppercase() }} gosta mais de ficar ${preposicao(certo)}!")
                         }
                     },
                     onRecusarItem = { item ->
@@ -257,22 +270,40 @@ fun TelaCasa(
                 )
             }
 
-            Text(
-                when {
-                    pintando -> "🎨 Toque num cômodo para pintar"
-                    casaCompleta -> "🏆 Casa completa! Você tem ${estado.estrelas.values.sum()} ⭐"
-                    bau.isNotEmpty() -> "👇 Toque num presente do baú"
-                    estado.colocados.keys.none { ItensDaCasa.porId[it]?.ehEstrutura == false } -> "🎮 Jogue para ganhar a próxima peça!"
-                    else -> "✋ Arraste para arrumar • Leve para o baú para guardar"
-                },
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-            )
+            if (pintando) {
+                Text(
+                    "🎨 👆 🏠",
+                    style = MaterialTheme.typography.headlineMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                )
+            }
 
-            Bau(bau, ganhouTudo = estado.itensGanhos.size == ItensDaCasa.total, onEscolher = ::colocarDoBau, onJogar = onJogar)
+            Bau(
+                itens = bau,
+                estado = estado,
+                onEscolher = ::colocarDoBau,
+                onJogar = onJogar,
+                onComprar = { produto ->
+                    val comprado = estado.comprar(produto)
+                    if (comprado == null) {
+                        sons.erro()
+                        narrador.falar("Faltam estrelas! Jogue mais fases para ganhar estrelas.")
+                    } else {
+                        onAtualizar { it.comprar(produto) ?: it }
+                        confete++
+                        sons.premio()
+                        narrador.falar(
+                            when (produto) {
+                                is ProdutoDaLoja.CorDoTelhado -> "Telhado novo, ${Loja.nomesDasCores[produto.indice]}!"
+                                is ProdutoDaLoja.Visitante -> "${produto.nome} veio passear no seu jardim!"
+                            },
+                        )
+                    }
+                },
+            )
         }
         Confete(confete)
     }
@@ -286,7 +317,14 @@ private fun preposicao(c: Comodo) = when (c) {
 }
 
 @Composable
-private fun Bau(itens: List<ItemCasa>, ganhouTudo: Boolean, onEscolher: (ItemCasa) -> Unit, onJogar: () -> Unit) {
+private fun Bau(
+    itens: List<ItemCasa>,
+    estado: EstadoJogo,
+    onEscolher: (ItemCasa) -> Unit,
+    onJogar: () -> Unit,
+    onComprar: (ProdutoDaLoja) -> Unit,
+) {
+    var naLoja by remember { mutableStateOf(false) }
     Column(
         Modifier
             .fillMaxWidth()
@@ -295,16 +333,42 @@ private fun Bau(itens: List<ItemCasa>, ganhouTudo: Boolean, onEscolher: (ItemCas
                 RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             )
             .border(4.dp, Color(0xFF8E5A34), RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .padding(top = 10.dp, bottom = 14.dp),
+            .padding(top = 8.dp, bottom = 14.dp),
     ) {
-        Text(
-            "🧺 Baú de presentes" + if (itens.isNotEmpty()) " (${itens.size})" else "",
-            style = MaterialTheme.typography.titleLarge,
-            color = Color.White,
-            modifier = Modifier.padding(horizontal = 18.dp),
-        )
+        // Abas: baú de presentes e loja de estrelas.
+        Row(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Aba("🧺" + if (itens.isNotEmpty()) " ${itens.size}" else "", "Baú de presentes", selecionada = !naLoja) { naLoja = false }
+            Aba("⭐ ${estado.saldo}", "Loja de estrelas, você tem ${estado.saldo} estrelas", selecionada = naLoja) { naLoja = true }
+            Spacer(Modifier.weight(1f))
+            if (!naLoja && itens.isEmpty() && estado.colocados.isNotEmpty()) {
+                // Dica sem texto: arrastar para arrumar, levar ao baú para guardar.
+                Text("✋➡️🏠  🏠➡️🧺", style = MaterialTheme.typography.titleMedium)
+            }
+        }
         Spacer(Modifier.height(8.dp))
-        if (itens.isEmpty()) {
+        if (naLoja) {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(Loja.vitrine(estado), key = { it.id }) { produto ->
+                    val podeComprar = estado.saldo >= produto.preco
+                    BotaoFofo(
+                        onClick = { onComprar(produto) },
+                        cor = Color.White,
+                        corBase = Color(0xFF8E5A34),
+                        descricao = "${produto.nome}, ${produto.preco} estrelas",
+                        modifier = Modifier.graphicsLayer { alpha = if (podeComprar) 1f else 0.55f },
+                    ) {
+                        Column(Modifier.width(92.dp).padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(produto.icone, fontSize = 40.sp)
+                            Text("⭐ ${produto.preco}", style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                }
+            }
+        } else if (itens.isEmpty()) {
+            val proximo = ItensDaCasa.ordem.getOrNull(estado.itensGanhos.size)
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -312,18 +376,22 @@ private fun Bau(itens: List<ItemCasa>, ganhouTudo: Boolean, onEscolher: (ItemCas
                     .padding(horizontal = 18.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    if (ganhouTudo) "Você ganhou tudo! Jogue de novo para ganhar mais estrelas." else "Vazio! Jogue para ganhar mais coisas.",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
-                    modifier = Modifier.weight(1f),
-                )
-                BotaoFofo(onClick = onJogar, cor = Cores.Certo, descricao = "Jogar") {
+                if (proximo != null) {
+                    // O próximo presente aparece "apagadinho", com cadeado: sempre há um objetivo à vista.
+                    Box(Modifier.size(80.dp).background(Color(0x33FFFFFF), RoundedCornerShape(20.dp)), contentAlignment = Alignment.Center) {
+                        IconeDoItem(proximo, 56.dp, Modifier.graphicsLayer { alpha = 0.35f })
+                        Text("🔒", fontSize = 24.sp, modifier = Modifier.align(Alignment.BottomEnd))
+                    }
+                } else {
+                    Text("🏆", fontSize = 48.sp)
+                }
+                Spacer(Modifier.weight(1f))
+                BotaoFofo(onClick = onJogar, cor = Cores.Certo, descricao = "Jogar", modifier = Modifier.pulsando()) {
                     Text(
                         "🎮 Jogar",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.headlineMedium,
                         color = Color.White,
-                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
+                        modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp),
                     )
                 }
             }
@@ -338,6 +406,21 @@ private fun Bau(itens: List<ItemCasa>, ganhouTudo: Boolean, onEscolher: (ItemCas
             }
         }
     }
+}
+
+@Composable
+private fun Aba(texto: String, descricao: String, selecionada: Boolean, onClick: () -> Unit) {
+    Text(
+        texto,
+        style = MaterialTheme.typography.titleLarge,
+        color = if (selecionada) Cores.Texto else Color.White,
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(if (selecionada) Color.White else Color(0x33FFFFFF))
+            .semantics { contentDescription = descricao }
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 6.dp),
+    )
 }
 
 @Composable

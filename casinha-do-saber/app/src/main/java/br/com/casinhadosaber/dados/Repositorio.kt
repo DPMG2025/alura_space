@@ -27,9 +27,34 @@ class Repositorio(context: Context) {
         private set
 
     fun alternarLimite() {
-        limiteMinutos = when (limiteMinutos) { 0 -> 15; 15 -> 30; else -> 0 }
+        limiteMinutos = when (limiteMinutos) { 0 -> 15; 15 -> 30; 30 -> 60; else -> 0 }
         prefs.edit { putInt(TIMER, limiteMinutos) }
     }
+
+    /** A casinha está "dormindo" (acabou o tempo do dia). Fica salvo: fechar o app não acorda. */
+    var dormindo by mutableStateOf(prefs.getBoolean(DORMINDO, false) && prefs.getLong(DIA, -1) == hoje())
+        private set
+
+    /** Segundos de uso hoje, contando só o tempo com o app aberto. */
+    fun segundosHoje(): Long = if (prefs.getLong(DIA, -1) == hoje()) prefs.getLong(SEGUNDOS_HOJE, 0) else 0
+
+    fun somarTempoDeHoje(segundos: Long) {
+        val total = segundosHoje() + segundos
+        prefs.edit { putLong(DIA, hoje()); putLong(SEGUNDOS_HOJE, total) }
+    }
+
+    fun dormir() {
+        dormindo = true
+        prefs.edit { putLong(DIA, hoje()); putBoolean(DORMINDO, true) }
+    }
+
+    /** Um adulto liberou: começa uma nova contagem. */
+    fun acordar() {
+        dormindo = false
+        prefs.edit { putBoolean(DORMINDO, false); putLong(SEGUNDOS_HOJE, 0) }
+    }
+
+    private fun hoje(): Long = System.currentTimeMillis().let { it + java.util.TimeZone.getDefault().getOffset(it) } / 86_400_000L
 
     var musicaLigada by mutableStateOf(prefs.getBoolean(MUSICA, true))
         private set
@@ -54,6 +79,8 @@ class Repositorio(context: Context) {
         estado = EstadoJogo()
         somLigado = true
         musicaLigada = true
+        dormindo = false
+        limiteMinutos = 0
     }
 
     private fun carregar(): EstadoJogo {
@@ -78,6 +105,9 @@ class Repositorio(context: Context) {
             acertosDePrimeira = Serializacao.textoParaTrilhas(prefs.getString(ACERTOS, null)),
             segundosJogados = prefs.getLong(SEGUNDOS, 0),
             tentativasSemVencer = Serializacao.textoParaMapa(prefs.getString(TENTATIVAS, null)),
+            estrelasGastas = prefs.getInt(GASTAS, 0),
+            corTelhado = prefs.getInt(COR_TELHADO, 0),
+            visitantes = prefs.getString(VISITANTES, "").orEmpty().split(",").filter { it.isNotBlank() }.toSet(),
         )
     }
 
@@ -98,6 +128,9 @@ class Repositorio(context: Context) {
         putString(ACERTOS, Serializacao.trilhasParaTexto(e.acertosDePrimeira))
         putLong(SEGUNDOS, e.segundosJogados)
         putString(TENTATIVAS, Serializacao.mapaParaTexto(e.tentativasSemVencer))
+        putInt(GASTAS, e.estrelasGastas)
+        putInt(COR_TELHADO, e.corTelhado)
+        putString(VISITANTES, e.visitantes.joinToString(","))
     }
 
     private companion object {
@@ -117,6 +150,12 @@ class Repositorio(context: Context) {
         const val SEGUNDOS = "segundos"
         const val TENTATIVAS = "tentativas"
         const val TIMER = "timer"
+        const val DORMINDO = "dormindo"
+        const val DIA = "dia"
+        const val SEGUNDOS_HOJE = "segundos_hoje"
+        const val GASTAS = "estrelas_gastas"
+        const val COR_TELHADO = "cor_telhado"
+        const val VISITANTES = "visitantes"
         const val MUSICA = "musica"
     }
 }

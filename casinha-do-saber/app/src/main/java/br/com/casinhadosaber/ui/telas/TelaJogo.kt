@@ -96,8 +96,10 @@ fun TelaJogo(
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     val escopo = rememberCoroutineScope()
+    // Na rodada facilitada, a primeira pergunta é um exemplo resolvido junto (a resposta brilha e não conta).
     val perguntas = remember(fase, facilitada) {
-        GeradorDeFases().perguntas(fase).map { if (facilitada) it.comDuasOpcoes() else it }
+        val normais = GeradorDeFases().perguntas(fase)
+        if (facilitada) listOf(GeradorDeFases().perguntas(fase, 1).first()) + normais else normais
     }
     var indice by remember { mutableIntStateOf(0) }
     var acertosDePrimeira by remember { mutableIntStateOf(0) }
@@ -107,13 +109,17 @@ fun TelaJogo(
     var humor by remember { mutableStateOf(Humor.FELIZ) }
     var confete by remember { mutableIntStateOf(0) }
     val pergunta = perguntas[indice]
+    val exemplo = facilitada && indice == 0
     val cor = Color(fase.trilha.corArgb)
     val vibracao = LocalHapticFeedback.current
 
     LaunchedEffect(indice) {
         delay(350)
-        if (indice == 0 && facilitada) {
-            narrador.falar(listOf(pt("Vou te ajudar: agora são só duas opções.")) + pergunta.fala)
+        if (exemplo) {
+            narrador.falar(
+                listOf(pt("Vamos fazer uma juntos?")) + pergunta.fala + pergunta.reforco +
+                    listOf(pt("A resposta é a que está brilhando. Toque nela!")),
+            )
         } else {
             narrador.falar(pergunta.fala)
         }
@@ -123,7 +129,7 @@ fun TelaJogo(
         if (acertou || i in erradas) return
         if (i == pergunta.indiceCorreto) {
             acertou = true
-            if (erradas.isEmpty()) acertosDePrimeira++
+            if (erradas.isEmpty() && !exemplo) acertosDePrimeira++
             humor = Humor.FELIZ
             pulo++
             vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -139,7 +145,7 @@ fun TelaJogo(
                     erradas = emptySet()
                     acertou = false
                 } else {
-                    onConcluir(acertosDePrimeira, perguntas.size)
+                    onConcluir(acertosDePrimeira, if (facilitada) perguntas.size - 1 else perguntas.size)
                 }
             }
         } else {
@@ -216,6 +222,8 @@ fun TelaJogo(
                         erradas = if (i == indice) erradas else emptySet(),
                         acertou = i == indice && acertou,
                         onTocar = ::responder,
+                        mostrarCerta = facilitada && i == 0,
+                        grande = p.cena == Cena.Nenhuma,
                     )
                 }
                 // Mesmo esqueleto em todos os jogos: figura no meio, respostas sempre embaixo.
@@ -227,42 +235,13 @@ fun TelaJogo(
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (p.cena == Cena.Nenhuma) {
-                            // Sem figura: a própria pergunta aparece grande, com o alto-falante.
-                            PerguntaGrande(p.instrucao) { narrador.falar(p.fala) }
-                        } else {
-                            CenaDaPergunta(p.cena)
-                        }
+                        if (p.cena != Cena.Nenhuma) CenaDaPergunta(p.cena)
                     }
                     opcoes()
                 }
             }
         }
         Confete(confete)
-    }
-}
-
-/** Mantém a resposta certa e uma errada (fase facilitada). */
-private fun Pergunta.comDuasOpcoes(): Pergunta {
-    if (opcoes.size <= 2) return this
-    val certa = opcoes[indiceCorreto]
-    val errada = opcoes.filterIndexed { i, _ -> i != indiceCorreto }.random()
-    val novas = listOf(certa, errada).shuffled()
-    return copy(opcoes = novas, indiceCorreto = novas.indexOf(certa))
-}
-
-@Composable
-private fun PerguntaGrande(texto: String, onOuvir: () -> Unit) {
-    Column(
-        Modifier
-            .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(32.dp))
-            .clickable(onClickLabel = "Ouvir de novo", onClick = onOuvir)
-            .padding(horizontal = 28.dp, vertical = 20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text("🔊", fontSize = 64.sp, modifier = Modifier.pulsando())
-        Spacer(Modifier.height(8.dp))
-        Text(texto, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
     }
 }
 
@@ -353,8 +332,8 @@ private fun CenaDaPergunta(cena: Cena) {
         is Cena.Sequencia -> BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             // Todas as figuras numa linha só, para a fila ficar clara.
             val n = cena.itens.size
-            // Até 6 por linha; filas maiores quebram em duas linhas iguais.
-            val porLinha = if (n <= 6) n else (n + 1) / 2
+            // Até 7 numa linha; filas maiores quebram de 6 em 6 (múltiplo de 2 e de 3: o padrão fica alinhado).
+            val porLinha = if (n <= 7) n else 6
             val tamanho = ((maxWidth - 6.dp * (porLinha - 1)) / porLinha).coerceAtMost(68.dp)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             for (linhaDaFila in cena.itens.chunked(porLinha)) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -438,26 +417,33 @@ private fun GrupoDeFiguras(emoji: String, total: Int, riscadas: Int, tamanho: Te
 // ------------------------------------------------------------------------------------- opções
 
 @Composable
-private fun Opcoes(pergunta: Pergunta, erradas: Set<Int>, acertou: Boolean, onTocar: (Int) -> Unit) {
+private fun Opcoes(
+    pergunta: Pergunta,
+    erradas: Set<Int>,
+    acertou: Boolean,
+    onTocar: (Int) -> Unit,
+    mostrarCerta: Boolean = false,
+    grande: Boolean = false,
+) {
     val grupos = pergunta.opcoes.any { (it.visual as? Visual.Emoji)?.let { v -> contarFiguras(v.emoji) > 1 } == true }
     val n = pergunta.opcoes.size
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         when {
             grupos -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 pergunta.opcoes.forEachIndexed { i, o ->
-                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = 150.dp)
+                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = if (grande) 260.dp else 150.dp, mostrarCerta = mostrarCerta)
                 }
             }
             n == 4 -> for (linha in 0 until 2) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     for (i in linha * 2 until linha * 2 + 2) {
-                        CartaoOpcao(pergunta.opcoes[i], i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f))
+                        CartaoOpcao(pergunta.opcoes[i], i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = if (grande) 170.dp else 112.dp, mostrarCerta = mostrarCerta)
                     }
                 }
             }
             else -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 pergunta.opcoes.forEachIndexed { i, o ->
-                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = 130.dp)
+                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = if (grande) 240.dp else 130.dp, mostrarCerta = mostrarCerta)
                 }
             }
         }
@@ -474,10 +460,11 @@ private fun CartaoOpcao(
     onTocar: (Int) -> Unit,
     modifier: Modifier,
     altura: androidx.compose.ui.unit.Dp = 112.dp,
+    mostrarCerta: Boolean = false,
 ) {
     val certa = acertou && i == pergunta.indiceCorreto
     val errada = i in erradas
-    val ajuda = !acertou && erradas.size >= 2 && i == pergunta.indiceCorreto
+    val ajuda = !acertou && (erradas.size >= 2 || mostrarCerta) && i == pergunta.indiceCorreto
     val apagada = acertou && !certa
     val cor by animateColorAsState(
         when {

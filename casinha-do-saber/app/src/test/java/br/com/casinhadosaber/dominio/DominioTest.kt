@@ -130,6 +130,23 @@ class EstadoJogoTest {
     }
 
     @Test
+    fun `loja usa as estrelas como moeda`() {
+        var e = EstadoJogo()
+        for (f in g.fases(Trilha.MATEMATICA).take(3)) e = e.registrarVitoria(f, 3).first
+        assertEquals(9, e.saldo)
+        val cor = Loja.vitrine(e).first()
+        e = e.comprar(cor)!!
+        assertEquals(4, e.saldo)
+        assertEquals(1, e.corTelhado)
+        val bicho = Loja.vitrine(e)[1]
+        assertNull("sem estrelas suficientes", e.comprar(bicho))
+        e = e.registrarVitoria(g.fases(Trilha.LOGICA)[0], 3).first.registrarVitoria(g.fases(Trilha.INGLES)[0], 3).first
+        e = e.comprar(bicho)!!
+        assertTrue(bicho.icone in e.visitantes)
+        assertFalse("visitante já comprado sai da vitrine", Loja.vitrine(e).contains(bicho))
+    }
+
+    @Test
     fun `estrelas nunca pioram`() {
         val fase = g.fases(Trilha.MATEMATICA)[0]
         val (e1, _) = EstadoJogo().registrarVitoria(fase, 3)

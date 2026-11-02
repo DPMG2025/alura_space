@@ -39,7 +39,24 @@ data class EstadoJogo(
     val segundosJogados: Long = 0,
     /** Derrotas seguidas em cada fase ("TRILHA:fase"). Com 2 ou mais, a fase fica mais fácil. */
     val tentativasSemVencer: Map<String, Int> = emptyMap(),
+    /** Loja de estrelas. */
+    val estrelasGastas: Int = 0,
+    val corTelhado: Int = 0,
+    val visitantes: Set<String> = emptySet(),
 ) {
+    val totalDeEstrelas: Int get() = estrelas.values.sum()
+    val saldo: Int get() = totalDeEstrelas - estrelasGastas
+
+    /** Compra um produto, se der. Devolve null quando faltam estrelas. */
+    fun comprar(p: ProdutoDaLoja): EstadoJogo? {
+        if (saldo < p.preco) return null
+        val pago = copy(estrelasGastas = estrelasGastas + p.preco)
+        return when (p) {
+            is ProdutoDaLoja.CorDoTelhado -> pago.copy(corTelhado = p.indice)
+            is ProdutoDaLoja.Visitante -> pago.copy(visitantes = visitantes + p.icone)
+        }
+    }
+
     /** Depois de 2 tentativas sem vencer, a fase vem com só 2 opções por pergunta. */
     fun facilitada(fase: Fase): Boolean = (tentativasSemVencer[chave(fase.trilha, fase.numero)] ?: 0) >= 2
 

@@ -62,8 +62,6 @@ class MainActivity : ComponentActivity() {
     private val musica = Musica()
     private var musicaPermitida = false
     private var inicioDaSessao = 0L
-    /** Início do tempo de jogo, para o limite combinado com os pais. */
-    private var inicioDoLimite = System.currentTimeMillis()
     private lateinit var repositorio: Repositorio
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,6 +88,7 @@ class MainActivity : ComponentActivity() {
         if (inicioDaSessao > 0) {
             val segundos = (System.currentTimeMillis() - inicioDaSessao) / 1000
             repositorio.atualizar { it.copy(segundosJogados = it.segundosJogados + segundos) }
+            repositorio.somarTempoDeHoje(segundos)
             inicioDaSessao = 0
         }
     }
@@ -112,21 +111,19 @@ class MainActivity : ComponentActivity() {
         val estado = repo.estado
         var tela by remember { mutableStateOf(if (estado.perfil == null) Tela.Perfil else Tela.Inicio) }
         val gerador = remember { GeradorDeFases() }
-        var dormindo by remember { mutableStateOf(false) }
-
-        // Limite de tempo: confere a cada 20 segundos.
-        LaunchedEffect(repo.limiteMinutos) {
-            inicioDoLimite = System.currentTimeMillis()
-            while (repo.limiteMinutos > 0) {
-                kotlinx.coroutines.delay(20_000)
-                if (System.currentTimeMillis() - inicioDoLimite >= repo.limiteMinutos * 60_000L) dormindo = true
+        // Limite de tempo do dia: conta só o tempo com o app aberto e fica salvo no aparelho.
+        LaunchedEffect(repo.limiteMinutos, repo.dormindo) {
+            while (repo.limiteMinutos > 0 && !repo.dormindo) {
+                val agora = if (inicioDaSessao > 0) (System.currentTimeMillis() - inicioDaSessao) / 1000 else 0
+                if (repo.segundosHoje() + agora >= repo.limiteMinutos * 60L) repo.dormir()
+                kotlinx.coroutines.delay(10_000)
             }
         }
-        if (dormindo) {
+        if (repo.dormindo && repo.limiteMinutos > 0) {
             BackHandler { }
             TelaDormir(estado) {
-                dormindo = false
-                inicioDoLimite = System.currentTimeMillis()
+                inicioDaSessao = System.currentTimeMillis()
+                repo.acordar()
                 irParaInicio(tela) { tela = it }
             }
             return
