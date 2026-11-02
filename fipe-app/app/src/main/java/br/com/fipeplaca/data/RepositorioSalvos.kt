@@ -28,12 +28,12 @@ class RepositorioSalvos(context: Context) {
     fun registrar(nova: ConsultaSalva) {
         val atual = _itens.value
         val antigo = atual.firstOrNull { it.id == nova.id }
-        val atual = listOfNotNull(nova.principal?.let { r ->
+        val pontoAtual = listOfNotNull(nova.principal?.let { r ->
             Dinheiro.paraDouble(r.valor)?.let { PontoHistorico(r.mesReferencia, r.valor.orEmpty(), it) }
         })
         val item = nova.copy(
             favorito = antigo?.favorito ?: nova.favorito,
-            historicoLocal = MesclarHistorico.acumular(antigo?.historicoLocal.orEmpty() + nova.historicoLocal.orEmpty(), atual),
+            historicoLocal = MesclarHistorico.acumular(antigo?.historicoLocal.orEmpty() + nova.historicoLocal.orEmpty(), pontoAtual),
         )
         gravar(OrganizarSalvos.inserir(atual, item, LIMITE_RECENTES))
     }
