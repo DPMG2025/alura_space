@@ -128,6 +128,13 @@ jobs:
           working-directory: fipe-app
           script: |
             ./gradlew connectedDebugAndroidTest --no-daemon || echo "FALHA_TESTES" > emulador-falhou.txt
+            ./gradlew assembleRelease --no-daemon -q
+            adb install -r app/build/outputs/apk/release/app-release.apk
+            adb logcat -c
+            adb shell am start -W -n br.com.fipeplaca/.MainActivity
+            sleep 15
+            adb logcat -d > logcat-release.txt
+            if adb shell pidof br.com.fipeplaca > /dev/null && ! grep -q "FATAL EXCEPTION" logcat-release.txt; then echo "APK release (R8) abriu e carregou dados sem falhas" > release-ok.txt; else echo "FALHA_RELEASE" > emulador-falhou.txt; grep -A 20 "FATAL EXCEPTION" logcat-release.txt | head -40 > release-erro.txt; fi
 
       - name: Versionar resultado do emulador
         if: github.event_name == 'push' && !cancelled()
@@ -135,6 +142,7 @@ jobs:
           rm -rf docs/emulador && mkdir -p docs/emulador
           find app/build/outputs/connected_android_test_additional_output -type f \( -name "*.png" -o -name "*.txt" \) -exec cp {} docs/emulador/ \; 2>/dev/null || true
           ls docs/emulador/*.png >/dev/null 2>&1 || echo "sem capturas" > docs/emulador/relatorio.txt
+          cat release-ok.txt release-erro.txt >> docs/emulador/relatorio.txt 2>/dev/null || true
           if [ -f emulador-falhou.txt ]; then echo "RESULTADO: FALHOU" >> docs/emulador/relatorio.txt; else echo "RESULTADO: TODOS OS TESTES PASSARAM" >> docs/emulador/relatorio.txt; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

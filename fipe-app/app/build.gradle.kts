@@ -14,8 +14,8 @@ android {
         applicationId = "br.com.fipeplaca"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "3.1"
+        versionCode = 7
+        versionName = "3.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["useTestStorageService"] = "true"
     }

@@ -39,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import br.com.fipeplaca.data.ConsultaSalva
 import br.com.fipeplaca.data.Datas
 
@@ -71,7 +73,6 @@ fun TelaSalvos(itens: List<ConsultaSalva>, acoes: AcoesSalvos, modifier: Modifie
                             activeBorderColor = Color.White.copy(alpha = 0.6f),
                             inactiveBorderColor = Color.White.copy(alpha = 0.4f),
                         ),
-                        icon = {},
                     ) { Text(rotulo, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
                 }
             }
@@ -122,6 +123,7 @@ private fun ItemSalvo(c: ConsultaSalva, acoes: AcoesSalvos) {
                 )
                 Text(c.principal?.valor ?: "Sem valor", style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                VariacaoDesdeSalvo(c)
                 Text(Datas.relativa(c.data), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -138,5 +140,36 @@ private fun ItemSalvo(c: ConsultaSalva, acoes: AcoesSalvos) {
                 }
             }
         }
+    }
+}
+
+/** "+2,1% desde out/26" com minigrafico dos valores guardados no aparelho. */
+@Composable
+private fun VariacaoDesdeSalvo(c: ConsultaSalva) {
+    val pontos = c.historicoLocal.orEmpty()
+    val variacao = br.com.fipeplaca.data.VariacaoSalvo.de(c) ?: return
+    val cor = corVariacao(variacao)
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
+        androidx.compose.foundation.Canvas(
+            Modifier.width(56.dp).height(18.dp)
+                .semantics { contentDescription = "Evolução guardada de ${pontos.size} meses" },
+        ) {
+            val min = pontos.minOf { it.valor }
+            val max = pontos.maxOf { it.valor }
+            val faixa = (max - min).takeIf { it > 0 } ?: 1.0
+            val passo = size.width / (pontos.size - 1)
+            val caminho = androidx.compose.ui.graphics.Path()
+            pontos.forEachIndexed { i, p ->
+                val x = i * passo
+                val y = size.height - ((p.valor - min) / faixa * size.height).toFloat()
+                if (i == 0) caminho.moveTo(x, y) else caminho.lineTo(x, y)
+            }
+            drawPath(caminho, cor, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()))
+        }
+        Spacer(Modifier.width(8.dp))
+        Text(
+            "${br.com.fipeplaca.data.Estatisticas.percentual(variacao)} desde ${br.com.fipeplaca.data.Meses.curto(pontos.first().mesReferencia)}",
+            style = MaterialTheme.typography.labelMedium, color = cor,
+        )
     }
 }

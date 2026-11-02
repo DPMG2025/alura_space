@@ -107,7 +107,7 @@ fun CartaoValorFipe(
                     Icon(
                         if (favorito) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                         contentDescription = if (favorito) "Remover dos favoritos" else "Salvar nos favoritos",
-                        tint = if (favorito) Color(0xFFFF6B81) else Color.White,
+                        tint = Color.White, // preenchido ou contorno: o formato indica o estado
                     )
                 }
                 IconButton(onClick = onCompartilhar) {
@@ -159,6 +159,7 @@ fun CartaoHistorico(
     onPeriodo: (PeriodoHistorico) -> Unit,
     onTentar: () -> Unit,
     onAbrirAjustes: () -> Unit = {},
+    semTokenFipe: Boolean = false,
 ) {
     Secao(titulo = "Evolução do preço") {
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -173,9 +174,13 @@ fun CartaoHistorico(
                         activeBorderColor = MaterialTheme.colorScheme.outline,
                         inactiveBorderColor = MaterialTheme.colorScheme.outline,
                     ),
-                    icon = {},
                 ) { Text(p.rotulo, maxLines = 1) }
             }
+        }
+        if (semTokenFipe) {
+            Spacer(Modifier.height(6.dp))
+            Text("Sem token da FIPE, o histórico cobre cerca dos últimos 3 meses.",
+                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(Modifier.height(16.dp))
         AnimatedContent(
@@ -206,11 +211,16 @@ fun CartaoHistorico(
                 }
                 1 -> CartaoErro(estado.erro.orEmpty(), "Tentar novamente", onTentar)
                 2 -> if (estado.pontos.size < 2) {
+                    val mes = Meses.capitalizar(estado.pontos.first().mesReferencia)
                     EstadoVazio(
                         Icons.Filled.Info, "Ainda não há meses suficientes",
-                        "Só o valor de ${Meses.capitalizar(estado.pontos.first().mesReferencia)} está disponível. " +
-                            "Os meses anteriores exigem um token da FIPE com acesso ao histórico; os veículos salvos " +
-                            "também acumulam o valor de cada mês neste aparelho.",
+                        if (estado.exigemToken > 0) {
+                            "Só o valor de $mes está disponível. Os meses anteriores exigem um token da FIPE com acesso " +
+                                "ao histórico; os veículos salvos também acumulam o valor de cada mês neste aparelho."
+                        } else {
+                            "Só o valor de $mes está disponível agora. Pode ser um veículo recente na tabela ou uma falha " +
+                                "temporária de conexão; tente de novo mais tarde."
+                        },
                     )
                 } else Column {
                     if (estado.offline) {
@@ -383,7 +393,8 @@ fun Grafico(pontos: List<PontoHistorico>) {
             Text(Meses.capitalizar(sel.mesReferencia), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 3.dp))
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(4.dp))
+        RotuloEixo(milhares(topo), Modifier)
         Box {
             Canvas(
                 Modifier
@@ -443,10 +454,8 @@ fun Grafico(pontos: List<PontoHistorico>) {
                 drawCircle(cor, radius = 7.dp.toPx(), center = ps)
                 drawCircle(fundo, radius = 3.5.dp.toPx(), center = ps)
             }
-            // Eixo Y: valores do topo e da base da escala
-            RotuloEixo(milhares(topo), Modifier.align(Alignment.TopStart))
-            RotuloEixo(milhares(base), Modifier.align(Alignment.BottomStart))
         }
+        RotuloEixo(milhares(base), Modifier)
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             val rotulos = listOf(0, pontos.lastIndex).distinct()

@@ -69,7 +69,7 @@ class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.Sa
         when {
             marca != null && modelo != null && ano != null -> {
                 _estado.value = ManualUi(tipo = tipo, etapa = Etapa.RESULTADO, marca = marca, modelo = modelo, ano = ano)
-                carregarValor()
+                carregarValor(registrar = false)
             }
             marca != null && modelo != null -> {
                 _estado.value = ManualUi(tipo = tipo, etapa = Etapa.ANOS, marca = marca, modelo = modelo)
@@ -116,11 +116,11 @@ class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.Sa
         _estado.update { it.copy(anos = lista) }
     }
 
-    private fun carregarValor() = executar {
+    private fun carregarValor(registrar: Boolean = true) = executar {
         val s = _estado.value
         val r = repo.valor(s.tipo, s.marca!!.codigo, s.modelo!!.codigo, s.ano!!.codigo)
         _estado.update { it.copy(resultado = r) }
-        salvos.registrar(
+        if (registrar) salvos.registrar(
             ConsultaSalva(ConsultaSalva.idManual(r), System.currentTimeMillis(), resultado = r,
                 marca = s.marca, modelo = s.modelo, ano = s.ano)
         )

@@ -145,3 +145,13 @@ object MesclarHistorico {
         return porMes.toSortedMap().values.toList().takeLast(limite)
     }
 }
+
+/** Variacao desde que o veiculo foi salvo (primeiro e ultimo valor guardados no aparelho). */
+object VariacaoSalvo {
+    fun de(c: ConsultaSalva): Double? {
+        val pts = c.historicoLocal.orEmpty()
+        if (pts.size < 2) return null
+        val primeiro = pts.first().valor
+        return if (primeiro > 0) (pts.last().valor - primeiro) / primeiro * 100 else null
+    }
+}

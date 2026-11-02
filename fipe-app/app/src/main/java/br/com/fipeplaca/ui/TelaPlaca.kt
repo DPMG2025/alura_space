@@ -48,6 +48,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,6 +88,7 @@ fun TelaPlaca(
     favorito: Boolean,
     acoes: AcoesPlaca,
     modifier: Modifier = Modifier,
+    semTokenFipe: Boolean = false,
 ) {
     val foco = LocalFocusManager.current
     val buscar = { foco.clearFocus(); acoes.consultar() }
@@ -169,7 +171,7 @@ fun TelaPlaca(
                 enter = fadeIn() + slideInVertically { it / 8 },
                 modifier = Modifier.bringIntoViewRequester(resultadoVisivel),
             ) {
-                if (v != null) ResultadoPlaca(v, estado, historico, favorito, acoes)
+                if (v != null) ResultadoPlaca(v, estado, historico, favorito, acoes, semTokenFipe)
             }
         }
     }
@@ -241,7 +243,7 @@ private fun Passo(numero: String, titulo: String, texto: String) {
 }
 
 @Composable
-private fun ResultadoPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesPlaca) {
+private fun ResultadoPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesPlaca, semTokenFipe: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Secao {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -249,12 +251,19 @@ private fun ResultadoPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: Historic
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text(listOfNotNull(v.marca?.let(Texto::marca), v.modelo?.let(Texto::modelo)).joinToString(" "), style = MaterialTheme.typography.titleMedium, maxLines = 2)
-                    if (estado.doSalvo) {
-                        Text("Aberto dos salvos", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                    when {
+                        estado.atualizacaoFalhou -> Text("Sem conexão: mostrando o valor guardado",
+                            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                        estado.doSalvo -> Text("Atualizando o valor…", style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary)
                     }
                 }
             }
-            Spacer(Modifier.height(16.dp))
+            TextButton(onClick = acoes.limpar, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp)) {
+                Icon(Icons.Filled.Search, null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Consultar outra placa")
+            }
             GradeInfo(
                 listOf(
                     "Ano" to listOfNotNull(v.anoFabricacao, v.anoModelo).distinct().joinToString("/").ifBlank { null },
@@ -273,14 +282,14 @@ private fun ResultadoPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: Historic
                 "Buscar por marca e modelo",
             ) { acoes.buscarManual(v.tipo, v.marca) }
         } else {
-            ValoresPlaca(v, estado, historico, favorito, acoes)
+            ValoresPlaca(v, estado, historico, favorito, acoes, semTokenFipe)
         }
         Spacer(Modifier.height(8.dp))
     }
 }
 
 @Composable
-private fun ValoresPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesPlaca) {
+private fun ValoresPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesPlaca, semTokenFipe: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         val sel = v.fipe.getOrNull(estado.selecionado) ?: v.fipe.first()
         CartaoValorFipe(
@@ -321,7 +330,7 @@ private fun ValoresPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: HistoricoU
             }
         }
 
-        CartaoHistorico(historico, acoes.mudarPeriodo, { acoes.selecionarVersao(estado.selecionado) }, acoes.abrirConfiguracoes)
+        CartaoHistorico(historico, acoes.mudarPeriodo, { acoes.selecionarVersao(estado.selecionado) }, acoes.abrirConfiguracoes, semTokenFipe)
 
         OutlinedButton(
             onClick = { acoes.buscarManual(v.tipo, v.marca) },

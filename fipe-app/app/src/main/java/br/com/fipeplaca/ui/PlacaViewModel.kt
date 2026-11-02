@@ -24,6 +24,8 @@ data class PlacaUi(
     val selecionado: Int = 0,
     /** true quando o resultado veio dos salvos, sem nova consulta. */
     val doSalvo: Boolean = false,
+    /** true quando nao foi possivel conferir o valor atual de um salvo (mostra o guardado). */
+    val atualizacaoFalhou: Boolean = false,
 )
 
 class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.SavedStateHandle) : AndroidViewModel(app) {
@@ -38,8 +40,8 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
     /** Historico local por veiculo e versao FIPE (a placa pode ter mais de uma versao). */
     val historico = HistoricoController(
         viewModelScope, repo,
-        locais = { r -> if (r == versaoAtual()) idAtual()?.let(salvos::pontosLocais).orEmpty() else emptyList() },
-        aoCarregar = { r, pontos -> if (r == versaoAtual()) idAtual()?.let { salvos.guardarPontos(it, pontos) } },
+        locais = { r -> if (mesmaVersao(r)) idAtual()?.let(salvos::pontosLocais).orEmpty() else emptyList() },
+        aoCarregar = { r, pontos -> if (mesmaVersao(r)) idAtual()?.let { salvos.guardarPontos(it, pontos) } },
     )
     private var job: Job? = null
 
@@ -55,6 +57,10 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
     }
 
     private fun versaoAtual() = _estado.value.let { e -> e.veiculo?.fipe?.getOrNull(e.selecionado) }
+
+    /** Compara pela identidade da versao (codigo FIPE e ano), nao pelo valor, que muda a cada mes. */
+    private fun mesmaVersao(r: br.com.fipeplaca.data.FipeResultado) =
+        versaoAtual()?.let { it.codigoFipe == r.codigoFipe && (it.codigoAno ?: it.anoModelo) == (r.codigoAno ?: r.anoModelo) } == true
 
     fun alterarPlaca(texto: String) {
         if (_estado.value.carregando) return
@@ -108,10 +114,17 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
         v.fipe.getOrNull(versao)?.let { historico.carregar(it) }
         if (!atualizar) return
         job = viewModelScope.launch {
-            val novo = runCatching { repo.atualizarValores(v) }.getOrNull() ?: return@launch
-            if (_estado.value.veiculo?.placa != v.placa || novo == v) return@launch
-            _estado.update { it.copy(veiculo = novo, doSalvo = false) }
-            salvos.registrar(ConsultaSalva(c.id, System.currentTimeMillis(), veiculo = novo, versao = versao))
+            val novo = runCatching { repo.atualizarValores(v) }
+                .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+                .getOrNull()
+            if (_estado.value.veiculo?.placa != v.placa) return@launch
+            if (novo == null) {
+                // Nao deu para conferir o valor agora: a tela avisa que mostra o valor guardado
+                _estado.update { it.copy(atualizacaoFalhou = true) }
+                return@launch
+            }
+            _estado.update { it.copy(veiculo = novo, doSalvo = false, atualizacaoFalhou = false) }
+            if (novo != v) salvos.registrar(ConsultaSalva(c.id, System.currentTimeMillis(), veiculo = novo, versao = versao))
         }
     }
 

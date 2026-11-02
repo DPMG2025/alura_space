@@ -62,7 +62,9 @@ class TelasCapturaTest {
         pontos = meses.zip(valores).map { (m, v) -> PontoHistorico(m, "", v) },
     )
     private val salvos = listOf(
-        ConsultaSalva(ConsultaSalva.idPlaca("RTA2C19"), 1793620800000, favorito = true, veiculo = veiculo),
+        ConsultaSalva(ConsultaSalva.idPlaca("RTA2C19"), 1793620800000, favorito = true, veiculo = veiculo,
+            historicoLocal = listOf(PontoHistorico("agosto de 2026", "", 49210.0), PontoHistorico("setembro de 2026", "", 48990.0),
+                PontoHistorico("outubro de 2026", "", 48700.0), PontoHistorico("novembro de 2026", "", 48512.0))),
         ConsultaSalva(ConsultaSalva.idPlaca("HKP4410"), 1793534400000, veiculo = veiculo.copy(placa = "HKP4410",
             fipe = listOf(gol.copy(modelo = "Onix 1.0 Turbo LT", marca = "GM - Chevrolet", valor = "R$ 79.340,00")))),
         ConsultaSalva("M:CARROS:1", 1793448000000, favorito = true,
@@ -126,6 +128,30 @@ class TelasCapturaTest {
                 ManualUi(etapa = Etapa.RESULTADO, marca = marcas.last(), modelo = ItemFipe("10", gol.modelo),
                     ano = ItemFipe("2019-1", "2019 Gasolina"), resultado = gol),
                 historico.copy(periodo = PeriodoHistorico.MESES_24, pontos = historico.pontos.drop(1), solicitados = 24, exigemToken = 13), true, AcoesManual(), it,
+            )
+        }
+    }
+
+    @Config(qualifiers = "w393dp-h1500dp-xhdpi")
+    @Test fun historicoReal3Meses() = captura("12_historico_3_meses_sem_token") {
+        Moldura(1) {
+            TelaManual(
+                ManualUi(etapa = Etapa.RESULTADO, marca = marcas.last(), modelo = ItemFipe("10", gol.modelo),
+                    ano = ItemFipe("2019-1", "2019 Gasolina"), resultado = gol),
+                historico.copy(pontos = historico.pontos.takeLast(3), solicitados = 12, exigemToken = 9), false, AcoesManual(), it,
+                semTokenFipe = true,
+            )
+        }
+    }
+
+    @Config(qualifiers = "w393dp-h1300dp-xhdpi")
+    @Test fun historicoReal1Mes() = captura("13_historico_1_mes_escuro", escuro = true) {
+        Moldura(1) {
+            TelaManual(
+                ManualUi(etapa = Etapa.RESULTADO, marca = marcas.last(), modelo = ItemFipe("10", gol.modelo),
+                    ano = ItemFipe("2019-1", "2019 Gasolina"), resultado = gol),
+                historico.copy(pontos = historico.pontos.takeLast(1), solicitados = 12, exigemToken = 11), false, AcoesManual(), it,
+                semTokenFipe = true,
             )
         }
     }

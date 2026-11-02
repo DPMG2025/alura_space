@@ -49,7 +49,7 @@ class HistoricoController(
     }
 
     /** Numero da busca atual: respostas de buscas antigas sao ignoradas. */
-    private var geracao = 0
+    @Volatile private var geracao = 0
 
     /** Mesma regra para resultado novo e vindo do cache: mescla com os valores guardados no aparelho. */
     private fun aplicar(alvo: FipeResultado, periodo: PeriodoHistorico, res: br.com.fipeplaca.data.ResultadoHistorico): HistoricoUi {
@@ -65,7 +65,8 @@ class HistoricoController(
     fun carregar(alvo: FipeResultado, periodo: PeriodoHistorico = _estado.value.periodo) {
         job?.cancel()
         val minha = ++geracao
-        val chave = "${alvo.tipo}|${alvo.codigoFipe}|${alvo.codigoAno ?: alvo.anoModelo}|${alvo.combustivel}" to periodo
+        // O mes de referencia entra na chave: na virada do mes o historico e buscado de novo
+        val chave = "${alvo.tipo}|${alvo.codigoFipe}|${alvo.codigoAno ?: alvo.anoModelo}|${alvo.combustivel}|${alvo.mesReferencia}" to periodo
         cache[chave]?.let {
             _estado.value = aplicar(alvo, periodo, it)
             return

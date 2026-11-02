@@ -97,7 +97,7 @@ class FipeRepositorio(
     private fun List<ItemFipe>.validos() = filter { it.codigo != null && it.nome != null }
 
     suspend fun marcas(tipo: TipoVeiculo): List<ItemFipe> =
-        cacheMarcas[tipo] ?: v1.marcas(tipo.caminhoV1).validos().sortedBy { Texto.chave(it.nome) }
+        cacheMarcas[tipo] ?: v1.marcas(tipo.caminhoV1).validos().sortedBy { Texto.chave(Texto.marca(it.nome)) }
             .also { cacheMarcas[tipo] = it }
 
     suspend fun modelos(tipo: TipoVeiculo, marca: String): List<ItemFipe> =
@@ -153,8 +153,10 @@ class FipeRepositorio(
 
     /** Atualiza o valor FIPE das versoes de uma placa ja consultada (nao chama o provedor de placas). */
     suspend fun atualizarValores(v: VeiculoPlaca): VeiculoPlaca = coroutineScope {
-        val fipe = v.fipe.map { r -> async { tentar { completar(r.copy(codigoAno = r.codigoAno), v.anoModelo) }.getOrDefault(r) } }.awaitAll()
-        v.copy(fipe = fipe)
+        val resultados = v.fipe.map { r -> async { tentar { completar(r, v.anoModelo) } } }.awaitAll()
+        // Nenhuma versao atualizada: sinaliza a falha (a tela avisa que o valor exibido e o guardado)
+        if (resultados.isNotEmpty() && resultados.all { it.isFailure }) throw resultados.first().exceptionOrNull()!!
+        v.copy(fipe = resultados.mapIndexed { i, res -> res.getOrDefault(v.fipe[i]) })
     }
 
     private suspend fun completar(r: FipeResultado, anoModeloVeiculo: String?): FipeResultado {
@@ -286,8 +288,8 @@ class FipeRepositorio(
                     while (true) {
                         val ref = synchronized(fila) { fila.removeFirstOrNull() } ?: break
                         valorNoMes(r, codigoAno, ref, estado, diagnostico)?.let { obtidos[ref.codigo] = it }
-                        synchronized(this@FipeRepositorio) { feitos++ }
-                        progresso(feitos, meses.size)
+                        val agoraFeitos = synchronized(this@FipeRepositorio) { ++feitos }
+                        progresso(agoraFeitos, meses.size)
                     }
                 }
             }.awaitAll()

@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.background
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
@@ -124,6 +128,7 @@ fun AppRaiz() {
     // Cada aba guarda o proprio estado (rolagem, campos, sub-abas) ao trocar de aba
     val estadosDasAbas = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
 
+  androidx.compose.foundation.layout.Box {
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbar, Modifier.imePadding()) },
@@ -146,6 +151,7 @@ fun AppRaiz() {
                     val fav = id != null && salvos.any { it.id == id && it.favorito }
                     TelaPlaca(
                         estado = placa, historico = histPlaca, recentes = salvos, favorito = fav,
+                        semTokenFipe = app.prefs.tokenFipe.isBlank(),
                         acoes = AcoesPlaca(
                             alterarPlaca = placaVm::alterarPlaca,
                             consultar = placaVm::consultar,
@@ -167,6 +173,7 @@ fun AppRaiz() {
                     val fav = id != null && salvos.any { it.id == id && it.favorito }
                     TelaManual(
                         estado = manual, historico = histManual, favorito = fav,
+                        semTokenFipe = app.prefs.tokenFipe.isBlank(),
                         acoes = AcoesManual(
                             selecionarTipo = { manualVm.selecionarTipo(it) },
                             alterarFiltro = manualVm::alterarFiltro,
@@ -225,6 +232,12 @@ fun AppRaiz() {
         }
       }
     }
+    // Faixa fixa atras da barra de status: os icones (claros) continuam legiveis quando o conteudo rola
+    Spacer(
+        Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars)
+            .background(Extras.cores.gradienteInicio),
+    )
+  }
 }
 
 @Composable

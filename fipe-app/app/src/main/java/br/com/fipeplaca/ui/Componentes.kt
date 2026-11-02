@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
@@ -106,7 +107,7 @@ fun Cabecalho(
 @Composable
 fun PlacaMercosul(placa: String, modifier: Modifier = Modifier, altura: Dp = 56.dp) {
     val texto = Placa.formatar(placa).ifBlank { "ABC1D23" }
-    MolduraPlaca(modifier, altura) {
+    MolduraPlaca(modifier.clearAndSetSemantics { contentDescription = "Placa ${texto.toList().joinToString(" ")}" }, altura) {
         Text(
             texto,
             style = estiloPlaca(altura, maxWidth, texto.length),
@@ -185,7 +186,8 @@ private fun MolduraPlaca(modifier: Modifier, altura: Dp, conteudo: @Composable B
             .border(if (compacta) 1.5.dp else 2.dp, Color(0xFF1A1A1A), RoundedCornerShape(altura * 0.14f)),
     ) {
         Row(
-            Modifier.fillMaxWidth().height(faixa).background(Extras.cores.placaAzul).padding(horizontal = altura * 0.14f),
+            Modifier.fillMaxWidth().height(faixa).background(Extras.cores.placaAzul).padding(horizontal = altura * 0.14f)
+                .clearAndSetSemantics {}, // "BR BRASIL" e bandeira sao decorativos
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (!compacta) Text("BR", style = estiloFaixa(faixa.value * 0.55f))

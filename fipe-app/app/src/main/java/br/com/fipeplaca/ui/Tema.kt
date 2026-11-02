@@ -26,7 +26,7 @@ data class CoresExtras(
 )
 
 private val ExtrasClaro = CoresExtras(
-    alta = Color(0xFF1B8A4B),
+    alta = Color(0xFF157A3F),
     baixa = Color(0xFFC62828),
     gradienteInicio = Color(0xFF0A2F7A),
     gradienteFim = Color(0xFF1565C0),
@@ -47,7 +47,7 @@ private val Claro = lightColorScheme(
     onPrimary = Color.White,
     primaryContainer = Color(0xFFDCE6FF),
     onPrimaryContainer = Color(0xFF001A43),
-    secondary = Color(0xFF00897B),
+    secondary = Color(0xFF00695C),
     onSecondary = Color.White,
     secondaryContainer = Color(0xFFCDEFEA),
     onSecondaryContainer = Color(0xFF00201C),

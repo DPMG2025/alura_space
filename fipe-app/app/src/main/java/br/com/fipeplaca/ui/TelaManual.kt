@@ -97,7 +97,7 @@ private val POPULARES = mapOf(
 )
 
 @Composable
-fun TelaManual(estado: ManualUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesManual, modifier: Modifier = Modifier) {
+fun TelaManual(estado: ManualUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesManual, modifier: Modifier = Modifier, semTokenFipe: Boolean = false) {
     val s = estado
     // Com teclado aberto ou pouca altura (paisagem, tela dividida), o cabecalho encolhe para a lista caber
     val compacto = WindowInsets.isImeVisible || LocalConfiguration.current.screenHeightDp < 560
@@ -105,7 +105,8 @@ fun TelaManual(estado: ManualUi, historico: HistoricoUi, favorito: Boolean, acoe
         Cabecalho(
             titulo = "Tabela FIPE",
             subtitulo = "Todas as marcas, modelos e anos",
-            compacto = compacto,
+            // Depois de escolher a marca o titulo sai (a trilha de etapas ja orienta): mais espaco para a lista
+            compacto = compacto || s.etapa != Etapa.MARCAS,
         ) {
             Spacer(Modifier.height(if (compacto) 4.dp else 14.dp))
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -122,7 +123,6 @@ fun TelaManual(estado: ManualUi, historico: HistoricoUi, favorito: Boolean, acoe
                             activeBorderColor = Color.White.copy(alpha = 0.6f),
                             inactiveBorderColor = Color.White.copy(alpha = 0.4f),
                         ),
-                        icon = {},
                     ) { Text(t.rotulo, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
@@ -176,7 +176,7 @@ fun TelaManual(estado: ManualUi, historico: HistoricoUi, favorito: Boolean, acoe
                     )
                     etapa == Etapa.MODELOS -> ListaItens(st.modelos, st.filtro, acoes.selecionarModelo)
                     etapa == Etapa.ANOS -> ListaItens(st.anos, st.filtro, acoes.selecionarAno, destacarZeroKm = true)
-                    else -> ResultadoManual(st, historico, favorito, acoes)
+                    else -> ResultadoManual(st, historico, favorito, acoes, semTokenFipe)
                 }
             }
         }
@@ -313,7 +313,7 @@ private fun ListaItens(
             items(filtrados, key = { it.codigo }) { item ->
                 val zeroKm = destacarZeroKm && item.nome.contains("Zero KM", ignoreCase = true)
                 ListItem(
-                    headlineContent = { Text(if (mostrarAvatar) item.nome else Texto.modelo(item.nome), fontWeight = if (zeroKm) FontWeight.Bold else FontWeight.Normal) },
+                    headlineContent = { Text(if (mostrarAvatar) Texto.marca(item.nome) else Texto.modelo(item.nome), fontWeight = if (zeroKm) FontWeight.Bold else FontWeight.Normal) },
                     leadingContent = if (mostrarAvatar) ({ Avatar(nomeCurto(item.nome)) }) else null,
                     supportingContent = if (zeroKm) ({ Text("Veículo novo", color = MaterialTheme.colorScheme.secondary) }) else null,
                     trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
@@ -330,7 +330,7 @@ private fun ListaItens(
 private fun nomeCurto(nome: String): String = Texto.marca(nome)
 
 @Composable
-private fun ResultadoManual(s: ManualUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesManual) {
+private fun ResultadoManual(s: ManualUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesManual, semTokenFipe: Boolean) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxSize()) {
         item {
             val r = s.resultado
@@ -344,7 +344,7 @@ private fun ResultadoManual(s: ManualUi, historico: HistoricoUi, favorito: Boole
             }
         }
         if (s.resultado != null) {
-            item { CartaoHistorico(historico, acoes.mudarPeriodo, acoes.recarregarHistorico, acoes.abrirConfiguracoes) }
+            item { CartaoHistorico(historico, acoes.mudarPeriodo, acoes.recarregarHistorico, acoes.abrirConfiguracoes, semTokenFipe) }
         }
         item {
             OutlinedButton(onClick = acoes.novaConsulta, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp), shape = MaterialTheme.shapes.medium) {

@@ -134,7 +134,6 @@ fun TelaConfiguracoes(
                                 activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                 activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             ),
-                            icon = {},
                         ) { Text(rotulo) }
                     }
                 }
