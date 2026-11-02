@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -115,7 +116,7 @@ fun TelaQuase(
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
                     )
                 }
-                MaoGuia(Modifier.align(Alignment.BottomEnd), espera = 2500)
+                MaoGuia(Modifier.align(Alignment.BottomEnd).offset(x = 30.dp, y = 34.dp), espera = 2500)
             }
         }
     }
