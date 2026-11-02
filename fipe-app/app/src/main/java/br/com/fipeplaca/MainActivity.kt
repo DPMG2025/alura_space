@@ -24,6 +24,15 @@ class MainActivity : ComponentActivity() {
                 "escuro" -> true
                 else -> isSystemInDarkTheme()
             }
+            // Barras do sistema seguem o tema do app (e nao o do sistema): icones claros sobre o cabecalho azul
+            androidx.compose.runtime.DisposableEffect(escuro) {
+                enableEdgeToEdge(
+                    statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+                    navigationBarStyle = if (escuro) androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                    else androidx.activity.SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+                )
+                onDispose {}
+            }
             TemaFipe(escuro = escuro) { AppRaiz() }
         }
     }

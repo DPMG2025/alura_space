@@ -11,6 +11,7 @@ import br.com.fipeplaca.data.VeiculoPlaca
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -42,6 +43,17 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
     )
     private var job: Job? = null
 
+    init {
+        // Depois de o sistema encerrar o app, reabre o resultado que estava na tela (vem dos salvos).
+        salvo.get<String>(CHAVE_CONSULTA)?.takeIf { it.isNotBlank() }?.let { id ->
+            viewModelScope.launch {
+                val c = kotlinx.coroutines.withTimeoutOrNull(3_000) { salvos.itens.first { l -> l.any { it.id == id } } }
+                    ?.firstOrNull { it.id == id }
+                if (c != null && _estado.value.veiculo == null) abrirSalvo(c, atualizar = false)
+            }
+        }
+    }
+
     private fun versaoAtual() = _estado.value.let { e -> e.veiculo?.fipe?.getOrNull(e.selecionado) }
 
     fun alterarPlaca(texto: String) {
@@ -66,9 +78,13 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
         job = viewModelScope.launch {
             runCatching { repo.consultarPlaca(placa) }
                 .onSuccess { v ->
-                    _estado.update { it.copy(carregando = false, veiculo = v) }
-                    salvos.registrar(ConsultaSalva(ConsultaSalva.idPlaca(v.placa), System.currentTimeMillis(), veiculo = v))
-                    v.fipe.firstOrNull()?.let { historico.carregar(it) }
+                    val id = ConsultaSalva.idPlaca(v.placa)
+                    // Abre na versao que o usuario ja tinha escolhido para esta placa
+                    val versao = (salvos.versaoSalva(id) ?: 0).coerceIn(0, (v.fipe.size - 1).coerceAtLeast(0))
+                    _estado.update { it.copy(carregando = false, veiculo = v, selecionado = versao) }
+                    salvo[CHAVE_CONSULTA] = id
+                    salvos.registrar(ConsultaSalva(id, System.currentTimeMillis(), veiculo = v, versao = versao))
+                    v.fipe.getOrNull(versao)?.let { historico.carregar(it) }
                 }
                 .onFailure { e ->
                     if (e is kotlinx.coroutines.CancellationException) throw e
@@ -77,20 +93,32 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
         }
     }
 
-    /** Reabre uma consulta salva sem gastar credito do servico de placas. */
-    fun abrirSalvo(c: ConsultaSalva) {
+    /**
+     * Reabre uma consulta salva sem gastar credito do servico de placas e, em seguida,
+     * atualiza o valor FIPE pelo codigo (o valor guardado aparece ate chegar o novo).
+     */
+    fun abrirSalvo(c: ConsultaSalva, atualizar: Boolean = true) {
         val v = c.veiculo ?: return
         job?.cancel()
         val versao = (c.versao ?: 0).coerceIn(0, (v.fipe.size - 1).coerceAtLeast(0))
         salvo[CHAVE_PLACA] = v.placa
+        salvo[CHAVE_CONSULTA] = c.id
         _estado.value = PlacaUi(placa = v.placa, veiculo = v, doSalvo = true, selecionado = versao)
         historico.limpar()
         v.fipe.getOrNull(versao)?.let { historico.carregar(it) }
+        if (!atualizar) return
+        job = viewModelScope.launch {
+            val novo = runCatching { repo.atualizarValores(v) }.getOrNull() ?: return@launch
+            if (_estado.value.veiculo?.placa != v.placa || novo == v) return@launch
+            _estado.update { it.copy(veiculo = novo, doSalvo = false) }
+            salvos.registrar(ConsultaSalva(c.id, System.currentTimeMillis(), veiculo = novo, versao = versao))
+        }
     }
 
     fun limpar() {
         job?.cancel()
         salvo[CHAVE_PLACA] = ""
+        salvo[CHAVE_CONSULTA] = ""
         historico.limpar()
         _estado.value = PlacaUi()
     }
@@ -99,7 +127,7 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
         val v = _estado.value.veiculo ?: return
         val id = ConsultaSalva.idPlaca(v.placa)
         if (salvos.itens.value.none { it.id == id }) {
-            salvos.registrar(ConsultaSalva(id, System.currentTimeMillis(), favorito = true, veiculo = v))
+            salvos.registrar(ConsultaSalva(id, System.currentTimeMillis(), favorito = true, veiculo = v, versao = _estado.value.selecionado))
         } else salvos.alternarFavorito(id)
     }
 
@@ -113,5 +141,6 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
 
     private companion object {
         const val CHAVE_PLACA = "placa"
+        const val CHAVE_CONSULTA = "consulta"
     }
 }

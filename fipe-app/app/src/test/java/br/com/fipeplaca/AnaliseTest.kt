@@ -50,8 +50,7 @@ class AnaliseTest {
         val t = Compartilhar.texto(r, historico = pontos)
         assertTrue(t.contains("Valor FIPE: R$ 20.000,00"))
         assertTrue(t.contains("Código FIPE: 001234-5"))
-        assertTrue(t.contains("-10,0%"))
-        assertTrue(t.contains("jan/26 a mar/26"))
+        assertTrue(t.contains("Variação de jan/26 a mar/26: -10,0%"))
     }
 
     @Test fun organizarSalvos() {
@@ -71,6 +70,9 @@ class FormatosExtrasTest {
         assertEquals("BMW", br.com.fipeplaca.data.Texto.marca("BMW"))
         assertEquals("CAOA Chery", br.com.fipeplaca.data.Texto.marca("CAOA Chery"))
         assertEquals("Kia Motors", br.com.fipeplaca.data.Texto.marca("Kia Motors"))
+        assertEquals("Volkswagen", br.com.fipeplaca.data.Texto.marca("VW"))
+        assertEquals("Mercedes-Benz", br.com.fipeplaca.data.Texto.marca("I/M.BENZ"))
+        assertEquals("Fiat", br.com.fipeplaca.data.Texto.marca("FIAT/UNO"))
     }
 
     @Test fun datas() {
@@ -152,6 +154,8 @@ class RevisaoIndependenteTest {
         assertEquals("Gol 1.0L MC4", br.com.fipeplaca.data.Texto.modelo("GOL 1.0L MC4"))
         assertEquals("Onix Plus 1.0 LT", br.com.fipeplaca.data.Texto.modelo("ONIX PLUS 1.0 LT"))
         assertEquals("Mobi Like 1.0", br.com.fipeplaca.data.Texto.modelo("Mobi Like 1.0"))
+        assertEquals("Mobi Drive 1.0 Flex 6V 5p", br.com.fipeplaca.data.Texto.modelo("MOBI DRIVE 1.0 Flex 6V 5p"))
+        assertEquals("Polo Highline 200 TSI 1.0", br.com.fipeplaca.data.Texto.modelo("POLO HIGHLINE 200 TSI 1.0"))
     }
 
     @Test fun anoAtualPeloValorNaViradaDoAno() {

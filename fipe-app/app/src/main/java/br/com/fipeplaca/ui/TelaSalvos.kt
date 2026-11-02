@@ -72,7 +72,7 @@ fun TelaSalvos(itens: List<ConsultaSalva>, acoes: AcoesSalvos, modifier: Modifie
                             inactiveBorderColor = Color.White.copy(alpha = 0.4f),
                         ),
                         icon = {},
-                    ) { Text(rotulo, maxLines = 1) }
+                    ) { Text(rotulo, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
                 }
             }
         }
@@ -129,12 +129,12 @@ private fun ItemSalvo(c: ConsultaSalva, acoes: AcoesSalvos) {
                 IconButton(onClick = { acoes.alternarFavorito(c.id) }) {
                     Icon(
                         if (c.favorito) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        contentDescription = if (c.favorito) "Remover dos favoritos" else "Favoritar",
+                        contentDescription = if (c.favorito) "Remover ${c.titulo} dos favoritos" else "Favoritar ${c.titulo}",
                         tint = if (c.favorito) Color(0xFFE53958) else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 IconButton(onClick = { acoes.remover(c.id) }) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Excluir", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(Icons.Filled.Delete, contentDescription = "Excluir ${c.titulo}", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

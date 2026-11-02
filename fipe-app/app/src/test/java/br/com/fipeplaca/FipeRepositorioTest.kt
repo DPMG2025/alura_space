@@ -199,8 +199,8 @@ class FipeRepositorioTest {
         assertEquals(9, res.exigemToken)
         // Depois do primeiro erro 500, a BrasilAPI nao e mais consultada (2 tentativas x ate 4 em paralelo)
         assertTrue(pedidos.count { it.path!!.startsWith("/brasil/fipe/preco") } <= 8)
-        // 402 nao e repetido
-        assertEquals(12, pedidos.count { it.path!!.startsWith("/v2/cars/X/years/2019-1?reference=") })
+        // 402 nao e repetido e, depois do primeiro, os meses mais antigos nem sao pedidos (3 com valor + ate 4 em paralelo)
+        assertTrue(pedidos.count { it.path!!.startsWith("/v2/cars/X/years/2019-1?reference=") } <= 7)
     }
 
     @Test fun historicoSemNenhumaFonteDaMensagemClara() = runTest {

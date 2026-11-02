@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Nada vai para backup em nuvem nem para outro aparelho: as preferencias guardam tokens. -->
+<!-- Favoritos e recentes vao para o backup; as preferencias com os tokens (config.xml) nao. -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="sharedpref" path="." />
+        <exclude domain="sharedpref" path="config.xml" />
     </cloud-backup>
     <device-transfer>
-        <exclude domain="sharedpref" path="." />
+        <exclude domain="sharedpref" path="config.xml" />
     </device-transfer>
 </data-extraction-rules>

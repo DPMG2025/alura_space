@@ -73,12 +73,21 @@ class FipeRepositorio(
     private val v1 = retrofit(baseV1).create(FipeV1Api::class.java)
     private val v2 = retrofit(baseV2).create(FipeV2Api::class.java)
     private val brasilApi = retrofit(baseBrasilApi).create(BrasilApi::class.java)
-    private val placaApi = retrofit("https://localhost/").create(PlacaApi::class.java)
+    // Consulta de placa sem cache em disco: a URL leva o token e a resposta traz dados do veiculo.
+    private val placaApi = Retrofit.Builder()
+        .baseUrl("https://localhost/")
+        .client(http.newBuilder().cache(null).build())
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(PlacaApi::class.java)
 
     private val cacheMarcas = mutableMapOf<TipoVeiculo, List<ItemFipe>>()
     private var cacheReferencias: List<ReferenciaV2>? = null
     private var referenciasEm = 0L
     @Volatile private var brasilApiIndisponivelAte = 0L
+    /** Maior codigo de referencia que respondeu 402 sem token (meses ate ele nao sao pedidos de novo por 1 hora). */
+    @Volatile private var limite402: Int? = null
+    @Volatile private var limite402Ate = 0L
     /** Relogio (substituivel nos testes). */
     internal var agora: () -> Long = System::currentTimeMillis
     private val travaRef = Mutex()
@@ -128,7 +137,7 @@ class FipeRepositorio(
         if (!resp.isSuccessful || corpo == null) {
             throw PlacaParser.ErroProvedor(
                 when (resp.code()) {
-                    401, 403 -> "Token do serviço de placas inválido ou sem permissão. Confira em Configurações."
+                    401, 403 -> "Token do serviço de placas inválido ou sem permissão. Confira em Ajustes."
                     402 -> "Sem créditos no serviço de placas."
                     404 -> "Placa não encontrada."
                     429 -> "Limite de consultas de placa atingido. Tente mais tarde."
@@ -138,8 +147,16 @@ class FipeRepositorio(
         }
         val veiculo = PlacaParser.parse(corpo, placa)
         // Completa valor e codigo do ano pela propria tabela FIPE, quando possivel.
-        val fipe = veiculo.fipe.map { r -> tentar { completar(r, veiculo.anoModelo) }.getOrDefault(r) }
+        val fipe = coroutineScope {
+            veiculo.fipe.map { r -> async { tentar { completar(r, veiculo.anoModelo) }.getOrDefault(r) } }.awaitAll()
+        }
         return veiculo.copy(fipe = fipe)
+    }
+
+    /** Atualiza o valor FIPE das versoes de uma placa ja consultada (nao chama o provedor de placas). */
+    suspend fun atualizarValores(v: VeiculoPlaca): VeiculoPlaca = coroutineScope {
+        val fipe = v.fipe.map { r -> async { tentar { completar(r.copy(codigoAno = r.codigoAno), v.anoModelo) }.getOrDefault(r) } }.awaitAll()
+        v.copy(fipe = fipe)
     }
 
     private suspend fun completar(r: FipeResultado, anoModeloVeiculo: String?): FipeResultado {
@@ -212,10 +229,22 @@ class FipeRepositorio(
                 if (num != null) return PontoHistorico((p.mesReferencia ?: ref.mes).trim(), p.valor.orEmpty(), num)
             }
 
+        val codigoRef = ref.codigo.toIntOrNull()
+        val janela = limite402.takeIf { prefs.tokenFipe.isBlank() && agora() < limite402Ate }
+        if (janela != null && codigoRef != null && codigoRef <= janela) {
+            estado.exigemToken.incrementAndGet() // ja se sabe que este mes exige token
+            return null
+        }
         val doV2 = tentar { comNovasTentativas { v2.valorPorCodigo(r.tipo.caminhoV2, r.codigoFipe, codigoAno, ref.codigo) } }
             .onFailure {
                 diagnostico("${ref.codigo} ${ref.mes} v2: ${descrever(it)}")
-                if (it is HttpException && it.code() == 402) estado.exigemToken.incrementAndGet()
+                if (it is HttpException && it.code() == 402) {
+                    estado.exigemToken.incrementAndGet()
+                    if (prefs.tokenFipe.isBlank() && codigoRef != null) synchronized(this) {
+                        limite402 = maxOf(limite402 ?: codigoRef, codigoRef)
+                        limite402Ate = agora() + HORA
+                    }
+                }
             }
             .getOrNull() ?: return null
         val num = Dinheiro.paraDouble(doV2.valor) ?: return null
@@ -337,9 +366,9 @@ class FipeRepositorio(
         fun mensagemErro(t: Throwable): String = when (t) {
             is PlacaParser.ErroProvedor -> t.message ?: "Erro na consulta."
             is HttpException -> when (t.code()) {
-                429 -> "Limite diário de consultas da FIPE atingido. Informe um token da FIPE em Configurações ou tente amanhã."
+                429 -> "Limite diário de consultas da FIPE atingido. Informe um token da FIPE em Ajustes ou tente amanhã."
                 404 -> "Não encontrado na tabela FIPE."
-                401, 403 -> "Token da FIPE inválido. Confira em Configurações."
+                401, 403 -> "Token da FIPE inválido. Confira em Ajustes."
                 else -> "Erro no servidor (HTTP ${t.code()})."
             }
             is java.net.UnknownServiceException -> "O endereço do serviço precisa usar https. Confira em Ajustes."

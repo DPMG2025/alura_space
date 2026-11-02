@@ -3,7 +3,18 @@ package br.com.fipeplaca.ui
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -107,13 +118,28 @@ fun AppRaiz() {
         )
     }
 
+    // Telas largas ou deitadas: barra lateral no lugar da barra inferior (mais altura para o conteudo)
+    val config = androidx.compose.ui.platform.LocalConfiguration.current
+    val lateral = config.screenWidthDp >= 600 && config.screenWidthDp > config.screenHeightDp
+    // Cada aba guarda o proprio estado (rolagem, campos, sub-abas) ao trocar de aba
+    val estadosDasAbas = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+
     Scaffold(
         contentWindowInsets = WindowInsets(0),
-        snackbarHost = { SnackbarHost(snackbar) },
+        snackbarHost = { SnackbarHost(snackbar, Modifier.imePadding()) },
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = { BarraNavegacao(aba) { aba = it } },
+        bottomBar = { if (!lateral) BarraNavegacao(aba) { aba = it } },
     ) { padding ->
-        Crossfade(targetState = aba, label = "abas", modifier = Modifier.padding(padding)) { atual ->
+      Row(Modifier.padding(padding).consumeWindowInsets(padding)) {
+        if (lateral) TrilhoNavegacao(aba) { aba = it }
+        Crossfade(
+            targetState = aba,
+            label = "abas",
+            // O teclado nao cobre o conteudo; em paisagem, o conteudo respeita o recorte da tela
+            modifier = Modifier.weight(1f).imePadding()
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
+        ) { atual ->
+          estadosDasAbas.SaveableStateProvider(atual) {
             when (atual) {
                 0 -> {
                     val id = placa.veiculo?.let { ConsultaSalva.idPlaca(it.placa) }
@@ -170,8 +196,8 @@ fun AppRaiz() {
                         remover = { id ->
                             val item = salvos.firstOrNull { it.id == id }
                             app.salvos.remover(id)
+                            // Sem dispensar o aviso anterior: cada exclusao mantem o seu "Desfazer" (os avisos entram em fila)
                             escopo.launch {
-                                snackbar.currentSnackbarData?.dismiss()
                                 val r = snackbar.showSnackbar("Consulta excluída", actionLabel = "Desfazer", duration = SnackbarDuration.Short)
                                 if (r == SnackbarResult.ActionPerformed && item != null) app.salvos.restaurar(item)
                             }
@@ -195,7 +221,33 @@ fun AppRaiz() {
                     },
                 ) }
             }
+          }
         }
+      }
+    }
+}
+
+@Composable
+private fun TrilhoNavegacao(aba: Int, onAba: (Int) -> Unit) {
+    NavigationRail(
+        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start + WindowInsetsSides.Vertical)),
+    ) {
+        Spacer(Modifier.weight(1f))
+        ABAS.forEachIndexed { i, a ->
+            NavigationRailItem(
+                selected = aba == i,
+                onClick = { onAba(i) },
+                icon = { Icon(a.icone, contentDescription = null) },
+                label = { Text(a.titulo) },
+                colors = NavigationRailItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                ),
+            )
+        }
+        Spacer(Modifier.weight(1f))
     }
 }
 

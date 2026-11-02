@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalLayoutApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 
 package br.com.fipeplaca.ui
 
@@ -7,6 +7,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -81,7 +91,16 @@ fun TelaPlaca(
     val foco = LocalFocusManager.current
     val buscar = { foco.clearFocus(); acoes.consultar() }
 
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    val rolagem = rememberScrollState()
+    val resultadoVisivel = remember { BringIntoViewRequester() }
+    // Quando o resultado chega, rola ate ele (o valor nao fica escondido abaixo da busca)
+    LaunchedEffect(estado.veiculo?.placa, estado.carregando) {
+        if (estado.veiculo != null && !estado.carregando) {
+            kotlinx.coroutines.delay(150)
+            resultadoVisivel.bringIntoView()
+        }
+    }
+    Column(modifier.fillMaxSize().verticalScroll(rolagem)) {
         Cabecalho(
             titulo = "FIPE pela Placa",
             subtitulo = "Valor de mercado e histórico em segundos",
@@ -99,7 +118,7 @@ fun TelaPlaca(
                 Button(
                     onClick = buscar,
                     enabled = !estado.carregando && estado.placa.length == 7,
-                    modifier = Modifier.weight(1f).height(54.dp),
+                    modifier = Modifier.weight(1f).heightIn(min = 54.dp),
                     shape = MaterialTheme.shapes.medium,
                 ) {
                     if (estado.carregando) {
@@ -145,7 +164,11 @@ fun TelaPlaca(
                 AtalhoTabela(acoes.abrirTabela)
             }
 
-            AnimatedVisibility(visible = v != null, enter = fadeIn() + slideInVertically { it / 8 }) {
+            AnimatedVisibility(
+                visible = v != null,
+                enter = fadeIn() + slideInVertically { it / 8 },
+                modifier = Modifier.bringIntoViewRequester(resultadoVisivel),
+            ) {
                 if (v != null) ResultadoPlaca(v, estado, historico, favorito, acoes)
             }
         }
@@ -168,7 +191,7 @@ private fun ConteudoInicial(recentes: List<ConsultaSalva>, abrir: (ConsultaSalva
                 ) {
                     PlacaMercosul(c.veiculo!!.placa, Modifier.fillMaxWidth(), altura = 44.dp)
                     Spacer(Modifier.height(4.dp))
-                    Text(c.titulo, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                    Text(c.titulo, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(c.principal?.valor.orEmpty(), style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
@@ -271,25 +294,29 @@ private fun ValoresPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: HistoricoU
                 Text("A placa corresponde a mais de uma versão na tabela FIPE. Escolha a do seu veículo:",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(8.dp))
+                Column(Modifier.selectableGroup()) {
                 v.fipe.forEachIndexed { i, r ->
+                    // Opcao de selecao unica: o leitor de tela anuncia "selecionado"
                     Surface(
-                        onClick = { acoes.selecionarVersao(i) },
                         shape = MaterialTheme.shapes.medium,
                         color = if (i == estado.selecionado) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                         border = BorderStroke(1.dp, if (i == estado.selecionado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                            .clip(MaterialTheme.shapes.medium)
+                            .selectable(selected = i == estado.selecionado, role = Role.RadioButton) { acoes.selecionarVersao(i) },
                     ) {
                         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(selected = i == estado.selecionado, onClick = null)
                             Spacer(Modifier.width(8.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(r.modelo, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                Text(Texto.modelo(r.modelo), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                                 Text(listOf(r.codigoFipe, r.score?.let { "compatibilidade $it%" }).filterNotNull().joinToString(" · "),
                                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Text(r.valor.orEmpty(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                         }
                     }
+                }
                 }
             }
         }
@@ -298,7 +325,7 @@ private fun ValoresPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: HistoricoU
 
         OutlinedButton(
             onClick = { acoes.buscarManual(v.tipo, v.marca) },
-            modifier = Modifier.fillMaxWidth().height(50.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp),
             shape = MaterialTheme.shapes.medium,
             colors = ButtonDefaults.outlinedButtonColors(),
         ) { Text("Não é este modelo? Buscar por marca e modelo") }

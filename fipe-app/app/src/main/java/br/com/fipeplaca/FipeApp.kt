@@ -10,7 +10,7 @@ class FipeApp : Application() {
     lateinit var prefs: Preferencias
         private set
     lateinit var repositorio: FipeRepositorio
-        private set
+        internal set // substituivel nos testes
     lateinit var salvos: RepositorioSalvos
         private set
 

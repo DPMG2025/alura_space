@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -97,9 +98,9 @@ fun CartaoValorFipe(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("VALOR FIPE", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.75f))
+                    Text("VALOR FIPE", style = MaterialTheme.typography.labelMedium, color = Color.White)
                     if (r.mesReferencia.isNotBlank()) {
-                        Text("Referência ${r.mesReferencia}", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.75f))
+                        Text("Referência ${r.mesReferencia}", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.95f))
                     }
                 }
                 IconButton(onClick = onFavoritar) {
@@ -121,7 +122,7 @@ fun CartaoValorFipe(
                 modifier = Modifier.semantics { contentDescription = "Valor FIPE ${r.valor ?: "indisponível"}" },
             )
             Spacer(Modifier.height(10.dp))
-            Text("${Texto.marca(r.marca)} ${r.modelo}".trim(), style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Text("${Texto.marca(r.marca)} ${Texto.modelo(r.modelo)}".trim(), style = MaterialTheme.typography.titleMedium, color = Color.White)
             Spacer(Modifier.height(12.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (r.anoModelo.isNotBlank()) Etiqueta(r.anoModelo)
@@ -140,13 +141,13 @@ private fun Etiqueta(texto: String, onClick: (() -> Unit)? = null, rotuloAcao: S
         color = Color.White,
         maxLines = 1,
         modifier = Modifier
-            .clip(RoundedCornerShape(50))
-            .background(Color.White.copy(alpha = 0.16f))
             .let {
-                if (onClick != null) it.clickable(onClickLabel = rotuloAcao, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
-                    .minimumInteractiveComponentSize()
-                else it
+                if (onClick != null) it.minimumInteractiveComponentSize()
+                    .clip(RoundedCornerShape(50))
+                    .clickable(onClickLabel = rotuloAcao, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
+                else it.clip(RoundedCornerShape(50))
             }
+            .background(Color.Black.copy(alpha = 0.22f), RoundedCornerShape(50))
             .padding(horizontal = 12.dp, vertical = 6.dp),
     )
 }
@@ -203,7 +204,14 @@ fun CartaoHistorico(
                     Esqueleto(Modifier.fillMaxWidth().height(170.dp))
                 }
                 1 -> CartaoErro(estado.erro.orEmpty(), "Tentar novamente", onTentar)
-                2 -> Column {
+                2 -> if (estado.pontos.size < 2) {
+                    EstadoVazio(
+                        Icons.Filled.Info, "Ainda não há meses suficientes",
+                        "Só o valor de ${Meses.capitalizar(estado.pontos.first().mesReferencia)} está disponível. " +
+                            "Os meses anteriores exigem um token da FIPE com acesso ao histórico; os veículos salvos " +
+                            "também acumulam o valor de cada mês neste aparelho.",
+                    )
+                } else Column {
                     if (estado.offline) {
                         Text("Sem conexão: mostrando os valores guardados neste aparelho.",
                             style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
@@ -440,7 +448,7 @@ fun Grafico(pontos: List<PontoHistorico>) {
         }
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            val rotulos = listOf(0, pontos.lastIndex / 2, pontos.lastIndex).distinct()
+            val rotulos = listOf(0, pontos.lastIndex).distinct()
             rotulos.forEach { i ->
                 Text(Meses.curto(pontos[i].mesReferencia), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)

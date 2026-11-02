@@ -44,36 +44,48 @@ class HistoricoController(
 
     fun limpar() {
         job?.cancel()
+        geracao++
         _estado.value = HistoricoUi(periodo = _estado.value.periodo)
+    }
+
+    /** Numero da busca atual: respostas de buscas antigas sao ignoradas. */
+    private var geracao = 0
+
+    /** Mesma regra para resultado novo e vindo do cache: mescla com os valores guardados no aparelho. */
+    private fun aplicar(alvo: FipeResultado, periodo: PeriodoHistorico, res: br.com.fipeplaca.data.ResultadoHistorico): HistoricoUi {
+        val pontos = MesclarHistorico.mesclar(res.pontos, locais(alvo), periodo)
+        return HistoricoUi(
+            alvo = alvo, periodo = periodo, pontos = pontos, solicitados = res.solicitados,
+            // meses vindos do aparelho reduzem os que faltam
+            exigemToken = if (pontos.size >= res.solicitados) 0 else res.exigemToken,
+            erro = if (pontos.isEmpty()) "Sem histórico para o período." else null,
+        )
     }
 
     fun carregar(alvo: FipeResultado, periodo: PeriodoHistorico = _estado.value.periodo) {
         job?.cancel()
+        val minha = ++geracao
         val chave = "${alvo.tipo}|${alvo.codigoFipe}|${alvo.codigoAno ?: alvo.anoModelo}|${alvo.combustivel}" to periodo
         cache[chave]?.let {
-            _estado.value = HistoricoUi(alvo = alvo, periodo = periodo, pontos = it.pontos, solicitados = it.solicitados, exigemToken = it.exigemToken)
+            _estado.value = aplicar(alvo, periodo, it)
             return
         }
         _estado.value = HistoricoUi(alvo = alvo, periodo = periodo, carregando = true)
         job = escopo.launch {
             runCatching {
                 repo.historico(alvo, periodo, progresso = { feitos, total ->
-                    _estado.update { it.copy(progresso = if (total == 0) 0f else feitos.toFloat() / total, feitos = feitos, total = total) }
+                    if (minha == geracao) {
+                        _estado.update { it.copy(progresso = if (total == 0) 0f else feitos.toFloat() / total, feitos = feitos, total = total) }
+                    }
                 })
             }.onSuccess { res ->
+                if (minha != geracao) return@onSuccess
                 cache[chave] = res
                 aoCarregar(alvo, res.pontos)
-                val pontos = MesclarHistorico.mesclar(res.pontos, locais(alvo), periodo)
-                _estado.update {
-                    it.copy(
-                        carregando = false, pontos = pontos, solicitados = res.solicitados,
-                        // meses vindos do aparelho reduzem os que faltam
-                        exigemToken = if (pontos.size >= res.solicitados) 0 else res.exigemToken,
-                        erro = if (pontos.isEmpty()) "Sem histórico para o período." else null,
-                    )
-                }
+                _estado.value = aplicar(alvo, periodo, res)
             }.onFailure { e ->
                 if (e is kotlinx.coroutines.CancellationException) throw e
+                if (minha != geracao) return@onFailure
                 // Sem rede ou sem fonte: mostra o que ja esta guardado no aparelho, se houver
                 val guardados = MesclarHistorico.mesclar(emptyList(), locais(alvo), periodo)
                 _estado.update {

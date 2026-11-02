@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -61,7 +62,9 @@ fun TelaConfiguracoes(
         Cabecalho(titulo = "Ajustes", subtitulo = "Conexões com os serviços de dados")
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Secao(titulo = "Consulta pela placa") {
-                Status(tokenPlaca.isNotBlank(), if (tokenPlaca.isNotBlank()) "Token informado" else "Sem token: busca por placa desativada")
+                // Status pelo que esta salvo, com a mesma regra usada na consulta
+                val placaAtiva = inicial.tokenPlaca.isNotBlank() || !inicial.urlPlaca.contains("{token}")
+                Status(placaAtiva, if (placaAtiva) "Busca pela placa ativa" else "Sem token: busca pela placa desativada")
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "A placa não faz parte da tabela FIPE. Para identificar o veículo, o app usa um serviço de consulta " +
@@ -116,7 +119,7 @@ fun TelaConfiguracoes(
                 onClick = { onSalvar(Configuracoes(tokenPlaca, urlPlaca.trim(), tokenFipe)) },
                 enabled = alterado && erroUrl == null,
                 shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
             ) { Text("Salvar alterações") }
 
             Secao(titulo = "Aparência") {

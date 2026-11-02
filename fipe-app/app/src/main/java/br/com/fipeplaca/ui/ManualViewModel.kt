@@ -32,7 +32,7 @@ data class ManualUi(
     val erro: String? = null,
 )
 
-class ManualViewModel(app: Application) : AndroidViewModel(app) {
+class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.SavedStateHandle) : AndroidViewModel(app) {
     private val repo = (app as FipeApp).repositorio
     private val salvos = (app as FipeApp).salvos
     private val _estado = MutableStateFlow(ManualUi())
@@ -45,7 +45,46 @@ class ManualViewModel(app: Application) : AndroidViewModel(app) {
     )
     private var job: Job? = null
 
-    init { carregarMarcas() }
+    init {
+        restaurarTrilha()
+        // Guarda a trilha (tipo, marca, modelo, ano) para sobreviver ao encerramento do app pelo sistema
+        viewModelScope.launch {
+            _estado.collect { e ->
+                salvo["tipo"] = e.tipo.name
+                salvo["marca"] = e.marca?.let { "${it.codigo}|${it.nome}" }
+                salvo["modelo"] = e.modelo?.let { "${it.codigo}|${it.nome}" }
+                salvo["ano"] = e.ano?.let { "${it.codigo}|${it.nome}" }
+            }
+        }
+    }
+
+    private fun item(chave: String): ItemFipe? = salvo.get<String>(chave)?.split('|', limit = 2)
+        ?.takeIf { it.size == 2 }?.let { ItemFipe(it[0], it[1]) }
+
+    private fun restaurarTrilha() {
+        val tipo = salvo.get<String>("tipo")?.let { n -> TipoVeiculo.entries.firstOrNull { it.name == n } } ?: TipoVeiculo.CARROS
+        val marca = item("marca")
+        val modelo = item("modelo")
+        val ano = item("ano")
+        when {
+            marca != null && modelo != null && ano != null -> {
+                _estado.value = ManualUi(tipo = tipo, etapa = Etapa.RESULTADO, marca = marca, modelo = modelo, ano = ano)
+                carregarValor()
+            }
+            marca != null && modelo != null -> {
+                _estado.value = ManualUi(tipo = tipo, etapa = Etapa.ANOS, marca = marca, modelo = modelo)
+                carregarAnos()
+            }
+            marca != null -> {
+                _estado.value = ManualUi(tipo = tipo, etapa = Etapa.MODELOS, marca = marca)
+                carregarModelos()
+            }
+            else -> {
+                _estado.value = ManualUi(tipo = tipo)
+                carregarMarcas()
+            }
+        }
+    }
 
     private fun executar(bloco: suspend () -> Unit) {
         job?.cancel()
@@ -165,17 +204,24 @@ class ManualViewModel(app: Application) : AndroidViewModel(app) {
         } else salvos.alternarFavorito(id)
     }
 
+    /** Reabre um salvo e atualiza o valor em seguida (o valor guardado aparece ate chegar o novo). */
     fun abrirSalvo(c: ConsultaSalva) {
         val r = c.resultado ?: return
         job?.cancel()
         historico.limpar()
         _estado.value = ManualUi(tipo = r.tipo, etapa = Etapa.RESULTADO, marca = c.marca, modelo = c.modelo, ano = c.ano, resultado = r)
         historico.carregar(r)
+        val (marca, modelo, ano) = Triple(c.marca ?: return, c.modelo ?: return, c.ano ?: return)
+        job = viewModelScope.launch {
+            val novo = runCatching { repo.valor(r.tipo, marca.codigo, modelo.codigo, ano.codigo) }.getOrNull() ?: return@launch
+            if (_estado.value.resultado?.codigoFipe != r.codigoFipe || novo.valor == r.valor) return@launch
+            _estado.update { it.copy(resultado = novo) }
+            salvos.registrar(ConsultaSalva(c.id, System.currentTimeMillis(), resultado = novo, marca = marca, modelo = modelo, ano = ano))
+        }
     }
 
     /** Abre a busca manual ja filtrando pela marca vinda da placa (ex.: "VW", "I/FIAT"). */
     fun preencherPorPlaca(tipo: TipoVeiculo, marca: String?) {
-        val chave = marca?.trim()?.removePrefix("I/")?.substringBefore('/')?.trim().orEmpty()
-        selecionarTipo(tipo, chave)
+        selecionarTipo(tipo, marca?.let(br.com.fipeplaca.data.Texto::marca).orEmpty())
     }
 }

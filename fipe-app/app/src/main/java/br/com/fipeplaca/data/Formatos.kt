@@ -54,9 +54,11 @@ object Texto {
     fun chave(texto: String): String =
         Normalizer.normalize(texto.lowercase(Locale.ROOT), Normalizer.Form.NFD).replace(ACENTOS, "")
 
-    /** "GOL 1.0L MC4" vira "Gol 1.0L MC4": palavras so de letras em maiusculas ganham so a inicial maiuscula. */
+    /**
+     * "GOL 1.0L MC4" vira "Gol 1.0L MC4" e "MOBI DRIVE 1.0 Flex" vira "Mobi Drive 1.0 Flex": palavras so de
+     * letras, com 3 ou mais letras e todas maiusculas, ganham so a inicial maiuscula (siglas conhecidas ficam).
+     */
     fun modelo(texto: String): String {
-        if (texto.any { it.isLowerCase() }) return texto
         return texto.split(' ').joinToString(" ") { p ->
             if (p.length >= 3 && p.all { it.isLetter() } && p !in SIGLAS) p.lowercase(Locale("pt", "BR")).replaceFirstChar { it.titlecase(Locale("pt", "BR")) } else p
         }
@@ -71,12 +73,24 @@ object Texto {
      * "GM - Chevrolet" vira "Chevrolet". Siglas (BMW, BYD) ficam como estao.
      */
     fun marca(nome: String): String {
-        val base = (if (" - " in nome) nome.substringAfter(" - ") else nome).trim()
+        val limpo = nome.trim().removePrefix("I/").substringBefore('/').trim()
+        SIGLAS_MARCA[limpo.uppercase(Locale.ROOT)]?.let { return it }
+        val base = (if (" - " in limpo) limpo.substringAfter(" - ") else limpo).trim()
         return base.split(' ').joinToString(" ") { p ->
             val misto = p.drop(1).any { it.isUpperCase() } && p.any { it.isLowerCase() }
             if (misto) p.lowercase(Locale("pt", "BR")).replaceFirstChar { it.titlecase(Locale("pt", "BR")) } else p
         }
     }
+
+    /** Siglas usadas pelos provedores de placa e pela FIPE para algumas marcas. */
+    private val SIGLAS_MARCA = mapOf(
+        "VW" to "Volkswagen", "VOLKSWAGEN" to "Volkswagen", "GM" to "Chevrolet", "CHEVROLET" to "Chevrolet",
+        "M.BENZ" to "Mercedes-Benz", "MBENZ" to "Mercedes-Benz", "MERCEDES" to "Mercedes-Benz", "MERCEDES-BENZ" to "Mercedes-Benz",
+        "FIAT" to "Fiat", "FORD" to "Ford", "HONDA" to "Honda", "TOYOTA" to "Toyota", "HYUNDAI" to "Hyundai", "RENAULT" to "Renault",
+        "NISSAN" to "Nissan", "JEEP" to "Jeep", "PEUGEOT" to "Peugeot", "CITROEN" to "Citroën", "MITSUBISHI" to "Mitsubishi",
+        "YAMAHA" to "Yamaha", "SUZUKI" to "Suzuki", "KAWASAKI" to "Kawasaki", "VOLVO" to "Volvo", "SCANIA" to "Scania", "IVECO" to "Iveco",
+        "KIA" to "Kia Motors", "CAOA CHERY" to "CAOA Chery", "CHERY" to "CAOA Chery",
+    )
 
     /** A FIPE usa 32000 para veiculos zero km. */
     fun nomeAno(nome: String): String = nome.replace("32000", "Zero KM")

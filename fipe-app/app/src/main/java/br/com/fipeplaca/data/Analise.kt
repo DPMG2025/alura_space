@@ -104,15 +104,15 @@ object Compartilhar {
         buildString {
             appendLine("Consulta Tabela FIPE")
             veiculo?.let { appendLine("Placa: ${Placa.formatar(it.placa)}") }
-            appendLine("${r.marca} ${r.modelo}".trim())
+            appendLine("${Texto.marca(r.marca)} ${Texto.modelo(r.modelo)}".trim())
             if (r.anoModelo.isNotBlank()) appendLine("Ano modelo: ${r.anoModelo}${if (r.combustivel.isNotBlank()) " (${r.combustivel})" else ""}")
             appendLine("Valor FIPE: ${r.valor ?: "indisponível"}")
             if (r.mesReferencia.isNotBlank()) appendLine("Referência: ${r.mesReferencia}")
             if (r.codigoFipe.isNotBlank()) appendLine("Código FIPE: ${r.codigoFipe}")
             Estatisticas.de(historico)?.takeIf { historico.size > 1 }?.let { e ->
                 appendLine(
-                    "Variação em ${historico.size} meses: ${Estatisticas.percentual(e.variacaoPercentual)} " +
-                        "(${Meses.curto(historico.first().mesReferencia)} a ${Meses.curto(historico.last().mesReferencia)})"
+                    "Variação de ${Meses.curto(historico.first().mesReferencia)} a ${Meses.curto(historico.last().mesReferencia)}: " +
+                        Estatisticas.percentual(e.variacaoPercentual)
                 )
             }
             append("Gerado pelo app FIPE pela Placa")

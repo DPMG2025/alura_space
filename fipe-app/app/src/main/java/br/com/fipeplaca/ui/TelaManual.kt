@@ -10,6 +10,15 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -90,12 +99,15 @@ private val POPULARES = mapOf(
 @Composable
 fun TelaManual(estado: ManualUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesManual, modifier: Modifier = Modifier) {
     val s = estado
+    // Com teclado aberto ou pouca altura (paisagem, tela dividida), o cabecalho encolhe para a lista caber
+    val compacto = WindowInsets.isImeVisible || LocalConfiguration.current.screenHeightDp < 560
     Column(modifier.fillMaxSize()) {
         Cabecalho(
             titulo = "Tabela FIPE",
             subtitulo = "Todas as marcas, modelos e anos",
+            compacto = compacto,
         ) {
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(if (compacto) 4.dp else 14.dp))
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 TipoVeiculo.entries.forEachIndexed { i, t ->
                     SegmentedButton(
@@ -111,11 +123,13 @@ fun TelaManual(estado: ManualUi, historico: HistoricoUi, favorito: Boolean, acoe
                             inactiveBorderColor = Color.White.copy(alpha = 0.4f),
                         ),
                         icon = {},
-                    ) { Text(t.rotulo, maxLines = 1) }
+                    ) { Text(t.rotulo, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
-            Spacer(Modifier.height(14.dp))
-            IndicadorEtapas(s, acoes.irPara)
+            if (!compacto) {
+                Spacer(Modifier.height(14.dp))
+                IndicadorEtapas(s, acoes.irPara)
+            }
         }
 
         Row(Modifier.padding(start = 4.dp, end = 16.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -126,40 +140,43 @@ fun TelaManual(estado: ManualUi, historico: HistoricoUi, favorito: Boolean, acoe
                 when (s.etapa) {
                     Etapa.MARCAS -> "Escolha a marca"
                     Etapa.MODELOS -> s.marca?.nome?.let(Texto::marca).orEmpty()
-                    Etapa.ANOS -> s.modelo?.nome.orEmpty()
-                    Etapa.RESULTADO -> listOfNotNull(s.modelo?.nome, s.ano?.nome).joinToString(" · ")
+                    Etapa.ANOS -> s.modelo?.nome?.let(Texto::modelo).orEmpty()
+                    Etapa.RESULTADO -> listOfNotNull(s.modelo?.nome?.let(Texto::modelo), s.ano?.nome).joinToString(" · ")
                 },
                 style = MaterialTheme.typography.titleMedium,
+                overflow = TextOverflow.Ellipsis,
                 maxLines = 2,
                 modifier = Modifier.weight(1f).padding(vertical = 8.dp),
             )
         }
 
         AnimatedContent(
-            targetState = s.etapa,
+            targetState = s,
+            contentKey = { it.etapa },
             transitionSpec = {
-                val avanca = targetState.ordinal > initialState.ordinal
+                val avanca = targetState.etapa.ordinal > initialState.etapa.ordinal
                 (slideInHorizontally(tween(260)) { if (avanca) it / 4 else -it / 4 } + fadeIn(tween(260))) togetherWith
                     (slideOutHorizontally(tween(200)) { if (avanca) -it / 4 else it / 4 } + fadeOut(tween(200)))
             },
             label = "etapa",
             modifier = Modifier.weight(1f),
-        ) { etapa ->
+        ) { st ->
+            val etapa = st.etapa
             Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
                 if (etapa != Etapa.RESULTADO) {
-                    CampoFiltro(s.filtro, etapa, acoes.alterarFiltro)
+                    CampoFiltro(st.filtro, etapa, acoes.alterarFiltro)
                     Spacer(Modifier.height(10.dp))
                 }
                 when {
-                    s.erro != null -> CartaoErro(s.erro, "Tentar novamente", acoes.tentarNovamente)
-                    s.carregando && etapa != Etapa.RESULTADO -> ListaCarregando()
+                    st.erro != null -> CartaoErro(st.erro, "Tentar novamente", acoes.tentarNovamente)
+                    st.carregando && etapa != Etapa.RESULTADO -> ListaCarregando()
                     etapa == Etapa.MARCAS -> ListaItens(
-                        s.marcas, s.filtro, acoes.selecionarMarca,
-                        populares = POPULARES[s.tipo].orEmpty(), mostrarAvatar = true,
+                        st.marcas, st.filtro, acoes.selecionarMarca,
+                        populares = POPULARES[st.tipo].orEmpty(), mostrarAvatar = true,
                     )
-                    etapa == Etapa.MODELOS -> ListaItens(s.modelos, s.filtro, acoes.selecionarModelo)
-                    etapa == Etapa.ANOS -> ListaItens(s.anos, s.filtro, acoes.selecionarAno, destacarZeroKm = true)
-                    else -> ResultadoManual(s, historico, favorito, acoes)
+                    etapa == Etapa.MODELOS -> ListaItens(st.modelos, st.filtro, acoes.selecionarModelo)
+                    etapa == Etapa.ANOS -> ListaItens(st.anos, st.filtro, acoes.selecionarAno, destacarZeroKm = true)
+                    else -> ResultadoManual(st, historico, favorito, acoes)
                 }
             }
         }
@@ -174,16 +191,22 @@ private fun IndicadorEtapas(s: ManualUi, irPara: (Etapa) -> Unit) {
             val atual = e == s.etapa
             Column(
                 Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
-                    .clickable(enabled = feita) { irPara(e) }.padding(vertical = 4.dp),
+                    .clickable(enabled = feita, onClickLabel = "Voltar para ${e.rotulo.lowercase()}") { irPara(e) }
+                    .padding(vertical = 4.dp)
+                    .semantics(mergeDescendants = true) {
+                        stateDescription = when { feita -> "concluída"; atual -> "etapa atual"; else -> "a seguir" }
+                    },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box(
                     Modifier.size(26.dp).clip(CircleShape)
-                        .background(if (feita || atual) Color.White else Color.White.copy(alpha = 0.25f)),
+                        .background(if (feita || atual) Color.White else Color.Transparent)
+                        .border(1.5.dp, Color.White, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(if (feita) "✓" else "${i + 1}", style = MaterialTheme.typography.labelMedium,
-                        color = if (feita || atual) Extras.cores.gradienteInicio else Color.White, fontWeight = FontWeight.Bold)
+                        color = if (feita || atual) Extras.cores.gradienteInicio else Color.White, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clearAndSetSemantics {})
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(e.rotulo, style = MaterialTheme.typography.labelSmall,
@@ -252,7 +275,11 @@ private fun ListaItens(
     val destaque = remember(itens, populares) {
         populares.mapNotNull { p -> itens.firstOrNull { Texto.chave(it.nome).contains(p) } }.distinct()
     }
-    if (filtrados.isEmpty() && itens.isNotEmpty()) {
+    if (itens.isEmpty()) {
+        EstadoVazio(Icons.Filled.Search, "Lista vazia", "A tabela FIPE não trouxe itens para esta escolha. Volte e tente outra opção.")
+        return
+    }
+    if (filtrados.isEmpty()) {
         EstadoVazio(Icons.Filled.Search, "Nada encontrado", "Nenhum resultado para \"$filtro\". Tente outro termo.")
         return
     }
@@ -286,7 +313,7 @@ private fun ListaItens(
             items(filtrados, key = { it.codigo }) { item ->
                 val zeroKm = destacarZeroKm && item.nome.contains("Zero KM", ignoreCase = true)
                 ListItem(
-                    headlineContent = { Text(item.nome, fontWeight = if (zeroKm) FontWeight.Bold else FontWeight.Normal) },
+                    headlineContent = { Text(if (mostrarAvatar) item.nome else Texto.modelo(item.nome), fontWeight = if (zeroKm) FontWeight.Bold else FontWeight.Normal) },
                     leadingContent = if (mostrarAvatar) ({ Avatar(nomeCurto(item.nome)) }) else null,
                     supportingContent = if (zeroKm) ({ Text("Veículo novo", color = MaterialTheme.colorScheme.secondary) }) else null,
                     trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
@@ -320,7 +347,7 @@ private fun ResultadoManual(s: ManualUi, historico: HistoricoUi, favorito: Boole
             item { CartaoHistorico(historico, acoes.mudarPeriodo, acoes.recarregarHistorico, acoes.abrirConfiguracoes) }
         }
         item {
-            OutlinedButton(onClick = acoes.novaConsulta, modifier = Modifier.fillMaxWidth().height(50.dp), shape = MaterialTheme.shapes.medium) {
+            OutlinedButton(onClick = acoes.novaConsulta, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp), shape = MaterialTheme.shapes.medium) {
                 Icon(Icons.Filled.Refresh, null)
                 Spacer(Modifier.width(8.dp))
                 Text("Nova consulta")

@@ -51,7 +51,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.PlatformTextStyle
@@ -72,6 +76,7 @@ fun Cabecalho(
     titulo: String,
     subtitulo: String? = null,
     acoes: @Composable () -> Unit = {},
+    compacto: Boolean = false,
     conteudo: @Composable ColumnScope.() -> Unit = {},
 ) {
     val c = Extras.cores
@@ -81,13 +86,14 @@ fun Cabecalho(
             .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
             .background(Brush.linearGradient(listOf(c.gradienteInicio, c.gradienteFim)))
             .statusBarsPadding()
-            .padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 20.dp),
+            .padding(start = 20.dp, end = 12.dp, top = if (compacto) 4.dp else 12.dp, bottom = if (compacto) 12.dp else 20.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        if (!compacto) Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f).padding(top = 8.dp)) {
-                Text(titulo, style = MaterialTheme.typography.headlineMedium, color = Color.White)
+                Text(titulo, style = MaterialTheme.typography.headlineMedium, color = Color.White,
+                    modifier = Modifier.semantics { heading() })
                 if (subtitulo != null) {
-                    Text(subtitulo, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
+                    Text(subtitulo, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.92f))
                 }
             }
             acoes()
@@ -117,7 +123,7 @@ fun PlacaMercosul(placa: String, modifier: Modifier = Modifier, altura: Dp = 56.
 @Composable
 fun CampoPlaca(valor: String, onValor: (String) -> Unit, onBuscar: () -> Unit, modifier: Modifier = Modifier, habilitado: Boolean = true) {
     val altura = 76.dp
-    MolduraPlaca(modifier.semantics { contentDescription = "Campo da placa" }, altura) {
+    MolduraPlaca(modifier, altura) {
         val estilo = estiloPlaca(altura, maxWidth, 7)
         BasicTextField(
             value = valor,
@@ -132,7 +138,7 @@ fun CampoPlaca(valor: String, onValor: (String) -> Unit, onBuscar: () -> Unit, m
             ),
             keyboardActions = KeyboardActions(onSearch = { onBuscar() }),
             cursorBrush = androidx.compose.ui.graphics.SolidColor(Extras.cores.placaAzul),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Placa do veículo" },
             decorationBox = { campo ->
                 Box(contentAlignment = Alignment.Center) {
                     if (valor.isEmpty()) {
@@ -251,7 +257,7 @@ fun Secao(
         Column(Modifier.padding(18.dp)) {
             if (titulo != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(titulo, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    Text(titulo, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).semantics { heading() })
                     acao()
                 }
                 Spacer(Modifier.height(10.dp))
@@ -288,7 +294,8 @@ fun CartaoErro(mensagem: String, acao: String? = null, onAcao: () -> Unit = {}) 
     Surface(
         color = MaterialTheme.colorScheme.errorContainer,
         shape = MaterialTheme.shapes.large,
-        modifier = Modifier.fillMaxWidth(),
+        // Leitor de tela anuncia o erro assim que ele aparece
+        modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
             Icon(Icons.Filled.Warning, null, tint = MaterialTheme.colorScheme.error)
@@ -329,12 +336,16 @@ fun EstadoVazio(icone: ImageVector, titulo: String, texto: String, modifier: Mod
 /** Paleta suave para avatares; a cor e fixa para cada nome. */
 private val TONS = listOf(0xFF1747B0, 0xFF00695C, 0xFF5E35B1, 0xFFB4501A, 0xFFAD1457, 0xFF2E7D32, 0xFF00695F, 0xFF6D4C41)
 
+private val TONS_ESCURO = listOf(0xFF9DBBFF, 0xFF6FD6C6, 0xFFC5A8FF, 0xFFFFB38A, 0xFFFF94BD, 0xFF8FD694, 0xFF7FD8E0, 0xFFD7B8A8)
+
 /** Avatar circular com as iniciais (marcas e salvos). */
 @Composable
 fun Avatar(texto: String, modifier: Modifier = Modifier, tamanho: Dp = 40.dp) {
     val iniciais = texto.split(' ', '-', '/').filter { it.isNotBlank() && it[0].isLetterOrDigit() }
         .take(2).joinToString("") { it.take(1) }.uppercase().ifBlank { "?" }
-    val tom = Color(TONS[(texto.lowercase().hashCode() and 0x7fffffff) % TONS.size])
+    val indice = (texto.lowercase().hashCode() and 0x7fffffff) % TONS.size
+    val escuro = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val tom = Color(if (escuro) TONS_ESCURO[indice] else TONS[indice])
     Box(
         modifier.size(tamanho).clip(CircleShape).background(tom.copy(alpha = 0.12f)),
         contentAlignment = Alignment.Center,
