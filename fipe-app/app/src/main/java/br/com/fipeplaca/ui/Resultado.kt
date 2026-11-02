@@ -177,7 +177,10 @@ fun CartaoHistorico(
                 ) { Text(p.rotulo, maxLines = 1) }
             }
         }
-        if (semTokenFipe) {
+        // So quando os avisos de historico parcial nao estao na tela (evita repetir a mesma informacao)
+        val avisoParcialVisivel = !estado.carregando && estado.pontos.isNotEmpty() &&
+            (estado.pontos.size < 2 || (estado.exigemToken > 0 && estado.pontos.size < estado.solicitados))
+        if (semTokenFipe && !avisoParcialVisivel) {
             Spacer(Modifier.height(6.dp))
             Text("Sem token da FIPE, o histórico cobre cerca dos últimos 3 meses.",
                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

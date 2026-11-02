@@ -151,7 +151,7 @@ private fun VariacaoDesdeSalvo(c: ConsultaSalva) {
     val cor = corVariacao(variacao)
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
         androidx.compose.foundation.Canvas(
-            Modifier.width(56.dp).height(18.dp)
+            Modifier.width(36.dp).height(16.dp)
                 .semantics { contentDescription = "Evolução guardada de ${pontos.size} meses" },
         ) {
             val min = pontos.minOf { it.valor }
@@ -166,10 +166,10 @@ private fun VariacaoDesdeSalvo(c: ConsultaSalva) {
             }
             drawPath(caminho, cor, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()))
         }
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(6.dp))
         Text(
             "${br.com.fipeplaca.data.Estatisticas.percentual(variacao)} desde ${br.com.fipeplaca.data.Meses.curto(pontos.first().mesReferencia)}",
-            style = MaterialTheme.typography.labelMedium, color = cor,
+            style = MaterialTheme.typography.labelSmall, color = cor, maxLines = 1, softWrap = false,
         )
     }
 }
