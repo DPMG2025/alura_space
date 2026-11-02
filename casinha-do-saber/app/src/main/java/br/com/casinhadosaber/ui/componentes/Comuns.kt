@@ -1,6 +1,11 @@
 package br.com.casinhadosaber.ui.componentes
 
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
@@ -141,15 +146,12 @@ fun BalaoDeFala(texto: String, modifier: Modifier = Modifier) {
 @Composable
 fun Modifier.pulsando(ativo: Boolean = true): Modifier {
     if (!ativo) return this
-    val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "pulso")
-    val s by t.animateFloat(
+    val transicao = rememberInfiniteTransition(label = "pulso")
+    val escala: Float by transicao.animateFloat(
         initialValue = 1f,
         targetValue = 1.08f,
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            androidx.compose.animation.core.tween(700),
-            androidx.compose.animation.core.RepeatMode.Reverse,
-        ),
-        label = "s",
+        animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse),
+        label = "escala",
     )
-    return this.scale(s)
+    return this.scale(escala)
 }

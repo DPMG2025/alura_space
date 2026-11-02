@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import br.com.casinhadosaber.dominio.Comodo
 import br.com.casinhadosaber.dominio.Desenho
@@ -169,7 +171,7 @@ fun CenaDaCasa(
         for (item in ItensDaCasa.ordem) {
             if (item.ehEstrutura) continue
             val pos = estado.colocados[item.id] ?: continue
-            ObjetoNaCena(
+            key(item.id) { ObjetoNaCena(
                 item = item,
                 pos = pos,
                 larguraCena = larguraPx,
@@ -182,7 +184,7 @@ fun CenaDaCasa(
                 },
             ) { w ->
                 ConteudoDoItem(item, w)
-            }
+            } }
         }
 
         val perfil = estado.perfil
@@ -248,12 +250,16 @@ private fun ObjetoNaCena(
         }
     }
 
-    val x = pos.x * larguraCena - w / 2 + arrasto.x
-    val y = pos.y * alturaCena - h + arrasto.y
+    // Área de toque de pelo menos 48dp, mesmo para objetos pequenos (dedos de criança).
+    val minimo = with(densidade) { 48.dp.toPx() }
+    val toqueW = maxOf(w, minimo)
+    val toqueH = maxOf(h, minimo)
+    val x = pos.x * larguraCena - toqueW / 2 + arrasto.x
+    val y = pos.y * alturaCena - toqueH + arrasto.y
     Box(
         Modifier
             .offset { IntOffset(x.roundToInt(), (y + salto.value).roundToInt()) }
-            .size(with(densidade) { w.toDp() }, with(densidade) { h.toDp() })
+            .size(with(densidade) { toqueW.toDp() }, with(densidade) { toqueH.toDp() })
             .zIndex(if (arrastando) 10f else 0f)
             .graphicsLayer {
                 val s = escala.value * if (arrastando) 1.15f else 1f
@@ -305,7 +311,9 @@ private fun ObjetoNaCena(
             ),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        conteudo(w)
+        Box(Modifier.size(with(densidade) { w.toDp() }, with(densidade) { h.toDp() }), contentAlignment = Alignment.BottomCenter) {
+            conteudo(w)
+        }
     }
 }
 
