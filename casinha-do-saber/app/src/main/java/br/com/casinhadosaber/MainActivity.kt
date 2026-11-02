@@ -26,6 +26,7 @@ import br.com.casinhadosaber.audio.Sons
 import br.com.casinhadosaber.dados.Repositorio
 import br.com.casinhadosaber.dominio.Fase
 import br.com.casinhadosaber.dominio.GeradorDeFases
+import br.com.casinhadosaber.dominio.ItemCasa
 import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
