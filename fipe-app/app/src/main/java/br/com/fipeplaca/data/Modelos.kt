@@ -3,10 +3,16 @@ package br.com.fipeplaca.data
 import com.google.gson.annotations.SerializedName
 
 /** Tipos de veiculo da tabela FIPE, com o caminho usado em cada versao da API. */
-enum class TipoVeiculo(val rotulo: String, val caminhoV1: String, val caminhoV2: String) {
-    CARROS("Carros", "carros", "cars"),
-    MOTOS("Motos", "motos", "motorcycles"),
-    CAMINHOES("Caminhões", "caminhoes", "trucks");
+enum class TipoVeiculo(
+    val rotulo: String,
+    val caminhoV1: String,
+    val caminhoV2: String,
+    val codigoOficial: Int,
+    val nomeOficial: String,
+) {
+    CARROS("Carros", "carros", "cars", 1, "carro"),
+    MOTOS("Motos", "motos", "motorcycles", 2, "moto"),
+    CAMINHOES("Caminhões", "caminhoes", "trucks", 3, "caminhao");
 
     companion object {
         fun porCodigo(codigo: Int?): TipoVeiculo = when (codigo) {
@@ -106,3 +112,17 @@ enum class PeriodoHistorico(val rotulo: String) {
     MESES_12("12 meses"),
     MESES_24("24 meses"),
 }
+
+/** Mes de referencia no servico oficial da FIPE (veiculos.fipe.org.br). */
+data class ReferenciaOficial(
+    @SerializedName("Codigo") val codigo: Int,
+    @SerializedName("Mes") val mes: String,
+)
+
+/** Valor no servico oficial; em caso de erro vem apenas "erro" e Valor nulo. */
+data class ValorOficial(
+    @SerializedName("Valor") val valor: String? = null,
+    @SerializedName("MesReferencia") val mesReferencia: String? = null,
+    @SerializedName("CodigoFipe") val codigoFipe: String? = null,
+    @SerializedName("erro") val erro: String? = null,
+)

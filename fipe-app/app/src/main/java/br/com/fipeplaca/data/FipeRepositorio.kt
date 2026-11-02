@@ -20,7 +20,9 @@ class FipeRepositorio(
     private val prefs: ConfigConexao,
     baseV1: String = "https://parallelum.com.br/fipe/api/v1/",
     baseV2: String = "https://fipe.parallelum.com.br/api/v2/",
+    baseOficial: String = "https://veiculos.fipe.org.br/api/veiculos/",
 ) {
+    private val hostOficial = baseOficial.toHttpUrl().host
     private val hostV2 = baseV2.toHttpUrl().host
 
 
@@ -31,9 +33,18 @@ class FipeRepositorio(
             val req = chain.request()
             val token = prefs.tokenFipe
             // Token opcional da FIPE v2 (aumenta o limite diario de consultas).
-            if (req.url.host == hostV2 && req.url.toString().startsWith(baseV2) && token.isNotBlank()) {
-                chain.proceed(req.newBuilder().header("X-Subscription-Token", token).build())
-            } else chain.proceed(req)
+            when {
+                req.url.host == hostV2 && req.url.toString().startsWith(baseV2) && token.isNotBlank() ->
+                    chain.proceed(req.newBuilder().header("X-Subscription-Token", token).build())
+                req.url.host == hostOficial && req.url.toString().startsWith(baseOficial) ->
+                    chain.proceed(
+                        req.newBuilder()
+                            .header("Referer", "https://veiculos.fipe.org.br/")
+                            .header("User-Agent", "Mozilla/5.0 (Linux; Android) FipePelaPlaca")
+                            .build()
+                    )
+                else -> chain.proceed(req)
+            }
         }
         .build()
 
@@ -45,6 +56,7 @@ class FipeRepositorio(
 
     private val v1 = retrofit(baseV1).create(FipeV1Api::class.java)
     private val v2 = retrofit(baseV2).create(FipeV2Api::class.java)
+    private val oficial = retrofit(baseOficial).create(FipeOficialApi::class.java)
     private val placaApi = retrofit("https://localhost/").create(PlacaApi::class.java)
 
     private val cacheMarcas = mutableMapOf<TipoVeiculo, List<ItemFipe>>()
@@ -134,11 +146,54 @@ class FipeRepositorio(
 
     // ---------- Historico de precos ----------
 
+    /**
+     * Meses de referencia (mais recente primeiro). Usa o servico oficial e, se ele falhar,
+     * a lista da API v2. Os codigos sao os mesmos nas duas fontes.
+     */
     private suspend fun referencias(): List<ReferenciaV2> = travaRef.withLock {
-        cacheReferencias ?: v2.referencias()
+        cacheReferencias ?: (
+            runCatching { comNovasTentativas { oficial.referencias() }.map { ReferenciaV2(it.codigo.toString(), it.mes.trim()) } }
+                .getOrNull()?.takeIf { it.isNotEmpty() }
+                ?: v2.referencias()
+            )
             .sortedByDescending { it.codigo.toIntOrNull() ?: 0 }
             .also { cacheReferencias = it }
     }
+
+    /** Valor de um mes: primeiro no servico oficial, depois na API v2. Null se o mes nao existir. */
+    private suspend fun valorNoMes(r: FipeResultado, codigoAno: String, ref: ReferenciaV2, diagnostico: (String) -> Unit): PontoHistorico? {
+        val ano = codigoAno.substringBefore('-')
+        val combustivel = codigoAno.substringAfter('-', "1")
+        val doOficial = runCatching {
+            comNovasTentativas {
+                oficial.valor(
+                    mapOf(
+                        "codigoTabelaReferencia" to ref.codigo,
+                        "codigoMarca" to "",
+                        "codigoModelo" to "",
+                        "codigoTipoVeiculo" to r.tipo.codigoOficial.toString(),
+                        "anoModelo" to ano,
+                        "codigoTipoCombustivel" to combustivel,
+                        "tipoVeiculo" to r.tipo.nomeOficial,
+                        "modeloCodigoExterno" to r.codigoFipe,
+                        "tipoConsulta" to "codigo",
+                    )
+                )
+            }
+        }.onFailure { diagnostico("${ref.codigo} ${ref.mes} oficial: ${descrever(it)}") }.getOrNull()
+        Dinheiro.paraDouble(doOficial?.valor)?.let { num ->
+            return PontoHistorico((doOficial?.mesReferencia ?: ref.mes).trim(), doOficial?.valor.orEmpty(), num)
+        }
+        if (doOficial?.erro != null) diagnostico("${ref.codigo} ${ref.mes} oficial: ${doOficial.erro}")
+
+        val doV2 = runCatching { comNovasTentativas { v2.valorPorCodigo(r.tipo.caminhoV2, r.codigoFipe, codigoAno, ref.codigo) } }
+            .onFailure { diagnostico("${ref.codigo} ${ref.mes} v2: ${descrever(it)}") }
+            .getOrNull() ?: return null
+        val num = Dinheiro.paraDouble(doV2.valor) ?: return null
+        return PontoHistorico((doV2.mesReferencia ?: ref.mes).trim(), doV2.valor.orEmpty(), num)
+    }
+
+    private fun descrever(t: Throwable) = "${t::class.java.simpleName} ${(t as? HttpException)?.code() ?: ""} ${t.message.orEmpty()}".trim()
 
     /**
      * Busca o valor do veiculo em cada mes de referencia do periodo.
@@ -155,27 +210,21 @@ class FipeRepositorio(
         val meses = Referencias.filtrar(referencias(), periodo)
         val limite = Semaphore(2)
         var feitos = 0
-        var ultimoErro: Throwable? = null
         val pontos = meses.map { ref ->
             async {
                 limite.withPermit {
-                    val ponto = runCatching {
-                        val v = comNovasTentativas { v2.valorPorCodigo(r.tipo.caminhoV2, r.codigoFipe, codigoAno, ref.codigo) }
-                        val num = Dinheiro.paraDouble(v.valor)
-                        if (num == null) null else PontoHistorico(
-                            mesReferencia = (v.mesReferencia ?: ref.mes).trim(),
-                            valorTexto = v.valor.orEmpty(),
-                            valor = num,
-                        )
-                    }.onFailure { ultimoErro = it; diagnostico("${ref.codigo} ${ref.mes}: ${it::class.java.simpleName} ${(it as? HttpException)?.code() ?: ""} ${it.message}") }.getOrNull()
+                    val ponto = valorNoMes(r, codigoAno, ref, diagnostico)
                     synchronized(this@FipeRepositorio) { feitos++ }
                     progresso(feitos, meses.size)
                     ponto
                 }
             }
         }.awaitAll().filterNotNull()
-        if (pontos.isEmpty() && ultimoErro != null) throw ultimoErro!!
-        pontos
+        if (pontos.isEmpty() && meses.isNotEmpty()) {
+            throw PlacaParser.ErroProvedor("Não foi possível obter o histórico agora. Verifique a conexão e tente novamente.")
+        }
+        // Mesmo mes vindo das duas fontes nao deve repetir
+        pontos.distinctBy { Texto.chave(it.mesReferencia) }
     }
 
     /**

@@ -33,6 +33,7 @@ class FipeRepositorioTest {
         },
         baseV1 = servidor.url("/v1/").toString(),
         baseV2 = servidor.url("/v2/").toString(),
+        baseOficial = servidor.url("/oficial/").toString(),
     )
 
     @Before fun iniciar() {
@@ -134,7 +135,7 @@ class FipeRepositorioTest {
                 p == "/v2/references" -> json((112 downTo 101).joinToString(",", "[", "]") { "{\"code\":\"$it\",\"month\":\"${it - 100}/2026\"}" })
                 p.startsWith("/v2/cars/X/years/2019-1?reference=") -> {
                     val n = tentativas.merge(p, 1, Int::plus)!!
-                    if (n < 3) json("{}", 429) else json("{\"price\":\"R$ 10.000,00\",\"referenceMonth\":\"m\"}")
+                    if (n < 3) json("{}", 429) else json("{\"price\":\"R$ 10.000,00\",\"referenceMonth\":\"${p.substringAfter("reference=")}\"}")
                 }
                 else -> MockResponse().setResponseCode(404)
             }
@@ -143,6 +144,49 @@ class FipeRepositorioTest {
         val alvo = br.com.fipeplaca.data.FipeResultado(TipoVeiculo.CARROS, "", "", "2019", "", "X", "", null, codigoAno = "2019-1")
         val pontos = r.historico(alvo, PeriodoHistorico.MESES_12)
         assertEquals(12, pontos.size) // todos recuperados apos duas respostas 429
+    }
+
+    @Test fun historicoPeloServicoOficial() = runTest {
+        rotas = { p ->
+            when (p) {
+                "/oficial/ConsultarTabelaDeReferencia" ->
+                    json((339 downTo 316).joinToString(",", "[", "]") { "{\"Codigo\":$it,\"Mes\":\"mes$it/2026 \"}" })
+                "/oficial/ConsultarValorComTodosParametros" -> MockResponse().setResponseCode(200) // respondido abaixo
+                else -> if (p.startsWith("/v2/cars/005490-9/years/2023-5?reference=338"))
+                    json("""{"price":"R$ 54.401,00","referenceMonth":"mes338/2026"}""")
+                else MockResponse().setResponseCode(402)
+            }
+        }
+        // O corpo do POST define a resposta do servico oficial
+        servidor.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                pedidos += request
+                if (request.path == "/oficial/ConsultarValorComTodosParametros") {
+                    val corpo = request.body.clone().readUtf8()
+                    listOf("anoModelo=2023", "codigoTipoCombustivel=5", "modeloCodigoExterno=005490-9", "tipoConsulta=codigo",
+                        "tipoVeiculo=carro", "codigoTipoVeiculo=1").forEach { require(it in corpo) { "faltou $it em $corpo" } }
+                    val ref = Regex("codigoTabelaReferencia=(\\d+)").find(corpo)!!.groupValues[1].toInt()
+                    return if (ref == 338) json("""{"codigo":"0","erro":"nadaencontrado"}""")
+                    else json("""{"Valor":"R$ ${50000 + ref},00","MesReferencia":"mes$ref/2026 ","CodigoFipe":"005490-9"}""")
+                }
+                return rotas(request.path.orEmpty())
+            }
+        }
+        val alvo = br.com.fipeplaca.data.FipeResultado(TipoVeiculo.CARROS, "VW", "Gol", "2023", "Flex", "005490-9", "", null, codigoAno = "2023-5")
+        val falhas = mutableListOf<String>()
+        val pontos = repo().historico(alvo, PeriodoHistorico.MESES_24, diagnostico = { falhas += it })
+        assertEquals(24, pontos.size) // 23 do oficial + 1 recuperado na v2
+        assertEquals("R$ 54.401,00", pontos.first { it.mesReferencia == "mes338/2026" }.valorTexto)
+        val post = pedidos.first { it.path == "/oficial/ConsultarValorComTodosParametros" }
+        assertEquals("https://veiculos.fipe.org.br/", post.getHeader("Referer"))
+        assertTrue(falhas.any { it.contains("nadaencontrado") })
+    }
+
+    @Test fun historicoSemNenhumaFonteDaMensagemClara() = runTest {
+        rotas = { p -> if (p == "/v2/references") json("""[{"code":"1","month":"jan/2026"},{"code":"2","month":"fev/2026"}]""") else json("{}", 402) }
+        val alvo = br.com.fipeplaca.data.FipeResultado(TipoVeiculo.CARROS, "", "", "2019", "", "X", "", null, codigoAno = "2019-1")
+        val e = runCatching { repo().historico(alvo, PeriodoHistorico.MESES_12) }.exceptionOrNull()!!
+        assertTrue(FipeRepositorio.mensagemErro(e).contains("histórico"))
     }
 
     @Test fun errosAmigaveis() = runTest {

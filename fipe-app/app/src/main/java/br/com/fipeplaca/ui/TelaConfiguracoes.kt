@@ -92,8 +92,8 @@ fun TelaConfiguracoes(
                 Status(true, "API pública conectada")
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Marcas, modelos, anos e valores vêm da API pública da FIPE, sem custo. O histórico consulta um mês de " +
-                        "referência por vez; sem token são cerca de 500 consultas por dia. Um token gratuito aumenta esse limite.",
+                    "Marcas, modelos, anos e valores vêm da API pública da FIPE, sem custo. O histórico mês a mês é consultado " +
+                        "no serviço oficial da FIPE. O token abaixo é opcional e serve de alternativa quando o serviço oficial não responde.",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(12.dp))

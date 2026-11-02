@@ -35,12 +35,13 @@ As capturas são geradas automaticamente pelo CI a cada alteração (Robolectric
 | Dado | Fonte | Token |
 |---|---|---|
 | Marcas, modelos, anos e valor atual | API FIPE pública v1 (`parallelum.com.br/fipe/api/v1`) | Não precisa |
-| Valor por código FIPE e histórico mensal | API FIPE v2 (`fipe.parallelum.com.br/api/v2`) | Opcional (sem token: cerca de 500 consultas por dia) |
+| Histórico mês a mês | Serviço do site oficial da FIPE (`veiculos.fipe.org.br`) | Não precisa |
+| Valor por código FIPE e alternativa do histórico | API FIPE v2 (`fipe.parallelum.com.br/api/v2`) | Opcional (sem token, meses antigos respondem 402) |
 | Placa para marca, modelo e código FIPE | API Placas (`apiplacas.com.br`), configurável | Obrigatório |
 
 A placa não faz parte da tabela FIPE: a ligação placa e veículo só existe em bases de consulta veicular, que são pagas. Por isso a busca pela placa exige o token de um desses serviços. O padrão é a API Placas (URL `https://wdapi2.com.br/consulta/{placa}/{token}`), mas em **Configurações** dá para trocar a URL por outro provedor com resposta parecida; o leitor da resposta aceita variações de nome dos campos.
 
-Cada mês do histórico é uma consulta à API v2. Um histórico de 24 meses gasta 24 consultas; os resultados ficam em cache enquanto o app está aberto. Para uso intenso, gere um token gratuito em fipe.online e informe em Configurações.
+Cada mês do histórico é uma consulta ao serviço oficial da FIPE (com novas tentativas automáticas em caso de limite ou falha de rede). Se um mês não responder, o app tenta a API v2. Os resultados ficam em cache enquanto o app está aberto. A verificação contra as APIs reais roda no CI e grava o resultado em `docs/verificacao-api-real.txt`.
 
 ## Como obter o APK
 
