@@ -37,7 +37,12 @@ data class EstadoJogo(
     val respondidas: Map<Trilha, Int> = emptyMap(),
     val acertosDePrimeira: Map<Trilha, Int> = emptyMap(),
     val segundosJogados: Long = 0,
+    /** Derrotas seguidas em cada fase ("TRILHA:fase"). Com 2 ou mais, a fase fica mais fácil. */
+    val tentativasSemVencer: Map<String, Int> = emptyMap(),
 ) {
+    /** Depois de 2 tentativas sem vencer, a fase vem com só 2 opções por pergunta. */
+    fun facilitada(fase: Fase): Boolean = (tentativasSemVencer[chave(fase.trilha, fase.numero)] ?: 0) >= 2
+
     /** Porcentagem de acertos de primeira no caminho (null se ainda não jogou). */
     fun precisao(t: Trilha): Int? {
         val total = respondidas[t] ?: 0
@@ -54,8 +59,12 @@ data class EstadoJogo(
             acertosDePrimeira = acertosDePrimeira + (fase.trilha to (acertosDePrimeira[fase.trilha] ?: 0) + acertos),
         )
         val estrelas = estrelasPorAcertos(acertos, total)
-        if (estrelas == 0) return ResultadoPartida(comEstatistica, 0, null)
-        val (novo, item) = comEstatistica.registrarVitoria(fase, estrelas)
+        val k = chave(fase.trilha, fase.numero)
+        if (estrelas == 0) {
+            val derrotas = comEstatistica.copy(tentativasSemVencer = tentativasSemVencer + (k to (tentativasSemVencer[k] ?: 0) + 1))
+            return ResultadoPartida(derrotas, 0, null)
+        }
+        val (novo, item) = comEstatistica.copy(tentativasSemVencer = tentativasSemVencer - k).registrarVitoria(fase, estrelas)
         return ResultadoPartida(novo, estrelas, item)
     }
     val fasesVencidas: Int get() = estrelas.size
@@ -100,17 +109,14 @@ data class EstadoJogo(
     companion object {
         fun chave(trilha: Trilha, fase: Int) = "${trilha.name}:$fase"
 
-        const val MINIMO_PARA_VENCER = 3
+        /** 4 de 5 de primeira: chutando ao acaso, quase nunca se vence (cerca de 4%). */
+        const val MINIMO_PARA_VENCER = 4
 
-        /** Com 5 perguntas: 5 de primeira = 3 estrelas, 4 = 2, 3 = 1, menos que isso = tentar de novo. */
-        fun estrelasPorAcertos(acertos: Int, total: Int): Int {
-            val erros = total - acertos
-            return when {
-                acertos < MINIMO_PARA_VENCER -> 0
-                erros == 0 -> 3
-                erros == 1 -> 2
-                else -> 1
-            }
+        /** 5 de primeira = 3 estrelas; 4 = 2 estrelas; menos = tentar de novo. Na fase facilitada, 4 vale 1 estrela. */
+        fun estrelasPorAcertos(acertos: Int, total: Int): Int = when {
+            acertos < MINIMO_PARA_VENCER -> 0
+            acertos >= total -> 3
+            else -> 2
         }
     }
 }
@@ -149,6 +155,13 @@ object Serializacao {
         val (k, v) = parte.split("=").takeIf { it.size == 2 } ?: return@mapNotNull null
         val t = Trilha.entries.firstOrNull { it.name == k } ?: return@mapNotNull null
         t to (v.toIntOrNull() ?: return@mapNotNull null)
+    }.toMap()
+
+    fun mapaParaTexto(m: Map<String, Int>): String = m.entries.joinToString(";") { "${it.key}=${it.value}" }
+
+    fun textoParaMapa(s: String?): Map<String, Int> = s.orEmpty().split(";").mapNotNull { parte ->
+        val (k, v) = parte.split("=").takeIf { it.size == 2 } ?: return@mapNotNull null
+        k to (v.toIntOrNull() ?: return@mapNotNull null)
     }.toMap()
 
     fun coresParaTexto(m: Map<Comodo, Int>): String = m.entries.joinToString(";") { "${it.key.name}=${it.value}" }

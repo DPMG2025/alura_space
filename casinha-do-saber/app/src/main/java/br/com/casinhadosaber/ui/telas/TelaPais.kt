@@ -53,6 +53,8 @@ fun TelaPais(
     onEditarPersonagem: () -> Unit,
     onApagarTudo: () -> Unit,
     onVoltar: () -> Unit,
+    limiteMinutos: Int = 0,
+    onAlternarLimite: () -> Unit = {},
 ) {
     var liberado by rememberSaveable { mutableStateOf(false) }
     Column(
@@ -72,7 +74,7 @@ fun TelaPais(
         if (!liberado) {
             Portao(onLiberar = { liberado = true })
         } else {
-            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo)
+            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite)
         }
     }
 }
@@ -137,6 +139,8 @@ private fun Painel(
     onAlternarMusica: () -> Unit,
     onEditarPersonagem: () -> Unit,
     onApagarTudo: () -> Unit,
+    limiteMinutos: Int,
+    onAlternarLimite: () -> Unit,
 ) {
     var confirmar by remember { mutableStateOf(false) }
     val gerador = remember { GeradorDeFases() }
@@ -212,6 +216,19 @@ private fun Painel(
                 Text(if (musicaLigada) "🎵 Música ligada" else "🎵 Música desligada", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
             }
         }
+        Spacer(Modifier.height(12.dp))
+        BotaoFofo(onClick = onAlternarLimite, cor = Color.White, corBase = Color(0xFFD9CFF0)) {
+            Text(
+                if (limiteMinutos == 0) "⏰ Tempo de jogo: livre" else "⏰ Tempo de jogo: $limiteMinutos min por vez",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(12.dp),
+            )
+        }
+        Text(
+            "Com limite, a casinha \"vai dormir\" no fim do tempo e só um adulto libera de novo.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Cores.TextoSuave,
+        )
         Spacer(Modifier.height(12.dp))
         BotaoFofo(onClick = onEditarPersonagem, cor = Color.White, corBase = Color(0xFFD9CFF0)) {
             Text("🧒 Trocar o personagem", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))

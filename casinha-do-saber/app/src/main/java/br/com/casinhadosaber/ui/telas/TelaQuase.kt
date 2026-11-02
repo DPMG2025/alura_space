@@ -6,6 +6,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Fase
 import br.com.casinhadosaber.dominio.Perfil
 import br.com.casinhadosaber.ui.LocalNarrador
@@ -40,6 +42,7 @@ import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Crianca
 import br.com.casinhadosaber.ui.componentes.Humor
+import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 
@@ -64,7 +67,7 @@ fun TelaQuase(
         sons.toque()
         narrador.falar(
             "Quase! Você acertou $acertos de primeira. O presente quer sair da caixa! " +
-                "Para abrir, acerte três de primeira. Vamos tentar de novo?",
+                "Para abrir, acerte quatro de primeira. Vamos tentar de novo?",
         )
     }
 
@@ -79,28 +82,40 @@ fun TelaQuase(
     ) {
         Text("Quase!", style = MaterialTheme.typography.displayLarge, color = Color.White)
         Spacer(Modifier.height(8.dp))
-        Text(
-            "Acerte 3 de primeira para abrir o presente",
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center,
-        )
+        // Cinco bolinhas: verdes as que acertou de primeira; o alvo (4) fica marcado.
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            repeat(5) { k ->
+                Box(
+                    Modifier
+                        .size(if (k == EstadoJogo.MINIMO_PARA_VENCER - 1) 30.dp else 24.dp)
+                        .background(if (k < acertos) Cores.Certo else Color.White, CircleShape)
+                        .border(3.dp, if (k == EstadoJogo.MINIMO_PARA_VENCER - 1) Cores.Estrela else Color(0x33000000), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (k == EstadoJogo.MINIMO_PARA_VENCER - 1) Text("🎁", fontSize = 14.sp)
+                }
+            }
+        }
         Spacer(Modifier.height(20.dp))
         Box(Modifier.size(190.dp).background(Color.White.copy(alpha = 0.85f), CircleShape), contentAlignment = Alignment.Center) {
             Text("🎁", fontSize = 96.sp, lineHeight = 108.sp, modifier = Modifier.graphicsLayer { rotationZ = giro })
-            Text("🔒", fontSize = 36.sp, modifier = Modifier.align(Alignment.BottomEnd))
+            Text("🔒", fontSize = 36.sp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp))
         }
         Spacer(Modifier.height(12.dp))
         perfil?.let { Crianca(it, Modifier.height(130.dp), acenando = true, humor = Humor.FELIZ) }
         Spacer(Modifier.height(20.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             BotaoRedondo("🗺️", "Voltar para o caminho", onVoltar, tamanho = 60.dp)
-            BotaoFofo(onClick = onTentarDeNovo, cor = Cores.Certo, modifier = Modifier.pulsando(), descricao = "Tentar de novo") {
-                Text(
-                    "🔄 Tentar de novo",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
-                )
+            Box {
+                BotaoFofo(onClick = onTentarDeNovo, cor = Cores.Certo, modifier = Modifier.pulsando(), descricao = "Tentar de novo") {
+                    Text(
+                        "🔄 De novo",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                    )
+                }
+                MaoGuia(Modifier.align(Alignment.BottomEnd), espera = 2500)
             }
         }
     }

@@ -149,9 +149,9 @@ class JogoNoEmuladorTest {
         capturar("e11_casa_antes_de_arrastar")
         val antes = prefs.getString("colocados", "")
 
-        // Arrasta a cama para a sala (para baixo e para a direita)
+        // Arrasta a cama para o andar de baixo (para baixo e para a direita, ainda dentro de casa)
         regra.onAllNodes(hasContentDescription("Cama")).onFirst().performTouchInput {
-            swipe(center, center + Offset(width * 1.2f, height * 2.5f), durationMillis = 600)
+            swipe(center, center + Offset(width * 2.5f, height * 1.8f), durationMillis = 600)
         }
         regra.waitUntil(5_000) { prefs.getString("colocados", "") != antes }
         avancar(600)
@@ -159,6 +159,16 @@ class JogoNoEmuladorTest {
         val cama = prefs.getString("colocados", "").orEmpty().split(";").first { it.startsWith("cama,") }.split(",")
         assertNotEquals("a cama não saiu do lugar", "0.528", cama[2])
         assertTrue("a cama deveria descer", cama[2].toFloat() > 0.6f)
+        assertEquals("a cama deveria pousar no piso de baixo", 0.775f, cama[2].toFloat(), 0.001f)
+
+        // Levar a cama para o jardim não deixa: ela volta para dentro
+        val dentro = prefs.getString("colocados", "")
+        regra.onAllNodes(hasContentDescription("Cama")).onFirst().performTouchInput {
+            swipe(center, center + Offset(0f, height * 1.2f), durationMillis = 500)
+        }
+        avancar(1_500)
+        capturar("e13_cama_nao_vai_para_o_jardim")
+        assertEquals("a cama não pode ir para o jardim", dentro, prefs.getString("colocados", ""))
     }
 
     @Test

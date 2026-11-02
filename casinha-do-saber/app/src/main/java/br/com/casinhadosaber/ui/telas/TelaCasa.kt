@@ -60,8 +60,12 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.CenaDaCasa
+import br.com.casinhadosaber.ui.componentes.comodoEm
+import br.com.casinhadosaber.dominio.Comodo
+import br.com.casinhadosaber.dominio.Lugar
 import br.com.casinhadosaber.ui.componentes.Confete
 import br.com.casinhadosaber.ui.componentes.IconeDoItem
+import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 
@@ -193,7 +197,7 @@ fun TelaCasa(
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
-                contentAlignment = Alignment.Center,
+                contentAlignment = Alignment.BottomCenter,
             ) {
                 CenaDaCasa(
                     estado = estado,
@@ -210,7 +214,25 @@ fun TelaCasa(
                         sons.toque()
                         narrador.falar(listOf(pt("${item.nome}!"), en(item.nomeEn)))
                     },
-                    onMoverItem = { item, pos -> onAtualizar { it.colocar(item, pos) } },
+                    onMoverItem = { item, pos ->
+                        onAtualizar { it.colocar(item, pos) }
+                        // Elogio de arrumação: o móvel foi para o cômodo dele.
+                        val comodo = comodoEm(pos.x, pos.y - 0.02f)
+                        if (comodo != null && comodo == item.comodo) {
+                            sons.acerto()
+                            narrador.falar("Isso! ${item.comArtigo.replaceFirstChar { it.uppercase() }} fica ${preposicao(comodo)}!")
+                        }
+                    },
+                    onRecusarItem = { item ->
+                        sons.erro()
+                        narrador.falar(
+                            if (item.lugar == Lugar.DENTRO) {
+                                "${item.comArtigo.replaceFirstChar { it.uppercase() }} mora dentro de casa!"
+                            } else {
+                                "${item.comArtigo.replaceFirstChar { it.uppercase() }} mora lá fora!"
+                            },
+                        )
+                    },
                     onGuardarItem = { item ->
                         onAtualizar { it.guardar(item) }
                         sons.toque()
@@ -238,7 +260,7 @@ fun TelaCasa(
             Text(
                 when {
                     pintando -> "🎨 Toque num cômodo para pintar"
-                    casaCompleta -> "🏆 Casa completa! Arraste as coisas para arrumar"
+                    casaCompleta -> "🏆 Casa completa! Você tem ${estado.estrelas.values.sum()} ⭐"
                     bau.isNotEmpty() -> "👇 Toque num presente do baú"
                     estado.colocados.keys.none { ItensDaCasa.porId[it]?.ehEstrutura == false } -> "🎮 Jogue para ganhar a próxima peça!"
                     else -> "✋ Arraste para arrumar • Leve para o baú para guardar"
@@ -254,6 +276,13 @@ fun TelaCasa(
         }
         Confete(confete)
     }
+}
+
+private fun preposicao(c: Comodo) = when (c) {
+    Comodo.QUARTO -> "no quarto"
+    Comodo.BANHEIRO -> "no banheiro"
+    Comodo.SALA -> "na sala"
+    Comodo.COZINHA -> "na cozinha"
 }
 
 @Composable
@@ -311,19 +340,6 @@ private fun Bau(itens: List<ItemCasa>, ganhouTudo: Boolean, onEscolher: (ItemCas
     }
 }
 
-/** Mãozinha que "toca" no presente, mostrando o que fazer para quem ainda não lê. */
-@Composable
-private fun MaoQueEnsina(modifier: Modifier) {
-    val t = rememberInfiniteTransition(label = "mao")
-    val y by t.animateFloat(
-        initialValue = 0f,
-        targetValue = -10f,
-        animationSpec = infiniteRepeatable(tween(500), RepeatMode.Reverse),
-        label = "y",
-    )
-    Text("👆", style = MaterialTheme.typography.headlineMedium, modifier = modifier.offset { IntOffset(0, (y * density).roundToInt() + 14) })
-}
-
 @Composable
 private fun ItemDoBau(item: ItemCasa, primeiro: Boolean, onClick: () -> Unit) {
     BotaoFofo(
@@ -344,7 +360,7 @@ private fun ItemDoBau(item: ItemCasa, primeiro: Boolean, onClick: () -> Unit) {
                 if (item.ehEstrutura) {
                     Text("🔨", style = MaterialTheme.typography.titleMedium, modifier = Modifier.align(Alignment.BottomEnd))
                 }
-                if (primeiro) MaoQueEnsina(Modifier.align(Alignment.BottomStart))
+                if (primeiro) MaoGuia(Modifier.align(Alignment.BottomStart).offset(x = (-6).dp, y = 22.dp), espera = 1500)
             }
             Text(item.nome, style = MaterialTheme.typography.bodyMedium, maxLines = 1, textAlign = TextAlign.Center)
         }

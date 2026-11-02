@@ -3,6 +3,9 @@ package br.com.casinhadosaber.dominio
 /** Partes fixas da casa, desenhadas na cena (a criança toca para construir). */
 enum class Estrutura { TERRENO, PAREDES, TELHADO, PORTA, JANELAS, ESCADA, CHAMINE, CERCA, CAMINHO, LAGO }
 
+/** Onde o objeto pode ficar. */
+enum class Lugar { DENTRO, FORA, CEU, QUALQUER }
+
 /** Móveis desenhados à mão (não existem como emoji). */
 enum class Desenho { GELADEIRA, FOGAO, MESA }
 
@@ -25,6 +28,8 @@ data class ItemCasa(
     val desenho: Desenho? = null,
 ) {
     val ehEstrutura get() = estrutura != null
+    val lugar: Lugar get() = ItensDaCasa.lugarDe(id)
+    val comodo: Comodo? get() = ItensDaCasa.comodoDe(id)
 }
 
 enum class Comodo(val nome: String, val cores: List<Long>) {
@@ -90,6 +95,23 @@ object ItensDaCasa {
     )
 
     val porId: Map<String, ItemCasa> = ordem.associateBy { it.id }
+
+    fun lugarDe(id: String): Lugar = when (id) {
+        "sol", "nuvem", "arcoiris", "pipa", "estrela", "borboleta" -> Lugar.CEU
+        "arvore", "flores", "bicicleta", "pato", "escorregador" -> Lugar.FORA
+        "cama", "sofa", "geladeira", "fogao", "mesa", "tv", "banheira", "abajur", "quadro",
+        "livros", "espelho", "violao", "bolo" -> Lugar.DENTRO
+        else -> Lugar.QUALQUER
+    }
+
+    /** O cômodo "certo" de cada móvel (para o elogio de arrumação). */
+    fun comodoDe(id: String): Comodo? = when (id) {
+        "cama", "ursinho", "violao" -> Comodo.QUARTO
+        "banheira", "espelho" -> Comodo.BANHEIRO
+        "sofa", "tv", "livros" -> Comodo.SALA
+        "geladeira", "fogao", "mesa", "bolo" -> Comodo.COZINHA
+        else -> null
+    }
 
     val total get() = ordem.size
 

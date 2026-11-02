@@ -90,11 +90,15 @@ fun TelaJogo(
     perfil: Perfil?,
     onSair: () -> Unit,
     onConcluir: (acertosDePrimeira: Int, total: Int) -> Unit,
+    /** Depois de duas tentativas sem vencer, cada pergunta vem com só duas opções. */
+    facilitada: Boolean = false,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     val escopo = rememberCoroutineScope()
-    val perguntas = remember(fase) { GeradorDeFases().perguntas(fase) }
+    val perguntas = remember(fase, facilitada) {
+        GeradorDeFases().perguntas(fase).map { if (facilitada) it.comDuasOpcoes() else it }
+    }
     var indice by remember { mutableIntStateOf(0) }
     var acertosDePrimeira by remember { mutableIntStateOf(0) }
     var pulo by remember { mutableIntStateOf(0) }
@@ -108,7 +112,11 @@ fun TelaJogo(
 
     LaunchedEffect(indice) {
         delay(350)
-        narrador.falar(pergunta.fala)
+        if (indice == 0 && facilitada) {
+            narrador.falar(listOf(pt("Vou te ajudar: agora são só duas opções.")) + pergunta.fala)
+        } else {
+            narrador.falar(pergunta.fala)
+        }
     }
 
     fun responder(i: Int) {
@@ -210,6 +218,7 @@ fun TelaJogo(
                         onTocar = ::responder,
                     )
                 }
+                // Mesmo esqueleto em todos os jogos: figura no meio, respostas sempre embaixo.
                 Column(Modifier.fillMaxSize()) {
                     Box(
                         Modifier
@@ -218,14 +227,42 @@ fun TelaJogo(
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        // Sem figura, as opções ocupam o meio da tela (são elas a pergunta).
-                        if (p.cena == Cena.Nenhuma) opcoes() else CenaDaPergunta(p.cena)
+                        if (p.cena == Cena.Nenhuma) {
+                            // Sem figura: a própria pergunta aparece grande, com o alto-falante.
+                            PerguntaGrande(p.instrucao) { narrador.falar(p.fala) }
+                        } else {
+                            CenaDaPergunta(p.cena)
+                        }
                     }
-                    if (p.cena != Cena.Nenhuma) opcoes()
+                    opcoes()
                 }
             }
         }
         Confete(confete)
+    }
+}
+
+/** Mantém a resposta certa e uma errada (fase facilitada). */
+private fun Pergunta.comDuasOpcoes(): Pergunta {
+    if (opcoes.size <= 2) return this
+    val certa = opcoes[indiceCorreto]
+    val errada = opcoes.filterIndexed { i, _ -> i != indiceCorreto }.random()
+    val novas = listOf(certa, errada).shuffled()
+    return copy(opcoes = novas, indiceCorreto = novas.indexOf(certa))
+}
+
+@Composable
+private fun PerguntaGrande(texto: String, onOuvir: () -> Unit) {
+    Column(
+        Modifier
+            .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(32.dp))
+            .clickable(onClickLabel = "Ouvir de novo", onClick = onOuvir)
+            .padding(horizontal = 28.dp, vertical = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text("🔊", fontSize = 64.sp, modifier = Modifier.pulsando())
+        Spacer(Modifier.height(8.dp))
+        Text(texto, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
     }
 }
 
@@ -279,21 +316,29 @@ private fun tamanhoParaFiguras(n: Int): TextUnit = when {
 private fun CenaDaPergunta(cena: Cena) {
     when (cena) {
         Cena.Nenhuma -> Unit
-        is Cena.Emojis -> {
-            val n = contarFiguras(cena.texto)
-            Box(
+        is Cena.Emojis -> BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            val figuras = separarFiguras(cena.texto)
+            val n = figuras.size
+            // Até 6: grade de 3 por linha (como num dado); mais que isso: 5 por linha (como os dedos da mão).
+            val porLinha = if (n <= 3) n else if (n <= 6) 3 else 5
+            val linhas = (n + porLinha - 1) / porLinha
+            val tamanho = minOf(maxWidth * 0.8f / porLinha, maxHeight * 0.7f / linhas, 150.dp)
+            Column(
                 Modifier
                     .background(Color.White.copy(alpha = 0.75f), RoundedCornerShape(32.dp))
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                contentAlignment = Alignment.Center,
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                    .then(if (n == 1) Modifier.pulsando() else Modifier),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(
-                    cena.texto,
-                    fontSize = tamanhoParaFiguras(n),
-                    lineHeight = tamanhoParaFiguras(n) * 1.15f,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.pulsando(n == 1),
-                )
+                for (linha in figuras.chunked(porLinha)) {
+                    Row {
+                        for (f in linha) {
+                            Box(Modifier.size(tamanho), contentAlignment = Alignment.Center) {
+                                Text(f, fontSize = (tamanho.value * 0.75f).sp, lineHeight = (tamanho.value * 0.85f).sp)
+                            }
+                        }
+                    }
+                }
             }
         }
         is Cena.Palavra -> Text(
@@ -308,9 +353,12 @@ private fun CenaDaPergunta(cena: Cena) {
         is Cena.Sequencia -> BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             // Todas as figuras numa linha só, para a fila ficar clara.
             val n = cena.itens.size
-            val tamanho = ((maxWidth - 6.dp * (n - 1)) / n).coerceAtMost(64.dp)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                for (item in cena.itens) {
+            // Até 6 por linha; filas maiores quebram em duas linhas iguais.
+            val porLinha = if (n <= 6) n else (n + 1) / 2
+            val tamanho = ((maxWidth - 6.dp * (porLinha - 1)) / porLinha).coerceAtMost(68.dp)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            for (linhaDaFila in cena.itens.chunked(porLinha)) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (item in linhaDaFila) {
                     val pergunta = item == "?"
                     Box(
                         Modifier
@@ -328,6 +376,7 @@ private fun CenaDaPergunta(cena: Cena) {
                         )
                     }
                 }
+            }
             }
         }
     }

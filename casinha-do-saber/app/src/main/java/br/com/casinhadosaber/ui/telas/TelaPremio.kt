@@ -15,6 +15,8 @@ import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
+import br.com.casinhadosaber.ui.componentes.MaoGuia
+import androidx.compose.foundation.border
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -282,6 +284,7 @@ private fun Presente(item: ItemCasa, aberto: Boolean, onToque: () -> Unit, onAbr
             }
             IconeDoItem(item, 130.dp, Modifier.graphicsLayer { scaleX = escala.value; scaleY = escala.value })
         } else {
+            MaoGuia(Modifier.align(Alignment.BottomEnd), espera = 1200)
             Box(
                 Modifier
                     .size(170.dp)
@@ -298,14 +301,17 @@ private fun Presente(item: ItemCasa, aberto: Boolean, onToque: () -> Unit, onAbr
                         scaleY = escala.value
                     },
                 )
-                Text(
-                    when (toques) {
-                        0 -> "Toque 3 vezes!"
-                        1 -> "Mais 2!"
-                        else -> "Mais 1!"
-                    },
-                    style = MaterialTheme.typography.titleLarge,
-                )
+                // Três bolinhas: cada toque acende uma (sem depender de leitura).
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    repeat(3) { k ->
+                        Box(
+                            Modifier
+                                .size(18.dp)
+                                .background(if (k < toques) Cores.Estrela else Color.White, CircleShape)
+                                .border(3.dp, Color(0xFFE0A800), CircleShape),
+                        )
+                    }
+                }
             }
         }
     }

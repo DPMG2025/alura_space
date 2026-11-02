@@ -206,5 +206,6 @@ object Vocabulario {
         "🍎", "🌟", "🐶", "🐱", "🚗", "⚽", "🌸", "🐟", "🎈", "🍌", "🐸", "🦋", "🍓", "🐥", "🧸", "🌙",
     )
 
-    val figurasDeSequencia = listOf("🔴", "🔵", "⭐", "❤️", "🌙", "🍀", "🟡", "🟢", "🔺", "🟣")
+    /** Figuras que aparecem do mesmo tamanho (círculos e formas cheias), para a fila ficar uniforme. */
+    val figurasDeSequencia = listOf("🔴", "🔵", "🟡", "🟢", "🟣", "🟠", "⭐", "❤️")
 }

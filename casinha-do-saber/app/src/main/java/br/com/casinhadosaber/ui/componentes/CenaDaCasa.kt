@@ -64,6 +64,7 @@ import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Estrutura
 import br.com.casinhadosaber.dominio.ItemCasa
 import br.com.casinhadosaber.dominio.ItensDaCasa
+import br.com.casinhadosaber.dominio.Lugar
 import br.com.casinhadosaber.dominio.Posicao
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -111,6 +112,8 @@ fun CenaDaCasa(
     onTocarItem: (ItemCasa) -> Unit = {},
     onMoverItem: (ItemCasa, Posicao) -> Unit = { _, _ -> },
     onGuardarItem: (ItemCasa) -> Unit = {},
+    /** O objeto foi solto num lugar onde ele não mora (cama no jardim, árvore na sala) e voltou. */
+    onRecusarItem: (ItemCasa) -> Unit = {},
     onPintar: (Comodo) -> Unit = {},
     onTocarCrianca: () -> Unit = {},
     onMoverCrianca: (Posicao) -> Unit = {},
@@ -175,6 +178,8 @@ fun CenaDaCasa(
 
         for (item in ItensDaCasa.ordem) {
             if (item.ehEstrutura) continue
+            // À noite não tem arco-íris, pipa nem borboleta.
+            if (noite && item.id in setOf("arcoiris", "pipa", "borboleta")) continue
             val pos = estado.colocados[item.id] ?: continue
             key(item.id) { ObjetoNaCena(
                 item = item,
@@ -192,7 +197,13 @@ fun CenaDaCasa(
                         onGuardarItem(item)
                         null
                     } else {
-                        encaixar(item.id, limitar(nova), estado).also { onMoverItem(item, it) }
+                        val destino = encaixar(item.id, limitar(nova), estado)
+                        if (destino == null) {
+                            onRecusarItem(item)
+                            pos
+                        } else {
+                            destino.also { onMoverItem(item, it) }
+                        }
                     }
                 },
             ) { w ->
@@ -216,7 +227,7 @@ fun CenaDaCasa(
                 tempo = t,
                 descricao = perfil.nome.ifBlank { "Você" },
                 onTocar = onTocarCrianca,
-                onSoltar = { nova -> encaixar("crianca", limitar(nova), estado).also(onMoverCrianca) },
+                onSoltar = { nova -> (encaixar("crianca", limitar(nova), estado) ?: estado.posicaoCrianca).also(onMoverCrianca) },
             ) { _ ->
                 Crianca(perfil, Modifier.fillMaxSize(), acenando = true)
             }
@@ -272,19 +283,35 @@ private fun androidx.compose.ui.graphics.GraphicsLayerScope.aplicarVida(
     }
 }
 
-/** Objetos que podem ficar em qualquer lugar (no céu, na parede, em cima de outro objeto). */
-private val objetosLivres = setOf(
-    "sol", "nuvem", "arcoiris", "pipa", "estrela", "borboleta", "passarinho", "balao",
-    "abajur", "quadro", "espelho", "livros", "bolo", "ursinho",
-)
+/** Objetos que ficam na parede ou em cima de outro objeto: não caem até o chão. */
+private val objetosDeParede = setOf("abajur", "quadro", "espelho", "livros", "bolo", "ursinho")
 
-/** Os outros objetos (e a criança) pousam no chão: piso de cima, piso de baixo ou grama. */
-fun encaixar(id: String, p: Posicao, estado: EstadoJogo): Posicao {
-    if (id in objetosLivres) return p
-    val dentroDaCasa = estado.temEstrutura(Estrutura.PAREDES) && p.x in 0.11f..0.89f
+/** Está dentro das paredes da casa? */
+fun dentroDaCasa(p: Posicao, estado: EstadoJogo): Boolean =
+    estado.temEstrutura(Estrutura.PAREDES) && p.x in 0.11f..0.89f && p.y in 0.28f..0.80f
+
+/**
+ * Para onde vai um objeto solto em [p]. Móveis pousam no piso do cômodo; coisas do jardim, na grama.
+ * Devolve null se o objeto não mora ali (a cama não vai para o jardim, a árvore não entra na sala).
+ */
+fun encaixar(id: String, p: Posicao, estado: EstadoJogo): Posicao? {
+    val dentro = dentroDaCasa(p, estado)
+    return when (ItensDaCasa.lugarDe(id)) {
+        Lugar.CEU -> p
+        Lugar.DENTRO -> when {
+            !dentro -> null
+            id in objetosDeParede -> p
+            else -> pousar(p, dentro = true)
+        }
+        Lugar.FORA -> if (dentro) null else pousar(p, dentro = false)
+        Lugar.QUALQUER -> if (id in objetosDeParede) p else pousar(p, dentro)
+    }
+}
+
+private fun pousar(p: Posicao, dentro: Boolean): Posicao {
     val y = when {
-        dentroDaCasa && p.y in 0.28f..0.535f -> 0.528f
-        dentroDaCasa && p.y in 0.535f..0.80f -> 0.775f
+        dentro && p.y < 0.535f -> 0.528f
+        dentro -> 0.775f
         p.y < 0.82f -> 0.84f
         else -> p.y
     }

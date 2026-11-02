@@ -22,6 +22,15 @@ class Repositorio(context: Context) {
     var somLigado by mutableStateOf(prefs.getBoolean(SOM, true))
         private set
 
+    /** Limite de tempo por sessão, em minutos (0 = sem limite). */
+    var limiteMinutos by mutableStateOf(prefs.getInt(TIMER, 0))
+        private set
+
+    fun alternarLimite() {
+        limiteMinutos = when (limiteMinutos) { 0 -> 15; 15 -> 30; else -> 0 }
+        prefs.edit { putInt(TIMER, limiteMinutos) }
+    }
+
     var musicaLigada by mutableStateOf(prefs.getBoolean(MUSICA, true))
         private set
 
@@ -68,6 +77,7 @@ class Repositorio(context: Context) {
             respondidas = Serializacao.textoParaTrilhas(prefs.getString(RESPONDIDAS, null)),
             acertosDePrimeira = Serializacao.textoParaTrilhas(prefs.getString(ACERTOS, null)),
             segundosJogados = prefs.getLong(SEGUNDOS, 0),
+            tentativasSemVencer = Serializacao.textoParaMapa(prefs.getString(TENTATIVAS, null)),
         )
     }
 
@@ -87,6 +97,7 @@ class Repositorio(context: Context) {
         putString(RESPONDIDAS, Serializacao.trilhasParaTexto(e.respondidas))
         putString(ACERTOS, Serializacao.trilhasParaTexto(e.acertosDePrimeira))
         putLong(SEGUNDOS, e.segundosJogados)
+        putString(TENTATIVAS, Serializacao.mapaParaTexto(e.tentativasSemVencer))
     }
 
     private companion object {
@@ -104,6 +115,8 @@ class Repositorio(context: Context) {
         const val RESPONDIDAS = "respondidas"
         const val ACERTOS = "acertos"
         const val SEGUNDOS = "segundos"
+        const val TENTATIVAS = "tentativas"
+        const val TIMER = "timer"
         const val MUSICA = "musica"
     }
 }

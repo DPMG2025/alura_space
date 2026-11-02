@@ -17,6 +17,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +58,8 @@ fun BotaoFofo(
     descricao: String? = null,
     habilitado: Boolean = true,
     profundidade: Dp = 6.dp,
+    /** Ocupa todo o espaço que o pai der (para botões que crescem com a tela). */
+    preencher: Boolean = false,
     conteudo: @Composable () -> Unit,
 ) {
     val interacao = remember { MutableInteractionSource() }
@@ -76,6 +80,7 @@ fun BotaoFofo(
         )
         Box(
             Modifier
+                .then(if (preencher) Modifier.fillMaxSize() else Modifier)
                 .offset(y = profundidade * afundar)
                 .clip(forma)
                 .background(cor),
@@ -139,6 +144,39 @@ fun BalaoDeFala(texto: String, modifier: Modifier = Modifier) {
             .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
         Text(texto, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+/**
+ * Mãozinha que mostra onde tocar, para quem ainda não lê. Aparece depois de [espera] ms
+ * sem a criança tocar, com um círculo que "pinga" como um toque.
+ */
+@Composable
+fun MaoGuia(modifier: Modifier = Modifier, ativa: Boolean = true, espera: Long = 3500) {
+    var visivel by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(ativa) {
+        visivel = false
+        if (ativa) {
+            kotlinx.coroutines.delay(espera)
+            visivel = true
+        }
+    }
+    if (!visivel) return
+    val t = rememberInfiniteTransition(label = "mao")
+    val fase by t.animateFloat(0f, 1f, infiniteRepeatable(tween(1100)), label = "fase")
+    Box(modifier.size(64.dp), contentAlignment = Alignment.TopStart) {
+        Canvas(Modifier.size(40.dp)) {
+            val p = (fase * 1.6f).coerceAtMost(1f)
+            drawCircle(Color.White.copy(alpha = 0.8f * (1f - p)), radius = size.minDimension * (0.2f + 0.5f * p), style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx()))
+        }
+        val desce = if (fase < 0.25f) fase * 4f else if (fase < 0.5f) (0.5f - fase) * 4f else 0f
+        Text(
+            "👆",
+            fontSize = 40.sp,
+            modifier = Modifier
+                .padding(start = 12.dp, top = 14.dp)
+                .offset(y = (-8).dp + 8.dp * desce),
+        )
     }
 }
 

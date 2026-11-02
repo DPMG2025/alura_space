@@ -123,6 +123,13 @@ class EstadoJogoTest {
     }
 
     @Test
+    fun `todo item tem lugar e moveis tem comodo valido`() {
+        for (i in ItensDaCasa.ordem.filter { !it.ehEstrutura }) {
+            if (i.comodo != null) assertEquals("${i.id} tem cômodo mas não mora dentro", true, i.lugar == Lugar.DENTRO || i.lugar == Lugar.QUALQUER)
+        }
+    }
+
+    @Test
     fun `estrelas nunca pioram`() {
         val fase = g.fases(Trilha.MATEMATICA)[0]
         val (e1, _) = EstadoJogo().registrarVitoria(fase, 3)
@@ -167,24 +174,28 @@ class EstadoJogoTest {
     fun `estrelas por acertos de primeira`() {
         assertEquals(3, EstadoJogo.estrelasPorAcertos(5, 5))
         assertEquals(2, EstadoJogo.estrelasPorAcertos(4, 5))
-        assertEquals(1, EstadoJogo.estrelasPorAcertos(3, 5))
-        assertEquals(0, EstadoJogo.estrelasPorAcertos(2, 5))
+        assertEquals(0, EstadoJogo.estrelasPorAcertos(3, 5))
     }
 
     @Test
     fun `chutar nao vence a fase nem da presente`() {
         val fase = g.fases(Trilha.MATEMATICA)[0]
-        val r = EstadoJogo().registrarPartida(fase, acertos = 2, total = 5)
+        val r = EstadoJogo().registrarPartida(fase, acertos = 3, total = 5)
         assertFalse(r.venceu)
         assertNull(r.item)
         assertEquals(0, r.estado.fasesVencidas)
         assertFalse(r.estado.liberada(g.fases(Trilha.MATEMATICA)[1]))
         // Mas a estatística para os pais é guardada.
-        assertEquals(40, r.estado.precisao(Trilha.MATEMATICA))
-        val r2 = r.estado.registrarPartida(fase, acertos = 4, total = 5)
+        assertEquals(60, r.estado.precisao(Trilha.MATEMATICA))
+        assertFalse(r.estado.facilitada(fase))
+        // Duas derrotas seguidas deixam a fase mais fácil; vencer volta ao normal.
+        val r1b = r.estado.registrarPartida(fase, acertos = 1, total = 5)
+        assertTrue(r1b.estado.facilitada(fase))
+        val r2 = r1b.estado.registrarPartida(fase, acertos = 4, total = 5)
         assertTrue(r2.venceu)
         assertEquals("terreno", r2.item?.id)
-        assertEquals(60, r2.estado.precisao(Trilha.MATEMATICA))
+        assertFalse(r2.estado.facilitada(fase))
+        assertEquals(53, r2.estado.precisao(Trilha.MATEMATICA))
     }
 }
 

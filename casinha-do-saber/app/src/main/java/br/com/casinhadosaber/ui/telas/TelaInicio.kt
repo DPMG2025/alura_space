@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +29,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -44,6 +46,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.CenaDaCasa
+import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 
@@ -110,7 +113,7 @@ fun TelaInicio(
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.BottomCenter,
         ) {
             Box(
                 Modifier
@@ -134,20 +137,26 @@ fun TelaInicio(
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                     ) {
                         Text(
-                            if (noBau == 1) "🎁 1 presente! Toque aqui" else "🎁 $noBau presentes! Toque aqui",
+                            if (noBau == 1) "🎁 1 presente!" else "🎁 $noBau presentes!",
                             style = MaterialTheme.typography.titleMedium,
                         )
                     }
+                    MaoGuia(Modifier.align(Alignment.Center), espera = 2500)
                 }
             }
         }
 
         // Caminhos
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        // Em telas altas, os botões dos caminhos crescem (mais fáceis de acertar com o dedo).
+        val alturaBotao = if (LocalConfiguration.current.screenHeightDp > 760) 118.dp else 88.dp
+        Column(
+            Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             for (linha in Trilha.entries.chunked(2)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.height(alturaBotao), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     for (t in linha) {
-                        BotaoTrilha(t, estado.vencidasNa(t), Modifier.weight(1f)) {
+                        BotaoTrilha(t, estado.vencidasNa(t), Modifier.weight(1f).fillMaxHeight()) {
                             sons.toque()
                             onAbrirTrilha(t)
                         }
@@ -167,10 +176,11 @@ private fun BotaoTrilha(trilha: Trilha, vencidas: Int, modifier: Modifier, onCli
         cor = Color(trilha.corArgb),
         corBase = Color(trilha.corEscuraArgb),
         descricao = "Caminho ${trilha.titulo}, $vencidas de $total fases",
+        preencher = true,
     ) {
         Row(
             Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

@@ -33,6 +33,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.TemaCasinha
 import br.com.casinhadosaber.ui.telas.TelaCasa
+import br.com.casinhadosaber.ui.telas.TelaDormir
 import br.com.casinhadosaber.ui.telas.TelaInicio
 import br.com.casinhadosaber.ui.telas.TelaJogo
 import br.com.casinhadosaber.ui.telas.TelaPais
@@ -61,6 +62,8 @@ class MainActivity : ComponentActivity() {
     private val musica = Musica()
     private var musicaPermitida = false
     private var inicioDaSessao = 0L
+    /** Início do tempo de jogo, para o limite combinado com os pais. */
+    private var inicioDoLimite = System.currentTimeMillis()
     private lateinit var repositorio: Repositorio
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,6 +112,25 @@ class MainActivity : ComponentActivity() {
         val estado = repo.estado
         var tela by remember { mutableStateOf(if (estado.perfil == null) Tela.Perfil else Tela.Inicio) }
         val gerador = remember { GeradorDeFases() }
+        var dormindo by remember { mutableStateOf(false) }
+
+        // Limite de tempo: confere a cada 20 segundos.
+        LaunchedEffect(repo.limiteMinutos) {
+            inicioDoLimite = System.currentTimeMillis()
+            while (repo.limiteMinutos > 0) {
+                kotlinx.coroutines.delay(20_000)
+                if (System.currentTimeMillis() - inicioDoLimite >= repo.limiteMinutos * 60_000L) dormindo = true
+            }
+        }
+        if (dormindo) {
+            BackHandler { }
+            TelaDormir(estado) {
+                dormindo = false
+                inicioDoLimite = System.currentTimeMillis()
+                irParaInicio(tela) { tela = it }
+            }
+            return
+        }
 
         LaunchedEffect(repo.somLigado) {
             narrador.ativo = repo.somLigado
@@ -171,6 +193,7 @@ class MainActivity : ComponentActivity() {
                     is Tela.Jogo -> TelaJogo(
                         fase = atual.fase,
                         perfil = estado.perfil,
+                        facilitada = estado.facilitada(atual.fase),
                         onSair = { irPara(Tela.Caminho(atual.fase.trilha)) },
                         onConcluir = { acertos, total ->
                             val resultado = repo.estado.registrarPartida(atual.fase, acertos, total)
@@ -221,6 +244,8 @@ class MainActivity : ComponentActivity() {
                         onAlternarSom = repo::alternarSom,
                         musicaLigada = repo.musicaLigada,
                         onAlternarMusica = repo::alternarMusica,
+                        limiteMinutos = repo.limiteMinutos,
+                        onAlternarLimite = repo::alternarLimite,
                         onEditarPersonagem = { irPara(Tela.Perfil) },
                         onApagarTudo = {
                             repo.apagarTudo()
@@ -231,5 +256,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun irParaInicio(atual: Tela, mudar: (Tela) -> Unit) {
+        if (atual !is Tela.Perfil) mudar(Tela.Inicio)
     }
 }

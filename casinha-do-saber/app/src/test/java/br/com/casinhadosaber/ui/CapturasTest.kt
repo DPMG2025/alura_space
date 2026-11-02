@@ -138,6 +138,14 @@ class CapturasTest {
         TelaCasa(estado(40, 40), {}, {}, {}, noiteInicial = true)
     }
 
+    @Test fun dormir() = capturar("15b_hora_de_dormir") {
+        br.com.casinhadosaber.ui.telas.TelaDormir(estado(20, 20)) {}
+    }
+
+    @Test fun jogoFacilitado() = capturar("17b_jogo_facilitado") {
+        TelaJogo(gerador.fases(Trilha.MATEMATICA)[3], menina, {}, { _, _ -> }, facilitada = true)
+    }
+
     @Test fun pais() = capturar("15_area_dos_pais") {
         TelaPais(estado(12, 12), true, {}, true, {}, {}, {}, {})
     }
