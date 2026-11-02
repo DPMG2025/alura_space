@@ -45,6 +45,7 @@ class Repositorio(context: Context) {
                 genero = Genero.entries.firstOrNull { it.name == prefs.getString(GENERO, null) } ?: Genero.MENINA,
                 pele = prefs.getInt(PELE, 0),
                 cabelo = prefs.getInt(CABELO, 0),
+                roupa = prefs.getInt(ROUPA, -1),
             )
         } else {
             null
@@ -64,6 +65,7 @@ class Repositorio(context: Context) {
             putString(GENERO, it.genero.name)
             putInt(PELE, it.pele)
             putInt(CABELO, it.cabelo)
+            putInt(ROUPA, it.roupa)
         }
         putString(ESTRELAS, Serializacao.estrelasParaTexto(e.estrelas))
         putString(COLOCADOS, Serializacao.posicoesParaTexto(e.colocados))
@@ -77,6 +79,7 @@ class Repositorio(context: Context) {
         const val GENERO = "genero"
         const val PELE = "pele"
         const val CABELO = "cabelo"
+        const val ROUPA = "roupa"
         const val ESTRELAS = "estrelas"
         const val COLOCADOS = "colocados"
         const val CORES = "cores"

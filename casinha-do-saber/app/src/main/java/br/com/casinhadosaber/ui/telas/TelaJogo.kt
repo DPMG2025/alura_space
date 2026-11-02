@@ -46,6 +46,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
@@ -94,6 +96,7 @@ fun TelaJogo(
     var confete by remember { mutableIntStateOf(0) }
     val pergunta = perguntas[indice]
     val cor = Color(fase.trilha.corArgb)
+    val vibracao = LocalHapticFeedback.current
 
     LaunchedEffect(indice) {
         delay(350)
@@ -105,6 +108,7 @@ fun TelaJogo(
         if (i == pergunta.indiceCorreto) {
             acertou = true
             humor = Humor.FELIZ
+            vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
             confete++
             sons.acerto()
             val elogio = elogios.random()

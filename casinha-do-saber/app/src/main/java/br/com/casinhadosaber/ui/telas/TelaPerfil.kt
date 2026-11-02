@@ -58,6 +58,7 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
     var pele by rememberSaveable { mutableStateOf(atual?.pele ?: 0) }
     var cabelo by rememberSaveable { mutableStateOf(atual?.cabelo ?: 0) }
     var nome by rememberSaveable { mutableStateOf(atual?.nome.orEmpty()) }
+    var roupa by rememberSaveable { mutableStateOf(atual?.roupa ?: -1) }
 
     LaunchedEffect(Unit) {
         narrador.falar("Olá! Quem vai morar na casinha? Escolha um menino ou uma menina.")
@@ -99,7 +100,7 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Crianca(
-                        Perfil(nome, g, pele, cabelo),
+                        Perfil(nome, g, pele, cabelo, roupa),
                         Modifier
                             .height(170.dp)
                             .then(if (genero == null) Modifier.pulsando() else Modifier),
@@ -116,6 +117,10 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
         Spacer(Modifier.height(12.dp))
         Text("Cor do cabelo", style = MaterialTheme.typography.titleMedium)
         SeletorDeCores(Aparencia.cabelos, cabelo, "cabelo") { cabelo = it; sons.toque() }
+        Spacer(Modifier.height(12.dp))
+        Text("Cor da roupa", style = MaterialTheme.typography.titleMedium)
+        val roupaAtual = if (roupa >= 0) roupa else if (genero == Genero.MENINA) 1 else 0
+        SeletorDeCores(Aparencia.roupas, roupaAtual, "roupa") { roupa = it; sons.toque() }
 
         Spacer(Modifier.height(16.dp))
         OutlinedTextField(
@@ -134,7 +139,7 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
             onClick = {
                 if (g != null) {
                     sons.acerto()
-                    onPronto(Perfil(nome.trim(), g, pele, cabelo))
+                    onPronto(Perfil(nome.trim(), g, pele, cabelo, roupa))
                 } else {
                     narrador.falar("Primeiro, toque no menino ou na menina.")
                 }
@@ -155,11 +160,11 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
 
 @Composable
 private fun SeletorDeCores(cores: List<Long>, escolhida: Int, nome: String, onEscolher: (Int) -> Unit) {
-    Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+    Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         cores.forEachIndexed { i, c ->
             Box(
                 Modifier
-                    .size(54.dp)
+                    .size(46.dp)
                     .border(if (i == escolhida) 5.dp else 2.dp, if (i == escolhida) Cores.Estrela else Color.White, CircleShape)
                     .padding(5.dp)
                     .background(Color(c), CircleShape)

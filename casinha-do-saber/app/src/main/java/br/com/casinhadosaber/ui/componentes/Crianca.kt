@@ -75,7 +75,7 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
     val pele = Color(Aparencia.peles.getOrElse(perfil.pele) { Aparencia.peles[0] })
     val cabelo = Color(Aparencia.cabelos.getOrElse(perfil.cabelo) { Aparencia.cabelos[0] })
     val menina = perfil.genero == Genero.MENINA
-    val roupa = if (menina) Color(0xFFFF6FAE) else Color(0xFF4D96FF)
+    val roupa = Color(perfil.corDaRoupa)
     val calca = if (menina) pele else Color(0xFF2E4A7D)
     val sapato = Color(0xFF5A3E36)
 

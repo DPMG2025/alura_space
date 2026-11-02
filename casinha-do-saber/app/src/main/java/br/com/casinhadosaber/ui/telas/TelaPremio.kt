@@ -36,6 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -80,11 +82,13 @@ fun TelaPremio(
     var aberto by remember { mutableStateOf(false) }
     var confete by remember { mutableIntStateOf(0) }
     val nome = perfil?.nome.orEmpty()
+    val vibracao = LocalHapticFeedback.current
 
     fun abrir() {
         if (aberto || item == null) return
         aberto = true
         confete++
+        vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
         sons.premio()
         val ultima = item == ItensDaCasa.ordem.last()
         narrador.falar(

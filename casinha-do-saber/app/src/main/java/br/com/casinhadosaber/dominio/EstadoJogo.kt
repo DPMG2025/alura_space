@@ -8,11 +8,17 @@ data class Perfil(
     val genero: Genero = Genero.MENINA,
     val pele: Int = 0,
     val cabelo: Int = 0,
-)
+    /** Cor da roupa; -1 usa a cor padrão do menino (azul) ou da menina (rosa). */
+    val roupa: Int = -1,
+) {
+    val corDaRoupa: Long
+        get() = Aparencia.roupas.getOrNull(roupa) ?: if (genero == Genero.MENINA) Aparencia.roupas[1] else Aparencia.roupas[0]
+}
 
 object Aparencia {
     val peles = listOf(0xFFFFDBB4, 0xFFF1C27D, 0xFFC68642, 0xFF8D5524)
     val cabelos = listOf(0xFF3B2314, 0xFF1C1C1C, 0xFFE6BE8A, 0xFFB55239)
+    val roupas = listOf(0xFF4D96FF, 0xFFFF6FAE, 0xFF3DBE6B, 0xFFFFA62B, 0xFF9B6BFF, 0xFFFF5E5B)
 }
 
 /** Lugar de um objeto na cena (mesmo sistema de coordenadas de [ItemCasa]). */

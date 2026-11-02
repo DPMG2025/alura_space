@@ -1,5 +1,10 @@
 package br.com.casinhadosaber.ui.telas
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,7 +39,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.compose.ui.unit.dp
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Estrutura
@@ -69,6 +79,7 @@ fun TelaCasa(
     val nome = estado.perfil?.nome.orEmpty()
     val bau = estado.itensNoBau
     val casaCompleta = estado.colocados.size == ItensDaCasa.total
+    val vibracao = LocalHapticFeedback.current
 
     LaunchedEffect(Unit) {
         narrador.falar(
@@ -82,6 +93,7 @@ fun TelaCasa(
 
     fun colocarDoBau(item: ItemCasa) {
         pintando = false
+        vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
         onAtualizar { it.colocar(item) }
         if (item.ehEstrutura) {
             novaEstrutura = item.estrutura
@@ -269,6 +281,19 @@ private fun Bau(itens: List<ItemCasa>, onEscolher: (ItemCasa) -> Unit, onJogar: 
     }
 }
 
+/** Mãozinha que "toca" no presente, mostrando o que fazer para quem ainda não lê. */
+@Composable
+private fun MaoQueEnsina(modifier: Modifier) {
+    val t = rememberInfiniteTransition(label = "mao")
+    val y by t.animateFloat(
+        initialValue = 0f,
+        targetValue = -10f,
+        animationSpec = infiniteRepeatable(tween(500), RepeatMode.Reverse),
+        label = "y",
+    )
+    Text("👆", style = MaterialTheme.typography.headlineMedium, modifier = modifier.offset { IntOffset(0, (y * density).roundToInt() + 14) })
+}
+
 @Composable
 private fun ItemDoBau(item: ItemCasa, primeiro: Boolean, onClick: () -> Unit) {
     BotaoFofo(
@@ -289,6 +314,7 @@ private fun ItemDoBau(item: ItemCasa, primeiro: Boolean, onClick: () -> Unit) {
                 if (item.ehEstrutura) {
                     Text("🔨", style = MaterialTheme.typography.titleMedium, modifier = Modifier.align(Alignment.BottomEnd))
                 }
+                if (primeiro) MaoQueEnsina(Modifier.align(Alignment.BottomStart))
             }
             Text(item.nome, style = MaterialTheme.typography.bodyMedium, maxLines = 1, textAlign = TextAlign.Center)
         }
