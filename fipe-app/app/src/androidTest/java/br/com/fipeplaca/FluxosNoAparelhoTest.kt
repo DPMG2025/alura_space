@@ -62,9 +62,9 @@ class FluxosNoAparelhoTest {
         }
     }
 
-    private fun existe(m: SemanticsMatcher) = regra.onAllNodes(m, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+    private fun existe(m: SemanticsMatcher) = regra.onAllNodes(m).fetchSemanticsNodes().isNotEmpty()
 
-    private fun textoDe(m: SemanticsMatcher): String = regra.onAllNodes(m, useUnmergedTree = true).fetchSemanticsNodes()
+    private fun textoDe(m: SemanticsMatcher): String = regra.onAllNodes(m).fetchSemanticsNodes()
         .first().config.getOrNull(SemanticsProperties.ContentDescription)?.joinToString().orEmpty()
 
     private val anoDaLista = SemanticsMatcher("item de ano") { n ->
