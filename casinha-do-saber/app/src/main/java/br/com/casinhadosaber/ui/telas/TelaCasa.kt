@@ -213,6 +213,7 @@ fun TelaCasa(
                     pintando -> "🎨 Toque num cômodo para pintar"
                     casaCompleta -> "🏆 Casa completa! Arraste as coisas para arrumar"
                     bau.isNotEmpty() -> "👇 Toque num presente do baú"
+                    estado.colocados.keys.none { ItensDaCasa.porId[it]?.ehEstrutura == false } -> "🎮 Jogue para ganhar a próxima peça!"
                     else -> "✋ Arraste para arrumar • Leve para o baú para guardar"
                 },
                 style = MaterialTheme.typography.titleMedium,
