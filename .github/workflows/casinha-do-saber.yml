@@ -1,0 +1,54 @@
+name: Casinha do Saber (Android)
+
+on:
+  push:
+    paths:
+      - "casinha-do-saber/**"
+      - ".github/workflows/casinha-do-saber.yml"
+  pull_request:
+    paths:
+      - "casinha-do-saber/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: casinha-do-saber
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Testes de unidade
+        run: ./gradlew --no-daemon testDebugUnitTest
+
+      - name: Lint
+        run: ./gradlew --no-daemon lintDebug
+
+      - name: Gerar APK
+        run: ./gradlew --no-daemon assembleDebug assembleRelease
+
+      - name: Publicar APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: casinha-do-saber-apk
+          path: |
+            casinha-do-saber/app/build/outputs/apk/debug/*.apk
+            casinha-do-saber/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Publicar relatórios
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios
+          path: |
+            casinha-do-saber/app/build/reports/
+          if-no-files-found: ignore

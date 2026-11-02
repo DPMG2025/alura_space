@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Casinha com estrela, área útil central de 66dp dentro de 108dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- grama -->
+    <path android:fillColor="#7CC56B" android:pathData="M18,78 L90,78 L90,86 Q54,92 18,86 Z" />
+    <!-- paredes -->
+    <path android:fillColor="#FFD166" android:pathData="M32,52 L76,52 L76,80 L32,80 Z" />
+    <!-- telhado -->
+    <path android:fillColor="#EF476F" android:pathData="M26,54 L54,30 L82,54 Z" />
+    <!-- porta -->
+    <path android:fillColor="#8D5A3B" android:pathData="M48,62 L60,62 L60,80 L48,80 Z" />
+    <!-- janela -->
+    <path android:fillColor="#9BE7FF" android:pathData="M36,58 L44,58 L44,66 L36,66 Z" />
+    <path android:fillColor="#9BE7FF" android:pathData="M64,58 L72,58 L72,66 L64,66 Z" />
+    <!-- estrela -->
+    <path android:fillColor="#FFE14D"
+        android:pathData="M54,18 L56.6,24.4 L63.5,24.9 L58.2,29.3 L59.9,36 L54,32.4 L48.1,36 L49.8,29.3 L44.5,24.9 L51.4,24.4 Z" />
+</vector>

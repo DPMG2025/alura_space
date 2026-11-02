@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.CasinhaDoSaber" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/fundo</item>
+        <item name="android:statusBarColor">@color/ceu</item>
+        <item name="android:navigationBarColor">@color/grama</item>
+    </style>
+</resources>
