@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -417,6 +418,8 @@ private fun CartaoOpcao(
         corBase = if (certa) Color(0xFF2A9452) else Color(0xFFD9CFF0),
         descricao = descreverOpcao(opcao),
         modifier = modifier
+            // Marca usada só pelos testes automáticos no emulador (não aparece para a criança).
+            .testTag(if (i == pergunta.indiceCorreto) "opcao_certa" else "opcao")
             .graphicsLayer {
                 translationX = tremida.value
                 scaleX = pulo.value

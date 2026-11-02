@@ -87,3 +87,67 @@ jobs:
           path: |
             casinha-do-saber/app/build/reports/
           if-no-files-found: ignore
+
+  # Testes de ponta a ponta num Android de verdade (emulador): jogar, abrir presente, arrastar móvel.
+  emulador:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: casinha-do-saber
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Testes no emulador
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: false
+          working-directory: casinha-do-saber
+          script: |
+            ./gradlew connectedDebugAndroidTest --no-daemon || echo "FALHA_TESTES" > emulador-falhou.txt
+
+      - name: Versionar resultado do emulador
+        if: github.event_name == 'push' && !cancelled()
+        run: |
+          rm -rf docs/emulador && mkdir -p docs/emulador
+          find app/build/outputs/connected_android_test_additional_output -type f \( -name "*.png" -o -name "*.txt" \) -exec cp {} docs/emulador/ \; 2>/dev/null || true
+          find app/build/outputs/androidTest-results -name "*.xml" -exec grep -h -A8 "<failure" {} \; > docs/emulador/falhas.txt 2>/dev/null || true
+          [ -s docs/emulador/falhas.txt ] || rm -f docs/emulador/falhas.txt
+          if [ -f emulador-falhou.txt ]; then echo "RESULTADO: FALHOU" > docs/emulador/relatorio.txt; else echo "RESULTADO: TODOS OS TESTES PASSARAM" > docs/emulador/relatorio.txt; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/emulador
+          git diff --cached --quiet || git commit -m "Atualiza resultado do emulador [skip ci]"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Relatório do emulador
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: relatorio-emulador
+          path: casinha-do-saber/app/build/reports/androidTests/
+          if-no-files-found: ignore
+
+      - name: Falhar se os testes do emulador falharam
+        run: test ! -f emulador-falhou.txt
