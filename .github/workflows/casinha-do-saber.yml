@@ -67,8 +67,32 @@ jobs:
       - name: Lint
         run: ./gradlew --no-daemon lintDebug
 
-      - name: Gerar APK
-        run: ./gradlew --no-daemon assembleDebug assembleRelease
+      # Se os segredos da chave de upload existirem, o release sai assinado para a Play Store.
+      - name: Preparar chave de upload
+        env:
+          CHAVE_BASE64: ${{ secrets.CASINHA_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$CHAVE_BASE64" ]; then
+            echo "$CHAVE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            echo "CASINHA_KEYSTORE_PATH=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+            echo "Chave de upload configurada"
+          else
+            echo "Sem chave de upload: o release usa a chave de debug (só para testes)"
+          fi
+
+      - name: Gerar APK e pacote da Play Store
+        env:
+          CASINHA_KEYSTORE_PASSWORD: ${{ secrets.CASINHA_KEYSTORE_PASSWORD }}
+          CASINHA_KEY_ALIAS: ${{ secrets.CASINHA_KEY_ALIAS }}
+          CASINHA_KEY_PASSWORD: ${{ secrets.CASINHA_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease
+
+      - name: Publicar pacote da Play Store (.aab)
+        uses: actions/upload-artifact@v5
+        with:
+          name: casinha-do-saber-play-store
+          path: casinha-do-saber/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
 
       - name: Publicar APKs
         uses: actions/upload-artifact@v5

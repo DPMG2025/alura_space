@@ -65,6 +65,8 @@ Ou abra a pasta `casinha-do-saber` no Android Studio e clique em Run.
 
 ### Publicar na Play Store
 
+Veja o passo a passo completo em [docs/publicar.md](docs/publicar.md).
+
 O build de release está assinado com a chave de debug só para facilitar testes. Para publicar, crie uma chave própria, configure `signingConfigs` em `app/build.gradle.kts` e gere um App Bundle (`./gradlew bundleRelease`). Apps para crianças precisam seguir a política **Famílias** do Google Play.
 
 ## Para a voz funcionar

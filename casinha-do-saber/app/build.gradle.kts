@@ -19,6 +19,19 @@ android {
         testInstrumentationRunnerArguments["useTestStorageService"] = "true"
     }
 
+    // Chave de upload da Play Store: vem de variáveis de ambiente (segredos do GitHub), nunca do repositório.
+    val chave = System.getenv("CASINHA_KEYSTORE_PATH")
+    signingConfigs {
+        if (chave != null && file(chave).exists()) {
+            create("upload") {
+                storeFile = file(chave)
+                storePassword = System.getenv("CASINHA_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("CASINHA_KEY_ALIAS")
+                keyPassword = System.getenv("CASINHA_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -27,9 +40,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Assinado com a chave de debug apenas para facilitar o teste do APK de release.
-            // Para publicar na Play Store, configure uma chave própria (veja o README).
-            signingConfig = signingConfigs.getByName("debug")
+            // Com a chave de upload configurada, o release sai pronto para a Play Store.
+            // Sem ela, usa a chave de debug só para permitir instalar e testar o APK.
+            signingConfig = signingConfigs.findByName("upload") ?: signingConfigs.getByName("debug")
         }
     }
 
