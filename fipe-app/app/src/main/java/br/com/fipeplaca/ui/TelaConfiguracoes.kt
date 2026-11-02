@@ -59,11 +59,9 @@ fun TelaConfiguracoes(
     val erroUrl = br.com.fipeplaca.data.FipeRepositorio.validarUrlPlaca(urlPlaca)
     val links = LocalUriHandler.current
     fun abrir(url: String) = runCatching { links.openUri(url) } // sem navegador instalado, nao fecha o app
-    var mostrarTokens by rememberSaveable { mutableStateOf(false) }
+    var mostrarPlaca by rememberSaveable { mutableStateOf(false) }
+    var mostrarFipe by rememberSaveable { mutableStateOf(false) }
     val teclado = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false)
-    val olho: @Composable () -> Unit = {
-        TextButton(onClick = { mostrarTokens = !mostrarTokens }) { Text(if (mostrarTokens) "Ocultar" else "Mostrar") }
-    }
     val alterado = Configuracoes(tokenPlaca, urlPlaca, tokenFipe) != inicial
 
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
@@ -82,11 +80,12 @@ fun TelaConfiguracoes(
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = tokenPlaca, onValueChange = { tokenPlaca = it.trim() },
-                    label = { Text("Token do serviço de placas") },
+                    label = { Text("Token de placas") },
                     leadingIcon = { Icon(Icons.Filled.Lock, null) },
                     singleLine = true,
-                    visualTransformation = if (mostrarTokens) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = teclado, trailingIcon = olho,
+                    visualTransformation = if (mostrarPlaca) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = teclado,
+                    trailingIcon = { TextButton(onClick = { mostrarPlaca = !mostrarPlaca }) { Text(if (mostrarPlaca) "Ocultar" else "Mostrar") } },
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -116,11 +115,13 @@ fun TelaConfiguracoes(
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = tokenFipe, onValueChange = { tokenFipe = it.trim() },
-                    label = { Text("Token da FIPE (opcional)") },
+                    label = { Text("Token FIPE") },
+                    supportingText = { Text("Opcional") },
                     leadingIcon = { Icon(Icons.Filled.Lock, null) },
                     singleLine = true,
-                    visualTransformation = if (mostrarTokens) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = teclado, trailingIcon = olho,
+                    visualTransformation = if (mostrarFipe) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = teclado,
+                    trailingIcon = { TextButton(onClick = { mostrarFipe = !mostrarFipe }) { Text(if (mostrarFipe) "Ocultar" else "Mostrar") } },
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -154,7 +155,7 @@ fun TelaConfiguracoes(
             Secao(titulo = "Sobre") {
                 Text(
                     "Valores de referência da Tabela FIPE (Fundação Instituto de Pesquisas Econômicas), que expressa o preço " +
-                        "médio de veículos anunciados no mercado nacional. Os tokens ficam guardados apenas neste aparelho.",
+                        "médio de veículos anunciados no mercado nacional. Os tokens ficam só neste aparelho, cifrados com uma chave do sistema, e não entram em backup.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(8.dp))

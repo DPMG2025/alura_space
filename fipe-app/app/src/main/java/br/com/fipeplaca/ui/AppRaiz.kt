@@ -92,7 +92,11 @@ fun AppRaiz() {
     val salvos by placaVm.itensSalvos.collectAsStateWithLifecycle()
     val tema by app.tema.collectAsStateWithLifecycle()
 
-    fun aviso(texto: String) = escopo.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(texto) }
+    fun aviso(texto: String) = escopo.launch {
+        // So substitui avisos simples: um aviso com "Desfazer" pendente nao e descartado
+        snackbar.currentSnackbarData?.takeIf { it.visuals.actionLabel == null }?.dismiss()
+        snackbar.showSnackbar(texto)
+    }
     fun compartilhar(r: FipeResultado, v: VeiculoPlaca?, pontos: List<PontoHistorico>) {
         val envio = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"

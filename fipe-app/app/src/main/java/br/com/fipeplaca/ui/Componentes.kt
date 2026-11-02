@@ -67,6 +67,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.fipeplaca.data.Placa
@@ -87,7 +88,7 @@ fun Cabecalho(
             .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
             .background(degradeMarca())
             .statusBarsPadding()
-            .padding(start = 20.dp, end = 12.dp, top = if (compacto) 4.dp else 12.dp, bottom = if (compacto) 12.dp else 20.dp),
+            .padding(start = 20.dp, end = 12.dp, top = if (compacto) 0.dp else 12.dp, bottom = if (compacto) 12.dp else 20.dp),
     ) {
         if (!compacto) Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f).padding(top = 8.dp)) {
@@ -110,7 +111,7 @@ fun PlacaMercosul(placa: String, modifier: Modifier = Modifier, altura: Dp = 56.
     MolduraPlaca(modifier.clearAndSetSemantics { contentDescription = "Placa ${texto.toList().joinToString(" ")}" }, altura) {
         Text(
             texto,
-            style = estiloPlaca(altura, maxWidth, texto.length),
+            style = estiloPlaca(altura, maxWidth, texto.length, LocalDensity.current.fontScale),
             color = Color(0xFF111111),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
@@ -125,7 +126,7 @@ fun PlacaMercosul(placa: String, modifier: Modifier = Modifier, altura: Dp = 56.
 fun CampoPlaca(valor: String, onValor: (String) -> Unit, onBuscar: () -> Unit, modifier: Modifier = Modifier, habilitado: Boolean = true) {
     val altura = 76.dp
     MolduraPlaca(modifier, altura) {
-        val estilo = estiloPlaca(altura, maxWidth, 7)
+        val estilo = estiloPlaca(altura, maxWidth, 7, LocalDensity.current.fontScale)
         BasicTextField(
             value = valor,
             onValueChange = onValor,
@@ -135,6 +136,8 @@ fun CampoPlaca(valor: String, onValor: (String) -> Unit, onBuscar: () -> Unit, m
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Characters,
                 autoCorrectEnabled = false,
+                // Teclado sem sugestoes nem texto "em composicao" (sublinhado) para a placa
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Password,
                 imeAction = ImeAction.Search,
             ),
             keyboardActions = KeyboardActions(onSearch = { onBuscar() }),
@@ -154,10 +157,11 @@ fun CampoPlaca(valor: String, onValor: (String) -> Unit, onBuscar: () -> Unit, m
 }
 
 /** Fonte monoespacada que cabe na largura disponivel (cada caractere ocupa cerca de 0,7 em). */
-private fun estiloPlaca(altura: Dp, largura: Dp, caracteres: Int): TextStyle {
+private fun estiloPlaca(altura: Dp, largura: Dp, caracteres: Int, escalaFonte: Float = 1f): TextStyle {
     val porAltura = altura.value * 0.46f
     val porLargura = largura.value / (caracteres.coerceAtLeast(1) * 0.70f)
-    val tamanho = minOf(porAltura, porLargura)
+    // A placa e um elemento grafico de tamanho fixo: o texto acompanha a moldura, nao a escala de fonte
+    val tamanho = minOf(porAltura, porLargura) / escalaFonte
     return TextStyle(
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Bold,
@@ -167,13 +171,17 @@ private fun estiloPlaca(altura: Dp, largura: Dp, caracteres: Int): TextStyle {
     )
 }
 
-private fun estiloFaixa(tamanho: Float) = TextStyle(
+@Composable
+private fun estiloFaixa(tamanho: Float): TextStyle {
+    val t = tamanho / LocalDensity.current.fontScale
+    return TextStyle(
     color = Color.White,
     fontWeight = FontWeight.Bold,
-    fontSize = tamanho.sp,
-    lineHeight = tamanho.sp,
+    fontSize = t.sp,
+    lineHeight = t.sp,
     platformStyle = PlatformTextStyle(includeFontPadding = false),
-)
+    )
+}
 
 @Composable
 private fun MolduraPlaca(modifier: Modifier, altura: Dp, conteudo: @Composable BoxWithConstraintsScope.() -> Unit) {

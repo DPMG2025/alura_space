@@ -57,6 +57,8 @@ object PlacaParser {
     private fun tipoPorTexto(texto: String?): Int? {
         val t = Texto.chave(texto ?: return null)
         return when {
+            // "Caminhonete"/"camioneta" (picapes como Hilux e S10) sao carros na tabela FIPE
+            "caminhonete" in t || "camioneta" in t -> 1
             "moto" in t || "ciclo" in t -> 2
             "caminh" in t || "onibus" in t -> 3
             else -> 1

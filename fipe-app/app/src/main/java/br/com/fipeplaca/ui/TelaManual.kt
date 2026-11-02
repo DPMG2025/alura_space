@@ -108,7 +108,7 @@ fun TelaManual(estado: ManualUi, historico: HistoricoUi, favorito: Boolean, acoe
             // Depois de escolher a marca o titulo sai (a trilha de etapas ja orienta): mais espaco para a lista
             compacto = compacto || s.etapa != Etapa.MARCAS,
         ) {
-            Spacer(Modifier.height(if (compacto) 4.dp else 14.dp))
+            Spacer(Modifier.height(if (compacto || s.etapa != Etapa.MARCAS) 0.dp else 14.dp))
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 TipoVeiculo.entries.forEachIndexed { i, t ->
                     SegmentedButton(

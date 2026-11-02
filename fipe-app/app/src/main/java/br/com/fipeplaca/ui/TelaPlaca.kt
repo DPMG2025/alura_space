@@ -8,6 +8,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.selection.selectable
@@ -103,12 +104,15 @@ fun TelaPlaca(
     val resultadoVisivel = remember { BringIntoViewRequester() }
     // Quando o resultado chega, rola ate ele (o valor nao fica escondido abaixo da busca)
     var ultimoRolado by rememberSaveable { mutableStateOf<String?>(null) }
+    val densidade = androidx.compose.ui.platform.LocalDensity.current
+    val margemTopo = androidx.compose.foundation.layout.WindowInsets.statusBars.getTop(densidade) + with(densidade) { 16.dp.toPx() }
     LaunchedEffect(estado.veiculo?.placa, estado.carregando) {
         val chave = estado.veiculo?.placa
         if (chave != null && !estado.carregando && chave != ultimoRolado) {
             ultimoRolado = chave
             kotlinx.coroutines.delay(150)
-            resultadoVisivel.bringIntoView()
+            // Inclui uma margem acima do resultado: ele para abaixo da faixa da barra de status
+            resultadoVisivel.bringIntoView(androidx.compose.ui.geometry.Rect(0f, -margemTopo, 1f, 1f))
         } else if (chave == null) ultimoRolado = null
     }
     Column(modifier.fillMaxSize().verticalScroll(rolagem)) {

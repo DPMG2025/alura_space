@@ -44,6 +44,13 @@ class PlacaParserTest {
         assertEquals(TipoVeiculo.MOTOS, v.fipe.first().tipo)
     }
 
+    @Test fun caminhoneteEhCarro() {
+        val json = """{"marca":"TOYOTA","modelo":"HILUX CD SRV","segmento":"CAMINHONETE","fipe":{"dados":[{"codigo_fipe":"002107-4"}]}}"""
+        assertEquals(TipoVeiculo.CARROS, PlacaParser.parse(JsonParser.parseString(json), "ABC1234").tipo)
+        val caminhao = """{"marca":"SCANIA","modelo":"R 450","segmento":"CAMINHAO","fipe":{"dados":[{"codigo_fipe":"516001-9"}]}}"""
+        assertEquals(TipoVeiculo.CAMINHOES, PlacaParser.parse(JsonParser.parseString(caminhao), "ABC1234").tipo)
+    }
+
     @Test fun erroDoProvedor() {
         val e = runCatching { PlacaParser.parse(JsonParser.parseString("""{"message":"Token inválido"}"""), "ABC1234") }
             .exceptionOrNull()

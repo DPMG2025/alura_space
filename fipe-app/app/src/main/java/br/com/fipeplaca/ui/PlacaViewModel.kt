@@ -7,6 +7,7 @@ import br.com.fipeplaca.FipeApp
 import br.com.fipeplaca.data.ConsultaSalva
 import br.com.fipeplaca.data.FipeRepositorio
 import br.com.fipeplaca.data.Placa
+import br.com.fipeplaca.data.Texto
 import br.com.fipeplaca.data.VeiculoPlaca
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,7 +61,7 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
 
     /** Compara pela identidade da versao (codigo FIPE e ano), nao pelo valor, que muda a cada mes. */
     private fun mesmaVersao(r: br.com.fipeplaca.data.FipeResultado) =
-        versaoAtual()?.let { it.codigoFipe == r.codigoFipe && (it.codigoAno ?: it.anoModelo) == (r.codigoAno ?: r.anoModelo) } == true
+        versaoAtual()?.let { it.codigoFipe == r.codigoFipe && Texto.chave(it.anoModelo).filter(Char::isDigit) == Texto.chave(r.anoModelo).filter(Char::isDigit) } == true
 
     fun alterarPlaca(texto: String) {
         if (_estado.value.carregando) return
@@ -81,12 +82,14 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
         job?.cancel()
         historico.limpar()
         _estado.update { PlacaUi(placa = placa, carregando = true) }
+        salvo[CHAVE_CONSULTA] = "" // se o processo morrer agora, nao reabre o veiculo anterior
         job = viewModelScope.launch {
             runCatching { repo.consultarPlaca(placa) }
                 .onSuccess { v ->
                     val id = ConsultaSalva.idPlaca(v.placa)
                     // Abre na versao que o usuario ja tinha escolhido para esta placa
-                    val versao = (salvos.versaoSalva(id) ?: 0).coerceIn(0, (v.fipe.size - 1).coerceAtLeast(0))
+                    val versao = (kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { salvos.versaoSalva(id) } ?: 0)
+                        .coerceIn(0, (v.fipe.size - 1).coerceAtLeast(0))
                     _estado.update { it.copy(carregando = false, veiculo = v, selecionado = versao) }
                     salvo[CHAVE_CONSULTA] = id
                     salvos.registrar(ConsultaSalva(id, System.currentTimeMillis(), veiculo = v, versao = versao))

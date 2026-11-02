@@ -34,6 +34,23 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v5
 
+      # Regressao visual: compara as telas com as capturas da versao anterior (docs/capturas)
+      - name: Comparar capturas com a versao anterior
+        continue-on-error: true
+        env:
+          ROBORAZZI_MODO: verify
+        run: |
+          mkdir -p app/build/outputs/roborazzi
+          cp docs/capturas/*.png app/build/outputs/roborazzi/ 2>/dev/null || true
+          if ./gradlew testDebugUnitTest --tests "br.com.fipeplaca.TelasCapturaTest" --no-daemon -q; then
+            echo "Nenhuma tela mudou em relacao a versao anterior." > regressao-visual.txt
+          else
+            echo "Telas com diferenca visual em relacao a versao anterior (revisar):" > regressao-visual.txt
+            grep -l "<failure" app/build/test-results/testDebugUnitTest/TEST-br.com.fipeplaca.TelasCapturaTest.xml >/dev/null 2>&1 && \
+              grep -o 'testcase name="[^"]*"[^>]*>\s*<failure' app/build/test-results/testDebugUnitTest/TEST-br.com.fipeplaca.TelasCapturaTest.xml | sed 's/testcase name="\([^"]*\)".*/\1/' >> regressao-visual.txt || true
+          fi
+          rm -rf app/build/outputs/roborazzi
+
       - name: Testes unitarios e capturas de tela
         run: ./gradlew testDebugUnitTest --no-daemon
 
@@ -63,6 +80,7 @@ jobs:
           rm -f docs/capturas/*.png
           cp app/build/outputs/roborazzi/*.png docs/capturas/ 2>/dev/null || git checkout -- docs/capturas
           if [ -f app/build/outputs/api-real.txt ]; then cp app/build/outputs/api-real.txt docs/verificacao-api-real.txt; fi
+          if [ -f regressao-visual.txt ]; then cp regressao-visual.txt docs/regressao-visual.txt; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs

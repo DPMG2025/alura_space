@@ -31,6 +31,8 @@ class MainActivity : ComponentActivity() {
                     navigationBarStyle = if (escuro) androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
                     else androidx.activity.SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
                 )
+                // Fundo da janela (abertura, teclado) segue o tema escolhido no app, nao o do sistema
+                window.decorView.setBackgroundColor(if (escuro) 0xFF0D121B.toInt() else 0xFFF4F6FB.toInt())
                 onDispose {}
             }
             TemaFipe(escuro = escuro) { AppRaiz() }

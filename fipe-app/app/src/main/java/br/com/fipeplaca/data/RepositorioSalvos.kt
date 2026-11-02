@@ -36,7 +36,9 @@ class RepositorioSalvos(context: Context) {
             val tipo = object : TypeToken<List<ConsultaSalva?>>() {}.type
             gson.fromJson<List<ConsultaSalva?>>(json, tipo).orEmpty().mapNotNull(::validar)
         } catch (e: Exception) {
-            sp.edit().putString("${CHAVE}_seguranca_${System.currentTimeMillis()}", json).apply()
+            // Uma copia por conteudo: reabrir o app nao acumula copias iguais
+            val jaGuardado = sp.all.any { (k, v) -> k.startsWith("${CHAVE}_seguranca_") && v == json }
+            if (!jaGuardado) sp.edit().putString("${CHAVE}_seguranca_${System.currentTimeMillis()}", json).apply()
             android.util.Log.w("RepositorioSalvos", "Salvos ilegiveis guardados em copia de seguranca", e)
             emptyList()
         }
@@ -119,7 +121,8 @@ class RepositorioSalvos(context: Context) {
 
     fun pontosLocais(id: String): List<PontoHistorico> = _itens.value.firstOrNull { it.id == id }?.historicoLocal.orEmpty()
 
-    fun versaoSalva(id: String): Int? = _itens.value.firstOrNull { it.id == id }?.versao
+    /** Versao escolhida, depois de terminar as gravacoes pendentes (chamar fora da thread principal). */
+    fun versaoSalva(id: String): Int? { aguardar(); return _itens.value.firstOrNull { it.id == id }?.versao }
 
     fun buscar(id: String): ConsultaSalva? = _itens.value.firstOrNull { it.id == id }
 

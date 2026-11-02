@@ -143,33 +143,42 @@ private fun ItemSalvo(c: ConsultaSalva, acoes: AcoesSalvos) {
     }
 }
 
-/** "+2,1% desde out/26" com minigrafico dos valores guardados no aparelho. */
+/** "+2,1% desde out/26" (mes em que foi salvo) com minigrafico a partir desse mes. */
 @Composable
 private fun VariacaoDesdeSalvo(c: ConsultaSalva) {
-    val pontos = c.historicoLocal.orEmpty()
     val variacao = br.com.fipeplaca.data.VariacaoSalvo.de(c) ?: return
+    val base = c.valorAoSalvar ?: return
+    val inicio = br.com.fipeplaca.data.Meses.indice(base.mesReferencia)
+    // Minigrafico so com os meses desde que foi salvo (o historico local pode ter meses anteriores)
+    val pontos = c.historicoLocal.orEmpty().filter { p ->
+        val i = br.com.fipeplaca.data.Meses.indice(p.mesReferencia)
+        inicio == null || i == null || i >= inicio
+    }
     val cor = corVariacao(variacao)
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
-        androidx.compose.foundation.Canvas(
-            Modifier.width(36.dp).height(16.dp)
-                .semantics { contentDescription = "Evolução guardada de ${pontos.size} meses" },
-        ) {
-            val min = pontos.minOf { it.valor }
-            val max = pontos.maxOf { it.valor }
-            val faixa = (max - min).takeIf { it > 0 } ?: 1.0
-            val passo = size.width / (pontos.size - 1)
-            val caminho = androidx.compose.ui.graphics.Path()
-            pontos.forEachIndexed { i, p ->
-                val x = i * passo
-                val y = size.height - ((p.valor - min) / faixa * size.height).toFloat()
-                if (i == 0) caminho.moveTo(x, y) else caminho.lineTo(x, y)
+        if (pontos.size >= 2) {
+            androidx.compose.foundation.Canvas(
+                Modifier.width(36.dp).height(16.dp)
+                    .semantics { contentDescription = "Evolução guardada de ${pontos.size} meses" },
+            ) {
+                val min = pontos.minOf { it.valor }
+                val max = pontos.maxOf { it.valor }
+                val faixa = (max - min).takeIf { it > 0 } ?: 1.0
+                val passo = size.width / (pontos.size - 1)
+                val caminho = androidx.compose.ui.graphics.Path()
+                pontos.forEachIndexed { i, p ->
+                    val x = i * passo
+                    val y = size.height - ((p.valor - min) / faixa * size.height).toFloat()
+                    if (i == 0) caminho.moveTo(x, y) else caminho.lineTo(x, y)
+                }
+                drawPath(caminho, cor, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()))
             }
-            drawPath(caminho, cor, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()))
+            Spacer(Modifier.width(6.dp))
         }
-        Spacer(Modifier.width(6.dp))
         Text(
-            "${br.com.fipeplaca.data.Estatisticas.percentual(variacao)} desde ${br.com.fipeplaca.data.Meses.curto(pontos.first().mesReferencia)}",
-            style = MaterialTheme.typography.labelSmall, color = cor, maxLines = 1, softWrap = false,
+            "${br.com.fipeplaca.data.Estatisticas.percentual(variacao)} desde ${br.com.fipeplaca.data.Meses.curto(base.mesReferencia)}",
+            style = MaterialTheme.typography.labelSmall, color = cor, maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
         )
     }
 }

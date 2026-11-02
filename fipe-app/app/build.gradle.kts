@@ -14,8 +14,8 @@ android {
         applicationId = "br.com.fipeplaca"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "3.3"
+        versionCode = 9
+        versionName = "3.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["useTestStorageService"] = "true"
     }
@@ -38,7 +38,10 @@ android {
         unitTests {
             isIncludeAndroidResources = true
             all {
-                it.systemProperty("roborazzi.test.record", "true")
+                // ROBORAZZI_MODO=verify compara com as capturas de referencia; o padrao grava novas
+                val modoCaptura = System.getenv("ROBORAZZI_MODO") ?: "record"
+                it.systemProperty("roborazzi.test.record", (modoCaptura == "record").toString())
+                it.systemProperty("roborazzi.test.verify", (modoCaptura == "verify").toString())
                 it.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
                 it.maxHeapSize = "2g"
                 it.systemProperty("fipe.online", System.getenv("FIPE_ONLINE") ?: "false")

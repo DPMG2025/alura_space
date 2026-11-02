@@ -158,7 +158,7 @@ class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.Sa
 
     fun selecionarAno(a: ItemFipe) {
         historico.limpar()
-        _estado.update { it.copy(ano = a, etapa = Etapa.RESULTADO, filtro = "", resultado = null) }
+        _estado.update { it.copy(ano = a, etapa = Etapa.RESULTADO, filtro = "", resultado = null, atualizando = false, avisoAtualizacao = null) }
         carregarValor()
     }
 
@@ -178,7 +178,7 @@ class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.Sa
             Etapa.ANOS -> s.copy(etapa = Etapa.MODELOS, modelo = null, ano = null)
             Etapa.RESULTADO -> s.copy(etapa = Etapa.ANOS, ano = null, resultado = null).also { historico.limpar() }
         }
-        _estado.value = nova.copy(filtro = "", carregando = false, erro = null)
+        _estado.value = nova.copy(filtro = "", carregando = false, erro = null, atualizando = false, avisoAtualizacao = null)
         // Listas podem estar vazias quando a tela foi aberta a partir dos salvos.
         when (nova.etapa) {
             Etapa.MARCAS -> if (nova.marcas.isEmpty()) carregarMarcas()
