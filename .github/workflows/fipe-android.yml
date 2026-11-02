@@ -43,7 +43,9 @@ jobs:
         env:
           FIPE_ONLINE: "true"
           FIPE_API_TOKEN: ${{ secrets.FIPE_API_TOKEN }}
-        run: ./gradlew testDebugUnitTest --tests "br.com.fipeplaca.ApiRealTest" --rerun-tasks --no-daemon -q
+        run: |
+          rm -f app/build/outputs/api-real.txt
+          ./gradlew testDebugUnitTest --tests "br.com.fipeplaca.ApiRealTest" --rerun-tasks --no-daemon
 
       - name: Publicar capturas de tela
         if: always()
@@ -55,14 +57,15 @@ jobs:
 
       # Guarda as capturas no proprio branch (pasta docs/capturas) para revisao e para o README.
       - name: Versionar capturas de tela
-        if: github.event_name == 'push' && success()
+        if: github.event_name == 'push' && !cancelled()
         run: |
           mkdir -p docs/capturas
           rm -f docs/capturas/*.png
           cp app/build/outputs/roborazzi/*.png docs/capturas/
+          if [ -f app/build/outputs/api-real.txt ]; then cp app/build/outputs/api-real.txt docs/verificacao-api-real.txt; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/capturas
+          git add docs
           if git diff --cached --quiet; then
             echo "Capturas sem alteracao"
           else

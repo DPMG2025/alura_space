@@ -24,9 +24,30 @@ class ApiRealTest {
 
     @Before fun somenteOnline() = assumeTrue(System.getProperty("fipe.online") == "true")
 
-    @Test fun fluxoCompletoComHistorico() = runBlocking {
+    /** Relatorio gravado em build/outputs/api-real.txt (o CI versiona em docs/). */
+    private fun log(texto: String) {
+        println(texto)
+        val f = java.io.File("build/outputs/api-real.txt")
+        f.parentFile.mkdirs()
+        f.appendText(texto + "\n")
+    }
+
+    private fun registrar(nome: String, bloco: suspend () -> Unit) = runBlocking {
+        log("=== $nome ===")
+        try {
+            bloco()
+            log("OK")
+        } catch (t: Throwable) {
+            log("FALHOU: ${t::class.java.name}: ${t.message}")
+            if (t is retrofit2.HttpException) log("HTTP ${t.code()} corpo: ${t.response()?.errorBody()?.string()?.take(500)}")
+            log(t.stackTraceToString().lines().take(12).joinToString("\n"))
+            throw t
+        }
+    }
+
+    @Test fun fluxoCompletoComHistorico() = registrar("fluxo completo") {
         val marcas = repo.marcas(TipoVeiculo.CARROS)
-        println("Marcas de carros: ${marcas.size}")
+        log("Marcas de carros: ${marcas.size}")
         assertTrue(marcas.size > 50)
         val vw = marcas.first { Texto.chave(it.nome).contains("volkswagen") }
         val modelos = repo.modelos(TipoVeiculo.CARROS, vw.codigo)
@@ -34,23 +55,23 @@ class ApiRealTest {
         val anos = repo.anos(TipoVeiculo.CARROS, vw.codigo, gol.codigo)
         val ano = anos.first { !it.codigo.startsWith("32000") }
         val r = repo.valor(TipoVeiculo.CARROS, vw.codigo, gol.codigo, ano.codigo)
-        println("Valor: ${r.marca} ${r.modelo} ${r.anoModelo} ${r.combustivel} ${r.codigoFipe} = ${r.valor} (${r.mesReferencia})")
+        log("Valor: ${r.marca} ${r.modelo} ${r.anoModelo} ${r.combustivel} ${r.codigoFipe} = ${r.valor} (${r.mesReferencia})")
         assertTrue(r.valor!!.startsWith("R$"))
         assertTrue(r.codigoFipe.matches(Regex("\\d{6}-\\d")))
 
         val hist = repo.historico(r, PeriodoHistorico.MESES_12)
-        println("Historico 12 meses: ${hist.size} pontos")
-        hist.forEach { println("  ${it.mesReferencia}: ${it.valorTexto}") }
+        log("Historico 12 meses: ${hist.size} pontos")
+        hist.forEach { log("  ${it.mesReferencia}: ${it.valorTexto}") }
         assertTrue(hist.size >= 6)
         val noAno = repo.historico(r, PeriodoHistorico.ANO_ATUAL)
-        println("No ano: ${noAno.size} pontos")
+        log("No ano: ${noAno.size} pontos")
         assertTrue(noAno.isNotEmpty())
     }
 
-    @Test fun motosECaminhoes() = runBlocking {
+    @Test fun motosECaminhoes() = registrar("motos e caminhoes") {
         val motos = repo.marcas(TipoVeiculo.MOTOS)
         val caminhoes = repo.marcas(TipoVeiculo.CAMINHOES)
-        println("Marcas de motos: ${motos.size}, caminhoes: ${caminhoes.size}")
+        log("Marcas de motos: ${motos.size}, caminhoes: ${caminhoes.size}")
         assertTrue(motos.any { Texto.chave(it.nome).contains("honda") })
         assertTrue(caminhoes.any { Texto.chave(it.nome).contains("scania") })
     }
