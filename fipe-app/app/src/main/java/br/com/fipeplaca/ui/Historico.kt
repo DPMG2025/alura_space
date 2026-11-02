@@ -2,6 +2,7 @@ package br.com.fipeplaca.ui
 
 import br.com.fipeplaca.data.FipeRepositorio
 import br.com.fipeplaca.data.FipeResultado
+import br.com.fipeplaca.data.MesclarHistorico
 import br.com.fipeplaca.data.PeriodoHistorico
 import br.com.fipeplaca.data.PontoHistorico
 import kotlinx.coroutines.CoroutineScope
@@ -21,12 +22,18 @@ data class HistoricoUi(
     /** Meses pedidos e meses que exigem token (para avisar quando o historico vier parcial). */
     val solicitados: Int = 0,
     val exigemToken: Int = 0,
+    /** true quando os pontos exibidos vieram so do aparelho (sem conexao). */
+    val offline: Boolean = false,
 )
 
 /** Carrega a evolucao do preco FIPE de um veiculo; usado pelas duas telas de busca. */
 class HistoricoController(
     private val escopo: CoroutineScope,
     private val repo: FipeRepositorio,
+    /** Valores ja guardados no aparelho para o veiculo (historico local). */
+    private val locais: (FipeResultado) -> List<PontoHistorico> = { emptyList() },
+    /** Chamado com os pontos obtidos, para guarda-los no aparelho. */
+    private val aoCarregar: (FipeResultado, List<PontoHistorico>) -> Unit = { _, _ -> },
 ) {
     private val _estado = MutableStateFlow(HistoricoUi())
     val estado: StateFlow<HistoricoUi> = _estado
@@ -53,15 +60,24 @@ class HistoricoController(
                 })
             }.onSuccess { res ->
                 cache[chave] = res
+                aoCarregar(alvo, res.pontos)
+                val pontos = MesclarHistorico.mesclar(res.pontos, locais(alvo), periodo)
                 _estado.update {
                     it.copy(
-                        carregando = false, pontos = res.pontos, solicitados = res.solicitados, exigemToken = res.exigemToken,
-                        erro = if (res.pontos.isEmpty()) "Sem histórico para o período." else null,
+                        carregando = false, pontos = pontos, solicitados = res.solicitados,
+                        // meses vindos do aparelho reduzem os que faltam
+                        exigemToken = if (pontos.size >= res.solicitados) 0 else res.exigemToken,
+                        erro = if (pontos.isEmpty()) "Sem histórico para o período." else null,
                     )
                 }
             }.onFailure { e ->
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                _estado.update { it.copy(carregando = false, erro = FipeRepositorio.mensagemErro(e)) }
+                // Sem rede ou sem fonte: mostra o que ja esta guardado no aparelho, se houver
+                val guardados = MesclarHistorico.mesclar(emptyList(), locais(alvo), periodo)
+                _estado.update {
+                    if (guardados.size >= 2) it.copy(carregando = false, pontos = guardados, offline = true)
+                    else it.copy(carregando = false, erro = FipeRepositorio.mensagemErro(e))
+                }
             }
         }
     }

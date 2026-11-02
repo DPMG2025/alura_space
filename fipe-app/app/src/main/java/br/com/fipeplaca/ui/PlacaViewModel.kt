@@ -31,7 +31,14 @@ class PlacaViewModel(app: Application) : AndroidViewModel(app) {
     private val _estado = MutableStateFlow(PlacaUi())
     val estado: StateFlow<PlacaUi> = _estado
     val itensSalvos: StateFlow<List<ConsultaSalva>> = salvos.itens
-    val historico = HistoricoController(viewModelScope, repo)
+    private fun idAtual(): String? = _estado.value.veiculo?.let { ConsultaSalva.idPlaca(it.placa) }
+
+    /** Historico local por veiculo e versao FIPE (a placa pode ter mais de uma versao). */
+    val historico = HistoricoController(
+        viewModelScope, repo,
+        locais = { r -> if (r == _estado.value.veiculo?.fipe?.firstOrNull()) idAtual()?.let(salvos::pontosLocais).orEmpty() else emptyList() },
+        aoCarregar = { r, pontos -> if (r == _estado.value.veiculo?.fipe?.firstOrNull()) idAtual()?.let { salvos.guardarPontos(it, pontos) } },
+    )
     private var job: Job? = null
 
     fun alterarPlaca(texto: String) {

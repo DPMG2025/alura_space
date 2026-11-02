@@ -195,8 +195,8 @@ class FipeRepositorioTest {
         assertEquals(3, res.size)
         assertEquals(12, res.solicitados)
         assertEquals(9, res.exigemToken)
-        // Depois do primeiro erro 500, a BrasilAPI nao e mais consultada (2 tentativas x ate 2 em paralelo)
-        assertTrue(pedidos.count { it.path!!.startsWith("/brasil/fipe/preco") } <= 4)
+        // Depois do primeiro erro 500, a BrasilAPI nao e mais consultada (2 tentativas x ate 4 em paralelo)
+        assertTrue(pedidos.count { it.path!!.startsWith("/brasil/fipe/preco") } <= 8)
         // 402 nao e repetido
         assertEquals(12, pedidos.count { it.path!!.startsWith("/v2/cars/X/years/2019-1?reference=") })
     }

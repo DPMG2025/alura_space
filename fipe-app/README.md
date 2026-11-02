@@ -21,7 +21,8 @@ As capturas são geradas automaticamente pelo CI a cada alteração (Robolectric
 3. **Histórico do preço**: evolução no ano atual, em 12 ou em 24 meses, com gráfico interativo (toque ou arraste para ver cada mês), variação percentual, diferença em reais, máximo, mínimo, média, variação mensal média, tabela mês a mês e projeção para 12 meses pela tendência.
 4. **Salvos**: favoritos e consultas recentes guardados no aparelho. Reabrir uma placa salva não gasta crédito do serviço de placas.
 5. **Compartilhar e copiar**: envia o resultado (com a variação do período) por WhatsApp, e-mail etc.; toque no código FIPE para copiar.
-6. **Acabamento**: tema claro e escuro (ou do sistema), tela de abertura, animações, esqueleto de carregamento, mensagens de erro claras, retorno tátil no gráfico e descrições de acessibilidade.
+6. **Histórico local**: cada valor FIPE obtido para um veículo salvo fica guardado por mês no aparelho. O gráfico dos salvos cresce com o tempo, funciona sem internet e não depende de token.
+7. **Acabamento**: tema claro e escuro (ou do sistema), tela de abertura, animações, esqueleto de carregamento, mensagens de erro claras, retorno tátil no gráfico e descrições de acessibilidade.
 
 ## Qualidade
 

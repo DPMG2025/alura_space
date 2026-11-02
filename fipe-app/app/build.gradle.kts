@@ -22,8 +22,8 @@ android {
         applicationId = "br.com.fipeplaca"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "2.1"
+        versionCode = 4
+        versionName = "2.2"
         buildConfigField("String", "PLACA_API_TOKEN", "\"${segredo("PLACA_API_TOKEN")}\"")
         buildConfigField("String", "FIPE_API_TOKEN", "\"${segredo("FIPE_API_TOKEN")}\"")
     }

@@ -90,3 +90,33 @@ class FormatosExtrasTest {
         assertEquals(30000.0, br.com.fipeplaca.data.Projecao.estimar(estavel)!!, 0.01)
     }
 }
+
+class MesclarHistoricoTest {
+    private fun p(mes: String, v: Double) = PontoHistorico(mes, "", v)
+
+    @Test fun indiceDosMeses() {
+        assertEquals(2026 * 12 + 10, br.com.fipeplaca.data.Meses.indice("novembro de 2026"))
+        assertEquals(2026 * 12 + 2, br.com.fipeplaca.data.Meses.indice("março/2026 "))
+        assertEquals(2025 * 12 + 11, br.com.fipeplaca.data.Meses.indice("12/2025"))
+        assertNull(br.com.fipeplaca.data.Meses.indice("ref 300"))
+    }
+
+    @Test fun mesclaSemRepetirERecortaPeriodo() {
+        val api = listOf(p("setembro de 2026", 3.0), p("outubro de 2026", 4.0))
+        val locais = listOf(p("setembro de 2026", 99.0), p("junho de 2025", 1.0), p("janeiro de 2026", 2.0))
+        val doze = br.com.fipeplaca.data.MesclarHistorico.mesclar(api, locais, br.com.fipeplaca.data.PeriodoHistorico.MESES_12)
+        assertEquals(listOf(2.0, 3.0, 4.0), doze.map { it.valor }) // junho/2025 fora dos 12 meses; API prevalece em setembro
+        val vinte4 = br.com.fipeplaca.data.MesclarHistorico.mesclar(api, locais, br.com.fipeplaca.data.PeriodoHistorico.MESES_24)
+        assertEquals(4, vinte4.size)
+        val ano = br.com.fipeplaca.data.MesclarHistorico.mesclar(api, locais, br.com.fipeplaca.data.PeriodoHistorico.ANO_ATUAL)
+        assertEquals(3, ano.size)
+    }
+
+    @Test fun acumulaComLimite() {
+        val antigos = (1..12).map { p("$it/2025", it.toDouble()) }
+        val r = br.com.fipeplaca.data.MesclarHistorico.acumular(antigos, listOf(p("1/2026", 13.0), p("12/2025", 50.0)), limite = 10)
+        assertEquals(10, r.size)
+        assertEquals(13.0, r.last().valor, 0.0)
+        assertEquals(50.0, r[r.size - 2].valor, 0.0) // novo valor do mes substitui o antigo
+    }
+}

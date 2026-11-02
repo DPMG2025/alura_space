@@ -191,7 +191,11 @@ fun CartaoHistorico(
                 }
                 1 -> CartaoErro(estado.erro.orEmpty(), "Tentar novamente", onTentar)
                 2 -> Column {
-                    if (estado.exigemToken > 0 && estado.pontos.size < estado.solicitados) {
+                    if (estado.offline) {
+                        Text("Sem conexão: mostrando os valores guardados neste aparelho.",
+                            style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                        Spacer(Modifier.height(10.dp))
+                    } else if (estado.exigemToken > 0 && estado.pontos.size < estado.solicitados) {
                         AvisoParcial(estado.pontos.size, estado.solicitados, onAbrirAjustes)
                         Spacer(Modifier.height(14.dp))
                     }

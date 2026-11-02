@@ -28,7 +28,13 @@ class RepositorioSalvos(context: Context) {
     fun registrar(nova: ConsultaSalva) {
         val atual = _itens.value
         val antigo = atual.firstOrNull { it.id == nova.id }
-        val item = nova.copy(favorito = antigo?.favorito ?: nova.favorito)
+        val atual = listOfNotNull(nova.principal?.let { r ->
+            Dinheiro.paraDouble(r.valor)?.let { PontoHistorico(r.mesReferencia, r.valor.orEmpty(), it) }
+        })
+        val item = nova.copy(
+            favorito = antigo?.favorito ?: nova.favorito,
+            historicoLocal = MesclarHistorico.acumular(antigo?.historicoLocal.orEmpty() + nova.historicoLocal.orEmpty(), atual),
+        )
         gravar(OrganizarSalvos.inserir(atual, item, LIMITE_RECENTES))
     }
 
@@ -41,6 +47,15 @@ class RepositorioSalvos(context: Context) {
 
     @Synchronized
     fun limparRecentes() = gravar(_itens.value.filter { it.favorito })
+
+    /** Guarda no aparelho os valores mensais obtidos para um veiculo ja salvo. */
+    @Synchronized
+    fun guardarPontos(id: String, pontos: List<PontoHistorico>) {
+        if (pontos.isEmpty() || _itens.value.none { it.id == id }) return
+        gravar(_itens.value.map { if (it.id == id) it.copy(historicoLocal = MesclarHistorico.acumular(it.historicoLocal.orEmpty(), pontos)) else it })
+    }
+
+    fun pontosLocais(id: String): List<PontoHistorico> = _itens.value.firstOrNull { it.id == id }?.historicoLocal.orEmpty()
 
     fun favorito(id: String): Boolean = _itens.value.any { it.id == id && it.favorito }
 

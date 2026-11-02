@@ -208,7 +208,7 @@ class FipeRepositorio(
         val codigoAno = resolverCodigoAno(r)
             ?: throw PlacaParser.ErroProvedor("Ano modelo não encontrado na tabela FIPE para este código.")
         val meses = Referencias.filtrar(referencias(), periodo)
-        val limite = Semaphore(2)
+        val limite = Semaphore(4)
         val estado = EstadoBusca()
         var feitos = 0
         val pontos = meses.map { ref ->
@@ -220,7 +220,11 @@ class FipeRepositorio(
                     ponto
                 }
             }
-        }.awaitAll().filterNotNull()
+        }.awaitAll().filterNotNull().toMutableList()
+        // O valor atual (ja conhecido) entra como ultimo ponto quando a lista de meses ainda nao o inclui.
+        val atual = Dinheiro.paraDouble(r.valor)?.takeIf { r.mesReferencia.isNotBlank() }
+            ?.let { PontoHistorico(r.mesReferencia.trim(), r.valor.orEmpty(), it) }
+        if (atual != null && pontos.none { Texto.chave(it.mesReferencia) == Texto.chave(atual.mesReferencia) }) pontos += atual
         if (pontos.isEmpty() && meses.isNotEmpty()) {
             throw PlacaParser.ErroProvedor(
                 if (estado.exigemToken.get() > 0) "O histórico deste período exige um token da FIPE com acesso ao histórico (veja Ajustes)."
@@ -228,7 +232,9 @@ class FipeRepositorio(
             )
         }
         // Mesmo mes vindo das duas fontes nao deve repetir
-        ResultadoHistorico(pontos.distinctBy { Texto.chave(it.mesReferencia) }, meses.size, estado.exigemToken.get())
+        val unicos = pontos.distinctBy { Meses.indice(it.mesReferencia) ?: Texto.chave(it.mesReferencia).hashCode() }
+            .sortedBy { Meses.indice(it.mesReferencia) ?: Int.MAX_VALUE }
+        ResultadoHistorico(unicos, meses.size, estado.exigemToken.get())
     }
 
     /** Estado compartilhado entre as consultas mensais de uma mesma busca. */

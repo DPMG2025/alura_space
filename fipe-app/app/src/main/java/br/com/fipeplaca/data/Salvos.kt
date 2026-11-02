@@ -13,6 +13,8 @@ data class ConsultaSalva(
     val marca: ItemFipe? = null,
     val modelo: ItemFipe? = null,
     val ano: ItemFipe? = null,
+    /** Valores FIPE ja vistos para este veiculo, por mes (anulavel: registros antigos nao tem). */
+    val historicoLocal: List<PontoHistorico>? = null,
 ) {
     val porPlaca: Boolean get() = veiculo != null
     val principal: FipeResultado? get() = resultado ?: veiculo?.fipe?.firstOrNull()

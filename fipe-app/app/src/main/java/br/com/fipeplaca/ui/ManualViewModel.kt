@@ -38,7 +38,11 @@ class ManualViewModel(app: Application) : AndroidViewModel(app) {
     private val _estado = MutableStateFlow(ManualUi())
     val estado: StateFlow<ManualUi> = _estado
     val itensSalvos: StateFlow<List<ConsultaSalva>> = salvos.itens
-    val historico = HistoricoController(viewModelScope, repo)
+    val historico = HistoricoController(
+        viewModelScope, repo,
+        locais = { r -> salvos.pontosLocais(ConsultaSalva.idManual(r)) },
+        aoCarregar = { r, pontos -> salvos.guardarPontos(ConsultaSalva.idManual(r), pontos) },
+    )
     private var job: Job? = null
 
     init { carregarMarcas() }

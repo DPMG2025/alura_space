@@ -66,6 +66,20 @@ object Meses {
         return "$nome/$ano"
     }
 
+    private val COMPLETOS = listOf("janeiro", "fevereiro", "marco", "abril", "maio", "junho", "julho", "agosto",
+        "setembro", "outubro", "novembro", "dezembro")
+
+    /** Indice absoluto do mes (ano * 12 + mes), para ordenar e comparar; null se nao reconhecer. */
+    fun indice(mes: String): Int? {
+        val chave = Texto.chave(mes.trim())
+        val m = COMPLETOS.indexOfFirst { chave.startsWith(it) }.takeIf { it >= 0 }
+            ?: NOMES.indexOfFirst { chave.startsWith(it) }.takeIf { it >= 0 }
+            ?: chave.substringBefore('/').toIntOrNull()?.minus(1)?.takeIf { it in 0..11 }
+            ?: return null
+        val ano = Referencias.ano(mes) ?: return null
+        return ano * 12 + m
+    }
+
     fun capitalizar(mes: String): String = mes.trim().replaceFirstChar { it.titlecase(Locale("pt", "BR")) }
 }
 
@@ -88,4 +102,31 @@ object Compartilhar {
             }
             append("Gerado pelo app FIPE pela Placa")
         }
+}
+
+/** Junta o historico da API com os valores guardados no aparelho (regras testadas em unidade). */
+object MesclarHistorico {
+    /**
+     * Une as duas listas sem repetir mes (a da API prevalece), ordena do mais antigo ao
+     * mais recente e recorta para o periodo, tomando o mes mais recente como referencia.
+     */
+    fun mesclar(api: List<PontoHistorico>, locais: List<PontoHistorico>, periodo: PeriodoHistorico): List<PontoHistorico> {
+        val porMes = LinkedHashMap<Int, PontoHistorico>()
+        (locais + api).forEach { p -> Meses.indice(p.mesReferencia)?.let { porMes[it] = p } }
+        if (porMes.isEmpty()) return api
+        val ultimo = porMes.keys.max()
+        val inicio = when (periodo) {
+            PeriodoHistorico.MESES_12 -> ultimo - 11
+            PeriodoHistorico.MESES_24 -> ultimo - 23
+            PeriodoHistorico.ANO_ATUAL -> (ultimo / 12) * 12
+        }
+        return porMes.filterKeys { it >= inicio }.toSortedMap().values.toList()
+    }
+
+    /** Une pontos guardados com novos, sem repetir mes, mantendo os ultimos [limite] meses. */
+    fun acumular(atuais: List<PontoHistorico>, novos: List<PontoHistorico>, limite: Int = 36): List<PontoHistorico> {
+        val porMes = LinkedHashMap<Int, PontoHistorico>()
+        (atuais + novos).forEach { p -> Meses.indice(p.mesReferencia)?.let { porMes[it] = p } }
+        return porMes.toSortedMap().values.toList().takeLast(limite)
+    }
 }
