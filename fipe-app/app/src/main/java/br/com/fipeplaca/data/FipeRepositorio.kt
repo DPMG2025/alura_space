@@ -20,9 +20,8 @@ class FipeRepositorio(
     private val prefs: ConfigConexao,
     baseV1: String = "https://parallelum.com.br/fipe/api/v1/",
     baseV2: String = "https://fipe.parallelum.com.br/api/v2/",
-    baseOficial: String = "https://veiculos.fipe.org.br/api/veiculos/",
+    baseBrasilApi: String = "https://brasilapi.com.br/api/",
 ) {
-    private val hostOficial = baseOficial.toHttpUrl().host
     private val hostV2 = baseV2.toHttpUrl().host
 
 
@@ -36,13 +35,6 @@ class FipeRepositorio(
             when {
                 req.url.host == hostV2 && req.url.toString().startsWith(baseV2) && token.isNotBlank() ->
                     chain.proceed(req.newBuilder().header("X-Subscription-Token", token).build())
-                req.url.host == hostOficial && req.url.toString().startsWith(baseOficial) ->
-                    chain.proceed(
-                        req.newBuilder()
-                            .header("Referer", "https://veiculos.fipe.org.br/")
-                            .header("User-Agent", "Mozilla/5.0 (Linux; Android) FipePelaPlaca")
-                            .build()
-                    )
                 else -> chain.proceed(req)
             }
         }
@@ -56,7 +48,7 @@ class FipeRepositorio(
 
     private val v1 = retrofit(baseV1).create(FipeV1Api::class.java)
     private val v2 = retrofit(baseV2).create(FipeV2Api::class.java)
-    private val oficial = retrofit(baseOficial).create(FipeOficialApi::class.java)
+    private val brasilApi = retrofit(baseBrasilApi).create(BrasilApi::class.java)
     private val placaApi = retrofit("https://localhost/").create(PlacaApi::class.java)
 
     private val cacheMarcas = mutableMapOf<TipoVeiculo, List<ItemFipe>>()
@@ -147,12 +139,12 @@ class FipeRepositorio(
     // ---------- Historico de precos ----------
 
     /**
-     * Meses de referencia (mais recente primeiro). Usa o servico oficial e, se ele falhar,
+     * Meses de referencia (mais recente primeiro). Usa a BrasilAPI e, se ela falhar,
      * a lista da API v2. Os codigos sao os mesmos nas duas fontes.
      */
     private suspend fun referencias(): List<ReferenciaV2> = travaRef.withLock {
         cacheReferencias ?: (
-            runCatching { comNovasTentativas { oficial.referencias() }.map { ReferenciaV2(it.codigo.toString(), it.mes.trim()) } }
+            runCatching { comNovasTentativas { brasilApi.referencias() }.map { ReferenciaV2(it.codigo.toString(), it.mes.trim()) } }
                 .getOrNull()?.takeIf { it.isNotEmpty() }
                 ?: v2.referencias()
             )
@@ -160,37 +152,32 @@ class FipeRepositorio(
             .also { cacheReferencias = it }
     }
 
-    /** Valor de um mes: primeiro no servico oficial, depois na API v2. Null se o mes nao existir. */
+    /** Valor de um mes: BrasilAPI e, se falhar, API v2. Null se o mes nao existir. */
     private suspend fun valorNoMes(r: FipeResultado, codigoAno: String, ref: ReferenciaV2, diagnostico: (String) -> Unit): PontoHistorico? {
         val ano = codigoAno.substringBefore('-')
-        val combustivel = codigoAno.substringAfter('-', "1")
-        val doOficial = runCatching {
-            comNovasTentativas {
-                oficial.valor(
-                    mapOf(
-                        "codigoTabelaReferencia" to ref.codigo,
-                        "codigoMarca" to "",
-                        "codigoModelo" to "",
-                        "codigoTipoVeiculo" to r.tipo.codigoOficial.toString(),
-                        "anoModelo" to ano,
-                        "codigoTipoCombustivel" to combustivel,
-                        "tipoVeiculo" to r.tipo.nomeOficial,
-                        "modeloCodigoExterno" to r.codigoFipe,
-                        "tipoConsulta" to "codigo",
-                    )
-                )
+
+        runCatching { comNovasTentativas { brasilApi.precos(r.codigoFipe, ref.codigo) } }
+            .onFailure { diagnostico("${ref.codigo} ${ref.mes} brasilapi: ${descrever(it)}") }
+            .getOrNull()
+            ?.let { lista -> escolherPreco(lista, ano.toIntOrNull(), r.combustivel) }
+            ?.let { p ->
+                val num = Dinheiro.paraDouble(p.valor)
+                if (num != null) return PontoHistorico((p.mesReferencia ?: ref.mes).trim(), p.valor.orEmpty(), num)
             }
-        }.onFailure { diagnostico("${ref.codigo} ${ref.mes} oficial: ${descrever(it)}") }.getOrNull()
-        Dinheiro.paraDouble(doOficial?.valor)?.let { num ->
-            return PontoHistorico((doOficial?.mesReferencia ?: ref.mes).trim(), doOficial?.valor.orEmpty(), num)
-        }
-        if (doOficial?.erro != null) diagnostico("${ref.codigo} ${ref.mes} oficial: ${doOficial.erro}")
 
         val doV2 = runCatching { comNovasTentativas { v2.valorPorCodigo(r.tipo.caminhoV2, r.codigoFipe, codigoAno, ref.codigo) } }
             .onFailure { diagnostico("${ref.codigo} ${ref.mes} v2: ${descrever(it)}") }
             .getOrNull() ?: return null
         val num = Dinheiro.paraDouble(doV2.valor) ?: return null
         return PontoHistorico((doV2.mesReferencia ?: ref.mes).trim(), doV2.valor.orEmpty(), num)
+    }
+
+    /** Entre os anos do codigo, pega o do ano modelo (e combustivel, se houver mais de um). */
+    private fun escolherPreco(lista: List<PrecoBrasilApi>, ano: Int?, combustivel: String): PrecoBrasilApi? {
+        val doAno = lista.filter { it.anoModelo == ano }
+        if (doAno.size <= 1) return doAno.firstOrNull()
+        val chave = Texto.chave(combustivel).take(4)
+        return doAno.firstOrNull { chave.isNotEmpty() && Texto.chave(it.combustivel.orEmpty()).contains(chave) } ?: doAno.first()
     }
 
     private fun descrever(t: Throwable) = "${t::class.java.simpleName} ${(t as? HttpException)?.code() ?: ""} ${t.message.orEmpty()}".trim()

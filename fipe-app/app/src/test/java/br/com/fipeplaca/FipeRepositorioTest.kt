@@ -33,7 +33,7 @@ class FipeRepositorioTest {
         },
         baseV1 = servidor.url("/v1/").toString(),
         baseV2 = servidor.url("/v2/").toString(),
-        baseOficial = servidor.url("/oficial/").toString(),
+        baseBrasilApi = servidor.url("/brasil/").toString(),
     )
 
     @Before fun iniciar() {
@@ -146,40 +146,36 @@ class FipeRepositorioTest {
         assertEquals(12, pontos.size) // todos recuperados apos duas respostas 429
     }
 
-    @Test fun historicoPeloServicoOficial() = runTest {
+    @Test fun historicoUsaV2QuandoBrasilApiFalha() = runTest {
         rotas = { p ->
-            when (p) {
-                "/oficial/ConsultarTabelaDeReferencia" ->
-                    json((339 downTo 316).joinToString(",", "[", "]") { "{\"Codigo\":$it,\"Mes\":\"mes$it/2026 \"}" })
-                "/oficial/ConsultarValorComTodosParametros" -> MockResponse().setResponseCode(200) // respondido abaixo
-                else -> if (p.startsWith("/v2/cars/005490-9/years/2023-5?reference=338"))
-                    json("""{"price":"R$ 54.401,00","referenceMonth":"mes338/2026"}""")
-                else MockResponse().setResponseCode(402)
+            when {
+                p == "/v2/references" -> json("""[{"code":"2","month":"fev/2026"},{"code":"1","month":"jan/2026"}]""")
+                p.startsWith("/v2/cars/X/years/2019-1?reference=") -> json("""{"price":"R$ 9.000,00","referenceMonth":"r${p.last()}"}""")
+                else -> json("{}", 500)
             }
         }
-        // O corpo do POST define a resposta do servico oficial
-        servidor.dispatcher = object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse {
-                pedidos += request
-                if (request.path == "/oficial/ConsultarValorComTodosParametros") {
-                    val corpo = request.body.clone().readUtf8()
-                    listOf("anoModelo=2023", "codigoTipoCombustivel=5", "modeloCodigoExterno=005490-9", "tipoConsulta=codigo",
-                        "tipoVeiculo=carro", "codigoTipoVeiculo=1").forEach { require(it in corpo) { "faltou $it em $corpo" } }
-                    val ref = Regex("codigoTabelaReferencia=(\\d+)").find(corpo)!!.groupValues[1].toInt()
-                    return if (ref == 338) json("""{"codigo":"0","erro":"nadaencontrado"}""")
-                    else json("""{"Valor":"R$ ${50000 + ref},00","MesReferencia":"mes$ref/2026 ","CodigoFipe":"005490-9"}""")
+        val alvo = br.com.fipeplaca.data.FipeResultado(TipoVeiculo.CARROS, "", "", "2019", "", "X", "", null, codigoAno = "2019-1")
+        val pontos = repo().apply { esperaInicialMs = 1 }.historico(alvo, PeriodoHistorico.MESES_12)
+        assertEquals(2, pontos.size)
+    }
+
+    @Test fun historicoPelaBrasilApi() = runTest {
+        rotas = { p ->
+            when {
+                p == "/brasil/fipe/tabelas/v1" -> json((339 downTo 328).joinToString(",", "[", "]") { "{\"codigo\":$it,\"mes\":\"m$it/2026 \"}" })
+                p.startsWith("/brasil/fipe/preco/v1/005490-9?tabela_referencia=") -> {
+                    val ref = p.substringAfter("=").toInt()
+                    json("""[{"valor":"R$ 1,00","anoModelo":2022,"combustivel":"Flex","mesReferencia":"m$ref"},
+                             {"valor":"R$ ${50000 + ref},00","anoModelo":2023,"combustivel":"Flex","mesReferencia":"m$ref de 2026 "}]""")
                 }
-                return rotas(request.path.orEmpty())
+                else -> MockResponse().setResponseCode(404)
             }
         }
         val alvo = br.com.fipeplaca.data.FipeResultado(TipoVeiculo.CARROS, "VW", "Gol", "2023", "Flex", "005490-9", "", null, codigoAno = "2023-5")
-        val falhas = mutableListOf<String>()
-        val pontos = repo().historico(alvo, PeriodoHistorico.MESES_24, diagnostico = { falhas += it })
-        assertEquals(24, pontos.size) // 23 do oficial + 1 recuperado na v2
-        assertEquals("R$ 54.401,00", pontos.first { it.mesReferencia == "mes338/2026" }.valorTexto)
-        val post = pedidos.first { it.path == "/oficial/ConsultarValorComTodosParametros" }
-        assertEquals("https://veiculos.fipe.org.br/", post.getHeader("Referer"))
-        assertTrue(falhas.any { it.contains("nadaencontrado") })
+        val pontos = repo().historico(alvo, PeriodoHistorico.MESES_12)
+        assertEquals(12, pontos.size)
+        assertEquals(50339.0, pontos.last().valor, 0.0) // ano 2023 escolhido, mais recente no fim
+        assertTrue(pedidos.none { it.path!!.startsWith("/v2/") })
     }
 
     @Test fun historicoSemNenhumaFonteDaMensagemClara() = runTest {

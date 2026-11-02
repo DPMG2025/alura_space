@@ -2,10 +2,7 @@ package br.com.fipeplaca.data
 
 import com.google.gson.JsonElement
 import retrofit2.Response
-import retrofit2.http.FieldMap
-import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
-import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Url
@@ -60,15 +57,14 @@ interface PlacaApi {
     suspend fun consultar(@Url url: String): Response<JsonElement>
 }
 
-/**
- * Servico do site oficial da FIPE. Aceita qualquer mes de referencia sem token,
- * por isso e a fonte principal do historico.
- */
-interface FipeOficialApi {
-    @POST("ConsultarTabelaDeReferencia")
-    suspend fun referencias(): List<ReferenciaOficial>
+/** BrasilAPI: preco FIPE por codigo em qualquer mes de referencia, sem token. */
+interface BrasilApi {
+    @GET("fipe/tabelas/v1")
+    suspend fun referencias(): List<ReferenciaBrasilApi>
 
-    @FormUrlEncoded
-    @POST("ConsultarValorComTodosParametros")
-    suspend fun valor(@FieldMap campos: Map<String, String>): ValorOficial
+    @GET("fipe/preco/v1/{codigoFipe}")
+    suspend fun precos(
+        @Path("codigoFipe") codigoFipe: String,
+        @Query("tabela_referencia") referencia: String? = null,
+    ): List<PrecoBrasilApi>
 }
