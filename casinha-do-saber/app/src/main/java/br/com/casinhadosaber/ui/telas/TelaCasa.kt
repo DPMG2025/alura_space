@@ -218,14 +218,14 @@ fun TelaCasa(
                     .padding(horizontal = 12.dp, vertical = 6.dp),
             )
 
-            Bau(bau, onEscolher = ::colocarDoBau, onJogar = onJogar)
+            Bau(bau, ganhouTudo = estado.itensGanhos.size == ItensDaCasa.total, onEscolher = ::colocarDoBau, onJogar = onJogar)
         }
         Confete(confete)
     }
 }
 
 @Composable
-private fun Bau(itens: List<ItemCasa>, onEscolher: (ItemCasa) -> Unit, onJogar: () -> Unit) {
+private fun Bau(itens: List<ItemCasa>, ganhouTudo: Boolean, onEscolher: (ItemCasa) -> Unit, onJogar: () -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -252,7 +252,7 @@ private fun Bau(itens: List<ItemCasa>, onEscolher: (ItemCasa) -> Unit, onJogar: 
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    "Vazio! Jogue para ganhar mais coisas.",
+                    if (ganhouTudo) "Você ganhou tudo! Jogue de novo para ganhar mais estrelas." else "Vazio! Jogue para ganhar mais coisas.",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White,
                     modifier = Modifier.weight(1f),
