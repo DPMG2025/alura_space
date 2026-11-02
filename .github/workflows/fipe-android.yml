@@ -27,8 +27,23 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v5
 
-      - name: Testes unitarios
+      - name: Testes unitarios e capturas de tela
         run: ./gradlew testDebugUnitTest --no-daemon
+
+      - name: Publicar capturas de tela
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: capturas-de-tela
+          path: fipe-app/app/build/outputs/roborazzi/*.png
+          if-no-files-found: warn
+
+      - name: Relatorio dos testes
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: relatorio-testes
+          path: fipe-app/app/build/reports/tests/
 
       - name: Gerar APK
         env:
@@ -37,7 +52,7 @@ jobs:
           FIPE_API_TOKEN: ${{ secrets.FIPE_API_TOKEN }}
         run: ./gradlew assembleDebug assembleRelease --no-daemon
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: fipe-pela-placa-apk
           path: |

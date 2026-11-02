@@ -1,14 +1,21 @@
 package br.com.fipeplaca.ui
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -18,70 +25,111 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import br.com.fipeplaca.FipeApp
 import br.com.fipeplaca.data.Preferencias
 
+data class Configuracoes(val tokenPlaca: String, val urlPlaca: String, val tokenFipe: String)
+
 @Composable
-fun TelaConfiguracoes(modifier: Modifier = Modifier) {
-    val ctx = LocalContext.current
-    val prefs = (ctx.applicationContext as FipeApp).prefs
-    var tokenPlaca by remember { mutableStateOf(prefs.tokenPlaca) }
-    var urlPlaca by remember { mutableStateOf(prefs.urlPlaca) }
-    var tokenFipe by remember { mutableStateOf(prefs.tokenFipe) }
+fun TelaConfiguracoes(
+    inicial: Configuracoes,
+    versao: String,
+    onSalvar: (Configuracoes) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var tokenPlaca by remember { mutableStateOf(inicial.tokenPlaca) }
+    var urlPlaca by remember { mutableStateOf(inicial.urlPlaca) }
+    var tokenFipe by remember { mutableStateOf(inicial.tokenFipe) }
+    val links = LocalUriHandler.current
+    val alterado = Configuracoes(tokenPlaca, urlPlaca, tokenFipe) != inicial
 
-    Column(
-        modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text("Configurações", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        Cabecalho(titulo = "Ajustes", subtitulo = "Conexões com os serviços de dados")
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Secao(titulo = "Consulta pela placa") {
+                Status(tokenPlaca.isNotBlank(), if (tokenPlaca.isNotBlank()) "Token informado" else "Sem token: busca por placa desativada")
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "A placa não faz parte da tabela FIPE. Para identificar o veículo, o app usa um serviço de consulta " +
+                        "veicular. O padrão é a API Placas: crie uma conta, copie o token e cole abaixo.",
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = tokenPlaca, onValueChange = { tokenPlaca = it.trim() },
+                    label = { Text("Token do serviço de placas") },
+                    leadingIcon = { Icon(Icons.Filled.Lock, null) },
+                    singleLine = true, visualTransformation = PasswordVisualTransformation(),
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = urlPlaca, onValueChange = { urlPlaca = it },
+                    label = { Text("URL da consulta") },
+                    supportingText = { Text("Use {placa} e {token} onde entram a placa e o token.") },
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row {
+                    TextButton(onClick = { links.openUri("https://apiplacas.com.br") }) { Text("Obter token") }
+                    TextButton(onClick = { urlPlaca = Preferencias.URL_PADRAO }) { Text("Restaurar URL padrão") }
+                }
+            }
 
-        Text("Consulta pela placa", style = MaterialTheme.typography.titleMedium)
-        Text(
-            "A placa não faz parte da tabela FIPE. Para descobrir marca, modelo e código FIPE a partir dela, o app usa um " +
-                "serviço de consulta veicular. O padrão é a API Placas (apiplacas.com.br): crie uma conta, copie o token e cole abaixo.",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        OutlinedTextField(
-            value = tokenPlaca, onValueChange = { tokenPlaca = it },
-            label = { Text("Token do serviço de placas") },
-            singleLine = true, visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = urlPlaca, onValueChange = { urlPlaca = it },
-            label = { Text("URL da consulta") },
-            supportingText = { Text("Use {placa} e {token} onde devem entrar a placa e o token.") },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        TextButton(onClick = { urlPlaca = Preferencias.URL_PADRAO }) { Text("Restaurar URL padrão") }
+            Secao(titulo = "Tabela FIPE") {
+                Status(true, "API pública conectada")
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Marcas, modelos, anos e valores vêm da API pública da FIPE, sem custo. O histórico consulta um mês de " +
+                        "referência por vez; sem token são cerca de 500 consultas por dia. Um token gratuito aumenta esse limite.",
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = tokenFipe, onValueChange = { tokenFipe = it.trim() },
+                    label = { Text("Token da FIPE (opcional)") },
+                    leadingIcon = { Icon(Icons.Filled.Lock, null) },
+                    singleLine = true, visualTransformation = PasswordVisualTransformation(),
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                TextButton(onClick = { links.openUri("https://fipe.online") }) { Text("Obter token gratuito") }
+            }
 
-        Text("Tabela FIPE", style = MaterialTheme.typography.titleMedium)
-        Text(
-            "Marcas, modelos, anos e valores vêm da API pública da FIPE (parallelum.com.br), sem token. " +
-                "O histórico usa a versão 2 da API, que sem token permite cerca de 500 consultas por dia " +
-                "(cada mês do histórico é uma consulta). Um token gratuito em fipe.online aumenta esse limite.",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        OutlinedTextField(
-            value = tokenFipe, onValueChange = { tokenFipe = it },
-            label = { Text("Token da FIPE (opcional)") },
-            singleLine = true, visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-        )
+            Button(
+                onClick = { onSalvar(Configuracoes(tokenPlaca, urlPlaca.trim(), tokenFipe)) },
+                enabled = alterado,
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+            ) { Text("Salvar alterações") }
 
-        Button(
-            onClick = {
-                prefs.tokenPlaca = tokenPlaca
-                prefs.urlPlaca = urlPlaca
-                prefs.tokenFipe = tokenFipe
-                Toast.makeText(ctx, "Configurações salvas", Toast.LENGTH_SHORT).show()
-            },
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Salvar") }
+            Secao(titulo = "Sobre") {
+                Text(
+                    "Valores de referência da Tabela FIPE (Fundação Instituto de Pesquisas Econômicas), que expressa o preço " +
+                        "médio de veículos anunciados no mercado nacional. Os tokens ficam guardados apenas neste aparelho.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text("Versão $versao", style = MaterialTheme.typography.labelMedium)
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun Status(ok: Boolean, texto: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            Icons.Filled.CheckCircle, null,
+            tint = if (ok) Extras.cores.alta else MaterialTheme.colorScheme.outline,
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(texto, style = MaterialTheme.typography.labelLarge, color = if (ok) Extras.cores.alta else MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

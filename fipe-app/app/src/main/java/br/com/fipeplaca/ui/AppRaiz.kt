@@ -1,65 +1,178 @@
 package br.com.fipeplaca.ui
 
+import android.content.Intent
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import br.com.fipeplaca.BuildConfig
+import br.com.fipeplaca.FipeApp
+import br.com.fipeplaca.data.Compartilhar
+import br.com.fipeplaca.data.ConsultaSalva
+import br.com.fipeplaca.data.FipeResultado
+import br.com.fipeplaca.data.PontoHistorico
+import br.com.fipeplaca.data.VeiculoPlaca
+import kotlinx.coroutines.launch
 
 private data class Aba(val titulo: String, val icone: ImageVector)
 
 private val ABAS = listOf(
     Aba("Placa", Icons.Filled.Search),
-    Aba("Marca e modelo", Icons.AutoMirrored.Filled.List),
-    Aba("Configurações", Icons.Filled.Settings),
+    Aba("Tabela", Icons.AutoMirrored.Filled.List),
+    Aba("Salvos", Icons.Filled.Favorite),
+    Aba("Ajustes", Icons.Filled.Settings),
 )
 
 @Composable
 fun AppRaiz() {
+    val contexto = LocalContext.current
+    val app = contexto.applicationContext as FipeApp
+    val clipboard = LocalClipboardManager.current
+    val snackbar = remember { SnackbarHostState() }
+    val escopo = rememberCoroutineScope()
     var aba by rememberSaveable { mutableIntStateOf(0) }
+    var ajustesSalvos by remember { mutableIntStateOf(0) }
+
     val placaVm: PlacaViewModel = viewModel()
     val manualVm: ManualViewModel = viewModel()
+    val placa by placaVm.estado.collectAsStateWithLifecycle()
+    val histPlaca by placaVm.historico.estado.collectAsStateWithLifecycle()
+    val manual by manualVm.estado.collectAsStateWithLifecycle()
+    val histManual by manualVm.historico.estado.collectAsStateWithLifecycle()
+    val salvos by placaVm.itensSalvos.collectAsStateWithLifecycle()
+
+    fun aviso(texto: String) = escopo.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(texto) }
+    fun compartilhar(r: FipeResultado, v: VeiculoPlaca?, pontos: List<PontoHistorico>) {
+        val envio = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, Compartilhar.texto(r, v, pontos))
+        }
+        contexto.startActivity(Intent.createChooser(envio, "Compartilhar consulta"))
+    }
+    fun copiar(codigo: String) {
+        clipboard.setText(AnnotatedString(codigo))
+        aviso("Código FIPE $codigo copiado")
+    }
+    fun favoritou(id: String, antes: Boolean) = aviso(if (antes) "Removido dos favoritos" else "Salvo nos favoritos")
+
+    BackHandler(enabled = aba == 1 && manual.etapa != Etapa.MARCAS) { manualVm.voltar() }
+    BackHandler(enabled = aba != 0 && !(aba == 1 && manual.etapa != Etapa.MARCAS)) { aba = 0 }
 
     Scaffold(
-        bottomBar = {
-            NavigationBar {
-                ABAS.forEachIndexed { i, a ->
-                    NavigationBarItem(
-                        selected = aba == i,
-                        onClick = { aba = i },
-                        icon = { Icon(a.icone, contentDescription = null) },
-                        label = { Text(a.titulo) },
+        contentWindowInsets = WindowInsets(0),
+        snackbarHost = { SnackbarHost(snackbar) },
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = { BarraNavegacao(aba) { aba = it } },
+    ) { padding ->
+        Crossfade(targetState = aba, label = "abas", modifier = Modifier.padding(padding)) { atual ->
+            when (atual) {
+                0 -> {
+                    val id = placa.veiculo?.let { ConsultaSalva.idPlaca(it.placa) }
+                    val fav = id != null && salvos.any { it.id == id && it.favorito }
+                    TelaPlaca(
+                        estado = placa, historico = histPlaca, recentes = salvos, favorito = fav,
+                        acoes = AcoesPlaca(
+                            alterarPlaca = placaVm::alterarPlaca,
+                            consultar = placaVm::consultar,
+                            limpar = placaVm::limpar,
+                            abrirSalvo = placaVm::abrirSalvo,
+                            selecionarVersao = placaVm::selecionarVersao,
+                            favoritar = { placaVm.alternarFavorito(); if (id != null) favoritou(id, fav) },
+                            compartilhar = { r -> compartilhar(r, placa.veiculo, histPlaca.pontos) },
+                            copiarCodigo = ::copiar,
+                            mudarPeriodo = placaVm.historico::mudarPeriodo,
+                            abrirConfiguracoes = { aba = 3 },
+                            buscarManual = { tipo, marca -> manualVm.preencherPorPlaca(tipo, marca); aba = 1 },
+                        ),
                     )
                 }
+                1 -> {
+                    val id = manual.resultado?.let { ConsultaSalva.idManual(it) }
+                    val fav = id != null && salvos.any { it.id == id && it.favorito }
+                    TelaManual(
+                        estado = manual, historico = histManual, favorito = fav,
+                        acoes = AcoesManual(
+                            selecionarTipo = { manualVm.selecionarTipo(it) },
+                            alterarFiltro = manualVm::alterarFiltro,
+                            selecionarMarca = manualVm::selecionarMarca,
+                            selecionarModelo = manualVm::selecionarModelo,
+                            selecionarAno = manualVm::selecionarAno,
+                            voltar = { manualVm.voltar() },
+                            irPara = manualVm::irPara,
+                            tentarNovamente = manualVm::tentarNovamente,
+                            novaConsulta = manualVm::novaConsulta,
+                            favoritar = { manualVm.alternarFavorito(); if (id != null) favoritou(id, fav) },
+                            compartilhar = { r -> compartilhar(r, null, histManual.pontos) },
+                            copiarCodigo = ::copiar,
+                            mudarPeriodo = manualVm.historico::mudarPeriodo,
+                            recarregarHistorico = { manual.resultado?.let { manualVm.historico.carregar(it) } },
+                        ),
+                    )
+                }
+                2 -> TelaSalvos(
+                    itens = salvos,
+                    acoes = AcoesSalvos(
+                        abrir = { c ->
+                            if (c.porPlaca) { placaVm.abrirSalvo(c); aba = 0 } else { manualVm.abrirSalvo(c); aba = 1 }
+                        },
+                        alternarFavorito = { app.salvos.alternarFavorito(it) },
+                        remover = { app.salvos.remover(it); aviso("Consulta excluída") },
+                        limparRecentes = { app.salvos.limparRecentes(); aviso("Recentes apagados") },
+                    ),
+                )
+                else -> androidx.compose.runtime.key(ajustesSalvos) { TelaConfiguracoes(
+                    inicial = Configuracoes(app.prefs.tokenPlaca, app.prefs.urlPlaca, app.prefs.tokenFipe),
+                    versao = BuildConfig.VERSION_NAME,
+                    onSalvar = { cfg ->
+                        app.prefs.tokenPlaca = cfg.tokenPlaca
+                        app.prefs.urlPlaca = cfg.urlPlaca
+                        app.prefs.tokenFipe = cfg.tokenFipe
+                        ajustesSalvos++
+                        aviso("Ajustes salvos")
+                    },
+                ) }
             }
-        },
-    ) { padding ->
-        val mod = Modifier.padding(padding)
-        when (aba) {
-            0 -> TelaPlaca(
-                vm = placaVm,
-                modifier = mod,
-                abrirConfiguracoes = { aba = 2 },
-                buscarManual = { tipo, marca ->
-                    manualVm.preencherPorPlaca(tipo, marca)
-                    aba = 1
-                },
+        }
+    }
+}
+
+@Composable
+fun BarraNavegacao(aba: Int, onAba: (Int) -> Unit) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+        ABAS.forEachIndexed { i, a ->
+            NavigationBarItem(
+                selected = aba == i,
+                onClick = { onAba(i) },
+                icon = { Icon(a.icone, contentDescription = null) },
+                label = { Text(a.titulo) },
             )
-            1 -> TelaManual(vm = manualVm, modifier = mod)
-            else -> TelaConfiguracoes(modifier = mod)
         }
     }
 }

@@ -1,152 +1,280 @@
+@file:OptIn(ExperimentalLayoutApi::class)
+
 package br.com.fipeplaca.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import br.com.fipeplaca.data.Placa
+import br.com.fipeplaca.data.ConsultaSalva
+import br.com.fipeplaca.data.FipeResultado
 import br.com.fipeplaca.data.TipoVeiculo
 import br.com.fipeplaca.data.VeiculoPlaca
 
+/** Acoes da tela de placa (separadas para permitir previas e testes de captura). */
+data class AcoesPlaca(
+    val alterarPlaca: (String) -> Unit = {},
+    val consultar: () -> Unit = {},
+    val limpar: () -> Unit = {},
+    val abrirSalvo: (ConsultaSalva) -> Unit = {},
+    val selecionarVersao: (Int) -> Unit = {},
+    val favoritar: () -> Unit = {},
+    val compartilhar: (FipeResultado) -> Unit = {},
+    val copiarCodigo: (String) -> Unit = {},
+    val mudarPeriodo: (br.com.fipeplaca.data.PeriodoHistorico) -> Unit = {},
+    val abrirConfiguracoes: () -> Unit = {},
+    val buscarManual: (TipoVeiculo, String?) -> Unit = { _, _ -> },
+)
+
 @Composable
 fun TelaPlaca(
-    vm: PlacaViewModel,
+    estado: PlacaUi,
+    historico: HistoricoUi,
+    recentes: List<ConsultaSalva>,
+    favorito: Boolean,
+    acoes: AcoesPlaca,
     modifier: Modifier = Modifier,
-    abrirConfiguracoes: () -> Unit,
-    buscarManual: (TipoVeiculo, String?) -> Unit,
 ) {
-    val estado by vm.estado.collectAsStateWithLifecycle()
-    val historico by vm.historico.estado.collectAsStateWithLifecycle()
     val foco = LocalFocusManager.current
+    val buscar = { foco.clearFocus(); acoes.consultar() }
 
-    Column(
-        modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text("Consulta pela placa", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text(
-            "Digite a placa (antiga ou Mercosul) para ver o valor de mercado pela tabela FIPE e a evolução do preço.",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        OutlinedTextField(
-            value = estado.placa,
-            onValueChange = vm::alterarPlaca,
-            label = { Text("Placa") },
-            placeholder = { Text("ABC1D23") },
-            singleLine = true,
-            textStyle = MaterialTheme.typography.headlineSmall.copy(
-                fontFamily = FontFamily.Monospace, letterSpacing = 4.sp, textAlign = TextAlign.Center,
-            ),
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Characters,
-                imeAction = ImeAction.Search,
-                autoCorrectEnabled = false,
-            ),
-            keyboardActions = KeyboardActions(onSearch = { foco.clearFocus(); vm.consultar() }),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Button(
-            onClick = { foco.clearFocus(); vm.consultar() },
-            enabled = !estado.carregando && estado.placa.length == 7,
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-        ) { Text("Consultar") }
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        Cabecalho(
+            titulo = "FIPE pela Placa",
+            subtitulo = "Valor de mercado e histórico em segundos",
+        ) { Spacer(Modifier.height(56.dp)) }
 
-        if (estado.semToken) {
-            CartaoErro(
-                "Para consultar pela placa é preciso informar o token do serviço de placas (ex.: API Placas, apiplacas.com.br). " +
-                    "Você também pode buscar pela marca, modelo e ano sem token.",
-                "Abrir configurações",
-                abrirConfiguracoes,
-            )
-        }
-        estado.erro?.let { CartaoErro(it) }
-
-        if (estado.carregando) {
-            Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        }
-
-        estado.veiculo?.let { v ->
-            CartaoVeiculo(v)
-            if (v.fipe.isEmpty()) {
-                CartaoErro(
-                    "O serviço de placas não informou o código FIPE deste veículo. Continue pela busca de marca e modelo.",
-                    "Buscar por marca e modelo",
-                ) { buscarManual(v.tipo, v.marca) }
-            } else {
-                if (v.fipe.size > 1) {
-                    Text(
-                        "Versões possíveis na FIPE (${v.fipe.size}). Toque para ver o histórico de cada uma:",
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                }
-                v.fipe.forEachIndexed { i, r ->
-                    if (v.fipe.size > 1) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = estado.selecionado == i, onClick = { vm.selecionarVersao(i) })
-                            Text(r.modelo, style = MaterialTheme.typography.bodyMedium)
-                        }
+        // Cartao de busca sobreposto ao cabecalho
+        Secao(Modifier.padding(horizontal = 16.dp).offset(y = (-48).dp)) {
+            Text("Digite a placa do veículo", style = MaterialTheme.typography.titleMedium)
+            Text("Placa antiga ou Mercosul", style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(14.dp))
+            CampoPlaca(estado.placa, acoes.alterarPlaca, buscar, Modifier.fillMaxWidth())
+            Spacer(Modifier.height(14.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Button(
+                    onClick = buscar,
+                    enabled = !estado.carregando && estado.placa.length == 7,
+                    modifier = Modifier.weight(1f).height(54.dp),
+                    shape = MaterialTheme.shapes.medium,
+                ) {
+                    if (estado.carregando) {
+                        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                        Spacer(Modifier.width(10.dp))
+                        Text("Consultando…")
+                    } else {
+                        Icon(Icons.Filled.Search, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Consultar valor")
                     }
-                    CartaoValorFipe(r, destaque = estado.selecionado == i)
                 }
-                CartaoHistorico(
-                    estado = historico,
-                    onPeriodo = vm.historico::mudarPeriodo,
-                    onTentar = { vm.selecionarVersao(estado.selecionado) },
-                )
-                OutlinedButton(onClick = { buscarManual(v.tipo, v.marca) }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Não é este modelo? Buscar por marca e modelo")
+                if (estado.placa.isNotEmpty() || estado.veiculo != null) {
+                    Spacer(Modifier.width(8.dp))
+                    IconButton(onClick = acoes.limpar) { Icon(Icons.Filled.Clear, "Limpar") }
                 }
             }
+        }
+
+        Column(
+            Modifier.padding(horizontal = 16.dp).offset(y = (-32).dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            if (estado.semToken) {
+                CartaoErro(
+                    "Para buscar pela placa, informe o token do serviço de consulta veicular (por exemplo, API Placas). " +
+                        "A busca por marca e modelo funciona sem token.",
+                    "Configurar agora",
+                    acoes.abrirConfiguracoes,
+                )
+            }
+            estado.erro?.let { CartaoErro(it) }
+
+            if (estado.carregando) {
+                CartaoCarregando()
+            }
+
+            val v = estado.veiculo
+            if (v == null && !estado.carregando) {
+                ConteudoInicial(recentes, acoes.abrirSalvo)
+            }
+
+            AnimatedVisibility(visible = v != null, enter = fadeIn() + slideInVertically { it / 8 }) {
+                if (v != null) ResultadoPlaca(v, estado, historico, favorito, acoes)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConteudoInicial(recentes: List<ConsultaSalva>, abrir: (ConsultaSalva) -> Unit) {
+    val placas = recentes.filter { it.porPlaca }.take(6)
+    if (placas.isNotEmpty()) {
+        Text("Consultas recentes", style = MaterialTheme.typography.titleMedium)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            placas.forEach { c ->
+                Column(
+                    Modifier.width(150.dp).clickable { abrir(c) },
+                ) {
+                    PlacaMercosul(c.veiculo!!.placa, Modifier.fillMaxWidth(), altura = 44.dp)
+                    Spacer(Modifier.height(4.dp))
+                    Text(c.titulo, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                    Text(c.principal?.valor.orEmpty(), style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    } else {
+        Secao(titulo = "Como funciona") {
+            Passo("1", "Digite a placa", "Aceita o formato antigo (ABC1234) e o Mercosul (ABC1D23).")
+            Passo("2", "Veja o valor FIPE", "Identificamos o modelo e o código FIPE e mostramos o valor de mercado atual.")
+            Passo("3", "Acompanhe o histórico", "Evolução do preço no ano, em 12 ou em 24 meses, com gráfico.")
+        }
+    }
+}
+
+@Composable
+private fun Passo(numero: String, titulo: String, texto: String) {
+    Row(Modifier.padding(vertical = 6.dp)) {
+        Avatar(numero, tamanho = 32.dp)
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(titulo, style = MaterialTheme.typography.titleSmall)
+            Text(texto, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun ResultadoPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesPlaca) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Secao {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                PlacaMercosul(v.placa, Modifier.width(148.dp), altura = 48.dp)
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(listOfNotNull(v.marca, v.modelo).joinToString(" "), style = MaterialTheme.typography.titleMedium, maxLines = 2)
+                    if (estado.doSalvo) {
+                        Text("Aberto dos salvos", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                    }
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            GradeInfo(
+                listOf(
+                    "Ano" to listOfNotNull(v.anoFabricacao, v.anoModelo).distinct().joinToString("/").ifBlank { null },
+                    "Cor" to v.cor,
+                    "Combustível" to v.combustivel,
+                    "Cidade" to listOfNotNull(v.municipio, v.uf).joinToString(" · ").ifBlank { null },
+                    "Situação" to v.situacao,
+                    "Chassi (final)" to v.chassiFinal,
+                )
+            )
+        }
+
+        if (v.fipe.isEmpty()) {
+            CartaoErro(
+                "O serviço de placas não informou o código FIPE deste veículo. Continue pela busca de marca e modelo.",
+                "Buscar por marca e modelo",
+            ) { acoes.buscarManual(v.tipo, v.marca) }
+        } else {
+            ValoresPlaca(v, estado, historico, favorito, acoes)
         }
         Spacer(Modifier.height(8.dp))
     }
 }
 
 @Composable
-private fun CartaoVeiculo(v: VeiculoPlaca) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            Text(Placa.formatar(v.placa), style = MaterialTheme.typography.titleLarge,
-                fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            Info("Marca", v.marca)
-            Info("Modelo", v.modelo)
-            Info("Ano fab./mod.", listOfNotNull(v.anoFabricacao, v.anoModelo).joinToString(" / ").ifBlank { null })
-            Info("Cor", v.cor)
-            Info("Combustível", v.combustivel)
-            Info("Cidade", listOfNotNull(v.municipio, v.uf).joinToString(" / ").ifBlank { null })
-            Info("Situação", v.situacao)
-            Info("Final do chassi", v.chassiFinal)
+private fun ValoresPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: HistoricoUi, favorito: Boolean, acoes: AcoesPlaca) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        val sel = v.fipe.getOrNull(estado.selecionado) ?: v.fipe.first()
+        CartaoValorFipe(
+            sel, favorito, acoes.favoritar,
+            onCompartilhar = { acoes.compartilhar(sel) },
+            onCopiarCodigo = { acoes.copiarCodigo(sel.codigoFipe) },
+        )
+
+        if (v.fipe.size > 1) {
+            Secao(titulo = "Versões compatíveis (${v.fipe.size})") {
+                Text("A placa corresponde a mais de uma versão na tabela FIPE. Escolha a do seu veículo:",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(8.dp))
+                v.fipe.forEachIndexed { i, r ->
+                    Surface(
+                        onClick = { acoes.selecionarVersao(i) },
+                        shape = MaterialTheme.shapes.medium,
+                        color = if (i == estado.selecionado) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                        border = BorderStroke(1.dp, if (i == estado.selecionado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    ) {
+                        Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = i == estado.selecionado, onClick = null)
+                            Spacer(Modifier.width(8.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(r.modelo, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                Text(listOf(r.codigoFipe, r.score?.let { "compatibilidade $it%" }).filterNotNull().joinToString(" · "),
+                                    style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Text(r.valor.orEmpty(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
+            }
+        }
+
+        CartaoHistorico(historico, acoes.mudarPeriodo) { acoes.selecionarVersao(estado.selecionado) }
+
+        OutlinedButton(
+            onClick = { acoes.buscarManual(v.tipo, v.marca) },
+            modifier = Modifier.fillMaxWidth().height(50.dp),
+            shape = MaterialTheme.shapes.medium,
+            colors = ButtonDefaults.outlinedButtonColors(),
+        ) { Text("Não é este modelo? Buscar por marca e modelo") }
+
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 4.dp)) {
+            Icon(Icons.Filled.Info, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(
+                "A tabela FIPE é referência de preço médio; o valor de venda pode variar com estado de conservação e quilometragem.",
+                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

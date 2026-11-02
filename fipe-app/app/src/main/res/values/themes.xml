@@ -1,5 +1,12 @@
 <resources>
     <style name="Theme.FipePlaca" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">#0D47A1</item>
+        <item name="android:windowBackground">@color/fundo</item>
+    </style>
+
+    <!-- Tela de abertura (Android 12+ nativo e compatibilidade nas versoes anteriores) -->
+    <style name="Theme.FipePlaca.Abertura" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.FipePlaca</item>
     </style>
 </resources>
