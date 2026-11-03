@@ -62,7 +62,7 @@ fun enfeiteDesenhado(m: Movel, proj: Projecao): List<Forma>? {
     val olho = Color(0xFF2B2B35)
     when (m.id) {
         "gato" -> {
-            val s = tw * 0.66f
+            val s = tw * 0.76f
             val laranja = Color(0xFFF4A340)
             val listra = Color(0xFFD97E22)
             sombra(s * 0.34f)
@@ -103,7 +103,7 @@ fun enfeiteDesenhado(m: Movel, proj: Projecao): List<Forma>? {
             }
         }
         "ursinho" -> {
-            val s = tw * 0.64f
+            val s = tw * 0.8f
             val marrom = Color(0xFFB07443)
             val claro = Color(0xFFE6BE91)
             sombra(s * 0.34f)
@@ -205,8 +205,8 @@ fun enfeiteDesenhado(m: Movel, proj: Projecao): List<Forma>? {
             }
         }
         "bolo" -> {
-            val r = tw * 0.2f
-            val h1 = tw * 0.15f
+            val r = tw * 0.23f
+            val h1 = tw * 0.17f
             f += Forma(oval(b.x, b.y, r * 1.35f, r * 0.62f), Color.White)
             f += cilindro(b, r, h1, Color(0xFFFFB3C8), Color(0xFFFFF5F8))
             // cobertura escorrendo na frente
@@ -216,7 +216,7 @@ fun enfeiteDesenhado(m: Movel, proj: Projecao): List<Forma>? {
             }
             val b2 = Offset(b.x, b.y - h1)
             val r2 = r * 0.62f
-            val h2 = tw * 0.11f
+            val h2 = tw * 0.13f
             f += cilindro(b2, r2, h2, Color(0xFFFFB3C8), Color(0xFFFFF5F8))
             for (k in 0..4) {
                 val a = PI * (0.1 + k * 0.2)
