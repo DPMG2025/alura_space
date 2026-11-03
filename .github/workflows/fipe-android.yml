@@ -118,6 +118,22 @@ jobs:
       - name: Gerar APK
         run: ./gradlew assembleDebug assembleRelease --no-daemon
 
+      # Publica uma Release com o APK direto (sem .zip) quando o commit traz [release]
+      - name: Publicar Release com o APK
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSAO=$(grep -o 'versionName = "[^"]*"' app/build.gradle.kts | cut -d'"' -f2)
+          ARQUIVO="FipePelaPlaca-$VERSAO.apk"
+          cp app/build/outputs/apk/release/app-release.apk "$ARQUIVO"
+          NOTAS="App FIPE pela Placa versão $VERSAO. Baixe o arquivo $ARQUIVO abaixo e toque nele no celular para instalar (permita instalar apps de fontes desconhecidas, se o Android pedir)."
+          if gh release view "v$VERSAO" > /dev/null 2>&1; then
+            gh release upload "v$VERSAO" "$ARQUIVO" --clobber
+          else
+            gh release create "v$VERSAO" "$ARQUIVO" --target "$GITHUB_SHA" --title "FIPE pela Placa $VERSAO" --notes "$NOTAS" --latest
+          fi
+
       - uses: actions/upload-artifact@v5
         with:
           name: fipe-pela-placa-apk
