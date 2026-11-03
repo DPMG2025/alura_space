@@ -25,7 +25,7 @@ class RitmoELivrinhosTest {
         assertTrue(Relembrar.fila(listOf(sessao(dia0, 2, 5)), emptyList()).isEmpty())
     }
 
-    @Test fun intervalosCrescemESaiDepoisDeDuasRevisoesCertas() {
+    @Test fun intervalosCrescemESaiSoDepoisDaRevisaoDe14Dias() {
         val s = listOf(sessao(dia0, 3, 3))
         val r1 = RegistroDeRevisao(dia0 + 1, Trilha.MATEMATICA, 3, true)
         val depois1 = Relembrar.fila(s, listOf(r1))
@@ -33,8 +33,15 @@ class RitmoELivrinhosTest {
         // Antes da hora, a revisão não conta.
         val cedo = RegistroDeRevisao(dia0 + 2, Trilha.MATEMATICA, 3, true)
         assertEquals(depois1, Relembrar.fila(s, listOf(r1, cedo)))
+        // 1, 3, 7 e 14 dias, como diz o texto dos pais: só sai acertando a revisão de 14 dias.
         val r2 = RegistroDeRevisao(dia0 + 4, Trilha.MATEMATICA, 3, true)
-        assertTrue(Relembrar.fila(s, listOf(r1, r2)).isEmpty())
+        assertEquals(dia0 + 4 + 7, Relembrar.fila(s, listOf(r1, r2)).single().proximoDia)
+        val r3 = RegistroDeRevisao(dia0 + 11, Trilha.MATEMATICA, 3, true)
+        val depois3 = Relembrar.fila(s, listOf(r1, r2, r3)).single()
+        assertEquals(Relembrar.INTERVALOS.lastIndex, depois3.passo)
+        assertEquals(dia0 + 11 + 14, depois3.proximoDia)
+        val r4 = RegistroDeRevisao(dia0 + 25, Trilha.MATEMATICA, 3, true)
+        assertTrue(Relembrar.fila(s, listOf(r1, r2, r3, r4)).isEmpty())
     }
 
     @Test fun errarNaRevisaoNaoTiraODegrauEChamaNoDiaSeguinte() {
@@ -47,11 +54,13 @@ class RitmoELivrinhosTest {
         assertEquals(1, i.passo)
         assertEquals(0, i.acertosSeguidos)
         assertEquals(dia0 + 5, i.proximoDia)
-        // Acerta: sobe para o degrau de 7 dias; acerta de novo: sai.
+        // Acerta: sobe para o degrau de 7 dias; depois o de 14; acertando o de 14, sai.
         val r3 = RegistroDeRevisao(dia0 + 5, Trilha.MATEMATICA, 7, true)
         assertEquals(dia0 + 5 + 7, Relembrar.fila(s, revs + r3).single().proximoDia)
         val r4 = RegistroDeRevisao(dia0 + 12, Trilha.MATEMATICA, 7, true)
-        assertTrue(Relembrar.fila(s, revs + r3 + r4).isEmpty())
+        assertEquals(dia0 + 12 + 14, Relembrar.fila(s, revs + r3 + r4).single().proximoDia)
+        val r5 = RegistroDeRevisao(dia0 + 26, Trilha.MATEMATICA, 7, true)
+        assertTrue(Relembrar.fila(s, revs + r3 + r4 + r5).isEmpty())
     }
 
     @Test fun errarDeNovoNaFaseVoltaParaOComeco() {
@@ -61,8 +70,9 @@ class RitmoELivrinhosTest {
         assertEquals(0, i.passo)
         assertEquals(dia0 + 6, i.proximoDia)
         // Jogar a fase inteira sem erro, quando ela está para relembrar, conta como revisão certa.
-        val perfeitas = s + sessao(dia0 + 6, 1, 5) + sessao(dia0 + 9, 1, 5)
+        val perfeitas = s + sessao(dia0 + 6, 1, 5) + sessao(dia0 + 9, 1, 5) + sessao(dia0 + 16, 1, 5) + sessao(dia0 + 30, 1, 5)
         assertTrue(Relembrar.fila(perfeitas, revs).isEmpty())
+        assertEquals(1, Relembrar.fila(perfeitas.dropLast(1), revs).size)
     }
 
     @Test fun mesmaEntradaMesmaFila() {
@@ -260,5 +270,47 @@ class RitmoELivrinhosTest {
         val q = primeiro.perguntas.first()
         assertEquals(q.certa, q.opcoes(0)[0])
         assertEquals(q.certa, q.opcoes(2)[2])
+    }
+
+    @Test
+    fun digrafosNuncaSeparam() {
+        val esperado = mapOf(
+            "OLHA" to listOf("O", "LHA"),
+            "GALINHA" to listOf("GA", "LI", "NHA"),
+            "NINHO" to listOf("NI", "NHO"),
+            "FOLHA" to listOf("FO", "LHA"),
+            "FILHOTE" to listOf("FI", "LHO", "TE"),
+            "DESENHA" to listOf("DE", "SE", "NHA"),
+            "MONTANHA" to listOf("MON", "TA", "NHA"),
+            "ABELHA" to listOf("A", "BE", "LHA"),
+            "CHUVA" to listOf("CHU", "VA"),
+            "AQUI" to listOf("A", "QUI"),
+            "CARRO" to listOf("CAR", "RO"),
+        )
+        for ((palavra, silabas) in esperado) assertEquals(palavra, silabas, Leitura.silabas(palavra, 300))
+        for (palavra in listOf("PALHAÇO", "BANHEIRA")) {
+            val s = Leitura.silabas(palavra, 300)
+            assertTrue("$palavra: $s", s != null && s.none { it.startsWith("H") })
+        }
+    }
+
+    @Test
+    fun duasVogaisJuntasSoDepoisDosDitongos() {
+        for (palavra in listOf("vai", "noite", "areia", "cai", "pousa", "deita", "cenoura")) {
+            assertNull("$palavra antes da fase 71", Leitura.silabas(palavra, 69))
+            assertTrue("$palavra na fase 71", Leitura.silabas(palavra, 70) != null)
+        }
+        // Uma vogal sozinha no começo continua valendo cedo (A-BE-LHA, E-LE), e duas sílabas também (LI-A, BO-A).
+        assertEquals(listOf("E", "LE"), Leitura.silabas("ele", 26))
+        assertEquals(listOf("LI", "A"), Leitura.silabas("Lia", 26))
+        assertEquals(listOf("BO", "A"), Leitura.silabas("boa", 26))
+    }
+
+    @Test
+    fun faseFechadaDeNovoNaoApareceParaRelembrar() {
+        // Fase 30 de Lógica aberta pelo nível, errada de primeira; depois os pais desfazem o nível.
+        val e = EstadoJogo(liberadaAte = mapOf(Trilha.LOGICA to 30), sessoes = listOf(sessao(dia0, 30, 3, Trilha.LOGICA)))
+        assertEquals(1, e.paraRelembrar(dia0 + 1).size)
+        assertTrue(e.desfazerNivel(Trilha.LOGICA).paraRelembrar(dia0 + 1).isEmpty())
     }
 }

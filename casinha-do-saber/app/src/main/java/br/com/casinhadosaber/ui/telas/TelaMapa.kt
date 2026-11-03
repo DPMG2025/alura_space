@@ -70,12 +70,15 @@ private val zigueZagueDoMapa = listOf(0.28f, 0.72f)
 /** Como está um mundo do caminho para a criança. */
 private class SituacaoDoMundo(val mundo: Mundo, val vencidas: Int, val completo: Boolean, val atual: Boolean, val alcancado: Boolean, val chefaoVencido: Boolean)
 
-/** A fase da vez no caminho: a primeira aberta e ainda não vencida (null com tudo vencido). */
+/**
+ * A fase da vez no caminho: a primeira aberta e ainda não vencida (null com tudo vencido), começando do mundo
+ * aberto pelo "Descobrir o nível" ([EstadoJogo.liberadaAte]), como `EstadoJogo.faseDaVez` no caminho.
+ */
 fun faseDaVez(estado: EstadoJogo, trilha: Trilha): Int? {
     val total = Mundos.todos.size * Mundos.FASES_POR_MUNDO
-    return (0 until total).firstOrNull { n ->
-        EstadoJogo.chave(trilha, n) !in estado.estrelas && (n == 0 || EstadoJogo.chave(trilha, n - 1) in estado.estrelas)
-    }
+    val desde = estado.liberadaAte[trilha] ?: 0
+    fun daVez(n: Int) = EstadoJogo.chave(trilha, n) !in estado.estrelas && estado.liberada(trilha, n)
+    return (desde until total).firstOrNull(::daVez) ?: (0 until total).firstOrNull(::daVez)
 }
 
 /**
@@ -94,7 +97,7 @@ fun TelaMapa(
     val sons = LocalSons.current
     val daVez = faseDaVez(estado, trilha)
     val mundoDaVez = daVez?.let { it / Mundos.FASES_POR_MUNDO }
-    val situacoes = remember(estado.estrelas, trilha) {
+    val situacoes = remember(estado.estrelas, estado.liberadaAte, trilha) {
         Mundos.todos.map { m ->
             val vencidas = (m.primeiraFase..m.ultimaFase).count { EstadoJogo.chave(trilha, it) in estado.estrelas }
             SituacaoDoMundo(

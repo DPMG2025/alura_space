@@ -591,7 +591,8 @@ class MainActivity : ComponentActivity() {
                             treino = ::pergunta,
                             fimDoTreino = { r -> Nivelamento.de(atual.trilha, r).terminou },
                             onConcluir = { r ->
-                                if (r.isEmpty()) {
+                                // Saiu no meio (✖ ou voltar): não aplica nada nem marca o nível como feito.
+                                if (r.isEmpty() || !Nivelamento.de(atual.trilha, r).terminou) {
                                     irPara(atual.voltar)
                                 } else {
                                     repo.atualizar { it.aplicarNivel(Nivelamento.de(atual.trilha, r)) }
@@ -621,6 +622,7 @@ class MainActivity : ComponentActivity() {
                                 nome = estado.perfil?.nome,
                                 onTerminar = { repo.atualizar { it.terminarLivrinho(livro.id) } },
                                 onVoltar = { irPara(Tela.Estante(atual.voltar)) },
+                                genero = estado.perfil?.genero,
                             )
                         }
                     }

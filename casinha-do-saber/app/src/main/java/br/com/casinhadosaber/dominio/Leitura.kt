@@ -141,32 +141,72 @@ object Leitura {
      * possíveis, fica a de menos pedaços (empate: o primeiro pedaço maior), que é a divisão da escola nas
      * palavras dos livrinhos.
      */
-    fun silabas(palavra: String, fase: Int): List<String>? = dividir(palavra.uppercase(), silabasAte(fase))
+    fun silabas(palavra: String, fase: Int): List<String>? =
+        dividir(palavra.uppercase(), silabasAte(fase), vogaisJuntas = etapaDa(fase) >= ETAPA_DITONGOS)
 
     private const val VOGAIS = "AEIOUÁÉÍÓÚÂÊÔÃÕ"
 
-    private fun dividir(p: String, conhecidas: Set<String>): List<String>? {
+    /**
+     * Etapa "Ditongos" (fase 71): só a partir dela se leem duas vogais na mesma sílaba (VAI, NOITE, AREIA,
+     * POUSA, CÉU). Encontros que são duas sílabas (LI-A, LU-A, BO-A, RI-O) valem desde o começo.
+     */
+    private val ETAPA_DITONGOS = etapas.indexOfFirst { it.fase == 70 }
+
+    /** Que tipo de pedaço começa o resto: 0 = outro, 1 = começa com I, 2 = começa com U (sem acento). */
+    private fun tipo(pedaco: String) = when (pedaco.first()) { 'I' -> 1; 'U' -> 2; else -> 0 }
+
+    /** [antes] terminando nessa vogal, seguido de um pedaço do [tipo], faria um ditongo (AI, EI, OI, UI, AU, EU, IU, OU)? */
+    private fun fariaDitongo(antes: Char, tipo: Int) = when (tipo) {
+        1 -> antes in "AEOU"
+        2 -> antes in "AEIO"
+        else -> false
+    }
+
+    /**
+     * Pode cortar a palavra antes da posição [j]? Nunca no meio de CH, LH, NH (OLHA é O-LHA, não OL-HA)
+     * nem de QU e GU (A-QUI, A-GUA).
+     */
+    private fun podeCortar(p: String, j: Int): Boolean {
+        if (j <= 0 || j >= p.length) return true
+        val antes = p[j - 1]
+        val depois = p[j]
+        if (depois == 'H' && antes in "CLN") return false
+        if (depois == 'U' && antes in "QG") return false
+        return true
+    }
+
+    private fun dividir(p: String, conhecidas: Set<String>, vogaisJuntas: Boolean): List<String>? {
         if (p.isEmpty()) return null
-        // melhor[i] = a melhor divisão de p[i..] e o custo dela: 10 por pedaço e 1 quando uma sílaba fechada vem
-        // antes de uma que começa com vogal (CA-SA, nunca CAS-A: a consoante do meio vai com a vogal seguinte).
-        val melhor = arrayOfNulls<List<String>>(p.length + 1)
-        val custo = IntArray(p.length + 1) { Int.MAX_VALUE }
-        melhor[p.length] = emptyList()
-        custo[p.length] = 0
-        for (i in p.length - 1 downTo 0) {
-            for (j in minOf(p.length, i + 5) downTo i + 1) {
+        // Para cada resto p[i..], a melhor divisão de cada tipo (começando com I, com U ou com outra coisa):
+        // antes dos ditongos, VA + I ou POU... não valem, então um pedaço que termina em vogal só pode vir
+        // antes de um resto que não forme ditongo com ele.
+        // Custo: 10 por pedaço e 1 quando uma sílaba fechada vem antes de uma que começa com vogal
+        // (CA-SA, nunca CAS-A: a consoante do meio vai com a vogal seguinte).
+        val n = p.length
+        val melhor = Array(3) { arrayOfNulls<List<String>>(n + 1) }
+        val custo = Array(3) { IntArray(n + 1) { Int.MAX_VALUE } }
+        melhor[0][n] = emptyList()
+        custo[0][n] = 0
+        for (i in n - 1 downTo 0) {
+            for (j in minOf(n, i + 5) downTo i + 1) {
                 val pedaco = p.substring(i, j)
-                val resto = melhor[j] ?: continue
-                if (pedaco !in conhecidas) continue
-                val emenda = if (pedaco.last() !in VOGAIS && resto.firstOrNull()?.first()?.let { it in VOGAIS } == true) 1 else 0
-                val c = 10 + emenda + custo[j]
-                if (c < custo[i]) {
-                    custo[i] = c
-                    melhor[i] = listOf(pedaco) + resto
+                if (pedaco !in conhecidas || !podeCortar(p, j)) continue
+                val ultima = pedaco.last()
+                val vogalNoFim = ultima in VOGAIS
+                val meu = tipo(pedaco)
+                for (t in 0..2) {
+                    val resto = melhor[t][j] ?: continue
+                    if (!vogaisJuntas && fariaDitongo(ultima, t)) continue
+                    val emenda = if (!vogalNoFim && resto.firstOrNull()?.first()?.let { it in VOGAIS } == true) 1 else 0
+                    val c = 10 + emenda + custo[t][j]
+                    if (c < custo[meu][i]) {
+                        custo[meu][i] = c
+                        melhor[meu][i] = listOf(pedaco) + resto
+                    }
                 }
             }
         }
-        return melhor[0]
+        return (0..2).filter { melhor[it][0] != null }.minByOrNull { custo[it][0] }?.let { melhor[it][0] }
     }
 
     fun decodificavel(palavra: String, fase: Int): Boolean = silabas(palavra, fase) != null
@@ -174,7 +214,7 @@ object Leitura {
     /** A fase (índice) da primeira etapa em que todas as palavras de [textos] dão para ler, ou null. */
     fun faseMinima(textos: List<String>): Int? {
         val todas = textos.flatMap(::palavras).map { it.uppercase() }.distinct()
-        return etapas.indices.firstOrNull { k -> todas.all { dividir(it, inventarios[k]) != null } }?.let { etapas[it].fase }
+        return etapas.indices.firstOrNull { k -> todas.all { dividir(it, inventarios[k], vogaisJuntas = k >= ETAPA_DITONGOS) != null } }?.let { etapas[it].fase }
     }
 
     /** As palavras de [textos] que ainda não dá para ler na fase [fase] (para o teste mostrar o que falta). */
@@ -186,7 +226,7 @@ object Leitura {
      * ([VocabularioLetras.falaDaSilaba]) e depois a palavra inteira.
      */
     fun falaDosPedacinhos(palavra: String): List<String> {
-        val pedacos = dividir(palavra.uppercase(), inventarios.last()) ?: return listOf(palavra.lowercase())
+        val pedacos = dividir(palavra.uppercase(), inventarios.last(), vogaisJuntas = true) ?: return listOf(palavra.lowercase())
         return pedacos.map(VocabularioLetras::falaDaSilaba) + palavra.lowercase()
     }
 }

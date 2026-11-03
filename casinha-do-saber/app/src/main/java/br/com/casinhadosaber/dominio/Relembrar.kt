@@ -10,8 +10,8 @@ package br.com.casinhadosaber.dominio
  * As regras:
  * * Errar de primeira numa fase põe a fase na fila (ou volta para o começo dela): relembrar no dia seguinte.
  * * Acertar tudo numa revisão (ou jogar a fase inteira sem errar, quando ela já está para relembrar) sobe um
- *   degrau no espaço: 1, 3, 7 e 14 dias ([INTERVALOS]). A fase sai da fila depois de [ACERTOS_PARA_SAIR]
- *   revisões certas seguidas.
+ *   degrau no espaço: 1, 3, 7 e 14 dias ([INTERVALOS]). A fase sai da fila quando acerta no último degrau
+ *   (a revisão de 14 dias), como prometido aos pais.
  * * Errar numa revisão não tira nada: só zera a contagem e chama de novo no dia seguinte (o degrau fica).
  */
 data class RegistroDeRevisao(val dia: Long, val trilha: Trilha, val fase: Int, val certo: Boolean)
@@ -30,7 +30,6 @@ data class ItemDeRevisao(
 object Relembrar {
     /** Dias até a próxima revisão em cada degrau. */
     val INTERVALOS = listOf(1L, 3L, 7L, 14L)
-    const val ACERTOS_PARA_SAIR = 2
     const val PERGUNTAS = 5
     /** Prêmio fixo da rodada (dentro do limite diário de moedinhas), tanto faz quantas acertou. */
     const val MOEDAS = 3
@@ -48,7 +47,8 @@ object Relembrar {
             val i = itens[k] ?: return
             if (!i.paraHoje(dia)) return
             val acertos = i.acertosSeguidos + 1
-            if (acertos >= ACERTOS_PARA_SAIR) {
+            if (i.passo >= INTERVALOS.lastIndex) {
+                // Acertou a revisão de 14 dias: aprendeu, sai da fila.
                 itens.remove(k)
             } else {
                 val passo = (i.passo + 1).coerceAtMost(INTERVALOS.lastIndex)
@@ -142,7 +142,9 @@ object Relembrar {
 val EstadoJogo.filaDeRevisao: List<ItemDeRevisao> get() = Relembrar.fila(sessoes, revisoes)
 
 /** O que está para relembrar hoje (de um caminho, ou de todos). */
-fun EstadoJogo.paraRelembrar(dia: Long, trilha: Trilha? = null): List<ItemDeRevisao> = Relembrar.paraHoje(filaDeRevisao, dia, trilha)
+fun EstadoJogo.paraRelembrar(dia: Long, trilha: Trilha? = null): List<ItemDeRevisao> =
+    // Fase fechada de novo (os pais desfizeram o nível) não aparece para relembrar.
+    Relembrar.paraHoje(filaDeRevisao, dia, trilha).filter { liberada(it.trilha, it.fase) }
 
 /**
  * Guarda a rodada do Relembrar: uma revisão por fase e o prêmio fixo ([Relembrar.MOEDAS], dentro do limite do

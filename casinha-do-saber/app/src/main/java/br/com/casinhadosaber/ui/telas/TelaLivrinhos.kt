@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.FiguraDoLivrinho
+import br.com.casinhadosaber.dominio.Genero
 import br.com.casinhadosaber.dominio.Leitura
 import br.com.casinhadosaber.dominio.Livrinho
 import br.com.casinhadosaber.dominio.Livrinhos
@@ -95,7 +97,7 @@ fun TelaEstante(estado: EstadoJogo, onAbrir: (Livrinho) -> Unit, onVoltar: () ->
             when {
                 sugerido != null -> "Minha estante! Toque num livrinho para ler sozinho. Que tal ${sugerido.titulo}?"
                 lidos.isEmpty() -> "Minha estante! Os livrinhos abrem quando você aprende as sílabas no caminho das Letras."
-                else -> "Minha estante! Você já leu ${lidos.size} livrinhos. Os próximos abrem no caminho das Letras."
+                else -> "Minha estante! Você já leu ${lidos.size} ${if (lidos.size == 1) "livrinho" else "livrinhos"}. Os próximos abrem no caminho das Letras."
             },
         )
     }
@@ -259,6 +261,8 @@ fun TelaLivrinho(
     onVoltar: () -> Unit,
     /** Começar numa parte (para as capturas): -1 = primeira página; de 0 a n-1 a página; n em diante as perguntas. */
     inicio: Int = -1,
+    /** Gênero do personagem (do perfil), para o "Você leu sozinha!" / "sozinho!". */
+    genero: Genero? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -310,7 +314,7 @@ fun TelaLivrinho(
             is Parte.Pergunta -> PerguntaAberta(livro, p.n, nome) {
                 parte = if (p.n + 1 < livro.perguntas.size) Parte.Pergunta(p.n + 1) else Parte.Fim
             }
-            Parte.Fim -> FimDoLivrinho(livro, nome, onTerminar, onVoltar)
+            Parte.Fim -> FimDoLivrinho(livro, nome, genero, onTerminar, onVoltar)
         }
     }
 }
@@ -344,7 +348,8 @@ private fun androidx.compose.foundation.layout.ColumnScope.PaginaAberta(
     ) {
         for ((i, escrita) in palavras.withIndex()) {
             val limpa = Leitura.palavras(escrita).firstOrNull() ?: escrita
-            Palavra(escrita, limpa, Modifier.testTag("palavra_$i"))
+            // Chave pela página: o destaque de palavra tocada não passa para a página seguinte.
+            key(livro.id, n, i) { Palavra(escrita, limpa, Modifier.testTag("palavra_$i")) }
         }
     }
     Spacer(Modifier.height(12.dp))
@@ -491,7 +496,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.PerguntaAberta(livro:
 }
 
 @Composable
-private fun androidx.compose.foundation.layout.ColumnScope.FimDoLivrinho(livro: Livrinho, nome: String?, onTerminar: () -> Unit, onVoltar: () -> Unit) {
+private fun androidx.compose.foundation.layout.ColumnScope.FimDoLivrinho(livro: Livrinho, nome: String?, genero: Genero?, onTerminar: () -> Unit, onVoltar: () -> Unit) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     var confete by remember { mutableIntStateOf(0) }
@@ -504,7 +509,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.FimDoLivrinho(livro: 
     }
     Box(Modifier.fillMaxWidth().weight(1f)) {
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)) {
-            Text("Você leu sozinho!", style = MaterialTheme.typography.headlineMedium, color = Cores.Texto, textAlign = TextAlign.Center)
+            Text(if (genero == Genero.MENINA) "Você leu sozinha!" else "Você leu sozinho!", style = MaterialTheme.typography.headlineMedium, color = Cores.Texto, textAlign = TextAlign.Center)
             // O marcador de página ganho, grande, numa fitinha.
             Box(
                 Modifier

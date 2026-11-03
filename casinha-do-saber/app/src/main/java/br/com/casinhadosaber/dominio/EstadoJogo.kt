@@ -256,8 +256,11 @@ data class EstadoJogo(
      * A primeira fase de cada trilha está sempre aberta; as outras abrem quando a anterior é vencida
      * (ou quando o "Descobrir o nível" abriu o caminho até elas, [liberadaAte]).
      */
-    fun liberada(fase: Fase): Boolean =
-        fase.numero == 0 || fase.numero <= (liberadaAte[fase.trilha] ?: 0) || estrelas.containsKey(chave(fase.trilha, fase.numero - 1))
+    fun liberada(fase: Fase): Boolean = liberada(fase.trilha, fase.numero)
+
+    /** O mesmo que [liberada] pela trilha e o número da fase (para quem não tem o [Fase] na mão). */
+    fun liberada(trilha: Trilha, numero: Int): Boolean =
+        numero == 0 || numero <= (liberadaAte[trilha] ?: 0) || estrelas.containsKey(chave(trilha, numero - 1))
 
     fun temEstrutura(e: Estrutura): Boolean =
         ItensDaCasa.ordem.firstOrNull { it.estrutura == e }?.id?.let { it in colocados } ?: false

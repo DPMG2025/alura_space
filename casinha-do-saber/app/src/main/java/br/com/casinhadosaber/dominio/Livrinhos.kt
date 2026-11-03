@@ -78,7 +78,7 @@ object Livrinhos {
                 p("A pata lava o pato.", L, "🦆", "💦", "🦆"),
                 p("O pato fica bonito.", L, "🦆", "✨"),
             ),
-            listOf(q("O que o pato faz no lago?", f("🏊", "nada"), f("😴", "dorme"), f("🍽️", "come"))),
+            listOf(q("O que o pato faz no lago?", f("🏊", "ele nada"), f("😴", "ele dorme"), f("🍽️", "ele come"))),
         ),
         Livrinho(
             "bola", "A bola da Lia", "⚽", 26, "⚽",
@@ -119,7 +119,7 @@ object Livrinhos {
                 p("O rato pula na mesa.", C, "🐭", "🍽️"),
                 p("O rato pega o bolo.", C, "🐭", "🎂"),
                 p("O gato pula na mesa.", C, "🐱", "🍽️"),
-                p("O rato vai para a toca. Ufa!", C, "🐭", "🕳️", "🎂"),
+                p("O rato pula na toca. Ufa!", C, "🐭", "🕳️", "🎂"),
             ),
             listOf(
                 q("O que o rato pega?", f("🎂", "bolo"), f("🍎", "maçã"), f("🥕", "cenoura")),
@@ -132,11 +132,11 @@ object Livrinhos {
                 p("A lua sobe no mato.", N, "🌙", "🌲"),
                 p("A coruja pia: u, u.", N, "🦉", "🎵"),
                 p("A coruja voa no mato.", N, "🦉", "🌲", "🌲"),
-                p("A coruja pousa no muro.", N, "🦉", "🧱"),
+                p("A coruja fica no muro.", N, "🦉", "🧱"),
                 p("A lua ilumina o mato.", N, "🌙", "✨", "🌲"),
-                p("Boa noite, coruja!", N, "🦉", "🌙", "⭐"),
+                p("Nana, coruja!", N, "🦉", "🌙", "⭐"),
             ),
-            listOf(q("Onde a coruja pousa?", f("🧱", "no muro"), f("🚗", "no carro"), f("🛏️", "na cama"))),
+            listOf(q("Onde a coruja fica?", f("🧱", "no muro"), f("🚗", "no carro"), f("🛏️", "na cama"))),
         ),
         Livrinho(
             "fada-sapo", "A fada e o sapo", "🧚", 26, "🐸",
@@ -159,7 +159,7 @@ object Livrinhos {
                 p("A chuva molha a janela.", C, "🌧️", "🪟", "💧"),
                 p("Lia pega a capa e a bota.", C, "🐛", "🧥", "👢"),
                 p("Tito acha a capa dele.", C, "🐿️", "🧥"),
-                p("Na rua, a chuva cai.", J, "🌧️", "🏘️"),
+                p("Na rua, a chuva molha tudo.", J, "🌧️", "🏘️"),
                 p("Lia pula na lama.", J, "🐛", "🟤", "💦"),
                 p("A chuva acaba.", J, "🌈", "🐛", "🐿️"),
             ),
@@ -172,7 +172,7 @@ object Livrinhos {
             "galinha", "A galinha e o ninho", "🐔", 32, "🐣",
             listOf(
                 p("A galinha mora no ninho.", M, "🐔", "🪹"),
-                p("A galinha bota o ovo.", M, "🐔", "🥚"),
+                p("A galinha bota ovo.", M, "🐔", "🥚"),
                 p("O ovo fica no ninho.", M, "🥚", "🪹"),
                 p("A galinha choca o ovo.", M, "🐔", "🥚"),
                 p("O ovo mexe!", M, "🥚", "✨"),
@@ -188,14 +188,14 @@ object Livrinhos {
         Livrinho(
             "prima", "A prima da Lia", "👧", 38, "🏖️",
             listOf(
-                p("A prima da Lia mora na praia.", P, "👧", "🏖️"),
-                p("Lia vai na praia.", P, "🐛", "🌊"),
+                p("A prima da Lia mora na ilha.", P, "👧", "🏖️"),
+                p("Lia visita a prima.", P, "🐛", "🌊"),
                 p("A prima pega a bola.", P, "👧", "⚽"),
                 p("Lia joga a bola para a prima.", P, "🐛", "⚽", "👧"),
                 p("A prima pega a bola. Bravo!", P, "👧", "⚽", "👏"),
-                p("Lia acha uma pena na areia.", P, "🐛", "🪶"),
+                p("Lia acha uma pena na ilha.", P, "🐛", "🪶"),
             ),
-            listOf(q("Onde mora a prima?", f("🏖️", "na praia"), f("🏔️", "na montanha"), f("🏙️", "na cidade"))),
+            listOf(q("Onde mora a prima?", f("🏝️", "na ilha"), f("🏔️", "na montanha"), f("🏙️", "na cidade"))),
         ),
         Livrinho(
             "cabra", "A cabra", "🐐", 38, "🐐",
@@ -205,7 +205,7 @@ object Livrinhos {
                 p("A cabra come a folha.", M, "🐐", "🍃"),
                 p("A cabra bebe no rio.", L, "🐐", "💧"),
                 p("A cabra fica na trilha.", M, "🐐", "🌄"),
-                p("Boa noite, cabra!", N, "🐐", "🌙"),
+                p("A cabra cochila.", N, "🐐", "🌙"),
             ),
             listOf(q("O que a cabra come?", f("🍃", "folha"), f("🍕", "pizza"), f("🍦", "sorvete"))),
         ),
@@ -227,7 +227,7 @@ object Livrinhos {
             listOf(
                 p("Pipo lava a cebola.", C, "🤖", "🧅", "💦"),
                 p("Pipo lava o tomate e o pepino.", C, "🤖", "🍅", "🥒"),
-                p("Pipo pica a cenoura.", C, "🤖", "🥕"),
+                p("Pipo pica a cebola.", C, "🤖", "🥕"),
                 p("Pipo coloca tudo na tigela.", C, "🤖", "🥣"),
                 p("A salada fica colorida!", C, "🥗", "🌈"),
             ),
@@ -244,13 +244,13 @@ object Livrinhos {
                 p("Tito ganha o balão.", J, "🐿️", "🎈"),
                 p("O vento leva o balão.", J, "🌬️", "🎈"),
                 p("Tito pula e pula.", J, "🐿️", "🎈"),
-                p("O balão pousa na ponte.", L, "🎈", "🌉"),
+                p("O balão para na ponte.", L, "🎈", "🌉"),
                 p("Lia pega o balão na mão.", L, "🐛", "🎈"),
                 p("Tito canta e dança.", J, "🐿️", "🎵", "🎈"),
             ),
             listOf(
                 q("Quem leva o balão?", f("🌬️", "o vento"), f("🐶", "o cão"), f("🚗", "o carro")),
-                q("Onde o balão pousa?", f("🌉", "na ponte"), f("🏠", "na casa"), f("🌳", "na árvore")),
+                q("Onde o balão para?", f("🌉", "na ponte"), f("🏠", "na casa"), f("🌳", "na árvore")),
             ),
         ),
         Livrinho(
@@ -258,14 +258,14 @@ object Livrinhos {
             listOf(
                 p("Mamãe pega a farinha.", C, "👩", "🌾"),
                 p("Lia ajuda a mamãe.", C, "🐛", "👩"),
-                p("O pão vai no fogão.", C, "🍞", "🔥"),
+                p("O pão fica no fogão.", C, "🍞", "🔥"),
                 p("Mamãe tira o pão do fogão.", C, "👩", "🍞"),
                 p("Lia ganha o pão na mão.", C, "🐛", "🍞"),
                 p("Obrigada, mamãe!", C, "🐛", "❤️", "👩"),
             ),
             listOf(
                 q("Quem ajuda a mamãe?", f("🐛", "Lia"), f("🐿️", "Tito"), f("🤖", "Pipo")),
-                q("Onde o pão vai?", f("🔥", "no fogão"), f("🛁", "na banheira"), f("🚗", "no carro")),
+                q("Onde o pão fica?", f("🔥", "no fogão"), f("🛁", "na banheira"), f("🚗", "no carro")),
             ),
         ),
         Livrinho(
@@ -273,12 +273,12 @@ object Livrinhos {
             listOf(
                 p("O leão anda na savana.", M, "🦁", "🌳"),
                 p("O leão cansa.", M, "🦁", "💤"),
-                p("O leão deita na areia.", P, "🦁", "🏜️"),
+                p("O leão cochila na savana.", P, "🦁", "🏜️"),
                 p("O leão ronca: ron, ron.", P, "🦁", "💤"),
                 p("O vento bate na juba.", P, "🌬️", "🦁"),
                 p("O leão abre o olho.", P, "🦁", "👀"),
             ),
-            listOf(q("Onde o leão deita?", f("🏜️", "na areia"), f("🛏️", "na cama"), f("🌊", "no mar"))),
+            listOf(q("Onde o leão cochila?", f("🌳", "na savana"), f("🛏️", "na cama"), f("🌊", "no mar"))),
         ),
 
         // ------------------------------------------------ R, S e L no fim (fase 81)
@@ -345,7 +345,7 @@ object Livrinhos {
             listOf(
                 p("O esquilo Tito mora no alto da mata.", M, "🐿️", "🌳"),
                 p("Tito esconde o coquinho.", M, "🐿️", "🥥"),
-                p("Tito esqueceu onde.", M, "🐿️", "❓"),
+                p("Tito não acha o coquinho.", M, "🐿️", "❓"),
                 p("Pipo ajuda o esquilo.", M, "🤖", "🐿️"),
                 p("Pipo acha o coquinho debaixo da folha.", M, "🤖", "🍃", "🥥"),
                 p("Tito pula e ri.", M, "🐿️", "😄"),
@@ -364,7 +364,7 @@ object Livrinhos {
             ),
             listOf(
                 q("O que o cachorro acha?", f("🦴", "o osso"), f("🧦", "a meia"), f("⚽", "a bola")),
-                q("Para onde o gato pula?", f("🧱", "no muro"), f("🛁", "na banheira"), f("🚗", "no carro")),
+                q("Onde o gato pula?", f("🧱", "no muro"), f("🛁", "na banheira"), f("🚗", "no carro")),
             ),
         ),
         Livrinho(
@@ -431,7 +431,7 @@ object Livrinhos {
                 p("No castelo mora o dragão.", N, "🏰", "🐉"),
                 p("O dragão sopra fogo.", N, "🐉", "🔥"),
                 p("O dragão acende a fogueira.", N, "🐉", "🔥", "🪵"),
-                p("A turma esquenta a mão.", N, "🐛", "🐿️", "🤖"),
+                p("A turma esquenta as mãos.", N, "🐛", "🐿️", "🤖"),
                 p("O dragão gosta de abraço.", N, "🐉", "🤗"),
                 p("Obrigado, dragão!", N, "🐉", "❤️"),
             ),
@@ -443,13 +443,13 @@ object Livrinhos {
             "hora-dormir", "A hora de dormir", "🌙", 120, "🛏️",
             listOf(
                 p("Chegou a hora de dormir.", N, "⏰", "🌙"),
-                p("Lia escova o dente.", C, "🐛", "🪥"),
+                p("Lia escova os dentes.", C, "🐛", "🪥"),
                 p("Lia veste o pijama.", C, "🐛", "👚"),
                 p("Mamãe canta baixinho.", N, "👩", "🎵"),
-                p("Lia fecha o olho.", N, "🐛", "😴"),
+                p("Lia fecha os olhos.", N, "🐛", "😴"),
                 p("Boa noite, Lia!", N, "🌙", "⭐"),
             ),
-            listOf(q("O que Lia escova?", f("🦷", "o dente"), f("👟", "o sapato"), f("🐶", "o cachorro"))),
+            listOf(q("O que Lia escova?", f("🦷", "os dentes"), f("👟", "o sapato"), f("🐶", "o cachorro"))),
         ),
         Livrinho(
             "hotel", "O hotel dos bichos", "🏨", 120, "🔑",
@@ -473,7 +473,7 @@ object Livrinhos {
                 p("O trem passa pela ponte.", L, "🚂", "🌉"),
                 p("Lia olha a montanha.", M, "🐛", "⛰️"),
                 p("Tito come um bolinho.", J, "🐿️", "🧁"),
-                p("O trem chega na cidade.", J, "🚂", "🏙️"),
+                p("O trem para na cidade.", J, "🚂", "🏙️"),
                 p("Que passeio bom!", J, "😄", "🚂"),
             ),
             listOf(
@@ -487,7 +487,7 @@ object Livrinhos {
                 p("No jardim tem muita flor.", J, "🌷", "🌼", "🌸"),
                 p("A abelha voa de flor em flor.", J, "🐝", "🌼"),
                 p("A borboleta pousa na folha.", J, "🦋", "🍃"),
-                p("Tem um caracol bem devagar.", J, "🐌", "🌱"),
+                p("Um caracol anda bem devagar.", J, "🐌", "🌱"),
                 p("Lia rega o jardim com o balde.", J, "🐛", "🪣", "💧"),
                 p("O jardim fica lindo.", J, "🌷", "🌈"),
             ),
