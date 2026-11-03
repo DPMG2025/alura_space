@@ -51,7 +51,6 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
 
     override fun onInit(status: Int) {
         if (status != TextToSpeech.SUCCESS) return
-        pronto = true
         val r = tts.isLanguageAvailable(Locale.US)
         inglesDisponivel = r != TextToSpeech.LANG_MISSING_DATA && r != TextToSpeech.LANG_NOT_SUPPORTED
         vozPt = melhorVoz(portugues)
@@ -70,6 +69,8 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
             }
             override fun onStop(utteranceId: String?, interrupted: Boolean) { falando = false }
         })
+        // Só fica pronto depois de escolher as vozes: assim a primeira fala já sai com a voz boa.
+        pronto = true
         pendente?.let { falar(it) }
         pendente = null
     }
