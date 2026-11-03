@@ -32,7 +32,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import br.com.casinhadosaber.dominio.Aparencia
 import br.com.casinhadosaber.dominio.Genero
+import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.dominio.Perfil
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.drawscope.clipPath
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -136,12 +139,40 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
     val pele = Color(Aparencia.peles.getOrElse(perfil.pele) { Aparencia.peles[0] })
     val cabelo = Color(Aparencia.cabelos.getOrElse(perfil.cabelo) { Aparencia.cabelos[0] })
     val menina = perfil.genero == Genero.MENINA
-    val roupa = Color(perfil.corDaRoupa)
-    val calca = if (menina) pele else Color(0xFF2E4A7D)
-    val sapato = Color(0xFF5A3E36)
+    // Roupa especial do guarda-roupa (comprada na loja), desenhada por cima da roupa de sempre.
+    val traje = Loja.trajeDe(perfil)?.id
+    val roupa = when (traje) {
+        "pijama" -> Color(0xFF3B4C8C)
+        "abelha" -> Color(0xFFFFC93C)
+        "astronauta" -> Color(0xFFF2F4F8)
+        else -> Color(perfil.corDaRoupa)
+    }
+    val calca = when (traje) {
+        "pijama" -> Color(0xFF3B4C8C)
+        "astronauta" -> Color(0xFFDCE1EA)
+        "abelha" -> if (menina) pele else Color(0xFF2B2B2B)
+        else -> if (menina) pele else Color(0xFF2E4A7D)
+    }
+    val sapato = if (traje == "astronauta") Color(0xFF9AA3B5) else Color(0xFF5A3E36)
 
     // sombra no chão
     drawOval(Color(0x26000000), topLeft = Offset(w * 0.08f, h * 0.975f), size = Size(w * 0.84f, h * 0.05f))
+
+    // Atrás do corpo: capa de herói ou asinhas de fada.
+    if (traje == "heroi") {
+        val capa = Path().apply {
+            moveTo(w * 0.24f, h * 0.47f); lineTo(w * 0.76f, h * 0.47f)
+            lineTo(w * 0.96f, h * 0.9f); quadraticTo(w * 0.5f, h * 0.96f, w * 0.04f, h * 0.9f); close()
+        }
+        drawPath(capa, Color(0xFFE63946))
+        drawPath(capa, Color(0xFFB0222F), style = Stroke(w * 0.02f))
+    } else if (traje == "fada") {
+        for (lado in listOf(-1f, 1f)) {
+            val base = p(0.5f + lado * 0.2f, 0.52f)
+            drawOval(Color(0xB3D9C2FF), Offset(base.x + (if (lado < 0) -w * 0.36f else 0f), base.y - h * 0.16f), Size(w * 0.36f, h * 0.17f))
+            drawOval(Color(0xB3FFC2E8), Offset(base.x + (if (lado < 0) -w * 0.26f else 0f), base.y - h * 0.01f), Size(w * 0.26f, h * 0.12f))
+        }
+    }
 
     // pernas
     for (u in listOf(0.37f, 0.63f)) {
@@ -177,18 +208,21 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
     drawCircle(pele, w * 0.085f, maoD)
 
     // corpo
+    val corpo: Path
     if (menina) {
-        val vestido = Path().apply {
+        corpo = Path().apply {
             moveTo(w * 0.26f, h * 0.46f); lineTo(w * 0.74f, h * 0.46f)
             lineTo(w * 0.9f, h * 0.8f); lineTo(w * 0.1f, h * 0.8f); close()
         }
-        drawPath(vestido, roupa)
-        for (u in listOf(0.3f, 0.5f, 0.7f)) drawCircle(Color(0x80FFFFFF), w * 0.04f, p(u, 0.68f))
+        drawPath(corpo, roupa)
+        if (traje == null) for (u in listOf(0.3f, 0.5f, 0.7f)) drawCircle(Color(0x80FFFFFF), w * 0.04f, p(u, 0.68f))
     } else {
-        drawRoundRect(roupa, topLeft = p(0.2f, 0.45f), size = Size(w * 0.6f, h * 0.3f), cornerRadius = CornerRadius(w * 0.14f))
-        drawRect(Color(0xFF2E4A7D), topLeft = p(0.2f, 0.7f), size = Size(w * 0.6f, h * 0.06f))
-        drawPath(caminhoEstrela(p(0.5f, 0.58f), w * 0.1f), Color(0xFFFFD166))
+        corpo = Path().apply { addRoundRect(RoundRect(w * 0.2f, h * 0.45f, w * 0.8f, h * 0.75f, CornerRadius(w * 0.14f))) }
+        drawPath(corpo, roupa)
+        drawRect(calca, topLeft = p(0.2f, 0.7f), size = Size(w * 0.6f, h * 0.06f))
+        if (traje == null) drawPath(caminhoEstrela(p(0.5f, 0.58f), w * 0.1f), Color(0xFFFFD166))
     }
+    if (traje != null) desenharTrajeNoCorpo(traje, corpo)
 
     // cabeça
     val centro = p(0.5f, 0.27f)
@@ -271,6 +305,14 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
             size = Size(r * 0.28f, r * 0.18f),
         )
     }
+    // Na cabeça: anteninhas de abelha ou o capacete de vidro do astronauta.
+    if (traje == "abelha") {
+        for (lado in listOf(-1f, 1f)) {
+            val ponta = Offset(centro.x + lado * r * 0.7f, centro.y - r * 1.55f)
+            drawLine(Color(0xFF2B2B2B), Offset(centro.x + lado * r * 0.3f, centro.y - r * 0.9f), ponta, strokeWidth = r * 0.07f, cap = StrokeCap.Round)
+            drawCircle(Color(0xFF2B2B2B), r * 0.13f, ponta)
+        }
+    }
     val boca = Color(0xFF7A3B2E)
     val bocaCentro = Offset(centro.x, centro.y + r * 0.38f)
     when (humor) {
@@ -284,6 +326,67 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
             boca, Offset(bocaCentro.x - r * 0.12f, bocaCentro.y + r * 0.12f), Offset(bocaCentro.x + r * 0.12f, bocaCentro.y + r * 0.06f),
             strokeWidth = r * 0.08f, cap = StrokeCap.Round,
         )
+    }
+    if (traje == "astronauta") {
+        drawCircle(Color(0x338FD3FF), r * 1.32f, centro)
+        drawCircle(Color(0xFFDCE1EA), r * 1.32f, centro, style = Stroke(r * 0.12f))
+        drawArc(
+            Color(0x99FFFFFF), startAngle = 200f, sweepAngle = 50f, useCenter = false,
+            topLeft = Offset(centro.x - r * 1.05f, centro.y - r * 1.05f), size = Size(r * 2.1f, r * 2.1f),
+            style = Stroke(r * 0.1f, cap = StrokeCap.Round),
+        )
+    }
+}
+
+/** Estampas e detalhes da roupa especial, recortados no formato do corpo. */
+private fun DrawScope.desenharTrajeNoCorpo(traje: String, corpo: Path) {
+    val w = size.width
+    val h = size.height
+    val topo = h * 0.45f
+    val base = h * 0.8f
+    clipPath(corpo) {
+        when (traje) {
+            "listras" -> {
+                var y = topo + h * 0.03f
+                while (y < base) {
+                    drawRect(Color(0xCCFFFFFF), Offset(0f, y), Size(w, h * 0.035f))
+                    y += h * 0.075f
+                }
+            }
+            "pijama" -> for (i in 0 until 7) {
+                val u = 0.22f + (i * 0.37f) % 0.58f
+                val v = 0.5f + (i * 0.13f) % 0.26f
+                drawPath(caminhoEstrela(Offset(w * u, h * v), w * 0.055f), Color(0xFFFFD166))
+            }
+            "abelha" -> {
+                var y = topo + h * 0.05f
+                while (y < base) {
+                    drawRect(Color(0xFF2B2B2B), Offset(0f, y), Size(w, h * 0.05f))
+                    y += h * 0.1f
+                }
+            }
+            "heroi" -> {
+                val c = Offset(w * 0.5f, h * 0.57f)
+                drawCircle(Color(0xFFFFD166), w * 0.13f, c)
+                val raio = Path().apply {
+                    moveTo(c.x + w * 0.03f, c.y - w * 0.1f); lineTo(c.x - w * 0.06f, c.y + w * 0.01f)
+                    lineTo(c.x + w * 0.01f, c.y + w * 0.01f); lineTo(c.x - w * 0.03f, c.y + w * 0.1f)
+                    lineTo(c.x + w * 0.07f, c.y - w * 0.02f); lineTo(c.x, c.y - w * 0.02f); close()
+                }
+                drawPath(raio, Color(0xFFE63946))
+            }
+            "fada" -> for (i in 0 until 6) {
+                val u = 0.25f + (i * 0.29f) % 0.5f
+                val v = 0.52f + (i * 0.11f) % 0.24f
+                drawPath(caminhoEstrela(Offset(w * u, h * v), w * 0.04f, 4), Color(0xE6FFFFFF))
+            }
+            "astronauta" -> {
+                drawRect(Color(0xFF9AA3B5), Offset(0f, h * 0.66f), Size(w, h * 0.035f))
+                drawRoundRect(Color(0xFF4D96FF), Offset(w * 0.56f, h * 0.51f), Size(w * 0.14f, h * 0.07f), CornerRadius(w * 0.02f))
+                drawCircle(Color(0xFFEF476F), w * 0.025f, Offset(w * 0.38f, h * 0.53f))
+                drawCircle(Color(0xFF3DBE6B), w * 0.025f, Offset(w * 0.38f, h * 0.59f))
+            }
+        }
     }
 }
 

@@ -30,12 +30,15 @@ import br.com.casinhadosaber.dados.Repositorio
 import br.com.casinhadosaber.dominio.Fase
 import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItemCasa
+import br.com.casinhadosaber.dominio.Loja
+import br.com.casinhadosaber.dominio.Produto
 import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.TemaCasinha
 import br.com.casinhadosaber.ui.telas.TelaCasa
+import br.com.casinhadosaber.ui.telas.TelaCasaPorDentro
 import br.com.casinhadosaber.ui.telas.TelaBoasVindas
 import br.com.casinhadosaber.ui.telas.TelaDormir
 import br.com.casinhadosaber.ui.telas.TelaInicio
@@ -53,9 +56,13 @@ sealed interface Tela {
     data object BoasVindas : Tela
     data class Caminho(val trilha: Trilha) : Tela
     data class Jogo(val fase: Fase) : Tela
-    data class Premio(val fase: Fase, val estrelas: Int, val item: ItemCasa?, val moedas: Int = 0) : Tela
+    data class Premio(val fase: Fase, val estrelas: Int, val item: ItemCasa?, val moedas: Int = 0, val brinde: Produto? = null) : Tela
     /** [colocar]: item que acabou de ser ganho e já vai direto para a casa. */
     data class Casa(val colocar: String? = null) : Tela
+    /** A casa por dentro (isométrica), onde a criança anda pelos cômodos. */
+    data object CasaPorDentro : Tela
+    /** Espelho: troca a aparência e volta para [voltar] (sem repetir as boas vindas). */
+    data class Espelho(val voltar: Tela) : Tela
     data class Quase(val fase: Fase, val acertos: Int) : Tela
     /** Missão do dia: revisão de fases difíceis, com prêmio em moedinhas. */
     data class Missao(val fase: Fase, val perguntas: List<br.com.casinhadosaber.dominio.Pergunta>) : Tela
@@ -158,6 +165,8 @@ class MainActivity : ComponentActivity() {
                     is Tela.Premio -> Tela.Caminho(t.fase.trilha)
                     is Tela.Quase -> Tela.Caminho(t.fase.trilha)
                     is Tela.Missao -> Tela.Inicio
+                    is Tela.Espelho -> t.voltar
+                    Tela.CasaPorDentro -> Tela.Casa()
                     else -> Tela.Inicio
                 },
             )
@@ -197,6 +206,7 @@ class MainActivity : ComponentActivity() {
                         somLigado = repo.somLigado,
                         onAlternarSom = repo::alternarSom,
                         onAbrirCasa = { irPara(Tela.Casa()) },
+                        onEspelho = { irPara(Tela.Espelho(Tela.Inicio)) },
                         onAbrirTrilha = { irPara(Tela.Caminho(it)) },
                         onAreaDosPais = { irPara(Tela.Pais) },
                         missaoDisponivel = estado.missaoDisponivel(repo.hoje()),
@@ -224,7 +234,7 @@ class MainActivity : ComponentActivity() {
                             repo.atualizar { resultado.estado }
                             irPara(
                                 if (resultado.venceu) {
-                                    Tela.Premio(atual.fase, resultado.estrelas, resultado.item, resultado.moedasGanhas)
+                                    Tela.Premio(atual.fase, resultado.estrelas, resultado.item, resultado.moedasGanhas, resultado.brinde)
                                 } else {
                                     Tela.Quase(atual.fase, acertos)
                                 },
@@ -264,6 +274,7 @@ class MainActivity : ComponentActivity() {
                             onColocarNaCasa = { irPara(Tela.Casa(atual.item?.id)) },
                             onProxima = { proxima?.let { irPara(Tela.Jogo(it)) } },
                             onVoltar = { irPara(Tela.Caminho(atual.fase.trilha)) },
+                            brinde = atual.brinde,
                         )
                     }
 
@@ -273,7 +284,26 @@ class MainActivity : ComponentActivity() {
                         onAtualizar = repo::atualizar,
                         onVoltar = { irPara(Tela.Inicio) },
                         onJogar = { irPara(Tela.Inicio) },
+                        onEspelho = { irPara(Tela.Espelho(Tela.Casa())) },
+                        onEntrar = { irPara(Tela.CasaPorDentro) },
                     )
+
+                    Tela.CasaPorDentro -> TelaCasaPorDentro(
+                        estado = estado,
+                        onAtualizar = repo::atualizar,
+                        onVoltar = { irPara(Tela.Casa()) },
+                        onEspelho = { irPara(Tela.Espelho(Tela.CasaPorDentro)) },
+                    )
+
+                    is Tela.Espelho -> TelaPerfil(
+                        atual = estado.perfil,
+                        espelho = true,
+                        roupas = Loja.noGuardaRoupa(estado),
+                        onVoltar = { irPara(atual.voltar) },
+                    ) { perfil ->
+                        repo.atualizar { it.copy(perfil = perfil) }
+                        irPara(atual.voltar)
+                    }
 
                     Tela.Pais -> TelaPais(
                         estado = estado,

@@ -312,6 +312,8 @@ private fun falaDoBrinde(p: Produto): String {
         Categoria.CHAPEU -> "Olha só, você já está usando!"
         Categoria.VISITANTE -> "Vai passear no seu jardim!"
         Categoria.CLIMA -> if (p.valor == "2") "Agora pode nevar na sua casa!" else "Agora pode chover na sua casa!"
+        Categoria.COMIDA -> "Está na geladeira da sua casa!"
+        Categoria.ROUPA -> "Está no guarda-roupa, e você já está vestindo!"
     }
     return "$oQue $onde E mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas!"
 }

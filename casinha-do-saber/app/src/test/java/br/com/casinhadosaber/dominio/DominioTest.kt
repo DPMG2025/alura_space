@@ -316,3 +316,238 @@ class SerializacaoTest {
         assertNotNull(Serializacao.textoParaCores(""))
     }
 }
+
+class LojaDaCasaPorDentroTest {
+
+    private val menina = Perfil("Ana", Genero.MENINA)
+
+    @Test
+    fun `comida comprada vai para a geladeira e continua la`() {
+        val maca = Loja.produtos.first { it.categoria == Categoria.COMIDA }
+        var e = EstadoJogo(perfil = menina, moedas = 50)
+        assertTrue(Loja.naGeladeira(e).isEmpty())
+        val preco = Loja.preco(maca, e)
+        e = e.usar(maca)!!
+        assertEquals(50 - preco, e.moedas)
+        assertEquals(listOf(maca), Loja.naGeladeira(e))
+        assertTrue(Loja.emUso(maca, e))
+        // Tocar de novo não cobra nem tira da geladeira.
+        val de_novo = e.usar(maca)!!
+        assertEquals(e.moedas, de_novo.moedas)
+        assertEquals(listOf(maca), Loja.naGeladeira(de_novo))
+    }
+
+    @Test
+    fun `roupa comprada vai para o guarda roupa e a crianca veste`() {
+        val capa = Loja.porId.getValue("roupaheroi")
+        val abelha = Loja.porId.getValue("roupaabelha")
+        var e = EstadoJogo(perfil = menina, moedas = 100)
+        // Não dá para vestir o que não é seu.
+        assertEquals("", e.vestir("heroi").perfil!!.traje)
+        e = e.usar(capa)!!
+        assertEquals("heroi", e.perfil!!.traje)
+        assertEquals(listOf(capa), Loja.noGuardaRoupa(e))
+        assertTrue(Loja.emUso(capa, e))
+        // No guarda-roupa: tira e põe de novo, de graça.
+        val moedas = e.moedas
+        e = e.vestir("")
+        assertEquals("", e.perfil!!.traje)
+        e = e.vestir("heroi")
+        assertEquals("heroi", e.perfil!!.traje)
+        assertEquals(moedas, e.moedas)
+        assertEquals("heroi", e.vestir("abelha").perfil!!.traje)
+        e = e.usar(abelha)!!
+        assertEquals("abelha", e.perfil!!.traje)
+        assertEquals(2, Loja.noGuardaRoupa(e).size)
+        // A roupa é desenhada por cima: a cor escolhida no perfil continua.
+        assertEquals(menina.corDaRoupa, e.perfil!!.corDaRoupa)
+    }
+
+    @Test
+    fun `experimentar antes de comprar nao muda o estado de verdade`() {
+        val capa = Loja.porId.getValue("roupaheroi")
+        val e = EstadoJogo(perfil = menina, moedas = 2)
+        assertNull("sem moedas", e.usar(capa))
+        val previa = e.copy(moedas = Int.MAX_VALUE / 2).usar(capa)!!
+        assertEquals("heroi", previa.perfil!!.traje)
+        assertEquals("", e.perfil!!.traje)
+        assertTrue(capa.id !in e.comprados)
+    }
+
+    @Test
+    fun `traje desconhecido vira roupa de sempre`() {
+        assertNull(Loja.trajeDe(menina.copy(traje = "nao-existe")))
+        assertNull(Loja.trajeDe(null))
+        assertEquals("pijama", Loja.trajeDe(menina.copy(traje = "pijama"))?.id)
+        // Dados antigos (sem o campo) usam o padrão vazio.
+        assertEquals("", Perfil().traje)
+    }
+
+    @Test
+    fun `ids da loja sao unicos e seguros para salvar`() {
+        assertEquals(Loja.produtos.size, Loja.porId.size)
+        for (p in Loja.produtos) assertFalse(p.id, p.id.any { it == ',' || it == ';' || it == '=' })
+        for (p in Loja.produtos.filter { it.categoria == Categoria.COMIDA || it.categoria == Categoria.ROUPA }) {
+            assertTrue("${p.id} sem nome em inglês", p.nomeEn.isNotBlank())
+        }
+    }
+
+    @Test
+    fun `vitrines de fora e de dentro separam as categorias`() {
+        val e = EstadoJogo()
+        val fora = Loja.vitrine(e, Loja.categoriasDeFora)
+        val dentro = Loja.vitrine(e, Loja.categoriasDeDentro)
+        assertTrue(fora.none { it.categoria == Categoria.COMIDA || it.categoria == Categoria.ROUPA })
+        assertTrue(dentro.any { it.categoria == Categoria.COMIDA })
+        assertTrue(dentro.any { it.categoria == Categoria.ROUPA })
+        assertEquals(Loja.produtos.size, Loja.vitrine(e).size)
+    }
+
+    @Test
+    fun `brinde funciona com comidas e roupas`() {
+        // Tudo comprado, menos uma comida e uma roupa: o brinde vem delas.
+        val g = GeradorDeFases(Random(3))
+        val todas = Trilha.entries.flatMap { g.fases(it) }
+        var e = EstadoJogo(perfil = menina)
+        for (f in todas.take(ItensDaCasa.total)) e = e.registrarPartida(f, 5, 5).estado
+        val comida = Loja.produtos.first { it.categoria == Categoria.COMIDA }
+        val roupa = Loja.produtos.first { it.categoria == Categoria.ROUPA }
+        e = e.copy(comprados = Loja.produtos.map { it.id }.toSet() - comida.id - roupa.id)
+        val r1 = e.registrarPartida(todas[ItensDaCasa.total], 5, 5)
+        assertEquals(comida, r1.brinde)
+        assertTrue(comida in Loja.naGeladeira(r1.estado))
+        assertTrue(r1.faseNova)
+        val r2 = r1.estado.registrarPartida(todas[ItensDaCasa.total + 1], 5, 5)
+        assertEquals(roupa, r2.brinde)
+        assertTrue(roupa in Loja.noGuardaRoupa(r2.estado))
+        assertEquals(roupa.valor, r2.estado.perfil!!.traje)
+    }
+
+    @Test
+    fun `fase nova so na primeira vitoria`() {
+        val fase = GeradorDeFases(Random(1)).fases(Trilha.LOGICA)[0]
+        val perdeu = EstadoJogo().registrarPartida(fase, 2, 5)
+        assertFalse(perdeu.faseNova)
+        val venceu = perdeu.estado.registrarPartida(fase, 5, 5)
+        assertTrue(venceu.faseNova)
+        val repetiu = venceu.estado.registrarPartida(fase, 5, 5)
+        assertTrue(repetiu.venceu)
+        assertFalse(repetiu.faseNova)
+    }
+}
+
+class CasaPorDentroTest {
+
+    private val tudo: EstadoJogo = EstadoJogo(estrelas = Trilha.entries.flatMap { t -> (0 until 10).map { "${t.name}:$it" to 3 } }.toMap())
+
+    @Test
+    fun `moveis de dentro aparecem no comodo certo`() {
+        for (m in PlantaDaCasa.moveis) {
+            val c = PlantaDaCasa.limitesDo(m.comodo)
+            assertTrue("${m.id} fora do cômodo", m.x0 >= c.x0 && m.x1 <= c.x1 && m.y0 >= c.y0 && m.y1 <= c.y1)
+            assertTrue("${m.id} ao contrário", m.x1 > m.x0 && m.y1 > m.y0)
+            val certo = m.itemId?.let { ItensDaCasa.comodoDe(it) }
+            if (certo != null) assertEquals(m.id, certo, m.comodo)
+            if (m.itemId != null) assertTrue("${m.id} mora lá fora", ItensDaCasa.porId.getValue(m.itemId!!).lugar != Lugar.FORA)
+        }
+        // Todo móvel "de dentro" da casa ganha lugar aqui.
+        for (i in ItensDaCasa.ordem.filter { it.lugar == Lugar.DENTRO }) assertTrue(i.id, i.id in PlantaDaCasa.pecasDeDentro)
+    }
+
+    @Test
+    fun `so aparecem as pecas ja ganhas`() {
+        val nada = PlantaDaCasa.moveisDe(EstadoJogo())
+        assertTrue(nada.all { it.fixo })
+        assertTrue(nada.any { it.acao == Acao.GUARDA_ROUPA })
+        val todos = PlantaDaCasa.moveisDe(tudo)
+        assertEquals(PlantaDaCasa.moveis.size, todos.size)
+        assertTrue(todos.any { it.acao == Acao.GELADEIRA })
+    }
+
+    @Test
+    fun `a crianca alcanca todos os comodos pelas portas`() {
+        for (e in listOf(EstadoJogo(), tudo)) {
+            val mapa = Mapa(PlantaDaCasa.moveisDe(e))
+            assertTrue("entrada ocupada", mapa.livre(PlantaDaCasa.entrada.x.toInt(), PlantaDaCasa.entrada.y.toInt()))
+            val alcance = mapa.alcancaveis(PlantaDaCasa.entrada)
+            for (y in 0 until PlantaDaCasa.LADO) for (x in 0 until PlantaDaCasa.LADO) {
+                if (mapa.livre(x, y)) assertTrue("ladrilho ($x,$y) isolado", (x to y) in alcance)
+            }
+            for (c in Comodo.entries) assertTrue(c.name, alcance.any { (x, y) -> PlantaDaCasa.comodoEm(x + 0.5f, y + 0.5f) == c })
+        }
+    }
+
+    @Test
+    fun `caminho nao atravessa paredes nem moveis`() {
+        val mapa = Mapa(PlantaDaCasa.moveisDe(tudo))
+        val livres = (0 until 8).flatMap { y -> (0 until 8).map { x -> x to y } }.filter { (x, y) -> mapa.livre(x, y) }
+        for ((ax, ay) in livres) for ((bx, by) in livres) {
+            val de = Posicao(ax + 0.5f, ay + 0.5f)
+            val para = Posicao(bx + 0.5f, by + 0.5f)
+            val caminho = mapa.caminho(de, para)
+            if (ax == bx && ay == by) {
+                assertTrue(caminho.isEmpty())
+                continue
+            }
+            assertTrue("sem caminho de ($ax,$ay) a ($bx,$by)", caminho.isNotEmpty())
+            assertEquals(para, caminho.last())
+            var atual = de
+            for (p in caminho) {
+                assertTrue("atravessou de $atual a $p", mapa.linhaLivre(atual, p))
+                atual = p
+            }
+        }
+    }
+
+    @Test
+    fun `do quarto para a sala passa pela porta`() {
+        val mapa = Mapa(PlantaDaCasa.moveisDe(tudo))
+        // Reto, do quarto (3,3) para a sala (3,5), atravessaria a parede: a porta fica em x = 2.
+        assertFalse(mapa.linhaLivre(Posicao(3.5f, 3.5f), Posicao(3.5f, 5.5f)))
+        val caminho = mapa.caminho(Posicao(3.5f, 3.5f), Posicao(3.5f, 5.5f))
+        assertTrue(caminho.size >= 2)
+        assertTrue(caminho.any { it.x in 2f..3f })
+    }
+
+    @Test
+    fun `tocar num movel leva para o ladrilho livre mais perto do mesmo lado da parede`() {
+        val mapa = Mapa(PlantaDaCasa.moveisDe(tudo))
+        val geladeira = PlantaDaCasa.porId.getValue("geladeira")
+        val perto = mapa.pertoDo(geladeira)
+        assertEquals(Comodo.COZINHA, PlantaDaCasa.comodoEm(perto.x, perto.y))
+        assertTrue(mapa.livre(perto.x.toInt(), perto.y.toInt()))
+        // Tocar em cima da cama: vai para perto dela.
+        val fim = mapa.caminho(PlantaDaCasa.entrada, Posicao(0.7f, 1.0f)).last()
+        assertTrue(mapa.livre(fim.x.toInt(), fim.y.toInt()))
+        assertEquals(Comodo.QUARTO, PlantaDaCasa.comodoEm(fim.x, fim.y))
+    }
+
+    @Test
+    fun `ordem de desenho poe o que esta atras primeiro`() {
+        val caixas = PlantaDaCasa.moveisDe(tudo).filter { !it.naParede && !it.noChao }.map { PlantaDaCasa.caixaDo(it) } + PlantaDaCasa.paredesInternas
+        val ordem = PlantaDaCasa.ordenarParaDesenho(caixas)
+        assertEquals(caixas.size, ordem.toSet().size)
+        val posicao = IntArray(caixas.size)
+        ordem.forEachIndexed { k, i -> posicao[i] = k }
+        for (i in caixas.indices) for (j in caixas.indices) {
+            if (i != j && PlantaDaCasa.atras(caixas[i], caixas[j]) && !PlantaDaCasa.atras(caixas[j], caixas[i])) {
+                assertTrue("${caixas[i]} deveria vir antes de ${caixas[j]}", posicao[i] < posicao[j])
+            }
+        }
+        // O ursinho (em cima da cama) vem depois da cama; a TV vem depois da parede de trás dela.
+        val m = PlantaDaCasa.moveisDe(tudo).filter { !it.naParede && !it.noChao }
+        fun idx(id: String) = posicao[m.indexOfFirst { it.id == id }]
+        assertTrue(idx("ursinho") > idx("cama"))
+        val paredeAtrasDaTv = m.size + PlantaDaCasa.paredesInternas.indexOfFirst { it.x0 == 0f && it.y0 < 4f && it.y1 > 4f }
+        assertTrue(idx("tv") > posicao[paredeAtrasDaTv])
+    }
+
+    @Test
+    fun `crianca fica na frente do que esta atras dela`() {
+        val cama = PlantaDaCasa.caixaDo(PlantaDaCasa.porId.getValue("cama"))
+        assertTrue(PlantaDaCasa.criancaNaFrente(2.5f, 1.5f, cama))
+        assertTrue(PlantaDaCasa.criancaNaFrente(0.5f, 2.5f, cama))
+        val mesa = PlantaDaCasa.caixaDo(PlantaDaCasa.porId.getValue("mesa"))
+        assertFalse(PlantaDaCasa.criancaNaFrente(5.5f, 6.5f, mesa))
+    }
+}

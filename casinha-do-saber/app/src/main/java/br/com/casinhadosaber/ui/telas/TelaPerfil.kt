@@ -50,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import br.com.casinhadosaber.dominio.Aparencia
 import br.com.casinhadosaber.dominio.Genero
 import br.com.casinhadosaber.dominio.Perfil
+import br.com.casinhadosaber.dominio.Produto
+import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
@@ -64,9 +66,18 @@ private val nomesDaRoupa = listOf("azul", "rosa", "verde", "laranja", "roxa", "v
 /**
  * Primeira tela: a criança monta quem vai morar na casinha. Tudo é falado e mostrado
  * num personagem grande que pula a cada escolha; o nome fica com o adulto.
+ *
+ * Com [espelho], é o espelho (🪞) da casa e do início: muda a aparência atual, mostra as roupas do
+ * guarda-roupa ([roupas]) e volta para onde estava ([onVoltar]), sem repetir as boas vindas.
  */
 @Composable
-fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
+fun TelaPerfil(
+    atual: Perfil?,
+    espelho: Boolean = false,
+    roupas: List<Produto> = emptyList(),
+    onVoltar: (() -> Unit)? = null,
+    onPronto: (Perfil) -> Unit,
+) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     var genero by rememberSaveable { mutableStateOf(atual?.genero) }
@@ -75,12 +86,16 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
     var estilo by rememberSaveable { mutableStateOf(atual?.estiloCabelo ?: 0) }
     var roupa by rememberSaveable { mutableStateOf(atual?.roupa ?: -1) }
     var nome by rememberSaveable { mutableStateOf(atual?.nome.orEmpty()) }
+    var traje by rememberSaveable { mutableStateOf(atual?.traje.orEmpty()) }
     var mostrarNome by rememberSaveable { mutableStateOf(false) }
     var mudancas by remember { mutableIntStateOf(0) }
     val pulo = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
-        narrador.falar("Olá! Quem vai morar na casinha? Escolha um menino ou uma menina.")
+        narrador.falar(
+            if (espelho) "Espelho, espelho meu! Escolha o cabelo, a pele e a roupa. Depois toque em pronto."
+            else "Olá! Quem vai morar na casinha? Escolha um menino ou uma menina.",
+        )
     }
     LaunchedEffect(mudancas) {
         if (mudancas > 0) {
@@ -97,7 +112,7 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
     }
 
     val g = genero
-    val perfil = Perfil(nome.trim(), g ?: Genero.MENINA, pele, cabelo, roupa, chapeu = atual?.chapeu.orEmpty(), estiloCabelo = estilo)
+    val perfil = Perfil(nome.trim(), g ?: Genero.MENINA, pele, cabelo, roupa, chapeu = atual?.chapeu.orEmpty(), estiloCabelo = estilo, traje = traje)
 
     Column(
         Modifier
@@ -108,7 +123,14 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("Casinha do Saber", style = MaterialTheme.typography.headlineLarge, color = Color.White)
+        if (onVoltar != null) {
+            Box(Modifier.fillMaxWidth()) {
+                BotaoRedondo("⬅️", "Voltar", onVoltar, Modifier.align(Alignment.CenterStart), tamanho = 52.dp)
+                Text(if (espelho) "🪞" else "Casinha do Saber", style = MaterialTheme.typography.headlineLarge, color = Color.White, modifier = Modifier.align(Alignment.Center))
+            }
+        } else {
+            Text("Casinha do Saber", style = MaterialTheme.typography.headlineLarge, color = Color.White)
+        }
         Spacer(Modifier.height(8.dp))
 
         if (g == null) {
@@ -138,11 +160,12 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
             return@Column
         }
 
-        // Personagem grande, que pula a cada escolha.
+        // Personagem grande, que pula a cada escolha. No espelho, fica dentro de uma moldura dourada.
         Box(
             Modifier
                 .size(230.dp)
-                .background(Color.White.copy(alpha = 0.7f), CircleShape),
+                .then(if (espelho) Modifier.border(8.dp, Color(0xFFD4A24C), CircleShape) else Modifier)
+                .background(if (espelho) Color(0xFFDDF3FF) else Color.White.copy(alpha = 0.7f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Crianca(perfil, Modifier.height(190.dp).graphicsLayer { translationY = pulo.value * density }, acenando = true)
@@ -195,6 +218,32 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
             val roupaAtual = if (roupa >= 0) roupa else if (g == Genero.MENINA) 1 else 0
             Aparencia.roupas.forEachIndexed { i, c ->
                 Bolinha(Color(c), i == roupaAtual, "Roupa ${nomesDaRoupa[i]}") { escolher("Roupa ${nomesDaRoupa[i]}!") { roupa = i } }
+            }
+        }
+
+        if (roupas.isNotEmpty()) {
+            // Roupas especiais do guarda-roupa (compradas na loja da casa por dentro).
+            Linha("🧥", "roupa especial") {
+                Box(
+                    Modifier
+                        .size(44.dp)
+                        .border(if (traje.isEmpty()) 4.dp else 2.dp, if (traje.isEmpty()) Cores.Estrela else Color.White, CircleShape)
+                        .background(Color.White.copy(alpha = 0.8f), CircleShape)
+                        .semantics { contentDescription = "Roupa de sempre" }
+                        .clickable { escolher("A roupa de sempre!") { traje = "" } },
+                    contentAlignment = Alignment.Center,
+                ) { Text("👕", style = MaterialTheme.typography.titleLarge) }
+                for (r in roupas) {
+                    Box(
+                        Modifier
+                            .size(44.dp)
+                            .border(if (traje == r.valor) 4.dp else 2.dp, if (traje == r.valor) Cores.Estrela else Color.White, CircleShape)
+                            .background(Color.White.copy(alpha = 0.8f), CircleShape)
+                            .semantics { contentDescription = r.nome }
+                            .clickable { escolher("${r.nome}!") { traje = r.valor } },
+                        contentAlignment = Alignment.Center,
+                    ) { Text(r.icone, style = MaterialTheme.typography.titleLarge) }
+                }
             }
         }
 

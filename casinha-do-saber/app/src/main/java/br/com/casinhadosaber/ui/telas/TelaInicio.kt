@@ -61,6 +61,8 @@ fun TelaInicio(
     onAreaDosPais: () -> Unit,
     missaoDisponivel: Boolean = false,
     onMissao: () -> Unit = {},
+    /** Espelho 🪞: abre o perfil para trocar a aparência e volta para o início. */
+    onEspelho: () -> Unit = {},
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -132,6 +134,17 @@ fun TelaInicio(
                     .clickable { sons.toque(); onAbrirCasa() },
             ) {
                 CenaDaCasa(estado, Modifier.fillMaxSize(), preencherAltura = true)
+                if (estado.perfil != null) {
+                    BotaoRedondo(
+                        "🪞",
+                        "Espelho: trocar a aparência",
+                        { sons.toque(); onEspelho() },
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .padding(10.dp),
+                        tamanho = 52.dp,
+                    )
+                }
                 if (missaoDisponivel) {
                     // Missão do dia: um pergaminho que pula no canto da casa, valendo moedinhas.
                     BotaoFofo(

@@ -89,6 +89,10 @@ fun TelaCasa(
     lojaInicial: Boolean = false,
     /** Item recém ganho: entra na casa sozinho, logo que a tela abre. */
     colocarAoAbrir: String? = null,
+    /** Espelho 🪞: abre o perfil para trocar a aparência e volta para cá. */
+    onEspelho: () -> Unit = {},
+    /** Porta 🚪: entra na casa por dentro (isométrica). */
+    onEntrar: () -> Unit = {},
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -281,6 +285,38 @@ fun TelaCasa(
                     },
                     onMoverCrianca = { pos: Posicao -> onAtualizar { it.copy(posicaoCrianca = pos) } },
                 )
+                // Espelho: trocar a aparência a qualquer momento.
+                BotaoRedondo(
+                    "🪞",
+                    "Espelho: trocar a aparência",
+                    { sons.toque(); onEspelho() },
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .padding(10.dp),
+                    tamanho = 52.dp,
+                )
+                // Entrar na casa: só quando a casa já tem porta.
+                if (estado.temEstrutura(Estrutura.PORTA) && !pintando) {
+                    BotaoFofo(
+                        onClick = {
+                            sons.toque()
+                            narrador.falar("Vamos entrar na casa!")
+                            onEntrar()
+                        },
+                        cor = Color(0xFFFFF3C4),
+                        corBase = Color(0xFFE0A800),
+                        descricao = "Entrar na casa",
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(10.dp)
+                            .pulsando(),
+                    ) {
+                        Row(Modifier.padding(horizontal = 14.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("🚪", fontSize = 34.sp)
+                            Text("👉", fontSize = 26.sp)
+                        }
+                    }
+                }
             }
 
             if (pintando) {
@@ -385,7 +421,7 @@ private fun Bau(
                 contentPadding = PaddingValues(horizontal = 14.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(Loja.vitrine(estado), key = { it.id }) { produto ->
+                items(Loja.vitrine(estado, Loja.categoriasDeFora), key = { it.id }) { produto ->
                     val tem = produto.id in estado.comprados
                     val preco = Loja.preco(produto, estado)
                     val podeComprar = tem || estado.moedas >= preco

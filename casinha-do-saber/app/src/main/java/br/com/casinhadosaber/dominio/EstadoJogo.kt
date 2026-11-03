@@ -14,6 +14,8 @@ data class Perfil(
     val chapeu: String = "",
     /** 0 = liso, 1 = cacheado, 2 = tranças (menina) ou espetadinho (menino). */
     val estiloCabelo: Int = 0,
+    /** Roupa especial do guarda-roupa ([Loja.trajes]), ou vazio para a roupa de sempre. */
+    val traje: String = "",
 ) {
     val corDaRoupa: Long
         get() = Aparencia.roupas.getOrNull(roupa) ?: if (genero == Genero.MENINA) Aparencia.roupas[1] else Aparencia.roupas[0]
@@ -95,7 +97,20 @@ data class EstadoJogo(
             Categoria.CLIMA -> base.copy(clima = if (clima.toString() == v && p.id in comprados) 0 else v.toInt())
             Categoria.CHAPEU -> base.copy(perfil = base.perfil?.copy(chapeu = if (base.perfil.chapeu == v) "" else v))
             Categoria.VISITANTE -> base.copy(visitantes = if (v in visitantes && p.id in comprados) visitantes - v else visitantes + v)
+            // Comida comprada vai para a geladeira e continua lá (não é gasta).
+            Categoria.COMIDA -> base
+            Categoria.ROUPA -> base.copy(perfil = base.perfil?.copy(traje = if (base.perfil.traje == v && p.id in comprados) "" else v))
         }
+    }
+
+    /**
+     * Veste uma roupa do guarda-roupa (só o que já foi comprado). Vazio volta para a roupa de sempre.
+     * Devolve o mesmo estado se a roupa não é sua.
+     */
+    fun vestir(traje: String): EstadoJogo {
+        val p = perfil ?: return this
+        if (traje.isNotEmpty() && Loja.trajes.none { it.id == traje && "roupa$traje" in comprados }) return this
+        return copy(perfil = p.copy(traje = traje))
     }
 
     /** Fase em que a criança mais erra de primeira, entre as já liberadas (para os pais). */
@@ -140,7 +155,7 @@ data class EstadoJogo(
         val k = chave(fase.trilha, fase.numero)
         if (estrelas == 0) {
             val derrotas = comEstatistica.copy(tentativasSemVencer = tentativasSemVencer + (k to (tentativasSemVencer[k] ?: 0) + 1))
-            return ResultadoPartida(derrotas, 0, null, ganhas)
+            return ResultadoPartida(derrotas, 0, null, ganhas, faseNova = false)
         }
         val primeiraVez = k !in this.estrelas
         val (novo, item) = comEstatistica.copy(tentativasSemVencer = tentativasSemVencer - k).registrarVitoria(fase, estrelas)
@@ -152,9 +167,9 @@ data class EstadoJogo(
             } else {
                 novo.copy(moedas = novo.moedas + MOEDAS_DO_BRINDE)
             }
-            return ResultadoPartida(comBrinde, estrelas, null, ganhas + MOEDAS_DO_BRINDE, brinde)
+            return ResultadoPartida(comBrinde, estrelas, null, ganhas + MOEDAS_DO_BRINDE, brinde, faseNova = true)
         }
-        return ResultadoPartida(novo, estrelas, item, ganhas)
+        return ResultadoPartida(novo, estrelas, item, ganhas, faseNova = primeiraVez)
     }
     val fasesVencidas: Int get() = estrelas.size
     val itensGanhos: List<ItemCasa> get() = ItensDaCasa.ganhos(fasesVencidas)
@@ -221,6 +236,8 @@ data class ResultadoPartida(
     val moedasGanhas: Int = 0,
     /** Presente da loja, para as fases depois das 40 peças da casa. */
     val brinde: Produto? = null,
+    /** A fase foi vencida pela primeira vez nesta partida. */
+    val faseNova: Boolean = false,
 ) {
     val venceu get() = estrelas > 0
 }
