@@ -213,17 +213,31 @@ class JogoNoEmuladorTest {
         avancar(500)
         val palavra = Regex("""Monte: (\S+)""").find(textoDaInstrucao())?.groupValues?.get(1)?.lowercase()
             ?: throw AssertionError("instrução de montar sem a palavra: ${textoDaInstrucao()}")
-        val textos = regra.onAllNodes(hasTestTag("silaba_certa")).fetchSemanticsNodes()
-            .map { it.config.getOrElse(SemanticsProperties.ContentDescription) { emptyList() }.joinToString("") }
-        val ordem = ordemDasSilabas(textos, palavra)
-            ?: throw AssertionError("as sílabas $textos não formam $palavra")
+        fun silabas() = regra.onAllNodes(hasTestTag("silaba_certa")).fetchSemanticsNodes()
+        fun texto(n: androidx.compose.ui.semantics.SemanticsNode) =
+            n.config.getOrElse(SemanticsProperties.ContentDescription) { emptyList() }.joinToString("")
+        val ordem = ordemDasSilabas(silabas().map(::texto), palavra)
+            ?: throw AssertionError("as sílabas ${silabas().map(::texto)} não formam $palavra")
+        val textos = ordem.map { texto(silabas()[it]) }
         val figura = regra.onAllNodes(hasContentDescription(palavra)).onFirst().fetchSemanticsNode().boundsInRoot
-        for (i in ordem) {
-            val silaba = regra.onAllNodes(hasTestTag("silaba_certa"))[i]
-            val antes = silaba.fetchSemanticsNode().boundsInRoot
-            val alvo = Offset(figura.center.x, figura.bottom + dp(8f) + antes.height / 2f)
-            silaba.performTouchInput { swipe(center, alvo - antes.topLeft, durationMillis = 500) }
-            avancar(900)
+        val raiz = regra.onRoot().fetchSemanticsNode().boundsInRoot
+        for (silaba in textos) {
+            // A peça solta (mais embaixo) com esta sílaba; a fila de nós pode mudar de ordem a cada encaixe.
+            val alvoY = { h: Float -> figura.bottom + dp(8f) + h / 2f }
+            fun encaixadas() = silabas().count { texto(it) == silaba && it.boundsInRoot.top < alvoY(it.boundsInRoot.height) + dp(20f) }
+            val jaEstavam = encaixadas()
+            var encaixou = false
+            for (x in listOf(raiz.center.x, raiz.left + raiz.width * 0.3f, raiz.left + raiz.width * 0.7f)) {
+                val no = silabas().withIndex().filter { texto(it.value) == silaba }.maxByOrNull { it.value.boundsInRoot.top }
+                    ?: throw AssertionError("sílaba $silaba sumiu")
+                val antes = no.value.boundsInRoot
+                regra.onAllNodes(hasTestTag("silaba_certa"))[no.index].performTouchInput {
+                    swipe(center, Offset(x, alvoY(antes.height)) - antes.topLeft, durationMillis = 600)
+                }
+                avancar(1_000)
+                if (encaixadas() > jaEstavam) { encaixou = true; break }
+            }
+            assertTrue("não consegui encaixar a sílaba $silaba de $palavra", encaixou)
         }
     }
 
