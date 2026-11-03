@@ -158,11 +158,11 @@ class TelasCapturaTest {
     }
 
     @Test fun salvosFavoritos() = captura("09_salvos") {
-        Moldura(2) { TelaSalvos(salvos, AcoesSalvos(), it, abaInicial = 1) }
+        Moldura(2) { TelaSalvos(salvos, AcoesSalvos(), it, abaInicial = 1, agora = 1793635200000) }
     }
 
     @Test fun salvosVazio() = captura("10_salvos_vazio_escuro", escuro = true) {
-        Moldura(2) { TelaSalvos(emptyList(), AcoesSalvos(), it) }
+        Moldura(2) { TelaSalvos(emptyList(), AcoesSalvos(), it, agora = 1793635200000) }
     }
 
     @Config(qualifiers = "w393dp-h1900dp-xhdpi")

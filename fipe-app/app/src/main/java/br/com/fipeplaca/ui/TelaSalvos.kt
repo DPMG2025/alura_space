@@ -52,7 +52,13 @@ data class AcoesSalvos(
 )
 
 @Composable
-fun TelaSalvos(itens: List<ConsultaSalva>, acoes: AcoesSalvos, modifier: Modifier = Modifier, abaInicial: Int = 0) {
+fun TelaSalvos(
+    itens: List<ConsultaSalva>,
+    acoes: AcoesSalvos,
+    modifier: Modifier = Modifier,
+    abaInicial: Int = 0,
+    agora: Long = System.currentTimeMillis(), // fixo nas capturas, para as datas relativas nao variarem
+) {
     var aba by rememberSaveable { mutableIntStateOf(abaInicial) }
     val favoritos = itens.filter { it.favorito }
     val lista = if (aba == 0) favoritos else itens.sortedByDescending { it.data }
@@ -88,7 +94,7 @@ fun TelaSalvos(itens: List<ConsultaSalva>, acoes: AcoesSalvos, modifier: Modifie
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
-            items(lista, key = { it.id }) { c -> ItemSalvo(c, acoes) }
+            items(lista, key = { it.id }) { c -> ItemSalvo(c, acoes, agora) }
             if (aba == 1 && itens.any { !it.favorito }) {
                 item {
                     TextButton(onClick = acoes.limparRecentes, modifier = Modifier.fillMaxWidth()) {
@@ -102,7 +108,7 @@ fun TelaSalvos(itens: List<ConsultaSalva>, acoes: AcoesSalvos, modifier: Modifie
 
 
 @Composable
-private fun ItemSalvo(c: ConsultaSalva, acoes: AcoesSalvos) {
+private fun ItemSalvo(c: ConsultaSalva, acoes: AcoesSalvos, agora: Long) {
     Surface(
         onClick = { acoes.abrir(c) },
         shape = MaterialTheme.shapes.large,
@@ -124,7 +130,7 @@ private fun ItemSalvo(c: ConsultaSalva, acoes: AcoesSalvos) {
                 Text(c.principal?.valor ?: "Sem valor", style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 VariacaoDesdeSalvo(c)
-                Text(Datas.relativa(c.data), style = MaterialTheme.typography.labelSmall,
+                Text(Datas.relativa(c.data, agora), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
