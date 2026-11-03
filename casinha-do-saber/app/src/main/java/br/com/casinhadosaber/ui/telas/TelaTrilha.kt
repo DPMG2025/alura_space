@@ -174,7 +174,7 @@ fun TelaTrilha(
     val fases = remember(todas, indiceEmFoco) {
         todas.take(minOf(todas.size, (indiceEmFoco / Mundos.FASES_POR_MUNDO + 2) * Mundos.FASES_POR_MUNDO))
     }
-    val proximoPremio = ItensDaCasa.ordem.getOrNull(estado.fasesVencidas)
+    val proximoPremio = ItensDaCasa.proximo(estado.fasesVencidas)
     val cor = Color(trilha.corArgb)
     val corEscura = Color(trilha.corEscuraArgb)
     val rolagem = rememberScrollState()

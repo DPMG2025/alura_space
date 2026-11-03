@@ -155,15 +155,14 @@ class AcessoriosTest {
     fun `brinde pode ser roupa ou acessorio e ja vem vestido`() {
         val g = GeradorDeFases(Random(5))
         val todas = Trilha.entries.flatMap { g.fases(it) }
-        var e = EstadoJogo(perfil = menino)
-        for (f in todas.take(ItensDaCasa.total)) e = e.registrarPartida(f, 5, 5).estado
+        var e = comTodosOsPremios(EstadoJogo(perfil = menino))
         val roupa = produto("roupachef")
         val acessorio = produto("acessorioursinho")
         e = e.copy(comprados = Loja.produtos.map { it.id }.toSet() - roupa.id - acessorio.id)
-        val r1 = e.registrarPartida(todas[ItensDaCasa.total], 5, 5)
+        val r1 = e.registrarPartida(todas[0], 5, 5)
         assertEquals(roupa, r1.brinde)
         assertEquals("chef", r1.estado.perfil!!.traje)
-        val r2 = r1.estado.registrarPartida(todas[ItensDaCasa.total + 1], 5, 5)
+        val r2 = r1.estado.registrarPartida(todas[1], 5, 5)
         assertNotNull(r2.brinde)
         assertEquals(acessorio, r2.brinde)
         assertTrue(acessorio in Loja.acessoriosComprados(r2.estado))

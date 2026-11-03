@@ -216,7 +216,8 @@ data class EstadoJogo(
         }
         val primeiraVez = k !in this.estrelas
         val (novo, item) = comEstatistica.copy(tentativasSemVencer = tentativasSemVencer - k).registrarVitoria(fase, estrelas)
-        // Depois das 40 peças da casa, cada fase nova dá um presente da loja (de graça) e moedinhas extras.
+        // Depois de todos os prêmios da casa (as 40 peças e as áreas da casa que cresce), cada fase nova dá um
+        // presente da loja (de graça) e moedinhas extras.
         if (primeiraVez && item == null) {
             val brinde = Loja.produtos.firstOrNull { it.id !in novo.comprados }
             val comBrinde = if (brinde != null) {
@@ -230,7 +231,11 @@ data class EstadoJogo(
     }
     val fasesVencidas: Int get() = estrelas.size
     val itensGanhos: List<ItemCasa> get() = ItensDaCasa.ganhos(fasesVencidas)
-    val itensNoBau: List<ItemCasa> get() = itensGanhos.filter { it.id !in colocados }
+    /**
+     * O que espera no baú. As coisas de uma área nova só aparecem depois que a criança constrói a obra dela
+     * (a obra vem primeiro, com o martelinho).
+     */
+    val itensNoBau: List<ItemCasa> get() = itensGanhos.filter { it.id !in colocados && (it.area == null || it.obra || "${it.area}.obra" in colocados) }
 
     fun estrelasDa(fase: Fase): Int = estrelas[chave(fase.trilha, fase.numero)] ?: 0
 
@@ -254,7 +259,7 @@ data class EstadoJogo(
         val primeiraVez = k !in this.estrelas
         val melhor = maxOf(estrelas[k] ?: 0, novasEstrelas.coerceIn(1, 3))
         val novo = copy(estrelas = estrelas + (k to melhor))
-        val premio = if (primeiraVez) ItensDaCasa.ordem.getOrNull(fasesVencidas) else null
+        val premio = if (primeiraVez) ItensDaCasa.proximo(fasesVencidas) else null
         return novo to premio
     }
 
@@ -291,7 +296,7 @@ data class ResultadoPartida(
     val estrelas: Int,
     val item: ItemCasa?,
     val moedasGanhas: Int = 0,
-    /** Presente da loja, para as fases depois das 40 peças da casa. */
+    /** Presente da loja, para as fases depois de todos os prêmios da casa. */
     val brinde: Produto? = null,
     /** A fase foi vencida pela primeira vez nesta partida. */
     val faseNova: Boolean = false,

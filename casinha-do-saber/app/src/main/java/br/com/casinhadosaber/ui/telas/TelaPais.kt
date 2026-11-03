@@ -190,7 +190,9 @@ private fun Painel(
         Text("Progresso", style = MaterialTheme.typography.titleLarge)
         Text(
             "Fases vencidas: ${estado.fasesVencidas} de ${Trilha.entries.size * GeradorDeFases.FASES_POR_TRILHA}. " +
-                "Itens da casa: ${estado.itensGanhos.size} de ${ItensDaCasa.total}.",
+                "Itens da casa: ${estado.itensGanhos.size} de ${ItensDaCasa.total}" +
+                (br.com.casinhadosaber.dominio.CasaQueCresce.ganhas(estado.fasesVencidas).takeIf { it.isNotEmpty() }
+                    ?.let { a -> " (áreas novas: ${a.joinToString { it.nome.lowercase() }})" } ?: "") + ".",
             style = MaterialTheme.typography.bodyLarge,
         )
         // A fase liberada em que mais erra de primeira (últimas 10 respostas).
@@ -303,7 +305,8 @@ private fun Painel(
                 "• O botão Treinar, no caminho, faz perguntas sem fim das fases já vencidas, mais das que a criança erra mais, " +
                 "e fica mais difícil quando ela acerta em sequência. Dá moedinhas dentro do limite do dia.\n" +
                 "• Cada fase nova vencida dá uma peça para a casa. Montar a casa (tocar, arrastar, pintar) treina coordenação e dá vontade de continuar. " +
-                "Depois das ${ItensDaCasa.total} peças, cada fase nova dá um enfeite da lojinha e mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas.\n" +
+                "Depois das ${ItensDaCasa.totalDaCasa} peças da casa, a casa cresce: a cada 40 a 50 fases chega uma área nova (quarto novo, área do pet, piscina, parquinho, horta e outras), " +
+                "com coisas novas a cada fase, até a fase ${ItensDaCasa.total}. Só depois de tudo, cada fase nova dá um enfeite da lojinha e mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas.\n" +
                 "• Sessões curtas, de 10 a 15 minutos, funcionam melhor nessa idade. Jogue junto e comemore cada peça!\n" +
                 "• O app não usa internet, não tem anúncios e não coleta dados. Para ouvir as palavras em inglês, " +
                 "instale a voz em inglês nas configurações de voz (Texto para fala) do celular.",

@@ -69,6 +69,7 @@ import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Estrutura
 import br.com.casinhadosaber.dominio.ItemCasa
 import br.com.casinhadosaber.dominio.ItensDaCasa
+import br.com.casinhadosaber.dominio.Passeio
 import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.dominio.Lugar
 import br.com.casinhadosaber.dominio.Posicao
@@ -133,6 +134,8 @@ fun CenaDaCasa(
     onPintar: (Comodo) -> Unit = {},
     onTocarCrianca: () -> Unit = {},
     onMoverCrianca: (Posicao) -> Unit = {},
+    /** Toque num visitante da semana ou da loja (o emoji dele): ele pula, quem chama fala o nome. */
+    onTocarVisitante: (String) -> Unit = {},
 ) {
     val tempo = rememberInfiniteTransition(label = "cena")
     val t by tempo.animateFloat(
@@ -203,30 +206,20 @@ fun CenaDaCasa(
                 onPintar = onPintar,
                 onTocarCrianca = onTocarCrianca,
                 onMoverCrianca = onMoverCrianca,
+                onTocarVisitante = onTocarVisitante,
             )
-            // Visitantes andam numa "pista" no alto do jardim de baixo, passando na frente dos objetos.
+            // Visitantes passeiam numa "pista" no alto do jardim de baixo, passando na frente dos objetos.
             if (temJardimExtra) {
-                val transicao = rememberInfiniteTransition(label = "visitas")
-                val passo by transicao.animateFloat(0f, 1f, infiniteRepeatable(tween(14000, easing = LinearEasing)), label = "passo")
-                val pulinho by transicao.animateFloat(0f, 1f, infiniteRepeatable(tween(300), androidx.compose.animation.core.RepeatMode.Reverse), label = "pulinho")
+                val relogio = rememberRelogioDoPasseio()
                 val densidade = LocalDensity.current
                 val larguraPx = with(densidade) { maxWidth.toPx() }
                 val topoJardim = with(densidade) { (ceuExtra + alturaCena).toPx() }
                 val alturaJardim = with(densidade) { jardim.toPx() }
                 val tamanho = larguraPx * 0.08f
                 estado.visitantes.forEachIndexed { i, bicho ->
-                    val volta = (passo + i * 0.37f) % 1f
-                    val ida = volta < 0.5f
-                    val fracao = if (ida) volta * 2f else (1f - volta) * 2f
-                    val x = (0.06f + 0.88f * fracao) * larguraPx
                     // Pista acima do canteiro (que fica entre 30% e 70% da altura do jardim de baixo).
-                    val y = topoJardim + alturaJardim * (0.06f + 0.1f * (i % 2)) + tamanho * 0.2f - pulinho * tamanho * 0.08f
-                    Box(
-                        Modifier
-                            .offset { IntOffset((x - tamanho / 2).roundToInt(), y.roundToInt()) }
-                            .size(with(densidade) { tamanho.toDp() })
-                            .graphicsLayer { scaleX = if (ida) -1f else 1f },
-                    ) { EmojiGrande(bicho, tamanho) }
+                    val pe = topoJardim + alturaJardim * (0.06f + 0.1f * (i % 2)) + tamanho * 1.2f
+                    key(bicho) { VisitanteAndando(bicho, i, relogio, larguraPx, pe, tamanho, onTocarVisitante) }
                 }
             }
         }
@@ -253,6 +246,7 @@ fun CenaDaCasa(
         onPintar = onPintar,
         onTocarCrianca = onTocarCrianca,
         onMoverCrianca = onMoverCrianca,
+        onTocarVisitante = onTocarVisitante,
     )
 }
 
@@ -309,8 +303,10 @@ private fun CenaPlana(
     onPintar: (Comodo) -> Unit,
     onTocarCrianca: () -> Unit,
     onMoverCrianca: (Posicao) -> Unit,
+    onTocarVisitante: (String) -> Unit,
 ) {
     val jardim = remember(jardimExtra) { JardimDeBaixo(jardimExtra) }
+    val relogio = rememberRelogioDoPasseio()
     // Jardim de baixo com pelo menos 20% da largura: as coisas de jardim ainda não arrastadas começam lá.
     val usarLugaresDoJardim = jardimExtra * PROPORCAO_CENA >= 0.2f
     BoxWithConstraints(
@@ -383,6 +379,10 @@ private fun CenaPlana(
             val lugarNoJardim = ItensDaCasa.noJardimDeBaixo[item.id]
             val naoMexido = guardada == Posicao(item.x, item.y)
             val pos = jardim.naTela(if (usarLugaresDoJardim && lugarNoJardim != null && naoMexido) lugarNoJardim else guardada)
+            // O cachorrinho e o gatinho passeiam em volta do lugar deles (menos dentro de casa, para não atravessar parede).
+            val bicho = bichoDesenhadoDe(item.id)
+            val semente = item.id.hashCode()
+            val alcance = if (bicho == null) 0f else Passeio.alcance(pos.x, if (dentroDaCasa(pos, estado)) 0.035f else 0.08f)
             key(item.id) { ObjetoNaCena(
                 item = item,
                 pos = pos,
@@ -391,9 +391,11 @@ private fun CenaPlana(
                 interativo = interativa && !pintando,
                 aparecer = item.id == destaqueId,
                 recusas = recusa?.takeIf { it.item.id == item.id }?.vez ?: 0,
-                vida = vidaDo(item.id),
+                vida = if (bicho != null) Vida.PARADO else vidaDo(item.id),
                 tempo = t,
                 noite = noite,
+                deriva = if (bicho == null) null else ({ Passeio.em(relogio.value.toLong(), semente).deslocamento * alcance * larguraPx }),
+                pularAoTocar = bicho != null,
                 onTocar = { onTocarItem(item) },
                 onSoltar = { nova ->
                     if (nova.y > jardim.limiteDoBau) {
@@ -419,7 +421,11 @@ private fun CenaPlana(
                     }
                 },
             ) { w ->
-                if (noite && item.id == "sol") EmojiGrande("🌙", w) else ConteudoDoItem(item, w)
+                when {
+                    bicho != null -> BichoDesenhado(bicho.first, bicho.second, { Passeio.em(relogio.value.toLong(), semente) })
+                    noite && item.id == "sol" -> EmojiGrande("🌙", w)
+                    else -> ConteudoDoItem(item, w)
+                }
             } }
         }
 
@@ -427,21 +433,8 @@ private fun CenaPlana(
 
         // Visitantes comprados na loja passeiam pelo jardim, cada um no seu ritmo.
         if (!semVisitantes) estado.visitantes.forEachIndexed { i, bicho ->
-            val volta = ((t + i * 0.37f) % 1f)
-            val ida = volta < 0.5f
-            val fracao = if (ida) volta * 2f else (1f - volta) * 2f
-            val x = 0.08f + 0.84f * fracao
             val y = 0.86f + (i % 3) * 0.045f
-            val tamanho = larguraPx * 0.065f
-            val densidade = LocalDensity.current
-            Box(
-                Modifier
-                    .offset { IntOffset((x * larguraPx - tamanho / 2).roundToInt(), (y * alturaPx - tamanho).roundToInt()) }
-                    .size(with(densidade) { tamanho.toDp() })
-                    .graphicsLayer { scaleX = if (ida) -1f else 1f },
-            ) {
-                EmojiGrande(bicho, tamanho)
-            }
+            key(bicho) { VisitanteAndando(bicho, i, relogio, larguraPx, y * alturaPx, larguraPx * 0.065f, onTocarVisitante) }
         }
 
         val perfil = estado.perfil
@@ -578,9 +571,9 @@ private fun pousar(p: Posicao, dentro: Boolean): Posicao {
     return Posicao(p.x, y)
 }
 
-/** Um objeto posicionado pelo pé, que pode ser tocado e arrastado. */
+/** Um objeto posicionado pelo pé, que pode ser tocado e arrastado (também nas áreas novas, [CenaDaArea]). */
 @Composable
-private fun ObjetoNaCena(
+internal fun ObjetoNaCena(
     item: ItemCasa?,
     pos: Posicao,
     larguraCena: Float,
@@ -599,6 +592,13 @@ private fun ObjetoNaCena(
     tempo: Float = 0f,
     noite: Boolean = false,
     descricao: String = item?.nome ?: "",
+    /**
+     * Passeio (bichinhos): quanto o objeto está deslocado para o lado agora, em pixels. Lido só na hora de
+     * posicionar, então o passeio não recompõe a cena. O toque e o arrasto acompanham o bicho.
+     */
+    deriva: (() -> Float)? = null,
+    /** Bichinhos dão um pulinho de alegria quando a criança toca neles. */
+    pularAoTocar: Boolean = false,
     conteudo: @Composable (larguraPx: Float) -> Unit,
 ) {
     val faisca = remember { Animatable(1f) }
@@ -646,7 +646,7 @@ private fun ObjetoNaCena(
     val y = pos.y * alturaCena - toqueH + arrasto.y
     Box(
         Modifier
-            .offset { IntOffset(x.roundToInt(), (y + salto.value).roundToInt()) }
+            .offset { IntOffset((x + if (arrastando) 0f else deriva?.invoke() ?: 0f).roundToInt(), (y + salto.value).roundToInt()) }
             .size(with(densidade) { toqueW.toDp() }, with(densidade) { toqueH.toDp() })
             .zIndex(if (arrastando) 10f else 0f)
             .graphicsLayer {
@@ -667,6 +667,10 @@ private fun ObjetoNaCena(
                         .pointerInput(pos) {
                             detectTapGestures {
                                 onTocar()
+                                if (pularAoTocar) escopo.launch {
+                                    salto.animateTo(-h * 0.45f, tween(170))
+                                    salto.animateTo(0f, spring(dampingRatio = 0.35f))
+                                }
                                 escopo.launch {
                                     faisca.snapTo(0f)
                                     faisca.animateTo(1f, tween(700))
@@ -680,6 +684,8 @@ private fun ObjetoNaCena(
                         .pointerInput(pos) {
                             detectDragGestures(
                                 onDragStart = {
+                                    // O bicho que passeava fica parado onde estava, embaixo do dedo.
+                                    deriva?.let { arrasto += Offset(it(), 0f) }
                                     arrastando = true
                                     sons.pegar()
                                     vibracao.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
@@ -752,7 +758,11 @@ fun proporcaoDoItem(item: ItemCasa?): Float = item?.let { ItensDaCasa.proporcaoD
 @Composable
 fun ConteudoDoItem(item: ItemCasa, larguraPx: Float, modifier: Modifier = Modifier) {
     val desenho = item.desenho
-    if (desenho != null) {
+    val bicho = bichoDesenhadoDe(item.id)
+    if (bicho != null) {
+        // O cachorrinho e o gatinho de corpo inteiro também no baú e no prêmio (parados, abanando o rabo).
+        BichoDesenhado(bicho.first, bicho.second, { PARADO_NO_BAU }, modifier)
+    } else if (desenho != null) {
         Canvas(modifier.fillMaxSize()) { desenharMovel(desenho) }
     } else {
         EmojiGrande(item.icone, larguraPx, modifier)
