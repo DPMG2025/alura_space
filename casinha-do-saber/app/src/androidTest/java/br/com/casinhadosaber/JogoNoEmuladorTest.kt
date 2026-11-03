@@ -676,6 +676,35 @@ class JogoNoEmuladorTest {
         assertEquals("a cama não pode ir para o jardim", dentro, prefs.getString("colocados", ""))
     }
 
+    /** Domínio visível: o botão do mapa no caminho, o mapa dos 25 mundos e o álbum de figurinhas. */
+    @Test
+    fun abrirMapaEAlbum() {
+        prefs.edit()
+            .putString("genero", "MENINA").putString("nome", "Ana")
+            .putString("estrelas", (0 until 12).joinToString(";") { "MATEMATICA:$it=3" })
+            .putString("colocados", "terreno,0.5,0.5;paredes,0.5,0.5;telhado,0.5,0.5;porta,0.5,0.5;cama,0.27,0.528;janelas,0.5,0.5")
+            .commit()
+        cenario = ActivityScenario.launch(MainActivity::class.java)
+
+        // Caminho -> mapa dos mundos -> álbum
+        esperar("Caminho Números", 15_000)
+        regra.onAllNodes(hasContentDescription("Caminho Números", substring = true)).onFirst().performClick()
+        esperar("Mapa dos mundos")
+        regra.onAllNodes(hasContentDescription("Mapa dos mundos")).onFirst().performClick()
+        esperar("Mundo 1, Jardim, completo")
+        avancar(1_000)
+        capturar("e30_mapa_dos_mundos")
+        regra.onAllNodes(hasContentDescription("Álbum de figurinhas")).onFirst().performClick()
+        esperar("Figurinha")
+        avancar(800)
+        capturar("e31_album")
+        regra.onAllNodes(hasContentDescription("Voltar")).onFirst().performClick()
+        esperar("Voltar para o caminho")
+        avancar(500)
+        // A casa por dentro (onde ficam o ateliê e o piano) tem um laço de quadros sem fim e não fica ociosa para
+        // este teste; o ateliê e o piano são conferidos nas capturas (CapturasCriativoTest).
+    }
+
     @Test
     fun vozesEmPortuguesEIngles() {
         val pronto = CountDownLatch(1)

@@ -121,6 +121,9 @@ import br.com.casinhadosaber.ui.componentes.Forma
 import br.com.casinhadosaber.ui.componentes.Humor
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.MaoQueArrasta
+import br.com.casinhadosaber.ui.componentes.BotoesDoCantinho
+import br.com.casinhadosaber.ui.componentes.CantinhoDaSala
+import br.com.casinhadosaber.ui.componentes.formasDaSalaCriativa
 import br.com.casinhadosaber.ui.componentes.PROPORCAO_CRIANCA
 import br.com.casinhadosaber.ui.componentes.Projecao
 import br.com.casinhadosaber.ui.componentes.caixa
@@ -195,6 +198,8 @@ fun TelaCasaPorDentro(
     lojaInicial: Boolean = false,
     /** Para as capturas de tela: a dica de arrastar começa logo (sem esperar a criança ficar parada). */
     dicaLogo: Boolean = false,
+    /** Cantinho criativo da sala (ateliê, piano, diplomas e álbum). Sem eles, os botões não aparecem. */
+    cantinho: CantinhoDaSala? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -875,6 +880,14 @@ fun TelaCasaPorDentro(
                 }
             }
 
+            // Cantinho criativo (ateliê, piano, diplomas e álbum): uma fileira embaixo da cena, fora da casa,
+            // escondida enquanto a geladeira, o guarda-roupa ou a lojinha estão abertos.
+            if (cantinho != null && !cena.geladeiraAberta && !cena.guardaRoupaAberto && !lojaAberta) {
+                BotoesDoCantinho(
+                    estado, cantinho.onAtelie, cantinho.onPiano, cantinho.onDiplomas, cantinho.onAlbum,
+                    Modifier.align(Alignment.CenterHorizontally).padding(bottom = 10.dp),
+                )
+            }
             if (cena.geladeiraAberta) {
                 PainelGeladeira(
                     comidas = Loja.naGeladeira(estado),
@@ -1493,6 +1506,8 @@ private fun montarAndar(
             ),
         )
     }
+    // quadros pintados no ateliê e diplomas, nas paredes da sala
+    daParede(Comodo.SALA, formasDaSalaCriativa(andar, proj, estado))
     // espessura e acabamento no alto das paredes
     val acabamento = Color(0xFFFDF3E4)
     paredes += Forma(proj.piso(-0.14f, -0.14f, lado, 0f, h), acabamento)
