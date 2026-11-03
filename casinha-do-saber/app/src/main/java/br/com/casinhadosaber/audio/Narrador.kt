@@ -7,10 +7,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import android.speech.tts.Voice
+import android.os.Bundle
 import br.com.casinhadosaber.dominio.Idioma
 import br.com.casinhadosaber.dominio.Trecho
 import br.com.casinhadosaber.dominio.pt
+import java.io.File
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Lê as instruções em voz alta. Crianças de 4 anos ainda não leem, então toda pergunta é falada.
@@ -33,6 +36,10 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
     var falando by mutableStateOf(false)
         private set
     @Volatile private var ultimaFala = ""
+    private val gravacoes = ConcurrentHashMap<String, (Boolean) -> Unit>()
+
+    /** O motor de voz já respondeu e está pronto para falar? */
+    val estaPronto: Boolean get() = pronto
 
     /** Descrição das vozes escolhidas (para o relatório do teste no emulador). */
     fun descricaoDasVozes(): String =
@@ -51,10 +58,16 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
         vozEn = melhorVoz(Locale.US)
         vozesBoas = (vozPt?.quality ?: 0) >= Voice.QUALITY_HIGH && (vozEn?.quality ?: 0) >= Voice.QUALITY_HIGH
         tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(utteranceId: String?) { falando = true }
-            override fun onDone(utteranceId: String?) { if (utteranceId == ultimaFala) falando = false }
+            override fun onStart(utteranceId: String?) { if (utteranceId == null || !gravacoes.containsKey(utteranceId)) falando = true }
+            override fun onDone(utteranceId: String?) {
+                utteranceId?.let { gravacoes.remove(it) }?.let { it(true); return }
+                if (utteranceId == ultimaFala) falando = false
+            }
             @Deprecated("Deprecated in Java")
-            override fun onError(utteranceId: String?) { falando = false }
+            override fun onError(utteranceId: String?) {
+                utteranceId?.let { gravacoes.remove(it) }?.let { it(false); return }
+                falando = false
+            }
             override fun onStop(utteranceId: String?, interrupted: Boolean) { falando = false }
         })
         pendente?.let { falar(it) }
@@ -78,20 +91,32 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
             pendente = trechos
             return
         }
-        var primeiro = true
-        for (trecho in trechos) {
-            val ingles = trecho.idioma == Idioma.EN && inglesDisponivel
-            // Frases separadas por pontuação viram falas com pausinhas entre elas.
-            val frases = trecho.texto.split(Regex("(?<=[.!?])\\s+")).filter { it.isNotBlank() }
-            for (frase in frases) {
-                if (!primeiro) tts.playSilentUtterance(if (ingles) 300L else 220L, TextToSpeech.QUEUE_ADD, null)
-                configurar(ingles)
-                val id = "fala-${System.nanoTime()}"
-                ultimaFala = id
-                tts.speak(frase, if (primeiro) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, null, id)
-                primeiro = false
-            }
+        frases(trechos).forEachIndexed { i, (frase, ingles) ->
+            if (i > 0) tts.playSilentUtterance(if (ingles) 300L else 220L, TextToSpeech.QUEUE_ADD, null)
+            configurar(ingles)
+            val id = "fala-${System.nanoTime()}"
+            ultimaFala = id
+            tts.speak(frase, if (i == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, null, id)
         }
+    }
+
+    /**
+     * Grava uma frase num arquivo WAV com a mesma voz, velocidade e tom da narração
+     * (usado no emulador do CI para conferir as falas). [aoTerminar] recebe se deu certo.
+     */
+    fun gravar(frase: String, ingles: Boolean, arquivo: File, aoTerminar: (Boolean) -> Unit) {
+        if (!pronto) { aoTerminar(false); return }
+        val id = "gravacao-${System.nanoTime()}"
+        gravacoes[id] = aoTerminar
+        configurar(ingles && inglesDisponivel)
+        if (tts.synthesizeToFile(frase, Bundle(), arquivo, id) != TextToSpeech.SUCCESS) gravacoes.remove(id)?.invoke(false)
+    }
+
+    /** As frases que o narrador fala, na ordem, cada uma com o idioma (true = inglês). */
+    fun frases(trechos: List<Trecho>): List<Pair<String, Boolean>> = trechos.flatMap { trecho ->
+        val ingles = trecho.idioma == Idioma.EN && inglesDisponivel
+        // Frases separadas por pontuação viram falas com pausinhas entre elas.
+        trecho.texto.split(Regex("(?<=[.!?])\\s+")).filter { it.isNotBlank() }.map { it to ingles }
     }
 
     private fun configurar(ingles: Boolean) {

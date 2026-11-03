@@ -4,6 +4,62 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+/**
+ * Varre o código do app e lista todos os emojis usados (um por linha), para o teste no emulador
+ * conferir que cada um tem desenho na fonte embutida. Símbolos de texto comuns (→, −, ★, ⌫) ficam
+ * de fora: são desenhados pela fonte normal do sistema, não pela de emojis.
+ */
+abstract class ListarEmojis : DefaultTask() {
+    @get:InputFiles
+    abstract val fontes: ConfigurableFileCollection
+
+    @get:OutputDirectory
+    abstract val saida: DirectoryProperty
+
+    @TaskAction
+    fun gerar() {
+        val simbolosDeTexto = setOf(0x2192, 0x2212, 0x2605, 0x232B)
+        fun eBase(cp: Int) = cp >= 0x1F000 && cp !in 0x1F3FB..0x1F3FF && cp < 0xE0000 ||
+            cp in 0x2190..0x2BFF && cp !in simbolosDeTexto || cp == 0x3030 || cp == 0x303D || cp == 0x3297 || cp == 0x3299 ||
+            cp == 0x00A9 || cp == 0x00AE || cp == 0x203C || cp == 0x2049 || cp == 0x2122 || cp == 0x2139
+        fun eJunta(cp: Int) = cp == 0xFE0F || cp == 0x20E3 || cp in 0x1F3FB..0x1F3FF || cp in 0xE0020..0xE007F
+        val achados = sortedSetOf<String>()
+        fontes.files.filter { it.isFile && it.extension == "kt" }.forEach { arquivo ->
+            val cps = arquivo.readText().codePoints().toArray()
+            var i = 0
+            while (i < cps.size) {
+                val cp = cps[i]
+                val keycap = (cp in 0x30..0x39 || cp == 0x23 || cp == 0x2A) && i + 2 < cps.size && cps[i + 1] == 0xFE0F && cps[i + 2] == 0x20E3
+                if (!eBase(cp) && !keycap) { i++; continue }
+                val seq = StringBuilder().appendCodePoint(cp)
+                var j = i + 1
+                while (j < cps.size) {
+                    val c = cps[j]
+                    if (eJunta(c)) { seq.appendCodePoint(c); j++ }
+                    else if (c == 0x200D && j + 1 < cps.size && eBase(cps[j + 1])) { seq.appendCodePoint(c).appendCodePoint(cps[j + 1]); j += 2 }
+                    else break
+                }
+                achados += seq.toString()
+                i = j
+            }
+        }
+        val pasta = saida.get().asFile
+        pasta.mkdirs()
+        File(pasta, "emojis_do_app.txt").writeText(achados.joinToString("\n", postfix = "\n"))
+    }
+}
+
+val listarEmojis = tasks.register<ListarEmojis>("listarEmojis") {
+    fontes.from(fileTree("src/main/java"))
+    saida.set(layout.buildDirectory.dir("generated/emojis"))
+}
+
+androidComponents {
+    onVariants { variante ->
+        variante.androidTest?.sources?.assets?.addGeneratedSourceDirectory(listarEmojis, ListarEmojis::saida)
+    }
+}
+
 android {
     namespace = "br.com.casinhadosaber"
     compileSdk = 35
