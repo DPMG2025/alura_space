@@ -258,7 +258,7 @@ internal fun AtividadeTracar(
                                         erros++
                                         avisarErro()
                                         sons.erro()
-                                        narrador.falar("Comece no pontinho verde e siga as bolinhas da letra ${Vocabulario.falaDaLetra(tracar.letra)}.")
+                                        narrador.falar("Comece no pontinho verde e siga as bolinhas ${nomeDoQueSeTraca(tracar.letra)}.")
                                     }
                                     // Fez outro traço antes da hora: só lembra da ordem, sem contar erro.
                                     !avancou && pertoDeOutro && comprimento > grande * 0.5f -> {
@@ -390,4 +390,14 @@ private fun DrawScope.setinha(t: List<Offset>, k: Float, cor: Color, tamanho: Fl
     }
     drawPath(seta, Color.White, style = Stroke(5.dp.toPx(), join = StrokeJoin.Round))
     drawPath(seta, cor)
+}
+
+/** "da letra bê", "da letra bê pequena" ou "do número três", para a fala de ajuda do traçado. */
+private fun nomeDoQueSeTraca(letra: String): String {
+    val c = letra.trim().firstOrNull() ?: return "da letra"
+    return when {
+        c.isDigit() -> "do número ${Vocabulario.porExtenso(c.digitToInt())}"
+        c.isLowerCase() -> "da letra ${Vocabulario.falaDaLetra(letra)} pequena"
+        else -> "da letra ${Vocabulario.falaDaLetra(letra)}"
+    }
 }

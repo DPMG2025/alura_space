@@ -114,6 +114,8 @@ fun TelaPremio(
     onVoltar: () -> Unit,
     /** Presente da loja quando a casa já está completa (ver `ResultadoPartida.brinde`). */
     brinde: Produto? = null,
+    /** Fala no lugar de "Você terminou a fase!" (no fim do treino, por exemplo). */
+    mensagem: String? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -146,7 +148,7 @@ fun TelaPremio(
 
     LaunchedEffect(Unit) {
         sons.acerto()
-        val parabens = if (nome.isBlank()) "Parabéns! Você terminou a fase!" else "Parabéns, $nome! Você terminou a fase!"
+        val parabens = mensagem ?: if (nome.isBlank()) "Parabéns! Você terminou a fase!" else "Parabéns, $nome! Você terminou a fase!"
         narrador.falar(if (temPresente) "$parabens Toque no presente três vezes para abrir!" else parabens)
         for (i in 1..estrelas) {
             delay(380)

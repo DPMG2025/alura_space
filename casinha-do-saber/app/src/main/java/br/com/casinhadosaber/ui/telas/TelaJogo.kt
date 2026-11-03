@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -98,14 +99,25 @@ fun TelaJogo(
     facilitada: Boolean = false,
     /** Perguntas já escolhidas (missão do dia); se vier vazio, sorteia as da fase. */
     perguntasProntas: List<Pergunta> = emptyList(),
+    /**
+     * Treino sem fim: cada pergunta nova vem daqui, recebendo os resultados até agora (para a dificuldade
+     * se ajustar). O ✖ termina o treino e entrega os resultados em [onConcluir].
+     */
+    treino: ((resultados: List<Boolean>) -> Pergunta)? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     val escopo = rememberCoroutineScope()
     // Na rodada facilitada, a primeira pergunta é um exemplo resolvido junto (a resposta brilha e não conta).
     val perguntas = remember(fase, facilitada) {
-        val normais = perguntasProntas.ifEmpty { GeradorDeFases().perguntas(fase) }
-        if (facilitada) listOf(GeradorDeFases().perguntas(fase, 1).first()) + normais else normais
+        val iniciais = when {
+            treino != null -> listOf(treino(emptyList()))
+            else -> {
+                val normais = perguntasProntas.ifEmpty { GeradorDeFases().perguntas(fase) }
+                if (facilitada) listOf(GeradorDeFases().perguntas(fase, 1).first()) + normais else normais
+            }
+        }
+        mutableStateListOf<Pergunta>().apply { addAll(iniciais) }
     }
     var indice by remember { mutableIntStateOf(0) }
     var resultados by remember { mutableStateOf(listOf<Boolean>()) }
@@ -151,7 +163,13 @@ fun TelaJogo(
         val caracteres = elogio.length + pergunta.reforco.sumOf { it.texto.length }
         escopo.launch {
             delay((1200L + caracteres * 65L).coerceAtMost(5000L))
-            if (indice < perguntas.lastIndex) {
+            if (treino != null) {
+                // Treino sem fim: a próxima pergunta já vem ajustada aos acertos e erros até aqui.
+                perguntas.add(treino(resultados))
+                indice++
+                erradas = emptySet()
+                acertou = false
+            } else if (indice < perguntas.lastIndex) {
                 indice++
                 erradas = emptySet()
                 acertou = false
@@ -187,7 +205,11 @@ fun TelaJogo(
         Column(Modifier.fillMaxSize().padding(12.dp)) {
             // barra de cima
             Row(verticalAlignment = Alignment.CenterVertically) {
-                BotaoRedondo("✖️", "Sair da fase", onSair, tamanho = 48.dp)
+                if (treino != null) {
+                    BotaoRedondo("✖️", "Terminar o treino", { onConcluir(resultados) }, tamanho = 48.dp)
+                } else {
+                    BotaoRedondo("✖️", "Sair da fase", onSair, tamanho = 48.dp)
+                }
                 Row(
                     Modifier.weight(1f),
                     horizontalArrangement = Arrangement.Center,
@@ -195,7 +217,9 @@ fun TelaJogo(
                     // Bolinhas do progresso, uma cor por estado (nunca vermelho: vermelho parece erro):
                     // verde com estrela = acertou de primeira; amarelo com estrela = acertou com ajuda;
                     // branca com borda na cor do caminho = a da vez; branca clarinha = ainda vem.
-                    for (i in perguntas.indices) {
+                    // No treino (sem fim), só as últimas bolinhas aparecem.
+                    val visiveis = if (treino != null) maxOf(0, indice - 5)..indice else perguntas.indices
+                    for (i in visiveis) {
                         val resultado = comoFoi[i]
                         val daVez = i == indice && resultado == null
                         val tamanho = if (i == indice) 24.dp else 18.dp
@@ -408,6 +432,7 @@ private fun CenaDaPergunta(cena: Cena) {
                 .padding(horizontal = 24.dp, vertical = 8.dp),
         )
         is Cena.Conta -> Conta(cena)
+        is Cena.Grade -> Grade(cena)
         is Cena.Sequencia -> BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             // Todas as figuras numa linha só, para a fila ficar clara.
             val n = cena.itens.size
@@ -435,6 +460,57 @@ private fun CenaDaPergunta(cena: Cena) {
                     }
                 }
             }
+            }
+        }
+    }
+}
+
+/**
+ * Quadro em linhas e colunas: labirinto, sudoku de figuras e gráfico. "" é uma casinha vazia
+ * (branca) e "?" é a casinha da pergunta, amarela e pulsando como nas filas.
+ */
+@Composable
+private fun Grade(g: Cena.Grade) {
+    BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        val vao = 4.dp
+        val vaoDoBloco = if (g.blocos > 0) 8.dp else 0.dp
+        val blocosNaLinha = if (g.blocos > 0) g.colunas / g.blocos - 1 else 0
+        val blocosNaColuna = if (g.blocos > 0) g.linhas / g.blocos - 1 else 0
+        val pelaLargura = (maxWidth - vao * (g.colunas - 1) - vaoDoBloco * blocosNaLinha - 24.dp) / g.colunas
+        val pelaAltura = (maxHeight - vao * (g.linhas - 1) - vaoDoBloco * blocosNaColuna - 24.dp) / g.linhas
+        val lado = minOf(pelaLargura, pelaAltura, 72.dp).coerceAtLeast(24.dp)
+        Column(
+            Modifier
+                .background(Color.White.copy(alpha = 0.75f), RoundedCornerShape(20.dp))
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            for (l in 0 until g.linhas) {
+                if (l > 0) Spacer(Modifier.height(if (g.blocos > 0 && l % g.blocos == 0) vao + vaoDoBloco else vao))
+                Row {
+                    for (c in 0 until g.colunas) {
+                        if (c > 0) Spacer(Modifier.width(if (g.blocos > 0 && c % g.blocos == 0) vao + vaoDoBloco else vao))
+                        val item = g.itens[l * g.colunas + c]
+                        val pergunta = item == "?"
+                        Box(
+                            Modifier
+                                .size(lado)
+                                .then(if (pergunta) Modifier.pulsando() else Modifier)
+                                .background(if (pergunta) Cores.Estrela else Color.White, RoundedCornerShape(12.dp))
+                                .border(2.dp, if (pergunta) Color(0xFFE0A800) else Color(0xFFEDE6FF), RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (item.isNotEmpty()) {
+                                Text(
+                                    item,
+                                    fontSize = (lado.value * 0.58f).sp,
+                                    lineHeight = (lado.value * 0.7f).sp,
+                                    fontWeight = if (pergunta) FontWeight.Bold else null,
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -623,7 +699,15 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui
     when (v) {
         is Visual.Texto -> Text(
             v.texto,
-            style = MaterialTheme.typography.displayLarge,
+            // Palavras e valores maiores (CHAVE, R$ 10) diminuem para caber inteiros no cartão.
+            style = MaterialTheme.typography.displayLarge.let { estilo ->
+                when (v.texto.length) {
+                    in 0..3 -> estilo
+                    4 -> estilo.copy(fontSize = 44.sp)
+                    5 -> estilo.copy(fontSize = 36.sp)
+                    else -> estilo.copy(fontSize = 30.sp)
+                }
+            },
             color = if (certa) Color.White else Cores.Texto,
             maxLines = 1,
         )

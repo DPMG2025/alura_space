@@ -41,6 +41,18 @@ sealed interface Cena {
 
     /** Sequência com o último item escondido por um "?". */
     data class Sequencia(val itens: List<String>) : Cena
+
+    /**
+     * Quadro em linhas e colunas (labirinto, sudoku de figuras, gráfico de figuras).
+     * "" é uma casinha vazia e "?" é a casinha da pergunta. [blocos] > 0 separa o quadro em
+     * blocos daquele tamanho (no sudoku 4 por 4, blocos de 2 por 2).
+     */
+    data class Grade(val colunas: Int, val itens: List<String>, val blocos: Int = 0) : Cena {
+        init {
+            require(colunas > 0 && itens.size % colunas == 0) { "Quadro incompleto" }
+        }
+        val linhas: Int get() = itens.size / colunas
+    }
 }
 
 /**

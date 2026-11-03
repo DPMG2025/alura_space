@@ -11,7 +11,7 @@ import kotlin.random.Random
 class GeradorDeFasesTest {
 
     @Test
-    fun `cada trilha tem vinte e cinco fases`() {
+    fun `cada trilha tem cinquenta fases`() {
         val g = GeradorDeFases(Random(1))
         for (t in Trilha.entries) assertEquals(GeradorDeFases.FASES_POR_TRILHA, g.fases(t).size)
     }
