@@ -65,6 +65,7 @@ import br.com.casinhadosaber.dados.ArquivoDaCopia
 import br.com.casinhadosaber.dominio.Copia
 import br.com.casinhadosaber.dominio.CopiaDoProgresso
 import br.com.casinhadosaber.dominio.ResultadoDaCopia
+import br.com.casinhadosaber.dominio.resumo
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import br.com.casinhadosaber.dominio.Livrinhos
@@ -176,13 +177,22 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         narrador.parar()
         musica.pausar()
-        // Tempo de uso, só para a área dos pais (fica no aparelho).
-        if (inicioDaSessao > 0) {
-            val segundos = (System.currentTimeMillis() - inicioDaSessao) / 1000
-            repositorio.atualizar { it.copy(segundosJogados = it.segundosJogados + segundos) }
-            repositorio.somarTempoDeHoje(segundos)
-            inicioDaSessao = 0
-        }
+        fecharTempoDaSessao()
+        inicioDaSessao = 0
+    }
+
+    /**
+     * Soma o tempo desde [inicioDaSessao] na criança que está jogando (área dos pais) e na contagem do
+     * aparelho, e recomeça a contar. Chamado ao pausar e antes de trocar de criança ou recuperar uma cópia,
+     * para o tempo não ir para a criança errada.
+     */
+    private fun fecharTempoDaSessao() {
+        if (inicioDaSessao <= 0) return
+        val agora = System.currentTimeMillis()
+        val segundos = (agora - inicioDaSessao) / 1000
+        repositorio.atualizar { it.copy(segundosJogados = it.segundosJogados + segundos) }
+        repositorio.somarTempoDeHoje(segundos)
+        inicioDaSessao = agora
     }
 
     override fun onStop() {
@@ -527,6 +537,7 @@ class MainActivity : ComponentActivity() {
                     )
 
                     Tela.QuemVaiJogar -> TelaQuemVaiJogar(repo.criancas) { id ->
+                        fecharTempoDaSessao()
                         repo.trocarCrianca(id)
                         conquistas = NovasConquistas()
                         irPara(if (repo.estado.perfil == null) Tela.Perfil else Tela.Inicio)
@@ -667,14 +678,18 @@ class MainActivity : ComponentActivity() {
         val familia = AcoesDaFamilia(
             criancas = repo.criancas,
             ativa = repo.ativa,
-            onAdicionar = { if (repo.novaCrianca() != null) { aoTrocar(); irPara(Tela.Perfil) } },
+            onAdicionar = {
+                fecharTempoDaSessao()
+                if (repo.novaCrianca() != null) { aoTrocar(); irPara(Tela.Perfil) }
+            },
             onJogarCom = { id ->
+                fecharTempoDaSessao()
                 repo.trocarCrianca(id)
                 aoTrocar()
                 irPara(if (repo.estado.perfil == null) Tela.Perfil else Tela.Inicio)
             },
             onRenomear = repo::renomearCrianca,
-            onApagar = { id -> repo.apagarCrianca(id); aoTrocar() },
+            onApagar = { id -> fecharTempoDaSessao(); repo.apagarCrianca(id); aoTrocar() },
         )
         val copia = AcoesDaCopia(
             onGuardar = { runCatching { guardar.launch(Copia.nomeDoArquivo(repo.hojeData())) } },
@@ -684,11 +699,24 @@ class MainActivity : ComponentActivity() {
             },
             onRecuperar = { runCatching { recuperar.launch(arrayOf("*/*")) } },
             pendente = pendente,
+            // O que está no aparelho agora, para o adulto comparar com a cópia antes de recuperar.
+            atual = if (pendente != null) repo.copiaDoProgresso().resumo() else emptyList(),
             onConfirmar = {
-                pendente?.let { repo.restaurar(it) }
+                fecharTempoDaSessao()
+                pendente?.let { repo.recuperar(it) }
                 pendente = null
                 aoTrocar()
-                aviso = "Pronto! O progresso da cópia voltou."
+                aviso = "Pronto! O progresso da cópia voltou. Se foi engano, toque em \"Desfazer a recuperação\"."
+            },
+            onDesfazer = if (repo.podeDesfazerRecuperacao) {
+                {
+                    fecharTempoDaSessao()
+                    val ok = repo.desfazerRecuperacao()
+                    aoTrocar()
+                    aviso = if (ok) "Pronto! O progresso de antes da recuperação voltou." else "Não deu para desfazer a recuperação."
+                }
+            } else {
+                null
             },
             onCancelar = { pendente = null },
             aviso = aviso,

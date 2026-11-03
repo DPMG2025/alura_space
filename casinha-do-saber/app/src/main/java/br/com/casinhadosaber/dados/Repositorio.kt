@@ -18,7 +18,9 @@ import br.com.casinhadosaber.dominio.Genero
 import br.com.casinhadosaber.dominio.Perfil
 import br.com.casinhadosaber.dominio.Posicao
 import br.com.casinhadosaber.dominio.Serializacao
+import br.com.casinhadosaber.dominio.Copia
 import br.com.casinhadosaber.dominio.CopiaDoProgresso
+import br.com.casinhadosaber.dominio.ResultadoDaCopia
 import br.com.casinhadosaber.dominio.CriancaDaCasa
 import br.com.casinhadosaber.dominio.CriancaGuardada
 import br.com.casinhadosaber.dominio.Familia
@@ -127,6 +129,7 @@ class Repositorio(private val context: Context) {
     fun apagarTudo() {
         prefs.edit(commit = true) { clear() }
         cadernoDa(ativa).apagarTudo()
+        descartarDesfazer()
         estado = EstadoJogo()
         if (criancas.size <= 1) {
             aparelho.edit(commit = true) { AJUSTES_DO_APARELHO.forEach { remove(it) } }
@@ -165,7 +168,7 @@ class Repositorio(private val context: Context) {
     }
 
     fun renomearCrianca(id: String, nome: String) {
-        val limpo = nome.trim().take(16)
+        val limpo = Familia.cortarNome(nome.trim())
         if (id == ativa) {
             estado.perfil?.let { p -> atualizar { it.copy(perfil = p.copy(nome = limpo)) } }
         } else {
@@ -187,6 +190,7 @@ class Repositorio(private val context: Context) {
         if (id == ativa) trocarCrianca(resto.first())
         arquivoDa(id).edit(commit = true) { clear() }
         cadernoDa(id).apagarTudo()
+        descartarDesfazer()
         aparelho.edit(commit = true) { putString(CHAVE_CRIANCAS, Familia.idsParaTexto(resto)) }
         criancas = lerCriancas()
     }
@@ -199,32 +203,104 @@ class Repositorio(private val context: Context) {
             CriancaGuardada(c.id, lerMapa(arquivoDa(c.id)).filterKeys { it !in AJUSTES_DO_APARELHO })
         },
         ativa = ativa,
-        aparelho = lerMapa(aparelho).filterKeys { it in Familia.AJUSTES_QUE_VIAJAM },
+        // Sempre os três, mesmo nunca mexidos: recuperar volta exatamente o que estava valendo (padrões inclusive).
+        aparelho = mapOf(
+            SOM to ValorGuardado.Logico(somLigado),
+            MUSICA to ValorGuardado.Logico(musicaLigada),
+            TIMER to ValorGuardado.Inteiro(limiteMinutos),
+        ),
         feitaEm = hojeData(),
     )
+
+    /** Há como desfazer a última recuperação (o progresso de antes dela está guardado no aparelho)? */
+    var podeDesfazerRecuperacao by mutableStateOf(arquivoAntesDeRecuperar().isFile)
+        private set
+
+    init {
+        // Depois de todos os campos acima (estado, crianças, ajustes) estarem lidos.
+        terminarRecuperacaoInterrompida()
+    }
+
+    /**
+     * Recupera a cópia guardando antes o progresso atual em `antes-de-recuperar.json`, para o adulto poder
+     * desfazer ("Desfazer a recuperação" na área dos pais).
+     */
+    fun recuperar(copia: CopiaDoProgresso) {
+        runCatching { arquivoAntesDeRecuperar().writeText(Copia.paraTexto(copiaDoProgresso())) }
+        restaurar(copia)
+        podeDesfazerRecuperacao = arquivoAntesDeRecuperar().isFile
+    }
+
+    /** Volta o progresso de antes da última recuperação e apaga o arquivo guardado. Devolve se deu certo. */
+    fun desfazerRecuperacao(): Boolean {
+        val arquivo = arquivoAntesDeRecuperar()
+        val texto = runCatching { arquivo.readText() }.getOrNull()
+        val ok = when (val r = Copia.deTexto(texto)) {
+            is ResultadoDaCopia.Valida -> { restaurar(r.copia); true }
+            is ResultadoDaCopia.Invalida -> false
+        }
+        runCatching { arquivo.delete() }
+        podeDesfazerRecuperacao = false
+        return ok
+    }
+
+    /** Apagar uma criança apaga também o progresso guardado para desfazer (ele tem os dados dela). */
+    private fun descartarDesfazer() {
+        runCatching { arquivoAntesDeRecuperar().delete() }
+        podeDesfazerRecuperacao = false
+    }
+
+    private fun arquivoAntesDeRecuperar() = java.io.File(context.filesDir, ANTES_DE_RECUPERAR)
+    private fun arquivoRecuperando() = java.io.File(context.filesDir, RECUPERANDO)
+
+    /**
+     * O app fechou (bateria, sistema) no meio de uma recuperação: a cópia ficou guardada em
+     * `recuperando.json`, então termina de aplicar. Sem o arquivo (ou estragado), só tira a marca.
+     */
+    private fun terminarRecuperacaoInterrompida() {
+        if (!aparelho.getBoolean(CHAVE_RECUPERANDO, false)) return
+        val r = Copia.deTexto(runCatching { arquivoRecuperando().readText() }.getOrNull())
+        if (r is ResultadoDaCopia.Valida) {
+            restaurar(r.copia)
+        } else {
+            aparelho.edit(commit = true) { remove(CHAVE_RECUPERANDO) }
+            runCatching { arquivoRecuperando().delete() }
+        }
+    }
 
     /**
      * Troca todo o progresso pelo da cópia (já validada por [br.com.casinhadosaber.dominio.Copia.deTexto]).
      * Grava cada arquivo inteiro e só no fim troca a lista de crianças. A contagem de tempo de hoje fica como está.
      */
     fun restaurar(copia: CopiaDoProgresso) {
-        val antigos = criancas.map { it.id }
+        // A lista de antes vem do arquivo (não do estado em memória), para valer também ao terminar uma
+        // recuperação interrompida.
+        val antigos = idsGuardados()
         val novos = copia.criancas.map { it.id }
+        // 1. Marca "recuperando" com a cópia guardada: se o app fechar no meio, termina ao abrir.
+        val guardouACopia = runCatching { arquivoRecuperando().writeText(Copia.paraTexto(copia)) }.isSuccess
+        if (guardouACopia) aparelho.edit(commit = true) { putBoolean(CHAVE_RECUPERANDO, true) }
+        // 2. Os arquivos das crianças da cópia.
         for (c in copia.criancas) {
             arquivoDa(c.id).edit(commit = true) {
                 clear()
                 c.dados.filterKeys { it !in AJUSTES_DO_APARELHO }.forEach { (k, v) -> por(k, v) }
             }
         }
-        for (id in antigos - novos.toSet()) {
-            arquivoDa(id).edit(commit = true) { clear() }
-            cadernoDa(id).apagarTudo()
-        }
+        // 3. A lista nova e quem joga, de uma vez.
         aparelho.edit(commit = true) {
             copia.aparelho.filterKeys { it in Familia.AJUSTES_QUE_VIAJAM }.forEach { (k, v) -> por(k, v) }
             putString(CHAVE_CRIANCAS, Familia.idsParaTexto(novos))
             putString(CHAVE_ATIVA, copia.ativa)
         }
+        // 4. Só agora apaga quem não está na cópia (antes disso, a lista antiga ainda apontava para eles).
+        for (id in antigos - novos.toSet()) {
+            arquivoDa(id).edit(commit = true) { clear() }
+            cadernoDa(id).apagarTudo()
+        }
+        // 5. Pronto: tira a marca.
+        aparelho.edit(commit = true) { remove(CHAVE_RECUPERANDO) }
+        runCatching { arquivoRecuperando().delete() }
         somLigado = aparelho.getBoolean(SOM, true)
         musicaLigada = aparelho.getBoolean(MUSICA, true)
         limiteMinutos = aparelho.getInt(TIMER, 0)
@@ -241,6 +317,7 @@ class Repositorio(private val context: Context) {
             is ValorGuardado.Longo -> putLong(k, v.valor)
             is ValorGuardado.Decimal -> putFloat(k, v.valor)
             is ValorGuardado.Logico -> putBoolean(k, v.valor)
+            is ValorGuardado.Conjunto -> putStringSet(k, v.valor)
         }
     }
 
@@ -251,6 +328,7 @@ class Repositorio(private val context: Context) {
             is Long -> k to ValorGuardado.Longo(v)
             is Float -> k to ValorGuardado.Decimal(v)
             is Boolean -> k to ValorGuardado.Logico(v)
+            is Set<*> -> k to ValorGuardado.Conjunto(v.filterIsInstance<String>().toSet())
             else -> null
         }
     }.toMap()
@@ -407,6 +485,13 @@ class Repositorio(private val context: Context) {
     }
 
     private companion object {
+        /** Progresso de antes da última recuperação (para desfazer), em `filesDir`. */
+        const val ANTES_DE_RECUPERAR = "antes-de-recuperar.json"
+        /** A cópia sendo recuperada, enquanto a recuperação não termina. */
+        const val RECUPERANDO = "recuperando.json"
+        /** Marca no arquivo do aparelho: uma recuperação começou e ainda não terminou. */
+        const val CHAVE_RECUPERANDO = "recuperando"
+
         const val NOME = "nome"
         const val GENERO = "genero"
         const val PELE = "pele"

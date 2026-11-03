@@ -3,6 +3,8 @@ package br.com.casinhadosaber.dados
 import android.content.Context
 import br.com.casinhadosaber.dominio.CadernoEmArquivo
 import br.com.casinhadosaber.dominio.Copia
+import br.com.casinhadosaber.dominio.CopiaDoProgresso
+import br.com.casinhadosaber.dominio.CriancaGuardada
 import br.com.casinhadosaber.dominio.PaginaDoCaderno
 import br.com.casinhadosaber.dominio.Ponto
 import br.com.casinhadosaber.dominio.RegistroDeRevisao
@@ -10,6 +12,7 @@ import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.dominio.Genero
 import br.com.casinhadosaber.dominio.Perfil
 import br.com.casinhadosaber.dominio.ResultadoDaCopia
+import br.com.casinhadosaber.dominio.ValorGuardado
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -38,6 +41,8 @@ class RepositorioFamiliaTest {
             prefs(n).edit().clear().commit()
         }
         java.io.File(contexto.filesDir, "caderno").deleteRecursively()
+        java.io.File(contexto.filesDir, "antes-de-recuperar.json").delete()
+        java.io.File(contexto.filesDir, "recuperando.json").delete()
     }
 
     /** Como o app de antes guardava: um arquivo só, com o jogo e os ajustes do aparelho. */
@@ -219,5 +224,68 @@ class RepositorioFamiliaTest {
         assertEquals(listOf("GATO"), CadernoEmArquivo.em(contexto.filesDir).ler().map { it.palavra })
         repo.apagarTudo()
         assertTrue(CadernoEmArquivo.em(contexto.filesDir).ler().isEmpty())
+    }
+
+    /** Recuperar guarda o progresso de antes; desfazer volta ele e apaga o arquivo guardado. */
+    @Test
+    fun recuperarEDesfazer() {
+        gravarSaveAntigo()
+        val repo = Repositorio(contexto)
+        val antes = repo.estado
+        val copia = CopiaDoProgresso(
+            criancas = listOf(CriancaGuardada("1", mapOf("nome" to ValorGuardado.Texto("Leo"), "genero" to ValorGuardado.Texto("MENINO"), "moedas" to ValorGuardado.Inteiro(3)))),
+            ativa = "1",
+        )
+        assertFalse(repo.podeDesfazerRecuperacao)
+        repo.recuperar(copia)
+        assertEquals("Leo", repo.estado.perfil?.nome)
+        assertTrue(repo.podeDesfazerRecuperacao)
+        assertTrue(Repositorio(contexto).podeDesfazerRecuperacao)
+        assertTrue(repo.desfazerRecuperacao())
+        assertEquals(antes, repo.estado)
+        assertFalse(repo.podeDesfazerRecuperacao)
+        assertFalse(java.io.File(contexto.filesDir, "antes-de-recuperar.json").exists())
+    }
+
+    /** O app fechou no meio da recuperação: ao abrir de novo, ela termina (nada fica pela metade). */
+    @Test
+    fun recuperacaoInterrompidaTerminaAoAbrir() {
+        gravarSaveAntigo()
+        Repositorio(contexto).novaCrianca()
+        val copia = CopiaDoProgresso(
+            criancas = listOf(CriancaGuardada("1", mapOf("nome" to ValorGuardado.Texto("Leo"), "genero" to ValorGuardado.Texto("MENINO")))),
+            ativa = "1",
+        )
+        // Como se o app tivesse parado logo depois de marcar "recuperando".
+        java.io.File(contexto.filesDir, "recuperando.json").writeText(Copia.paraTexto(copia))
+        prefs("casinha_aparelho").edit().putBoolean("recuperando", true).commit()
+        val repo = Repositorio(contexto)
+        assertEquals(1, repo.criancas.size)
+        assertEquals("Leo", repo.estado.perfil?.nome)
+        assertFalse(prefs("casinha_aparelho").contains("recuperando"))
+        assertTrue(prefs("casinha_do_saber_crianca_2").all.isEmpty())
+        assertFalse(java.io.File(contexto.filesDir, "recuperando.json").exists())
+    }
+
+    /** Som, música e limite vão sempre na cópia, mesmo nunca mexidos (com os valores padrão). */
+    @Test
+    fun copiaLevaOsAjustesMesmoPadrao() {
+        val repo = Repositorio(contexto)
+        val a = repo.copiaDoProgresso().aparelho
+        assertEquals(ValorGuardado.Logico(true), a["som"])
+        assertEquals(ValorGuardado.Logico(true), a["musica"])
+        assertEquals(ValorGuardado.Inteiro(0), a["timer"])
+    }
+
+    /** Um conjunto de textos nas preferências vai e volta na cópia (o app de hoje não grava, mas não pode perder). */
+    @Test
+    fun conjuntoNasPreferenciasVaiEVolta() {
+        gravarSaveAntigo()
+        prefs("casinha_do_saber").edit().putStringSet("algum_conjunto", setOf("a", "b")).commit()
+        val repo = Repositorio(contexto)
+        val texto = Copia.paraTexto(repo.copiaDoProgresso())
+        limpar()
+        Repositorio(contexto).restaurar((Copia.deTexto(texto) as ResultadoDaCopia.Valida).copia)
+        assertEquals(setOf("a", "b"), prefs("casinha_do_saber").getStringSet("algum_conjunto", null))
     }
 }
