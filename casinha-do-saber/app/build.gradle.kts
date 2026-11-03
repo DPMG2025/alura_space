@@ -6,8 +6,9 @@ plugins {
 
 /**
  * Varre o código do app e lista todos os emojis usados (um por linha), para o teste no emulador
- * conferir que cada um tem desenho na fonte embutida. Símbolos de texto comuns (→, −, ★, ⌫) ficam
- * de fora: são desenhados pela fonte normal do sistema, não pela de emojis.
+ * conferir que cada um tem desenho na fonte embutida. Símbolos de texto comuns (→, −, ★, ⌫ e as formas
+ * ● ▲ ■ ▬ do pintar por símbolo e da geometria) ficam de fora: são desenhados pela fonte normal do
+ * sistema, não pela de emojis.
  */
 abstract class ListarEmojis : DefaultTask() {
     @get:InputFiles
@@ -18,7 +19,7 @@ abstract class ListarEmojis : DefaultTask() {
 
     @TaskAction
     fun gerar() {
-        val simbolosDeTexto = setOf(0x2192, 0x2212, 0x2605, 0x232B)
+        val simbolosDeTexto = setOf(0x2192, 0x2212, 0x2605, 0x232B, 0x25CF, 0x25B2, 0x25A0, 0x25AC)
         fun eBase(cp: Int) = cp >= 0x1F000 && cp !in 0x1F3FB..0x1F3FF && cp < 0xE0000 ||
             cp in 0x2190..0x2BFF && cp !in simbolosDeTexto || cp == 0x3030 || cp == 0x303D || cp == 0x3297 || cp == 0x3299 ||
             cp == 0x00A9 || cp == 0x00AE || cp == 0x203C || cp == 0x2049 || cp == 0x2122 || cp == 0x2139

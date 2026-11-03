@@ -1224,7 +1224,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
         val f4 = ModeloDeFase("Pescaria do 10", "🎣") { sorteio({ pescariaDeContas(10, "+", somas(1)) }, { pescariaDeContas(10, "+", somas(1)) }, { faltaParaDez(false) }) }
         val f5 = marco("Bandeirinha do mar", "🚩", f1, f2, f3, f4)
         val f6 = ModeloDeFase("Completar a dezena", "🦀") { completarDezena() }
-        val f7 = ModeloDeFase("Dominó do mar", "🁫") { sorteio({ dominoDoMar(12) }, { dominoDoMar(15) }, { completarDezena() }) }
+        val f7 = ModeloDeFase("Dominó do mar", "🎲") { sorteio({ dominoDoMar(12) }, { dominoDoMar(15) }, { completarDezena() }) }
         val f8 = ModeloDeFase("Dez e revisão", "🔁") { sorteio({ faltaParaDez(false) }, { completarDezena() }, { revisao(mundo6) }) }
         val f9 = ModeloDeFase("Passando pelo 10", "🐬") { sorteio({ somarPassandoDez() }, { somarPassandoDez() }, { completarDezena() }) }
         val f10 = ModeloDeFase("Chefão: o polvo", "👑") {
@@ -1545,7 +1545,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
         val f1 = ModeloDeFase("Somar dezenas redondas", "🐫") { dezenasInteiras(soma = true) }
         val f2 = ModeloDeFase("Balões do deserto", "🎈") { sorteio({ baloesDeContas((3..9).random(random) * 10, "+", somasDeDezenas) }, { baloesDeContas((3..9).random(random) * 10, "+", somasDeDezenas) }, { dezenasInteiras(true) }) }
         val f3 = ModeloDeFase("Dezena e unidade", "🌵") { dezenaMaisUnidade() }
-        val f4 = ModeloDeFase("Dominó do deserto", "🁫") {
+        val f4 = ModeloDeFase("Dominó do deserto", "🎲") {
             sorteio(
                 { val v = (2..9).toList().sorteia(4).map { it * 10 }; dominoDeContas(v, "+", somasDeDezenas, (2..9).map { it * 10 }.filter { it !in v }) },
                 { val v = (2..9).toList().sorteia(3).map { it * 10 }; dominoDeContas(v, "+", somasDeDezenas, (2..9).map { it * 10 }.filter { it !in v }) },
@@ -2066,7 +2066,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
         val f1 = ModeloDeFase("Tirar dezenas e unidades", "🍄") { tirarSemReagrupar() }
         val f2 = ModeloDeFase("Pescaria encantada", "🎣") { sorteio({ pescariaDeContas((11..66).filter { it % 10 in 1..6 }.random(random), "−", subtracoesSemReagrupar, VN.bosque[0]) }, { pescariaDeContas((11..55).random(random), "−", subtracoesSemReagrupar, VN.bosque[0]) }, { tirarSemReagrupar() }) }
         val f3 = ModeloDeFase("Subtrações parecidas", "🦉") { tirarSemReagrupar(parecidas = true) }
-        val f4 = ModeloDeFase("Dominó do bosque", "🁫") { sorteio({ dominoDoBosque() }, { dominoDoBosque() }, { tirarSemReagrupar() }) }
+        val f4 = ModeloDeFase("Dominó do bosque", "🎲") { sorteio({ dominoDoBosque() }, { dominoDoBosque() }, { tirarSemReagrupar() }) }
         val f5 = marco("Bandeirinha do bosque", "🚩", f1, f2, f3, f4)
         val f6 = ModeloDeFase("Tirar e comparar", "🧚") { tirarOuComparar() }
         val f7 = ModeloDeFase("Balança das fadas", "⚖️") { sorteio({ balancaQueFalta() }, { balancaQueFalta() }, { tirarOuComparar() }) }
@@ -2302,7 +2302,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
 
     private val mundo20: List<ModeloDeFase> by lazy {
         val f1 = ModeloDeFase("Emprestar uma dezena", "💎") { tirarComReagrupar() }
-        val f2 = ModeloDeFase("Dominó de cristal", "🁫") { sorteio({ dominoDaCaverna() }, { dominoDaCaverna() }, { tirarComReagrupar() }) }
+        val f2 = ModeloDeFase("Dominó de cristal", "🎲") { sorteio({ dominoDaCaverna() }, { dominoDaCaverna() }, { tirarComReagrupar() }) }
         val f3 = ModeloDeFase("Cuidado com a armadilha", "🦇") { tirarComReagrupar(parecidas = true) }
         val f4 = ModeloDeFase("Pescaria no lago escuro", "🎣") { sorteio({ pescariaDeContas((5..60).filter { it % 10 != 0 }.random(random), "−", subtracoesComReagrupar, VN.mar[0]) }, { pescariaDeContas((5..60).filter { it % 10 != 0 }.random(random), "−", subtracoesComReagrupar, VN.mar[0]) }, { tirarComReagrupar() }) }
         val f5 = marco("Bandeirinha da caverna", "🚩", f1, f2, f3, f4)

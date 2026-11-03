@@ -398,17 +398,24 @@ class JogoNoEmuladorTest {
 
     /** Uma fase alta já liberada: todas as anteriores do caminho vencidas com 3 estrelas. */
     private fun abrirFase(chaveTrilha: String, caminho: String, numero: Int) {
+        // Fecha a partida anterior antes de mexer no progresso: ao pausar, o app grava o estado dele por cima.
+        cenario?.close()
+        cenario = null
         prefs.edit().clear()
             .putString("genero", "MENINO").putString("nome", "Leo")
             .putString("estrelas", (0 until numero - 1).joinToString(";") { "$chaveTrilha:$it=3" })
             .putString("colocados", "terreno,0.5,0.5;paredes,0.5,0.5;telhado,0.5,0.5;porta,0.5,0.5;cama,0.27,0.528;janelas,0.5,0.5")
             .commit()
         PartidaNaTela.limpar()
-        cenario?.close()
         cenario = ActivityScenario.launch(MainActivity::class.java)
         esperar("Caminho $caminho", 15_000)
         regra.onAllNodes(hasContentDescription("Caminho $caminho", substring = true)).onFirst().performClick()
-        esperar("Fase $numero,", 15_000)
+        try {
+            esperar("Fase $numero,", 15_000)
+        } catch (e: Throwable) {
+            capturar("e29_sem_fase_${chaveTrilha.lowercase()}_$numero")
+            throw AssertionError("a fase $numero de $caminho não apareceu no caminho", e)
+        }
         avancar(1_500)
         val fase = regra.onAllNodes(hasContentDescription("Fase $numero,", substring = true)).onFirst()
         runCatching { fase.performSemanticsAction(SemanticsActions.OnClick) }.onFailure { fase.performClick() }

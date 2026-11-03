@@ -168,8 +168,17 @@ class CapturasNovas1Test {
         TelaJogo(gerador.fases(Trilha.MATEMATICA)[2], menina, {}, {}, perguntasProntas = listOf(pescaria))
     }
 
-    @Test fun pescariaComAjuda() = capturar("n1_02_pescaria_ajuda", tempo = 3000) {
-        TelaJogo(gerador.fases(Trilha.LOGICA)[2], menino, {}, {}, facilitada = true, perguntasProntas = listOf(pescariaFiguras))
+    /** Depois de dois peixes errados, as frutas certas brilham (a rodada facilitada trocaria a pergunta). */
+    @Test fun pescariaComAjuda() = capturar(
+        "n1_02_pescaria_ajuda",
+        acao = {
+            repeat(2) {
+                regra.onAllNodesWithTag("peixe_errado")[it].performSemanticsAction(SemanticsActions.OnClick)
+                regra.mainClock.advanceTimeBy(1500)
+            }
+        },
+    ) {
+        TelaJogo(gerador.fases(Trilha.LOGICA)[2], menino, {}, {}, perguntasProntas = listOf(pescariaFiguras))
     }
 
     @Test fun pescariaPescouUm() = capturar(

@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.animation.core.withInfiniteAnimationFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -94,9 +95,11 @@ internal fun n1Descricao(o: Opcao): String =
 internal fun n1Relogio(): MutableFloatState {
     val tempo = remember { mutableFloatStateOf(0f) }
     LaunchedEffect(Unit) {
-        var antes = withFrameNanos { it }
+        // Animação sem fim: nos testes com relógio automático (emulador) ela fica parada, senão a tela
+        // nunca fica ociosa; no app e nas capturas (relógio manual) anda normalmente.
+        var antes = withInfiniteAnimationFrameNanos { it }
         while (true) {
-            val agora = withFrameNanos { it }
+            val agora = withInfiniteAnimationFrameNanos { it }
             // Um quadro muito atrasado (app em segundo plano) não faz nada pular longe.
             tempo.floatValue += ((agora - antes) / 1_000_000_000f).coerceIn(0f, 0.1f)
             antes = agora
