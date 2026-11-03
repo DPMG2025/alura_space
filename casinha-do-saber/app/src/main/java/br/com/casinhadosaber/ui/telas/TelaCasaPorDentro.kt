@@ -734,7 +734,7 @@ fun TelaCasaPorDentro(
                 cena.tocadoEm = cena.tempo
                 narrador.falar("Oba! ${produto.nome}! Guardei na geladeira.")
             }
-            Categoria.ROUPA -> narrador.falar("Oba! ${produto.nome}! Ficou lindo! Está no guarda-roupa.")
+            Categoria.ROUPA, Categoria.ACESSORIO -> narrador.falar("Oba! ${produto.nome}! Ficou lindo! Está no guarda-roupa.")
             else -> narrador.falar("Oba! ${produto.nome}!")
         }
     }
@@ -899,20 +899,26 @@ fun TelaCasaPorDentro(
                     },
                 )
             }
+            // ---- Guarda-roupa (roupas, chapéus e acessórios): início do bloco ----
             if (cena.guardaRoupaAberto) {
                 PainelGuardaRoupa(
                     estado = estado,
-                    onVestir = { traje ->
-                        onAtualizar { it.vestir(traje) }
-                        cena.puloEm = cena.tempo
-                        sons.colocar()
-                        val t = Loja.trajes.firstOrNull { it.id == traje }
-                        narrador.falar(if (t == null) listOf(pt("A roupa de sempre!")) else listOf(pt("${t.nome}! Em inglês:"), en(t.nomeEn)))
+                    perfilNaCena = perfil,
+                    onVestir = { p ->
+                        if (p.id in estado.comprados) {
+                            // Já é seu: veste (o provador fala o nome).
+                            onAtualizar { it.vestirProduto(p) }
+                            cena.puloEm = cena.tempo
+                            sons.colocar()
+                        } else {
+                            // Ainda não é seu: o primeiro toque experimenta, o segundo compra (como na lojinha).
+                            comprar(p)
+                            cena.puloEm = cena.tempo
+                        }
                     },
-                    onExperimentar = { p ->
-                        cena.guardaRoupaAberto = false
-                        lojaAberta = true
-                        comprar(p)
+                    onTirar = { gaveta ->
+                        onAtualizar { it.tirar(gaveta) }
+                        cena.puloEm = cena.tempo
                     },
                     onFechar = {
                         sonsCasa.porta()
@@ -920,6 +926,7 @@ fun TelaCasaPorDentro(
                     },
                 )
             }
+            // ---- Guarda-roupa: fim do bloco ----
             if (lojaAberta) {
                 Lojinha(
                     estado = estado,
@@ -1908,6 +1915,9 @@ private fun corDoTraje(traje: String, perfil: Perfil): Color = when (traje) {
     "astronauta" -> Color(0xFFF2F4F8)
     "heroi" -> Color(0xFFE63946)
     "fada" -> Color(0xFFD9C2FF)
+    // Roupas novas do guarda-roupa: a mesma cor com que a criança aparece vestida.
+    "vestido", "macacao", "futebol", "bailarina", "chuva", "medico", "chef", "pirata", "realeza", "dinossauro" ->
+        br.com.casinhadosaber.ui.componentes.corDaRoupaDoTraje(traje, perfil)
     else -> clarear(Color(perfil.corDaRoupa), 0.3f)
 }
 
@@ -2312,41 +2322,41 @@ private fun PainelGeladeira(
     }
 }
 
+// ---- Guarda-roupa (roupas, chapéus e acessórios): painel ----
+/**
+ * Guarda-roupa aberto: a criança grande (com o que está experimentando) e o provador com uma aba por gaveta.
+ * O que ainda não é seu aparece com o preço: tocar experimenta e tocar de novo compra.
+ */
 @Composable
-private fun PainelGuardaRoupa(estado: EstadoJogo, onVestir: (String) -> Unit, onExperimentar: (Produto) -> Unit, onFechar: () -> Unit) {
-    val perfil = estado.perfil ?: Perfil()
-    val minhas = Loja.noGuardaRoupa(estado).map { it.valor }.toSet()
+private fun PainelGuardaRoupa(
+    estado: EstadoJogo,
+    perfilNaCena: Perfil,
+    onVestir: (Produto) -> Unit,
+    onTirar: (br.com.casinhadosaber.dominio.Gaveta) -> Unit,
+    onFechar: () -> Unit,
+) {
     Painel("Guarda-roupa aberto", onFechar, cabecalho = {
         Box(
             Modifier
-                .size(56.dp)
-                .background(Color(0xFFFFF0F6), CircleShape),
-            contentAlignment = Alignment.Center,
+                .size(width = 96.dp, height = 112.dp)
+                .background(Color(0xFFFFF0F6), RoundedCornerShape(24.dp)),
+            contentAlignment = Alignment.BottomCenter,
         ) {
-            Text("👗", fontSize = 30.sp)
+            Crianca(perfilNaCena, Modifier.height(104.dp), acenando = true)
         }
         Spacer(Modifier.weight(1f))
     }) {
         Spacer(Modifier.height(8.dp))
-        ListaComDica(contentPadding = PaddingValues(horizontal = 4.dp), espaco = 10.dp) {
-            item(key = "sempre") {
-                CabideDaRoupa(perfil.copy(traje = ""), perfil.traje.isEmpty(), "Roupa de sempre", null) { onVestir("") }
-            }
-            items(Loja.trajes, key = { it.id }) { traje ->
-                val tem = traje.id in minhas
-                val produto = Loja.porId.getValue("roupa${traje.id}")
-                CabideDaRoupa(
-                    perfil.copy(traje = traje.id),
-                    usando = perfil.traje == traje.id,
-                    descricao = traje.nome + if (tem) "" else ", ${Loja.preco(produto, estado)} moedinhas",
-                    preco = if (tem) null else Loja.preco(produto, estado),
-                ) {
-                    if (tem) onVestir(traje.id) else onExperimentar(produto)
-                }
-            }
-        }
+        br.com.casinhadosaber.ui.componentes.Provador(
+            perfil = perfilNaCena,
+            possui = { it.id in estado.comprados },
+            onVestir = onVestir,
+            onTirar = onTirar,
+            precoDe = { Loja.preco(it, estado) },
+        )
     }
 }
+// ---- Guarda-roupa: fim do painel ----
 
 /**
  * Lista que rola para o lado e mostra que tem mais: a borda some num degradê (onde há mais cartões)
@@ -2392,30 +2402,6 @@ private fun ListaComDica(contentPadding: PaddingValues, espaco: Dp, conteudo: La
             },
         content = conteudo,
     )
-}
-
-@Composable
-private fun CabideDaRoupa(perfil: Perfil, usando: Boolean, descricao: String, preco: Int?, onClick: () -> Unit) {
-    BotaoFofo(
-        onClick = onClick,
-        cor = if (usando) Color(0xFFDFF7E6) else Color(0xFFFFF6EC),
-        corBase = Color(0xFF8E5A34),
-        descricao = descricao,
-        modifier = Modifier.graphicsLayer { alpha = if (preco == null) 1f else 0.7f },
-    ) {
-        Column(Modifier.width(84.dp).padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Crianca(perfil, Modifier.height(96.dp))
-            Text(
-                when {
-                    usando -> "✔"
-                    preco != null -> "🪙 $preco"
-                    else -> "👆"
-                },
-                style = MaterialTheme.typography.titleMedium,
-                color = if (usando) Cores.Certo else Cores.Texto,
-            )
-        }
-    }
 }
 
 @Composable

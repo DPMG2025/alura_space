@@ -51,6 +51,10 @@ import br.com.casinhadosaber.dominio.Aparencia
 import br.com.casinhadosaber.dominio.Genero
 import br.com.casinhadosaber.dominio.Perfil
 import br.com.casinhadosaber.dominio.Produto
+import br.com.casinhadosaber.dominio.Serializacao
+import br.com.casinhadosaber.dominio.tirando
+import br.com.casinhadosaber.dominio.vestindo
+import br.com.casinhadosaber.ui.componentes.Provador
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
@@ -67,14 +71,17 @@ private val nomesDaRoupa = listOf("azul", "rosa", "verde", "laranja", "roxa", "v
  * Primeira tela: a criança monta quem vai morar na casinha. Tudo é falado e mostrado
  * num personagem grande que pula a cada escolha; o nome fica com o adulto.
  *
- * Com [espelho], é o espelho (🪞) da casa e do início: muda a aparência atual, mostra as roupas do
- * guarda-roupa ([roupas]) e volta para onde estava ([onVoltar]), sem repetir as boas vindas.
+ * Com [espelho], é o espelho (🪞) da casa e do início: muda a aparência atual, mostra o provador com as
+ * roupas, chapéus e acessórios do guarda-roupa ([roupas] e o que está em [comprados]) e volta para onde
+ * estava ([onVoltar]), sem repetir as boas vindas.
  */
 @Composable
 fun TelaPerfil(
     atual: Perfil?,
     espelho: Boolean = false,
     roupas: List<Produto> = emptyList(),
+    /** Ids comprados na loja: o provador do espelho mostra o que é da criança. */
+    comprados: Set<String> = emptySet(),
     onVoltar: (() -> Unit)? = null,
     onPronto: (Perfil) -> Unit,
 ) {
@@ -87,13 +94,16 @@ fun TelaPerfil(
     var roupa by rememberSaveable { mutableStateOf(atual?.roupa ?: -1) }
     var nome by rememberSaveable { mutableStateOf(atual?.nome.orEmpty()) }
     var traje by rememberSaveable { mutableStateOf(atual?.traje.orEmpty()) }
+    var chapeu by rememberSaveable { mutableStateOf(atual?.chapeu.orEmpty()) }
+    // Acessórios guardados como texto (simples de salvar na rotação da tela).
+    var acessorios by rememberSaveable { mutableStateOf(Serializacao.acessoriosParaTexto(atual?.acessorios.orEmpty())) }
     var mostrarNome by rememberSaveable { mutableStateOf(false) }
     var mudancas by remember { mutableIntStateOf(0) }
     val pulo = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
         narrador.falar(
-            if (espelho) "Espelho, espelho meu! Escolha o cabelo, a pele e a roupa. Depois toque em pronto."
+            if (espelho) "Espelho, espelho meu! Escolha o cabelo, a pele, a roupa e os acessórios. Depois toque em pronto."
             else "Olá! Quem vai morar na casinha? Escolha um menino ou uma menina.",
         )
     }
@@ -112,7 +122,18 @@ fun TelaPerfil(
     }
 
     val g = genero
-    val perfil = Perfil(nome.trim(), g ?: Genero.MENINA, pele, cabelo, roupa, chapeu = atual?.chapeu.orEmpty(), estiloCabelo = estilo, traje = traje)
+    val perfil = Perfil(
+        nome.trim(), g ?: Genero.MENINA, pele, cabelo, roupa, chapeu = chapeu, estiloCabelo = estilo, traje = traje,
+        acessorios = Serializacao.textoParaAcessorios(acessorios),
+    )
+
+    /** Veste ou tira no provador: muda roupa, chapéu e acessórios de uma vez, e a criança pula. */
+    fun provar(novo: Perfil) {
+        traje = novo.traje
+        chapeu = novo.chapeu
+        acessorios = Serializacao.acessoriosParaTexto(novo.acessorios)
+        mudancas++
+    }
 
     Column(
         Modifier
@@ -221,30 +242,21 @@ fun TelaPerfil(
             }
         }
 
-        if (roupas.isNotEmpty()) {
-            // Roupas especiais do guarda-roupa (compradas na loja da casa por dentro).
-            Linha("🧥", "roupa especial") {
-                Box(
-                    Modifier
-                        .size(44.dp)
-                        .border(if (traje.isEmpty()) 4.dp else 2.dp, if (traje.isEmpty()) Cores.Estrela else Color.White, CircleShape)
-                        .background(Color.White.copy(alpha = 0.8f), CircleShape)
-                        .semantics { contentDescription = "Roupa de sempre" }
-                        .clickable { escolher("A roupa de sempre!") { traje = "" } },
-                    contentAlignment = Alignment.Center,
-                ) { Text("👕", style = MaterialTheme.typography.titleLarge) }
-                for (r in roupas) {
-                    Box(
-                        Modifier
-                            .size(44.dp)
-                            .border(if (traje == r.valor) 4.dp else 2.dp, if (traje == r.valor) Cores.Estrela else Color.White, CircleShape)
-                            .background(Color.White.copy(alpha = 0.8f), CircleShape)
-                            .semantics { contentDescription = r.nome }
-                            .clickable { escolher("${r.nome}!") { traje = r.valor } },
-                        contentAlignment = Alignment.Center,
-                    ) { Text(r.icone, style = MaterialTheme.typography.titleLarge) }
-                }
-            }
+        if (espelho) {
+            // Provador: roupas, chapéus e acessórios do guarda-roupa, uma gaveta por parte do corpo.
+            val possui: (Produto) -> Boolean = { p -> p in roupas || p.id in comprados }
+            Spacer(Modifier.height(14.dp))
+            Provador(
+                perfil = perfil,
+                possui = possui,
+                onVestir = { p ->
+                    if (possui(p)) {
+                        sons.toque()
+                        provar(perfil.vestindo(p))
+                    }
+                },
+                onTirar = { gaveta -> provar(perfil.tirando(gaveta)) },
+            )
         }
 
         Spacer(Modifier.height(12.dp))

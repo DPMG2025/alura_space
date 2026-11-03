@@ -299,6 +299,7 @@ class MainActivity : ComponentActivity() {
                         atual = estado.perfil,
                         espelho = true,
                         roupas = Loja.noGuardaRoupa(estado),
+                        comprados = estado.comprados,
                         onVoltar = { irPara(atual.voltar) },
                     ) { perfil ->
                         repo.atualizar { it.copy(perfil = perfil) }
