@@ -117,10 +117,11 @@ object ItensDaCasa {
     /**
      * Onde as coisas do jardim ficam quando a tela é alta e tem o jardim de baixo (y de 1 a 2, ver [ItemCasa]).
      * Vale só para objetos que a criança ainda não arrastou: o resto da cena fica com espaço para respirar.
-     * Os lugares desviam do caminho de pedrinhas (x perto de 0,30), dos arbustos dos cantos e do canteiro.
+     * Os lugares desviam do caminho de pedrinhas (x perto de 0,30), dos arbustos dos cantos, do canteiro e do
+     * cantinho do mascote (canto de baixo à esquerda): o cachorrinho fica logo acima dele.
      */
     val noJardimDeBaixo: Map<String, Posicao> = mapOf(
-        "cachorro" to Posicao(0.20f, 1.45f),
+        "cachorro" to Posicao(0.17f, 1.15f),
         "bicicleta" to Posicao(0.50f, 1.50f),
         "bola" to Posicao(0.62f, 1.42f),
         "escorregador" to Posicao(0.76f, 1.45f),

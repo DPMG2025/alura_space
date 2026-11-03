@@ -70,11 +70,11 @@ internal fun CartaoDosPais(modifier: Modifier = Modifier, conteudo: @Composable 
     ) { conteudo() }
 }
 
-/** Desafio do dia com papai ou mamãe: longe da tela; o adulto marca "Fizemos!" e a criança ganha moedinhas, uma vez por dia. */
+/** Desafio do dia em família (com quem cuida da criança): longe da tela; o adulto marca "Fizemos!" e a criança ganha moedinhas, uma vez por dia. */
 @Composable
 fun CartaoDesafioDosPais(desafio: DesafioDosPais, feito: Boolean, onFizemos: () -> Unit) {
     CartaoDosPais {
-        Text("🤝 Desafio do dia com papai ou mamãe", style = MaterialTheme.typography.titleLarge)
+        Text("🤝 Desafio do dia em família", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(4.dp))
         Text(
             "${desafio.area.emoji} ${desafio.area.nome}",

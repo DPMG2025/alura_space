@@ -392,6 +392,9 @@ private fun QuadroDePintar(
     }
 }
 
+/** Altura da fileira de desenhos guardados (miniatura de 76 dp mais os botões de 44 dp). */
+private val ALTURA_DA_GALERIA = 132.dp
+
 /** Os desenhos guardados: tocar abre; 🖼️ pendura na sala (ou tira); 🗑️ duas vezes apaga. */
 @Composable
 private fun Galeria(
@@ -413,15 +416,22 @@ private fun Galeria(
         )
         Spacer(Modifier.height(4.dp))
         if (estado.desenhos.isEmpty()) {
-            Text(
-                "Pinte alguma coisa: o desenho fica guardado aqui sozinho!",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(12.dp),
-            )
+            // Mesma altura da fileira de desenhos: quando o primeiro desenho é guardado, o quadro não pula.
+            Box(Modifier.fillMaxWidth().height(ALTURA_DA_GALERIA), contentAlignment = Alignment.Center) {
+                Text(
+                    "Pinte alguma coisa: o desenho fica guardado aqui sozinho!",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                )
+            }
             return@Column
         }
-        LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        LazyRow(
+            Modifier.height(ALTURA_DA_GALERIA),
+            contentPadding = PaddingValues(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             items(estado.desenhos.asReversed(), key = { it.id }) { d ->
                 val naParede = d.id in estado.quadrosNaParede
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {

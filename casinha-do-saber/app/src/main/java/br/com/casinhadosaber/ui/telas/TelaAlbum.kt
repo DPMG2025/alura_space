@@ -194,7 +194,7 @@ fun TelaAlbum(
                     }
                 }
                 Text(
-                    dica ?: "Toque numa figurinha que falta para saber como ganhar.",
+                    dica ?: if (p.completa) "Você ganhou todas as figurinhas deste mundo!" else "Toque numa figurinha que falta para saber como ganhar.",
                     style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center,
                     color = if (dica != null) Cores.Texto else Cores.TextoSuave,

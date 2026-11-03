@@ -480,15 +480,15 @@ fun TelaCasa(
                     Box(
                         Modifier
                             .align(Alignment.BottomStart)
-                            .padding(start = 6.dp, bottom = 6.dp)
-                            .size(96.dp)
+                            .padding(start = 2.dp, bottom = 2.dp)
+                            .size(84.dp)
                             .testTag("mascote_na_casa")
                             .clickable {
                                 sons.piu(1)
                                 noCantinho = true
                             },
                     ) {
-                        MascoteAnimado(especie, Crescimento.estagio(estado.fasesVencidas), Modifier.size(96.dp), estado.mascote.acessorioEmUso, estado.mascote.nomeParaMostrar)
+                        MascoteAnimado(especie, Crescimento.estagio(estado.fasesVencidas), Modifier.size(84.dp), estado.mascote.acessorioEmUso, estado.mascote.nomeParaMostrar)
                     }
                 }
                 presenteDoEvento?.let { p ->

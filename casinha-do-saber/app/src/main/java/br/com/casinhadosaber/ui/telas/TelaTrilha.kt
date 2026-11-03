@@ -31,6 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -201,13 +204,21 @@ fun TelaTrilha(
                 BotaoRedondo("🗺️", "Mapa dos mundos", { sons.toque(); onMapa() }, tamanho = 52.dp)
             }
             Spacer(Modifier.width(12.dp))
-            Text(trilha.emoji, style = MaterialTheme.typography.headlineLarge)
-            Spacer(Modifier.width(8.dp))
+            // Com o botão do mapa a barra fica cheia: o emoji do caminho sai (a cor e o nome já dizem qual é).
+            if (onMapa == null) {
+                Text(trilha.emoji, style = MaterialTheme.typography.headlineLarge)
+                Spacer(Modifier.width(8.dp))
+            }
+            // O nome nunca é cortado: se não couber (celular estreito), a letra diminui um pouco até caber.
+            val estilo = MaterialTheme.typography.headlineLarge
+            var escalaDoTitulo by remember(trilha) { mutableFloatStateOf(1f) }
             Text(
                 trilha.titulo,
-                style = MaterialTheme.typography.headlineLarge,
+                style = estilo.copy(fontSize = estilo.fontSize * escalaDoTitulo),
                 color = Color.White,
                 maxLines = 1,
+                softWrap = false,
+                onTextLayout = { if (it.hasVisualOverflow && escalaDoTitulo > 0.6f) escalaDoTitulo -= 0.08f },
                 modifier = Modifier.weight(1f),
             )
             if (proximoPremio != null) {
