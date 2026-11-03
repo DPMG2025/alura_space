@@ -144,6 +144,17 @@ import kotlin.math.sin
 /** Altura da criança, nas unidades de altura da planta (a parede tem 3). */
 private const val ALTURA_CRIANCA = 2.15f
 
+/**
+ * Espera [ms] contando pelos quadros da tela (e não pelo relógio de parede): no app é o mesmo, e nas capturas
+ * de tela o tempo anda junto com o relógio do teste.
+ */
+private suspend fun esperarQuadros(ms: Long) {
+    val inicio = withFrameNanos { it }
+    while (withFrameNanos { it } - inicio < ms * 1_000_000L) {
+        // só espera o próximo quadro
+    }
+}
+
 /** Velocidade da criança andando, em ladrilhos por segundo. */
 private const val VELOCIDADE = 2.6f
 
@@ -609,14 +620,14 @@ fun TelaCasaPorDentro(
             repeat(2) {
                 maoDaDica = pontoDo(0f) ?: return
                 maoApertando = false
-                delay(800)
+                esperarQuadros(800)
                 maoApertando = true
                 sonsCasa.pegar()
                 cena.arrasteDx = 0
                 cena.arrasteDy = 0
                 cena.arrastando = m.id
                 cena.arrasteDaDica = true
-                delay(400)
+                esperarQuadros(400)
                 val quadros = 20
                 for (k in 1..quadros) {
                     val f = k / quadros.toFloat()
@@ -627,15 +638,15 @@ fun TelaCasaPorDentro(
                         cena.arrasteDx = ix
                         cena.arrasteDy = iy
                     }
-                    delay(45)
+                    esperarQuadros(45)
                 }
-                delay(800)
+                esperarQuadros(800)
                 // Solta: é só de mentirinha, o móvel volta para o lugar dele.
                 maoApertando = false
                 cena.arrasteDaDica = false
                 cancelarArraste()
                 sonsCasa.pousar()
-                delay(900)
+                esperarQuadros(900)
             }
         } finally {
             limparDica()
@@ -653,11 +664,11 @@ fun TelaCasaPorDentro(
 
     LaunchedEffect(Unit) {
         if (abrirInicial != Acao.NENHUMA || lojaInicial) return@LaunchedEffect
-        // Contagem em segundos de laço (não depende dos quadros da animação).
+        // Contagem em segundos (pelos quadros da tela).
         var segundos = 0
         var ultimaDica = -1
         while (true) {
-            delay(1000)
+            esperarQuadros(1000)
             segundos++
             segundosParada++
             if (estadoAtual.moveisDentro.isNotEmpty() || arrastouAqui) return@LaunchedEffect
