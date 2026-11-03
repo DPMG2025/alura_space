@@ -179,6 +179,8 @@ fun TelaCasaPorDentro(
     /** Para as capturas de tela: já abre com a geladeira, o guarda-roupa ou a lojinha abertos. */
     abrirInicial: Acao = Acao.NENHUMA,
     lojaInicial: Boolean = false,
+    /** Para as capturas de tela: a dica de arrastar começa logo (sem esperar a criança ficar parada). */
+    dicaLogo: Boolean = false,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -661,7 +663,7 @@ fun TelaCasaPorDentro(
             if (estadoAtual.moveisDentro.isNotEmpty() || arrastouAqui) return@LaunchedEffect
             val primeira = !estadoAtual.viuDicaDeArrastar && ultimaDica < 0
             val hora = if (primeira) {
-                segundos >= 8 && segundosParada >= 4
+                if (dicaLogo) segundos >= 1 else segundos >= 8 && segundosParada >= 4
             } else {
                 segundosParada >= 30 && (ultimaDica < 0 || segundos - ultimaDica >= 60)
             }
