@@ -157,6 +157,8 @@ fun TelaTrilha(
     onJogar: (Fase) -> Unit,
     /** Treino sem fim do caminho (aparece depois da primeira fase vencida). */
     onTreinar: () -> Unit = {},
+    /** Mapa grande com os 25 mundos do caminho (sem ele, o botão 🗺️ não aparece). */
+    onMapa: (() -> Unit)? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -194,6 +196,10 @@ fun TelaTrilha(
     ) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             BotaoRedondo("⬅️", "Voltar", onVoltar, tamanho = 52.dp)
+            if (onMapa != null) {
+                Spacer(Modifier.width(8.dp))
+                BotaoRedondo("🗺️", "Mapa dos mundos", { sons.toque(); onMapa() }, tamanho = 52.dp)
+            }
             Spacer(Modifier.width(12.dp))
             Text(trilha.emoji, style = MaterialTheme.typography.headlineLarge)
             Spacer(Modifier.width(8.dp))

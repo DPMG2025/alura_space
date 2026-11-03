@@ -49,6 +49,14 @@ import br.com.casinhadosaber.ui.telas.TelaPerfil
 import br.com.casinhadosaber.ui.telas.TelaPremio
 import br.com.casinhadosaber.ui.telas.TelaQuase
 import br.com.casinhadosaber.ui.telas.TelaTrilha
+import br.com.casinhadosaber.ui.componentes.CantinhoDaSala
+import br.com.casinhadosaber.ui.telas.AvisoDeConquistas
+import br.com.casinhadosaber.ui.telas.NovasConquistas
+import br.com.casinhadosaber.ui.telas.TelaAlbum
+import br.com.casinhadosaber.ui.telas.TelaAtelie
+import br.com.casinhadosaber.ui.telas.TelaDiplomas
+import br.com.casinhadosaber.ui.telas.TelaMapa
+import br.com.casinhadosaber.ui.telas.TelaPiano
 
 /** As telas do app. A navegação é simples e fica toda aqui. */
 sealed interface Tela {
@@ -83,6 +91,13 @@ sealed interface Tela {
 
     /** Treino sem fim do caminho: perguntas das fases vencidas, mais das que a criança erra mais. */
     data class Treino(val trilha: Trilha) : Tela
+
+    // ---- Modo criativo e conquistas (ateliê, piano, mapa, diplomas e álbum)
+    data object Atelie : Tela
+    data object Piano : Tela
+    data class Mapa(val trilha: Trilha) : Tela
+    data class Diplomas(val voltar: Tela) : Tela
+    data class Album(val trilha: Trilha, val mundo: Int, val voltar: Tela) : Tela
 }
 
 class MainActivity : ComponentActivity() {
@@ -146,6 +161,8 @@ class MainActivity : ComponentActivity() {
         val estado = repo.estado
         var tela by remember { mutableStateOf(if (estado.perfil == null) Tela.Perfil else Tela.Inicio) }
         val gerador = remember { GeradorDeFases() }
+        /** Figurinhas e diplomas ganhos na vitória, mostrados quando a criança sai do prêmio. */
+        var conquistas by remember { mutableStateOf(NovasConquistas()) }
         // Limite de tempo do dia: conta só o tempo com o app aberto e fica salvo no aparelho.
         LaunchedEffect(repo.limiteMinutos, repo.dormindo) {
             while (repo.limiteMinutos > 0 && !repo.dormindo) {
@@ -169,8 +186,10 @@ class MainActivity : ComponentActivity() {
             sons.ativo = repo.somLigado
             if (!repo.somLigado) narrador.parar()
         }
-        LaunchedEffect(repo.somLigado, repo.musicaLigada) {
-            musicaPermitida = repo.somLigado && repo.musicaLigada
+        // No piano a música de fundo pausa (as teclas soam sozinhas).
+        val noPiano = tela == Tela.Piano
+        LaunchedEffect(repo.somLigado, repo.musicaLigada, noPiano) {
+            musicaPermitida = repo.somLigado && repo.musicaLigada && !noPiano
             if (musicaPermitida) musica.tocar() else musica.pausar()
         }
 
@@ -189,6 +208,10 @@ class MainActivity : ComponentActivity() {
                     is Tela.Treino -> Tela.Caminho(t.trilha)
                     is Tela.Espelho -> t.voltar
                     Tela.CasaPorDentro -> Tela.Casa()
+                    Tela.Atelie, Tela.Piano -> Tela.CasaPorDentro
+                    is Tela.Mapa -> Tela.Caminho(t.trilha)
+                    is Tela.Diplomas -> t.voltar
+                    is Tela.Album -> t.voltar
                     else -> Tela.Inicio
                 },
             )
@@ -240,6 +263,7 @@ class MainActivity : ComponentActivity() {
                         onVoltar = { irPara(Tela.Inicio) },
                         onJogar = { irPara(Tela.Jogo(it)) },
                         onTreinar = { irPara(Tela.Treino(atual.trilha)) },
+                        onMapa = { irPara(Tela.Mapa(atual.trilha)) },
                     )
 
                     is Tela.Treino -> {
@@ -292,12 +316,14 @@ class MainActivity : ComponentActivity() {
                         onSair = { irPara(Tela.Caminho(atual.fase.trilha)) },
                         onConcluir = { resultados ->
                             val acertos = resultados.count { it }
+                            val antes = repo.estado.estrelas
                             val resultado = repo.estado.registrarPartida(atual.fase, acertos, resultados.size, repo.hoje(), resultados)
                             // Teto de 20 minutos: o app pode ter ficado pausado no meio da partida.
                             val segundos = ((System.nanoTime() - inicioDaPartida) / 1_000_000_000L).coerceIn(0L, 20 * 60L)
                             repo.atualizar {
                                 resultado.estado.registrarSessao(atual.fase, resultado, acertos, resultados.size, segundos, repo.hoje())
                             }
+                            conquistas += NovasConquistas.entre(antes, resultado.estado.estrelas)
                             irPara(
                                 if (resultado.venceu) {
                                     Tela.Premio(atual.fase, resultado.estrelas, resultado.item, resultado.moedasGanhas, resultado.brinde, fasesAntes = resultado.estado.fasesVencidas - if (resultado.faseNova) 1 else 0)
@@ -365,7 +391,28 @@ class MainActivity : ComponentActivity() {
                         onAtualizar = repo::atualizar,
                         onVoltar = { irPara(Tela.Casa()) },
                         onEspelho = { irPara(Tela.Espelho(Tela.CasaPorDentro)) },
+                        cantinho = CantinhoDaSala(
+                            onAtelie = { irPara(Tela.Atelie) },
+                            onPiano = { irPara(Tela.Piano) },
+                            onDiplomas = { irPara(Tela.Diplomas(Tela.CasaPorDentro)) },
+                            onAlbum = { irPara(Tela.Album(Trilha.entries.maxBy { estado.vencidasNa(it) }, -1, Tela.CasaPorDentro)) },
+                        ),
                     )
+
+                    Tela.Atelie -> TelaAtelie(estado, repo::atualizar, onVoltar = { irPara(Tela.CasaPorDentro) })
+
+                    Tela.Piano -> TelaPiano(onVoltar = { irPara(Tela.CasaPorDentro) })
+
+                    is Tela.Mapa -> TelaMapa(
+                        trilha = atual.trilha,
+                        estado = estado,
+                        onVoltar = { irPara(Tela.Caminho(atual.trilha)) },
+                        onAlbum = { mundo -> irPara(Tela.Album(atual.trilha, mundo, atual)) },
+                    )
+
+                    is Tela.Diplomas -> TelaDiplomas(estado, onVoltar = { irPara(atual.voltar) })
+
+                    is Tela.Album -> TelaAlbum(estado, atual.trilha, atual.mundo, onVoltar = { irPara(atual.voltar) })
 
                     is Tela.Espelho -> TelaPerfil(
                         atual = estado.perfil,
@@ -397,6 +444,25 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 }
+            }
+            // Figurinha ou diploma novo: uma faixa embaixo, depois do prêmio (nunca durante uma partida).
+            val podeAvisar = tela == Tela.Inicio || tela is Tela.Caminho || tela is Tela.Casa || tela == Tela.CasaPorDentro
+            if (!conquistas.vazia && podeAvisar) {
+                val novas = conquistas
+                AvisoDeConquistas(
+                    novas = novas,
+                    nome = estado.perfil?.nome,
+                    onAbrir = {
+                        conquistas = NovasConquistas()
+                        val f = novas.figurinhas.firstOrNull()
+                        irPara(
+                            if (novas.diplomas.isNotEmpty() || f == null) Tela.Diplomas(tela)
+                            else Tela.Album(f.trilha, f.mundo, tela),
+                        )
+                    },
+                    onFim = { conquistas = NovasConquistas() },
+                    modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter),
+                )
             }
         }
     }
