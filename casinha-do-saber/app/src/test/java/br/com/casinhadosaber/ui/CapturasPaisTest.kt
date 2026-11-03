@@ -110,6 +110,21 @@ class CapturasPaisTest {
         regra.onRoot().captureRoboImage("build/outputs/roborazzi/$nome.png")
     }
 
+    /**
+     * performScrollTo espera a rolagem animada terminar: com o relógio parado ela nunca termina e o teste trava.
+     * Liga o relógio só durante a rolagem (a área dos pais não tem animação sem fim).
+     */
+    private fun rolarAte(tag: String): androidx.compose.ui.test.SemanticsNodeInteraction {
+        regra.mainClock.autoAdvance = true
+        try {
+            regra.onNodeWithTag(tag).performScrollTo()
+            regra.waitForIdle()
+        } finally {
+            regra.mainClock.autoAdvance = false
+        }
+        return regra.onNodeWithTag(tag)
+    }
+
     private fun relatorio(registros: List<RegistroDeSessao>) = Pais.relatorioDaSemana(registros, hoje, ::titulo)
 
     @Test fun desafioEResumoDaSemana() = capturar("s7_01_desafio_e_resumo") {
@@ -156,7 +171,7 @@ class CapturasPaisTest {
         regra.mainClock.advanceTimeBy(800)
         regra.onRoot().captureRoboImage("build/outputs/roborazzi/s7_05_pais_com_desafio.png")
 
-        regra.onNodeWithTag("fizemos").performScrollTo().performClick()
+        rolarAte("fizemos").performClick()
         regra.mainClock.advanceTimeBy(800)
         assertTrue(estado.desafioDosPaisFeito(hoje))
         assertEquals(7 + Pais.MOEDAS_DO_DESAFIO, estado.moedas)
@@ -165,7 +180,7 @@ class CapturasPaisTest {
         regra.onRoot().captureRoboImage("build/outputs/roborazzi/s7_06_pais_desafio_feito.png")
 
         // Aniversário: 1 de janeiro, dois toques no "mais" do dia e um no "menos" do mês = 3 de dezembro.
-        regra.onNodeWithTag("aniversario_dia_mais").performScrollTo().performClick()
+        rolarAte("aniversario_dia_mais").performClick()
         regra.mainClock.advanceTimeBy(100)
         regra.onNodeWithTag("aniversario_dia_mais").performClick()
         regra.mainClock.advanceTimeBy(100)
@@ -176,7 +191,7 @@ class CapturasPaisTest {
         assertEquals(Aniversario(3, 12), estado.perfil?.aniversario)
 
         // Temas: escolher dinossauros e depois tirar.
-        regra.onNodeWithTag("tema_DINOSSAUROS").performScrollTo().performClick()
+        rolarAte("tema_DINOSSAUROS").performClick()
         regra.mainClock.advanceTimeBy(300)
         assertEquals(listOf(TemaFavorito.DINOSSAUROS), estado.perfil?.temasFavoritos)
         regra.onNodeWithTag("tema_ESPACO").performClick()

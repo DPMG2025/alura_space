@@ -105,28 +105,6 @@ jobs:
           path: casinha-do-saber/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
 
-      # Versão para testar no celular: um link direto do .apk na página de Releases do GitHub,
-      # sempre atualizado com o último build deste branch.
-      - name: Publicar versão de teste (Releases)
-        if: github.event_name == 'push'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cp app/build/outputs/apk/release/app-release.apk CasinhaDoSaber.apk
-          gh release delete casinha-teste --yes --cleanup-tag || true
-          gh release create casinha-teste CasinhaDoSaber.apk \
-            --prerelease \
-            --target "$GITHUB_SHA" \
-            --title "Casinha do Saber (versão de teste)" \
-            --notes "Versão de teste, atualizada a cada mudança no branch ${GITHUB_REF_NAME} (commit ${GITHUB_SHA::7}).
-
-          Como instalar no celular Android:
-          1. Toque em CasinhaDoSaber.apk (em Assets, logo abaixo) para baixar.
-          2. Abra o arquivo baixado. Se o Android pedir, permita instalar apps desta fonte.
-          3. Toque em Instalar.
-
-          Para atualizar depois, baixe e instale de novo por cima: o progresso fica guardado."
-
       - name: Publicar APKs
         uses: actions/upload-artifact@v5
         with:
@@ -285,3 +263,41 @@ jobs:
 
       - name: Falhar se o teste dos emojis falhou
         run: test ! -f emulador-falhou.txt
+
+  # Versão para testar no celular: um link direto do .apk na página de Releases do GitHub, sempre com o
+  # último build deste branch. Só sai depois que o mesmo APK passou em todos os testes (unidade, capturas,
+  # lint e emuladores), então o link nunca entrega código não testado.
+  publicar-apk-testado:
+    needs: [build, emulador, emulador-android-antigo]
+    if: github.event_name == 'push' && success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o APK do build
+        uses: actions/download-artifact@v5
+        with:
+          name: casinha-do-saber-apk
+          path: apk
+
+      - name: Publicar versão de teste (Releases)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          APK=$(find apk -path "*release*" -name "*.apk" | head -1)
+          [ -f "$APK" ] || { echo "ERRO: APK de release não encontrado no artefato"; find apk; exit 1; }
+          cp "$APK" CasinhaDoSaber.apk
+          gh release delete casinha-teste -R "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          gh release create casinha-teste CasinhaDoSaber.apk \
+            -R "$GITHUB_REPOSITORY" \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Casinha do Saber (versão de teste)" \
+            --notes "Versão de teste do branch ${GITHUB_REF_NAME}, commit ${GITHUB_SHA::7}.
+
+          Este APK passou nos testes de unidade, nas capturas de tela, no lint e nos testes no emulador com Android 14, 7.0 e 8.0.
+
+          Como instalar no celular Android:
+          1. Toque em CasinhaDoSaber.apk (em Assets, logo abaixo) para baixar.
+          2. Abra o arquivo baixado. Se o Android pedir, permita instalar apps desta fonte.
+          3. Toque em Instalar.
+
+          Para atualizar depois, baixe e instale de novo por cima: o progresso fica guardado."
