@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import br.com.casinhadosaber.audio.Musica
 import br.com.casinhadosaber.audio.Narrador
+import br.com.casinhadosaber.dominio.registrarSessao
 import br.com.casinhadosaber.audio.Sons
 import br.com.casinhadosaber.dados.Repositorio
 import br.com.casinhadosaber.dominio.Fase
@@ -278,7 +279,10 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    is Tela.Jogo -> TelaJogo(
+                    is Tela.Jogo -> {
+                    // Começo da partida, para o resumo da semana da área dos pais (relógio que não volta atrás).
+                    val inicioDaPartida = remember(atual) { System.nanoTime() }
+                    TelaJogo(
                         fase = atual.fase,
                         perfil = estado.perfil,
                         facilitada = estado.facilitada(atual.fase),
@@ -286,7 +290,11 @@ class MainActivity : ComponentActivity() {
                         onConcluir = { resultados ->
                             val acertos = resultados.count { it }
                             val resultado = repo.estado.registrarPartida(atual.fase, acertos, resultados.size, repo.hoje(), resultados)
-                            repo.atualizar { resultado.estado }
+                            // Teto de 20 minutos: o app pode ter ficado pausado no meio da partida.
+                            val segundos = ((System.nanoTime() - inicioDaPartida) / 1_000_000_000L).coerceIn(0L, 20 * 60L)
+                            repo.atualizar {
+                                resultado.estado.registrarSessao(atual.fase, resultado, acertos, resultados.size, segundos, repo.hoje())
+                            }
                             irPara(
                                 if (resultado.venceu) {
                                     Tela.Premio(atual.fase, resultado.estrelas, resultado.item, resultado.moedasGanhas, resultado.brinde)
@@ -296,6 +304,7 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                     )
+                    }
 
                     is Tela.Missao -> TelaJogo(
                         fase = atual.fase,
@@ -370,6 +379,8 @@ class MainActivity : ComponentActivity() {
                         onAlternarMusica = repo::alternarMusica,
                         limiteMinutos = repo.limiteMinutos,
                         onAlternarLimite = repo::alternarLimite,
+                        hoje = repo.hoje(),
+                        onAtualizar = repo::atualizar,
                         onEditarPersonagem = { irPara(Tela.Perfil) },
                         onApagarTudo = {
                             repo.apagarTudo()

@@ -14,6 +14,9 @@ import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.compose.ui.semantics.SemanticsActions
@@ -588,6 +591,9 @@ class JogoNoEmuladorTest {
         assertTrue("fase vencida não foi salva", prefs.getString("estrelas", "").orEmpty().startsWith("MATEMATICA:0="))
         // Errou uma vez: duas estrelas
         assertEquals("MATEMATICA:0=2", prefs.getString("estrelas", ""))
+        // A partida entrou no registro do resumo da semana (área dos pais): fase 0, 2 estrelas, 4 de 5 de primeira.
+        val sessao = prefs.getString("sessoes", "").orEmpty().split(",")
+        assertEquals("sessão não foi registrada: $sessao", listOf("MATEMATICA", "0", "2", "4", "5"), sessao.drop(1).take(5))
     }
 
     /**
@@ -697,5 +703,38 @@ class JogoNoEmuladorTest {
         InstrumentationRegistry.getInstrumentation().runOnMainSync { narrador.desligar() }
         armazenamento.openOutputFile("vozes.txt").use { it.write(relatorio.toString().toByteArray()) }
         // Não falha o teste: o relatório só registra o que o aparelho tem.
+    }
+
+    /**
+     * Área dos pais: segurar a engrenagem, responder a continha do portão, tocar em "Fizemos!" no desafio do dia
+     * e conferir que a criança ganhou as moedinhas uma vez só (o cartão passa a mostrar "feito").
+     */
+    @Test
+    fun areaDosPaisDesafioDoDia() {
+        prefs.edit().putString("genero", "MENINA").putString("nome", "Ana").putInt("moedas", 3).commit()
+        cenario = ActivityScenario.launch(MainActivity::class.java)
+
+        esperar("Área dos pais")
+        regra.onAllNodes(hasContentDescription("Área dos pais", substring = true)).onFirst()
+            .performTouchInput { longClick() }
+        regra.waitUntilAtLeastOneExists(hasText("Quanto é", substring = true), 10_000)
+        val conta = regra.onAllNodes(hasText("Quanto é", substring = true)).onFirst().fetchSemanticsNode()
+            .config.getOrNull(SemanticsProperties.Text)?.joinToString { it.text }.orEmpty()
+        val (a, b) = Regex("""(\d+) × (\d+)""").find(conta)!!.destructured
+        for (d in (a.toInt() * b.toInt()).toString()) {
+            regra.onAllNodes(hasContentDescription(d.toString())).onFirst().performClick()
+        }
+        regra.onAllNodes(hasContentDescription("OK")).onFirst().performClick()
+
+        regra.waitUntilAtLeastOneExists(hasTestTag("fizemos"), 10_000)
+        no("fizemos").performScrollTo()
+        avancar(500)
+        capturar("e30_pais_desafio_do_dia")
+        no("fizemos").performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("desafio_feito"), 5_000)
+        avancar(500)
+        capturar("e31_pais_desafio_feito")
+        regra.waitUntil(5_000) { prefs.getInt("moedas", 0) == 3 + br.com.casinhadosaber.dominio.Pais.MOEDAS_DO_DESAFIO }
+        assertTrue("dia do desafio não foi salvo", prefs.getString("desafios_pais", "").orEmpty().isNotEmpty())
     }
 }
