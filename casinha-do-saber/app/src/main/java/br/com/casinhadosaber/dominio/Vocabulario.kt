@@ -30,8 +30,9 @@ object Vocabulario {
         Objeto("🧁", "bolinho", "bolinhos", false),
     )
 
-    private val unidadesM = listOf("zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez")
-    private val unidadesF = listOf("zero", "uma", "duas", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez")
+    private val ateVinte = listOf("onze", "doze", "treze", "catorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove", "vinte")
+    private val unidadesM = listOf("zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez") + ateVinte
+    private val unidadesF = listOf("zero", "uma", "duas", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez") + ateVinte
     val numerosEn = listOf("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
 
     fun porExtenso(n: Int, feminino: Boolean = false): String =
@@ -172,6 +173,83 @@ object Vocabulario {
         PalavraEn("drum", "tambor", "🥁"),
         PalavraEn("robot", "robô", "🤖"),
     )
+
+    val roupas = listOf(
+        PalavraEn("shirt", "camiseta", "👕"),
+        PalavraEn("pants", "calça", "👖"),
+        PalavraEn("dress", "vestido", "👗"),
+        PalavraEn("cap", "boné", "🧢"),
+        PalavraEn("socks", "meias", "🧦"),
+        PalavraEn("shoes", "tênis", "👟"),
+        PalavraEn("gloves", "luvas", "🧤"),
+        PalavraEn("scarf", "cachecol", "🧣"),
+    )
+
+    val comidas = listOf(
+        PalavraEn("bread", "pão", "🍞"),
+        PalavraEn("milk", "leite", "🥛"),
+        PalavraEn("cheese", "queijo", "🧀"),
+        PalavraEn("egg", "ovo", "🥚"),
+        PalavraEn("cake", "bolo", "🎂"),
+        PalavraEn("pizza", "pizza", "🍕"),
+        PalavraEn("ice cream", "sorvete", "🍦"),
+        PalavraEn("carrot", "cenoura", "🥕"),
+        PalavraEn("cookie", "biscoito", "🍪"),
+    )
+
+    val tempo = listOf(
+        PalavraEn("sun", "sol", "☀️"),
+        PalavraEn("rain", "chuva", "🌧️"),
+        PalavraEn("snow", "neve", "❄️"),
+        PalavraEn("cloud", "nuvem", "☁️"),
+        PalavraEn("rainbow", "arco-íris", "🌈"),
+        PalavraEn("moon", "lua", "🌙"),
+        PalavraEn("star", "estrela", "⭐"),
+    )
+
+    val familia = listOf(
+        PalavraEn("mom", "mamãe", "👩"),
+        PalavraEn("dad", "papai", "👨"),
+        PalavraEn("baby", "bebê", "👶"),
+        PalavraEn("grandma", "vovó", "👵"),
+        PalavraEn("grandpa", "vovô", "👴"),
+        PalavraEn("girl", "menina", "👧"),
+        PalavraEn("boy", "menino", "👦"),
+    )
+
+    val acoes = listOf(
+        PalavraEn("run", "correr", "🏃"),
+        PalavraEn("sleep", "dormir", "😴"),
+        PalavraEn("swim", "nadar", "🏊"),
+        PalavraEn("dance", "dançar", "💃"),
+        PalavraEn("read", "ler", "📖"),
+        PalavraEn("eat", "comer", "😋"),
+        PalavraEn("sing", "cantar", "🎤"),
+        PalavraEn("paint", "pintar", "🎨"),
+    )
+
+    val veiculos = listOf(
+        PalavraEn("car", "carro", "🚗"),
+        PalavraEn("bus", "ônibus", "🚌"),
+        PalavraEn("train", "trem", "🚂"),
+        PalavraEn("plane", "avião", "✈️"),
+        PalavraEn("boat", "barco", "⛵"),
+        PalavraEn("bike", "bicicleta", "🚲"),
+        PalavraEn("truck", "caminhão", "🚚"),
+        PalavraEn("rocket", "foguete", "🚀"),
+    )
+
+    /** Formas: nome em português, em inglês e a figura. */
+    val formas = listOf(
+        PalavraEn("circle", "círculo", "🔴"),
+        PalavraEn("square", "quadrado", "🟦"),
+        PalavraEn("triangle", "triângulo", "🔺"),
+        PalavraEn("star", "estrela", "⭐"),
+        PalavraEn("heart", "coração", "❤️"),
+        PalavraEn("diamond", "losango", "🔷"),
+    )
+
+    val nomesDeCriancas = listOf("Ana", "Leo", "Bia", "Davi", "Lia", "Theo", "Malu", "Gabi")
 
     /** Pares que combinam (lógica): o primeiro precisa do segundo. */
     data class Par(val de: String, val nomeDe: String, val para: String, val nomePara: String)

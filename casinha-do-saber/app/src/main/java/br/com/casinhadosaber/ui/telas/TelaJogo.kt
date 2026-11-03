@@ -48,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -565,6 +566,7 @@ private fun descreverOpcao(o: Opcao): String = when (val v = o.visual) {
     is Visual.Texto -> v.texto
     is Visual.Emoji -> o.fala.joinToString(" ") { it.texto }.ifBlank { v.emoji }
     is Visual.Cor -> o.fala.joinToString(" ") { it.texto }.ifBlank { "Cor" }
+    is Visual.Sombra -> "Sombra"
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -601,6 +603,16 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui
                 Text(v.emoji, fontSize = (base * v.escala).sp, lineHeight = (base * 1.12f * v.escala).sp)
             }
         }
+        is Visual.Sombra -> Text(
+            v.emoji,
+            fontSize = 54.sp,
+            modifier = Modifier
+                .graphicsLayer(compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen)
+                .drawWithContent {
+                    drawContent()
+                    drawRect(Color(0xFF3D2C5E), blendMode = androidx.compose.ui.graphics.BlendMode.SrcIn)
+                },
+        )
         is Visual.Cor -> Box(
             Modifier
                 .size(76.dp)

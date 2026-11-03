@@ -142,7 +142,18 @@ data class EstadoJogo(
             val derrotas = comEstatistica.copy(tentativasSemVencer = tentativasSemVencer + (k to (tentativasSemVencer[k] ?: 0) + 1))
             return ResultadoPartida(derrotas, 0, null, ganhas)
         }
+        val primeiraVez = k !in this.estrelas
         val (novo, item) = comEstatistica.copy(tentativasSemVencer = tentativasSemVencer - k).registrarVitoria(fase, estrelas)
+        // Depois das 40 peças da casa, cada fase nova dá um presente da loja (de graça) e moedinhas extras.
+        if (primeiraVez && item == null) {
+            val brinde = Loja.produtos.firstOrNull { it.id !in novo.comprados }
+            val comBrinde = if (brinde != null) {
+                (novo.copy(moedas = novo.moedas + Loja.preco(brinde, novo)).usar(brinde) ?: novo).copy(moedas = novo.moedas + MOEDAS_DO_BRINDE)
+            } else {
+                novo.copy(moedas = novo.moedas + MOEDAS_DO_BRINDE)
+            }
+            return ResultadoPartida(comBrinde, estrelas, null, ganhas + MOEDAS_DO_BRINDE, brinde)
+        }
         return ResultadoPartida(novo, estrelas, item, ganhas)
     }
     val fasesVencidas: Int get() = estrelas.size
@@ -168,7 +179,7 @@ data class EstadoJogo(
      */
     fun registrarVitoria(fase: Fase, novasEstrelas: Int): Pair<EstadoJogo, ItemCasa?> {
         val k = chave(fase.trilha, fase.numero)
-        val primeiraVez = k !in estrelas
+        val primeiraVez = k !in this.estrelas
         val melhor = maxOf(estrelas[k] ?: 0, novasEstrelas.coerceIn(1, 3))
         val novo = copy(estrelas = estrelas + (k to melhor))
         val premio = if (primeiraVez) ItensDaCasa.ordem.getOrNull(fasesVencidas) else null
@@ -189,6 +200,7 @@ data class EstadoJogo(
 
         const val MOEDAS_POR_DIA = 30
         const val MOEDAS_DA_MISSAO = 6
+        const val MOEDAS_DO_BRINDE = 5
 
         /** 4 de 5 de primeira: chutando ao acaso, quase nunca se vence (cerca de 4%). */
         const val MINIMO_PARA_VENCER = 4
@@ -202,7 +214,14 @@ data class EstadoJogo(
     }
 }
 
-data class ResultadoPartida(val estado: EstadoJogo, val estrelas: Int, val item: ItemCasa?, val moedasGanhas: Int = 0) {
+data class ResultadoPartida(
+    val estado: EstadoJogo,
+    val estrelas: Int,
+    val item: ItemCasa?,
+    val moedasGanhas: Int = 0,
+    /** Presente da loja, para as fases depois das 40 peças da casa. */
+    val brinde: Produto? = null,
+) {
     val venceu get() = estrelas > 0
 }
 

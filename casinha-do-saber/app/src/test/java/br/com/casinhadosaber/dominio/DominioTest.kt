@@ -11,15 +11,28 @@ import kotlin.random.Random
 class GeradorDeFasesTest {
 
     @Test
-    fun `cada trilha tem dez fases`() {
+    fun `cada trilha tem vinte e cinco fases`() {
         val g = GeradorDeFases(Random(1))
         for (t in Trilha.entries) assertEquals(GeradorDeFases.FASES_POR_TRILHA, g.fases(t).size)
     }
 
     @Test
-    fun `existe um item da casa para cada fase`() {
-        assertEquals(Trilha.entries.size * GeradorDeFases.FASES_POR_TRILHA, ItensDaCasa.total)
+    fun `fases suficientes para a casa inteira`() {
+        assertTrue(Trilha.entries.size * GeradorDeFases.FASES_POR_TRILHA >= ItensDaCasa.total)
         assertEquals("ids repetidos", ItensDaCasa.ordem.size, ItensDaCasa.porId.size)
+    }
+
+    @Test
+    fun `depois das quarenta pecas cada fase nova da um presente da loja`() {
+        val todas = Trilha.entries.flatMap { t -> GeradorDeFases(Random(2)).fases(t) }
+        var e = EstadoJogo()
+        for (f in todas.take(ItensDaCasa.total)) e = e.registrarPartida(f, 5, 5).estado
+        assertEquals(ItensDaCasa.total, e.itensGanhos.size)
+        val r = e.registrarPartida(todas[ItensDaCasa.total], 5, 5)
+        assertNull(r.item)
+        assertNotNull(r.brinde)
+        assertTrue(r.brinde!!.id in r.estado.comprados)
+        assertTrue(r.estado.moedas >= e.moedas + EstadoJogo.MOEDAS_DO_BRINDE)
     }
 
     @Test
@@ -35,7 +48,28 @@ class GeradorDeFasesTest {
     }
 
     private fun validar(fase: Fase, p: Pergunta) {
-        assertTrue("$fase: poucas opções", p.opcoes.size in 3..4)
+        when (val a = p.atividade) {
+            is Atividade.Cesta -> {
+                assertTrue("$fase: cesta impossível", a.alvo in 1..a.certos.size)
+                return
+            }
+            is Atividade.Memoria -> {
+                assertTrue("$fase: memória com poucos pares", a.pares.size >= 2)
+                assertEquals("$fase: cartas repetidas", a.pares.size, a.pares.map { it.first }.toSet().size)
+                return
+            }
+            is Atividade.MontarPalavra -> {
+                assertEquals("$fase: sílabas não formam a palavra", a.palavra, a.silabas.joinToString(""))
+                assertTrue("$fase: extra igual a sílaba", a.extras.none { it in a.silabas })
+                return
+            }
+            is Atividade.Tracar -> {
+                assertTrue("$fase: letra sem traçado", a.letra.length == 1)
+                return
+            }
+            Atividade.Escolha -> Unit
+        }
+        assertEquals("$fase: deve ter 4 opções (${p.instrucao})", 4, p.opcoes.size)
         assertTrue("$fase: sem fala", p.fala.isNotEmpty() && p.fala.all { it.texto.isNotBlank() })
         val certa = p.opcoes[p.indiceCorreto].visual
         // A resposta certa não pode aparecer de novo entre as erradas.
@@ -50,6 +84,7 @@ class GeradorDeFasesTest {
                 is Visual.Texto -> assertTrue(v.texto.isNotBlank())
                 is Visual.Emoji -> assertTrue(v.emoji.isNotBlank())
                 is Visual.Cor -> Unit
+                is Visual.Sombra -> assertTrue(v.emoji.isNotBlank())
             }
         }
     }
@@ -57,13 +92,13 @@ class GeradorDeFasesTest {
     @Test
     fun `silabas erradas sao parecidas com a certa`() {
         val g = GeradorDeFases(Random(11))
-        val fase = g.fases(Trilha.PORTUGUES)[6]
+        val fase = g.fases(Trilha.PORTUGUES)[11]
         repeat(40) {
             for (p in g.perguntas(fase).filter { it.instrucao == "Com que pedacinho começa?" }) {
                 val textos = p.opcoes.map { (it.visual as Visual.Texto).texto }
                 assertTrue("tamanhos diferentes: $textos", textos.all { it.length == 2 })
                 val certa = textos[p.indiceCorreto]
-                assertTrue("distratores longe demais: $textos", textos.count { it[0] == certa[0] || it[1] == certa[1] } == 3)
+                assertTrue("distratores longe demais: $textos", textos.count { it[0] == certa[0] || it[1] == certa[1] } >= 3)
             }
         }
     }
@@ -71,7 +106,7 @@ class GeradorDeFasesTest {
     @Test
     fun `mais ou menos sempre tem quantidades vizinhas`() {
         val g = GeradorDeFases(Random(5))
-        val fase = g.fases(Trilha.MATEMATICA)[4]
+        val fase = g.fases(Trilha.MATEMATICA)[7]
         repeat(40) {
             for (p in g.perguntas(fase).filter { it.instrucao.startsWith("Onde tem") }) {
                 val qtds = p.opcoes.map { (it.visual as Visual.Emoji).emoji.codePointCount(0, (it.visual as Visual.Emoji).emoji.length) }.sorted()

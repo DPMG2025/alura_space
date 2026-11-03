@@ -121,7 +121,7 @@ class GeradorDeFases(private val random: Random = Random.Default) {
             fala = listOf(pt("Toque onde tem ${porExtenso(n, obj.feminino)} ${obj.nome(n)}.")),
             cena = Cena.Palavra(n.toString()),
             certa = grupo(n),
-            erradas = numerosErrados(n, 1, 5, 2).map(grupo),
+            erradas = numerosErrados(n, 1, 6, 3).map(grupo),
             reforco = listOf(pt("Isso! ${porExtenso(n, obj.feminino)}!")),
         )
     }
@@ -132,8 +132,8 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         // Uma das opções erradas sempre fica a 1 de distância da certa, para a criança comparar de verdade.
         val base = (2..5).random(random)
         val vizinho = if (random.nextBoolean()) base + 1 else base - 1
-        val terceiro = (1..6).filter { it != base && it != vizinho }.random(random)
-        val qtds = listOf(base, vizinho, terceiro)
+        val outros = (1..6).filter { it != base && it != vizinho }.shuffled(random).take(2)
+        val qtds = listOf(base, vizinho) + outros
         val certo = if (mais) qtds.max() else qtds.min()
         val grupo = { k: Int -> Opcao(Visual.Emoji(obj.emoji.repeat(k)), listOf(pt(porExtenso(k, obj.feminino)))) }
         val palavra = if (mais) "mais" else "menos"
@@ -183,23 +183,31 @@ class GeradorDeFases(private val random: Random = Random.Default) {
     }
 
     private val matematica: List<Modelo> = listOf(
-        Modelo("Contar até 3", "🍎") { contar(1, 3, 3) },
-        Modelo("Contar até 5", "⭐") { contar(1, 5, 3) },
+        Modelo("Contar até 3", "🍎") { contar(1, 3, 4) },
+        Modelo("Contar até 5", "⭐") { contar(1, 5, 4) },
+        Modelo("Cesta: até 5", "🧺") { if (random.nextInt(3) == 0) contar(1, 5, 4) else cesta(1, 5) },
         Modelo("Achar a quantidade", "👆") { acharQuantidade() },
-        Modelo("Contar até 10", "🔟") { contar(4, 10, 3) },
+        Modelo("Memória dos números", "🃏") { if (random.nextBoolean()) memoriaDeNumeros() else acharQuantidade() },
+        Modelo("Contar até 10", "🔟") { contar(4, 10, 4) },
+        Modelo("Cesta: até 10", "🧺") { if (random.nextInt(3) == 0) contar(5, 10, 4) else cesta(4, 9) },
         Modelo("Mais ou menos", "⚖️") { maisOuMenos() },
-        Modelo("Somar até 5", "➕") { somar(5, 3) },
-        Modelo("Tirar até 5", "➖") { subtrair(5, 3) },
+        Modelo("Maior e menor número", "🔢") { maiorNumero(10) },
+        Modelo("Formas", "🔺") { formas(emIngles = false) },
+        Modelo("Somar até 5", "➕") { somar(5, 4) },
+        Modelo("Tirar até 5", "➖") { subtrair(5, 4) },
+        Modelo("Antes e depois", "↔️") { antesDepois(10) },
+        Modelo("Historinhas de somar", "📖") { historia(soma = true, max = 8) },
         Modelo("Somar até 10", "🧮") { somar(10, 4) },
         Modelo("Tirar até 10", "🎈") { subtrair(10, 4) },
-        Modelo("Desafio dos números", "🏆") {
-            when (random.nextInt(4)) {
-                0 -> contar(5, 10, 4)
-                1 -> somar(10, 4)
-                2 -> subtrair(10, 4)
-                else -> maisOuMenos()
-            }
-        },
+        Modelo("Historinhas de tirar", "📕") { historia(soma = false, max = 10) },
+        Modelo("Números até 20", "2️⃣") { ouvirNumero(10..20) },
+        Modelo("Antes e depois até 20", "🔁") { antesDepois(20) },
+        Modelo("De 2 em 2", "👣") { deDoisEmDois() },
+        Modelo("Maior até 20", "🏔️") { maiorNumero(20) },
+        Modelo("Contas misturadas", "🎲") { when (random.nextInt(3)) { 0 -> somar(10, 4); 1 -> subtrair(10, 4); else -> historia(random.nextBoolean(), 10) } },
+        Modelo("Cesta e memória", "🧩") { when (random.nextInt(3)) { 0 -> cesta(5, 10); 1 -> memoriaDeNumeros(); else -> maisOuMenos() } },
+        Modelo("Desafio dos números", "🏆") { when (random.nextInt(5)) { 0 -> contar(5, 10, 4); 1 -> somar(10, 4); 2 -> subtrair(10, 4); 3 -> antesDepois(20); else -> deDoisEmDois() } },
+        Modelo("Supercampeão dos números", "👑") { when (random.nextInt(5)) { 0 -> historia(random.nextBoolean(), 10); 1 -> maiorNumero(20); 2 -> ouvirNumero(10..20); 3 -> cesta(5, 10); else -> memoriaDeNumeros() } },
     )
 
     // ------------------------------------------------------------------ PORTUGUÊS
@@ -220,7 +228,7 @@ class GeradorDeFases(private val random: Random = Random.Default) {
 
     private fun letraInicial(palavras: List<Palavra>, letrasPossiveis: List<String>): Pergunta {
         val p = palavras.um()
-        val erradas = letrasPossiveis.filter { it != p.inicial }.sorteia(2)
+        val erradas = letrasPossiveis.filter { it != p.inicial }.sorteia(3)
         return montar(
             instrucao = "Com que letra começa?",
             fala = listOf(pt("${p.texto.lowercase()}. Com que letra começa ${p.texto.lowercase()}?")),
@@ -237,7 +245,7 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         val erradas = Vocabulario.todasAsPalavras
             .filter { it.inicial != certa.inicial }
             .distinctBy { it.inicial }
-            .sorteia(2)
+            .sorteia(3)
         val op = { p: Palavra -> Opcao(Visual.Emoji(p.emoji), listOf(pt(p.texto.lowercase()))) }
         return montar(
             instrucao = "Que figura é esta palavra?",
@@ -261,7 +269,8 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         val vogal = primeira[1].toString()
         val outraVogal = Vocabulario.vogais.filter { it != vogal }.um()
         val outraConsoante = listOf("B", "D", "F", "L", "M", "N", "P", "T", "V").filter { it != consoante }.um()
-        val erradas = listOf(consoante + outraVogal, outraConsoante + vogal)
+        val outraVogal2 = Vocabulario.vogais.filter { it != vogal && it != outraVogal }.um()
+        val erradas = listOf(consoante + outraVogal, outraConsoante + vogal, outraConsoante + outraVogal2)
         val op = { s: String -> Opcao(Visual.Texto(s), listOf(pt(s.lowercase()))) }
         return montar(
             instrucao = "Com que pedacinho começa?",
@@ -290,7 +299,7 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         val comRima = Vocabulario.todasAsPalavras.filter { it.rima != null }
         val base = comRima.um()
         val certa = comRima.filter { it.rima == base.rima && it != base }.um()
-        val erradas = comRima.filter { it.rima != base.rima }.distinctBy { it.rima }.sorteia(2)
+        val erradas = comRima.filter { it.rima != base.rima }.distinctBy { it.rima }.sorteia(3)
         val op = { p: Palavra -> Opcao(Visual.Emoji(p.emoji), listOf(pt(p.texto.lowercase()))) }
         return montar(
             instrucao = "O que rima com ${base.texto}?",
@@ -303,25 +312,31 @@ class GeradorDeFases(private val random: Random = Random.Default) {
     }
 
     private val portugues: List<Modelo> = listOf(
-        Modelo("Vogais A, E, I", "🅰️") { tocarNaLetra(listOf("A", "E", "I"), 3) },
+        Modelo("Vogais A, E, I, O", "🅰️") { tocarNaLetra(listOf("A", "E", "I", "O"), 4) },
+        Modelo("Traçar vogais", "✍️") { if (random.nextInt(3) == 0) tocarNaLetra(Vocabulario.vogais, 4) else tracar(Vocabulario.vogais) },
         Modelo("Todas as vogais", "🔤") { tocarNaLetra(Vocabulario.vogais, 4) },
         Modelo("Começa com vogal", "🐝") { letraInicial(Vocabulario.palavrasComVogal, Vocabulario.vogais) },
-        Modelo("Outras letras", "🅱️") { tocarNaLetra(Vocabulario.consoantes, 3) },
-        Modelo("Primeira letra", "🐱") {
-            letraInicial(Vocabulario.palavrasComConsoante, Vocabulario.consoantes)
-        },
+        Modelo("Grande e pequenina", "🔡") { minuscula() },
+        Modelo("Outras letras", "🅱️") { tocarNaLetra(Vocabulario.consoantes, 4) },
+        Modelo("Traçar letras", "✏️") { if (random.nextInt(3) == 0) tocarNaLetra(Vocabulario.consoantes, 4) else tracar(listOf("L", "T", "V", "M", "N", "Z", "E", "F")) },
+        Modelo("Primeira letra", "🐱") { letraInicial(Vocabulario.palavrasComConsoante, Vocabulario.consoantes) },
+        Modelo("Memória das letras", "🃏") { if (random.nextBoolean()) memoriaDeLetras() else letraInicial(Vocabulario.palavrasComConsoante, Vocabulario.consoantes) },
+        Modelo("Começa igual", "👂") { comecaIgual() },
         Modelo("Lendo palavras", "📖") { lerPalavra() },
         Modelo("Pedacinhos", "🧩") { silabaInicial() },
+        Modelo("Quantos pedacinhos", "👏") { quantasSilabas() },
+        Modelo("Montar palavras", "🧱") { if (random.nextInt(3) == 0) silabaInicial() else montarPalavra(2) },
         Modelo("Complete a palavra", "✏️") { completarPalavra() },
         Modelo("Rimas", "🎵") { rima() },
-        Modelo("Desafio das letras", "🏆") {
-            when (random.nextInt(4)) {
-                0 -> lerPalavra()
-                1 -> silabaInicial()
-                2 -> completarPalavra()
-                else -> rima()
-            }
-        },
+        Modelo("Montar palavras grandes", "🏗️") { if (random.nextInt(3) == 0) montarPalavra(2) else montarPalavra(3) },
+        Modelo("Leitura caprichada", "🔍") { lerPalavraDificil() },
+        Modelo("Traçar e ler", "📝") { when (random.nextInt(3)) { 0 -> tracar(Vocabulario.vogais + listOf("L", "T", "V", "M", "N")); 1 -> lerPalavra(); else -> minuscula() } },
+        Modelo("Palavras e rimas", "🎶") { when (random.nextInt(3)) { 0 -> rima(); 1 -> comecaIgual(); else -> quantasSilabas() } },
+        Modelo("Montar e completar", "🔧") { when (random.nextInt(3)) { 0 -> montarPalavra(2); 1 -> montarPalavra(3); else -> completarPalavra() } },
+        Modelo("Leitor esperto", "🦉") { when (random.nextInt(3)) { 0 -> lerPalavraDificil(); 1 -> lerPalavra(); else -> silabaInicial() } },
+        Modelo("Memória e letras", "🃏") { when (random.nextInt(3)) { 0 -> memoriaDeLetras(); 1 -> letraInicial(Vocabulario.todasAsPalavras, Vocabulario.vogais + Vocabulario.consoantes); else -> minuscula() } },
+        Modelo("Desafio das letras", "🏆") { when (random.nextInt(5)) { 0 -> lerPalavra(); 1 -> silabaInicial(); 2 -> completarPalavra(); 3 -> rima(); else -> montarPalavra(2) } },
+        Modelo("Supercampeão das letras", "👑") { when (random.nextInt(5)) { 0 -> lerPalavraDificil(); 1 -> montarPalavra(3); 2 -> quantasSilabas(); 3 -> comecaIgual(); else -> tracar(Vocabulario.vogais + Vocabulario.consoantes.take(6)) } },
     )
 
     // ------------------------------------------------------------------ INGLÊS
@@ -359,24 +374,31 @@ class GeradorDeFases(private val random: Random = Random.Default) {
     }
 
     private val ingles: List<Modelo> = listOf(
-        Modelo("Colors", "🎨") { encontreEmIngles(Vocabulario.coresBasicas, 3, "Toque na cor") },
-        Modelo("Animals", "🐶") { encontreEmIngles(Vocabulario.animais.take(6), 3) },
-        Modelo("Numbers 1 a 5", "🖐️") { numeroEmIngles(1..5, 1..5, 3) },
-        Modelo("Fruits", "🍎") { encontreEmIngles(Vocabulario.frutas, 3) },
+        Modelo("Colors", "🎨") { encontreEmIngles(Vocabulario.coresBasicas, 4, "Toque na cor") },
+        Modelo("Animals", "🐶") { encontreEmIngles(Vocabulario.animais.take(6), 4) },
+        Modelo("Numbers 1 a 5", "🖐️") { numeroEmIngles(1..5, 1..6, 4) },
+        Modelo("Memory: animals", "🃏") { if (random.nextBoolean()) memoria(3, Vocabulario.animais) else encontreEmIngles(Vocabulario.animais.take(6), 4) },
+        Modelo("Fruits", "🍎") { encontreEmIngles(Vocabulario.frutas, 4) },
         Modelo("More colors", "🌈") { encontreEmIngles(Vocabulario.todasAsCores, 4, "Toque na cor") },
+        Modelo("Shapes", "🔺") { formas(emIngles = true) },
         Modelo("My body", "👂") { encontreEmIngles(Vocabulario.corpo, 4) },
         Modelo("Numbers 6 a 10", "🔟") { numeroEmIngles(6..10, 1..10, 4) },
+        Modelo("Clothes", "👕") { encontreEmIngles(Vocabulario.roupas, 4) },
+        Modelo("Memory: fruits", "🃏") { if (random.nextBoolean()) memoria(3, Vocabulario.frutas) else encontreEmIngles(Vocabulario.frutas, 4) },
         Modelo("My house", "🏠") { encontreEmIngles(Vocabulario.casa, 4) },
+        Modelo("Food", "🍕") { encontreEmIngles(Vocabulario.comidas, 4) },
         Modelo("Toys", "🧸") { encontreEmIngles(Vocabulario.brinquedos + Vocabulario.animais.drop(6), 4) },
-        Modelo("English challenge", "🏆") {
-            when (random.nextInt(5)) {
-                0 -> encontreEmIngles(Vocabulario.todasAsCores, 4, "Toque na cor")
-                1 -> encontreEmIngles(Vocabulario.animais, 4)
-                2 -> numeroEmIngles(1..10, 1..10, 4)
-                3 -> encontreEmIngles(Vocabulario.casa + Vocabulario.brinquedos, 4)
-                else -> encontreEmIngles(Vocabulario.frutas + Vocabulario.corpo, 4)
-            }
-        },
+        Modelo("Weather", "🌦️") { encontreEmIngles(Vocabulario.tempo, 4) },
+        Modelo("Family", "👨‍👩‍👧") { encontreEmIngles(Vocabulario.familia, 4) },
+        Modelo("Vehicles", "🚌") { encontreEmIngles(Vocabulario.veiculos, 4) },
+        Modelo("Actions", "🏃") { encontreEmIngles(Vocabulario.acoes, 4) },
+        Modelo("Memory: big", "🃏") { when (random.nextInt(2)) { 0 -> memoria(4, Vocabulario.animais + Vocabulario.frutas); else -> memoria(4, Vocabulario.roupas + Vocabulario.comidas) } },
+        Modelo("Colors and shapes", "🟣") { when (random.nextInt(2)) { 0 -> encontreEmIngles(Vocabulario.todasAsCores, 4, "Toque na cor"); else -> formas(emIngles = true) } },
+        Modelo("Food and clothes", "👗") { when (random.nextInt(2)) { 0 -> encontreEmIngles(Vocabulario.comidas, 4); else -> encontreEmIngles(Vocabulario.roupas, 4) } },
+        Modelo("Family and actions", "💃") { when (random.nextInt(2)) { 0 -> encontreEmIngles(Vocabulario.familia, 4); else -> encontreEmIngles(Vocabulario.acoes, 4) } },
+        Modelo("All the numbers", "🔢") { numeroEmIngles(1..10, 1..10, 4) },
+        Modelo("English challenge", "🏆") { when (random.nextInt(5)) { 0 -> encontreEmIngles(Vocabulario.todasAsCores, 4, "Toque na cor"); 1 -> encontreEmIngles(Vocabulario.animais, 4); 2 -> numeroEmIngles(1..10, 1..10, 4); 3 -> encontreEmIngles(Vocabulario.casa + Vocabulario.brinquedos, 4); else -> encontreEmIngles(Vocabulario.frutas + Vocabulario.corpo, 4) } },
+        Modelo("English super star", "👑") { when (random.nextInt(4)) { 0 -> encontreEmIngles(Vocabulario.veiculos + Vocabulario.tempo, 4); 1 -> encontreEmIngles(Vocabulario.acoes + Vocabulario.familia, 4); 2 -> encontreEmIngles(Vocabulario.roupas + Vocabulario.comidas, 4); else -> memoria(4, Vocabulario.veiculos + Vocabulario.animais) } },
     )
 
     // ------------------------------------------------------------------ LÓGICA
@@ -385,12 +407,13 @@ class GeradorDeFases(private val random: Random = Random.Default) {
 
     private fun igual(): Pergunta {
         val (certa, e1, e2) = Vocabulario.figurasSimples.sorteia(3)
+        val e3 = Vocabulario.figurasSimples.filter { it != certa && it != e1 && it != e2 }.um()
         return montar(
             instrucao = "Toque no igual",
             fala = listOf(pt("Toque na figura igual a esta.")),
             cena = Cena.Emojis(certa),
             certa = opEmoji(certa),
-            erradas = listOf(opEmoji(e1), opEmoji(e2)),
+            erradas = listOf(opEmoji(e1), opEmoji(e2), opEmoji(e3)),
             reforco = listOf(pt("Igualzinho!")),
         )
     }
@@ -409,7 +432,7 @@ class GeradorDeFases(private val random: Random = Random.Default) {
 
     private fun tamanho(maior: Boolean): Pergunta {
         val e = Vocabulario.figurasSimples.um()
-        val escalas = listOf(0.5f, 0.8f, 1.2f)
+        val escalas = listOf(0.45f, 0.7f, 0.95f, 1.25f)
         val certa = if (maior) escalas.max() else escalas.min()
         return montar(
             instrucao = if (maior) "Qual é o maior?" else "Qual é o menor?",
@@ -434,10 +457,10 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         val tamanho = base.size * 2 + random.nextInt(1, base.size + 1)
         val completa = List(tamanho) { base[it % base.size] }
         val resposta = completa.last()
-        val outras = (figuras + Vocabulario.figurasDeSequencia.filter { it !in figuras }.sorteia(1))
+        val outras = (figuras + Vocabulario.figurasDeSequencia.filter { it !in figuras }.sorteia(2))
             .distinct()
             .filter { it != resposta }
-            .take(2)
+            .take(3)
         return montar(
             instrucao = "O que vem depois?",
             fala = listOf(pt("Olhe a fila. Qual figura vem no lugar da interrogação?")),
@@ -450,7 +473,7 @@ class GeradorDeFases(private val random: Random = Random.Default) {
 
     private fun combina(): Pergunta {
         val par = Vocabulario.pares.um()
-        val erradas = Vocabulario.pares.filter { it != par }.sorteia(2)
+        val erradas = Vocabulario.pares.filter { it != par }.sorteia(3)
         return montar(
             instrucao = "O que combina?",
             fala = listOf(pt("O que combina com ${par.nomeDe}?")),
@@ -464,7 +487,7 @@ class GeradorDeFases(private val random: Random = Random.Default) {
     private fun grupo(): Pergunta {
         val g = Vocabulario.grupos.um()
         val certa = g.itens.um()
-        val erradas = Vocabulario.grupos.filter { it != g }.sorteia(2).map { it.itens.um() }
+        val erradas = Vocabulario.grupos.filter { it != g }.sorteia(3).map { it.itens.um() }
         return montar(
             instrucao = g.pergunta,
             fala = listOf(pt(g.pergunta)),
@@ -486,7 +509,7 @@ class GeradorDeFases(private val random: Random = Random.Default) {
             fala = listOf(pt(fila.dropLast(1).joinToString(", ") { porExtenso(it) } + ". Que número vem depois?")),
             cena = Cena.Sequencia(fila.dropLast(1).map { it.toString() } + "?"),
             certa = opcaoNumero(resposta),
-            erradas = numerosErrados(resposta, 0, 10, 2).map(::opcaoNumero),
+            erradas = numerosErrados(resposta, 0, 10, 3).map(::opcaoNumero),
             reforco = listOf(pt(fila.joinToString(", ") { porExtenso(it) } + "!")),
         )
     }
@@ -494,25 +517,294 @@ class GeradorDeFases(private val random: Random = Random.Default) {
     private val logica: List<Modelo> = listOf(
         Modelo("Igualzinho", "👯") { igual() },
         Modelo("O diferente", "🔍") { diferente() },
+        Modelo("Memória fácil", "🃏") { memoria(2) },
         Modelo("Grande e pequeno", "🐘") { tamanho(maior = random.nextBoolean()) },
         Modelo("Filas de 2", "🔴") { sequencia("AB") },
+        Modelo("Sombras", "🌑") { sombra() },
         Modelo("O que combina", "🔑") { combina() },
+        Modelo("Cesta das coisas", "🧺") { cestaDoGrupo() },
+        Modelo("Memória", "🃏") { memoria(3) },
         Modelo("Cada um no seu grupo", "🗂️") { grupo() },
         Modelo("Filas de 3", "⭐") { sequencia("ABC") },
+        Modelo("Sombras difíceis", "🌚") { sombra() },
         Modelo("Filas espertas", "🧠") { sequencia(if (random.nextBoolean()) "AAB" else "ABB") },
         Modelo("Números em fila", "🔢") { numerosEmOrdem() },
-        Modelo("Desafio da lógica", "🏆") {
-            when (random.nextInt(4)) {
-                0 -> sequencia(listOf("ABC", "AAB", "ABB").um())
-                1 -> combina()
-                2 -> grupo()
-                else -> numerosEmOrdem()
-            }
-        },
+        Modelo("Memória grande", "🃏") { memoria(4) },
+        Modelo("Separar na cesta", "🧺") { cestaDoGrupo() },
+        Modelo("Combina e grupos", "🔗") { when (random.nextInt(2)) { 0 -> combina(); else -> grupo() } },
+        Modelo("Tamanhos e sombras", "🔦") { when (random.nextInt(2)) { 0 -> tamanho(random.nextBoolean()); else -> sombra() } },
+        Modelo("Filas misturadas", "🎨") { when (random.nextInt(4)) { 0 -> sequencia("AB"); 1 -> sequencia("ABC"); 2 -> sequencia("AAB"); else -> sequencia("ABB") } },
+        Modelo("Memória gigante", "🃏") { memoria(5) },
+        Modelo("Detetive", "🕵️") { when (random.nextInt(3)) { 0 -> diferente(); 1 -> sombra(); else -> combina() } },
+        Modelo("Pensa rápido", "⚡") { when (random.nextInt(3)) { 0 -> igual(); 1 -> grupo(); else -> numerosEmOrdem() } },
+        Modelo("Cesta e memória", "🧩") { when (random.nextInt(2)) { 0 -> cestaDoGrupo(); else -> memoria(4) } },
+        Modelo("Desafio da lógica", "🏆") { when (random.nextInt(5)) { 0 -> sequencia(listOf("ABC", "AAB", "ABB").um()); 1 -> combina(); 2 -> grupo(); 3 -> numerosEmOrdem(); else -> sombra() } },
+        Modelo("Supercampeão da lógica", "👑") { when (random.nextInt(5)) { 0 -> memoria(5); 1 -> sequencia("ABC"); 2 -> cestaDoGrupo(); 3 -> sombra(); else -> diferente() } },
     )
 
+
+    // ------------------------------------------------------------------ ATIVIDADES DE MEXER E NOVOS JOGOS
+
+    /** Arrastar N figuras para a cesta (sobram algumas de propósito: é preciso contar e parar). */
+    private fun cesta(min: Int, max: Int): Pergunta {
+        val obj = Vocabulario.objetosParaContar.um()
+        val n = (min..max).random(random)
+        val disponiveis = n + (2..3).random(random)
+        val f = obj.feminino
+        return Pergunta.deAtividade(
+            instrucao = "Coloque ${n} na cesta",
+            fala = listOf(pt("Coloque ${porExtenso(n, f)} ${obj.nome(n)} na cesta. Depois toque no certinho.")),
+            atividade = Atividade.Cesta(List(disponiveis) { obj.emoji }, n),
+            reforco = listOf(pt("${porExtenso(n, f)} ${obj.nome(n)} na cesta!")),
+        )
+    }
+
+    /** Classificar: só as figuras do grupo entram na cesta. */
+    private fun cestaDoGrupo(): Pergunta {
+        val g = Vocabulario.grupos.um()
+        val certos = g.itens.sorteia(3)
+        val errados = Vocabulario.grupos.filter { it != g }.flatMap { it.itens }.sorteia(3)
+        val nome = g.pergunta.removePrefix("Qual destes é ").removeSuffix("?")
+        return Pergunta.deAtividade(
+            instrucao = "Só $nome na cesta",
+            fala = listOf(pt("Coloque na cesta só o que é $nome.")),
+            atividade = Atividade.Cesta(certos, certos.size, errados),
+            reforco = listOf(pt("Muito bem! Tudo certinho na cesta.")),
+        )
+    }
+
+    private fun memoria(paresQtd: Int, fonte: List<PalavraEn>? = null, iguais: List<String>? = null): Pergunta {
+        val pares: List<Pair<String, String>>
+        val falas = mutableMapOf<String, Trecho>()
+        if (fonte != null) {
+            val escolhidos = fonte.distinctBy { it.emoji }.sorteia(paresQtd)
+            pares = escolhidos.map { it.emoji to it.emoji }
+            escolhidos.forEach { falas[it.emoji] = en(it.en) }
+        } else {
+            pares = (iguais ?: Vocabulario.figurasSimples).sorteia(paresQtd).map { it to it }
+        }
+        return Pergunta.deAtividade(
+            instrucao = "Ache os pares",
+            fala = listOf(pt("Jogo da memória! Vire duas cartas e ache as figuras iguais.")),
+            atividade = Atividade.Memoria(pares, falas),
+            reforco = listOf(pt("Achou todos os pares!")),
+        )
+    }
+
+    /** Memória de quantidade: o número com o grupo que tem aquela quantidade. */
+    private fun memoriaDeNumeros(): Pergunta {
+        val obj = Vocabulario.objetosParaContar.um()
+        val nums = (1..5).toList().sorteia(3)
+        return Pergunta.deAtividade(
+            instrucao = "Número com a quantidade",
+            fala = listOf(pt("Jogo da memória! Junte cada número com o grupo que tem aquela quantidade.")),
+            atividade = Atividade.Memoria(nums.map { it.toString() to obj.emoji.repeat(it) }),
+            reforco = listOf(pt("Isso! Cada número com a sua quantidade.")),
+        )
+    }
+
+    /** Memória de letras: a letra com a figura que começa com ela. */
+    private fun memoriaDeLetras(): Pergunta {
+        val palavras = Vocabulario.palavrasComConsoante.distinctBy { it.inicial }.sorteia(3)
+        return Pergunta.deAtividade(
+            instrucao = "Letra com a figura",
+            fala = listOf(pt("Jogo da memória! Junte cada letra com a figura que começa com ela.")),
+            atividade = Atividade.Memoria(palavras.map { it.inicial to it.emoji }, palavras.associate { it.emoji to pt(it.texto.lowercase()) }),
+            reforco = listOf(pt("Muito bem!")),
+        )
+    }
+
+    private fun montarPalavra(silabas: Int): Pergunta {
+        val p = Vocabulario.todasAsPalavras.filter { it.silabas.size == silabas && it.silabas.all { s -> s.length <= 3 } }.um()
+        val extras = Vocabulario.todasAsPalavras.flatMap { it.silabas }.distinct().filter { it !in p.silabas && it.length == 2 }.sorteia(2)
+        return Pergunta.deAtividade(
+            instrucao = "Monte: ${p.texto}",
+            fala = listOf(pt("Monte a palavra ${p.texto.lowercase()}. Arraste os pedacinhos na ordem.")),
+            atividade = Atividade.MontarPalavra(p.emoji, p.texto, p.silabas, extras),
+            reforco = listOf(pt(p.silabas.joinToString(", ") { it.lowercase() } + ". " + p.texto.lowercase() + "!")),
+        )
+    }
+
+    private fun tracar(letras: List<String>): Pergunta {
+        val l = letras.um()
+        return Pergunta.deAtividade(
+            instrucao = "Trace a letra $l",
+            fala = listOf(pt("Passe o dedo por cima da letra ${falaDaLetra(l)}, seguindo os pontinhos.")),
+            atividade = Atividade.Tracar(l),
+            reforco = listOf(pt("Você escreveu a letra ${falaDaLetra(l)}!")),
+        )
+    }
+
+    private fun formas(emIngles: Boolean): Pergunta {
+        val certa = Vocabulario.formas.um()
+        val erradas = Vocabulario.formas.filter { it != certa }.sorteia(3)
+        val op = { f: PalavraEn -> Opcao(Visual.Emoji(f.emoji), listOf(if (emIngles) en(f.en) else pt(f.pt))) }
+        return montar(
+            instrucao = if (emIngles) "Encontre: ${certa.en}" else "Toque no ${certa.pt}",
+            fala = if (emIngles) listOf(pt("Encontre a forma"), en(certa.en)) else listOf(pt("Toque na forma: ${certa.pt}.")),
+            cena = if (emIngles) Cena.Palavra(certa.en) else Cena.Nenhuma,
+            certa = op(certa),
+            erradas = erradas.map(op),
+            reforco = if (emIngles) listOf(en(certa.en + "!"), pt("${certa.pt}!")) else listOf(pt("Isso! ${certa.pt}!")),
+        )
+    }
+
+    private fun maiorNumero(max: Int): Pergunta {
+        val nums = (1..max).toList().sorteia(4)
+        val maior = random.nextBoolean()
+        val certo = if (maior) nums.max() else nums.min()
+        return montar(
+            instrucao = if (maior) "Qual é o maior número?" else "Qual é o menor número?",
+            fala = listOf(pt(if (maior) "Qual é o maior número?" else "Qual é o menor número?")),
+            cena = Cena.Nenhuma,
+            certa = opcaoNumero(certo),
+            erradas = nums.filter { it != certo }.map(::opcaoNumero),
+            reforco = listOf(pt("${porExtenso(certo)} é o ${if (maior) "maior" else "menor"}!")),
+        )
+    }
+
+    private fun antesDepois(max: Int): Pergunta {
+        val depois = random.nextBoolean()
+        val n = if (depois) (1 until max).random(random) else (2..max).random(random)
+        val resposta = if (depois) n + 1 else n - 1
+        return montar(
+            instrucao = if (depois) "Depois do $n vem?" else "Antes do $n vem?",
+            fala = listOf(pt(if (depois) "Que número vem depois do ${porExtenso(n)}?" else "Que número vem antes do ${porExtenso(n)}?")),
+            cena = Cena.Sequencia(if (depois) listOf("$n", "?") else listOf("?", "$n")),
+            certa = opcaoNumero(resposta),
+            erradas = numerosErrados(resposta, 0, max + 1, 3).map(::opcaoNumero),
+            reforco = listOf(pt(if (depois) "${porExtenso(n)}, ${porExtenso(resposta)}!" else "${porExtenso(resposta)}, ${porExtenso(n)}!")),
+        )
+    }
+
+    private fun ouvirNumero(faixa: IntRange): Pergunta {
+        val n = faixa.random(random)
+        return montar(
+            instrucao = "Toque no $n",
+            fala = listOf(pt("Toque no número ${porExtenso(n)}.")),
+            cena = Cena.Nenhuma,
+            certa = opcaoNumero(n),
+            erradas = numerosErrados(n, faixa.first, faixa.last, 3).map(::opcaoNumero),
+            reforco = listOf(pt("${porExtenso(n)}!")),
+        )
+    }
+
+    /** Continhas contadas como historinha, com nomes de crianças. */
+    private fun historia(soma: Boolean, max: Int): Pergunta {
+        val nome = Vocabulario.nomesDeCriancas.um()
+        val obj = Vocabulario.objetosParaContar.um()
+        val f = obj.feminino
+        val a = (2..max - 1).random(random)
+        val b = if (soma) (1..(max - a)).random(random) else (1 until a).random(random)
+        val resp = if (soma) a + b else a - b
+        val quantos = if (f) "Quantas" else "Quantos"
+        val texto = if (soma) {
+            "$nome tinha ${porExtenso(a, f)} ${obj.nome(a)} e ganhou mais ${porExtenso(b, f)}. $quantos $nome tem agora?"
+        } else {
+            "$nome tinha ${porExtenso(a, f)} ${obj.nome(a)} e deu ${porExtenso(b, f)} para um amigo. $quantos sobraram?"
+        }
+        return montar(
+            instrucao = "${if (soma) "$a + $b" else "$a − $b"} = ?",
+            fala = listOf(pt(texto)),
+            cena = Cena.Conta(obj.emoji, a, b, soma),
+            certa = opcaoNumero(resp),
+            erradas = numerosErrados(resp, 0, max, 3).map(::opcaoNumero),
+            reforco = listOf(pt("${porExtenso(resp, f)} ${obj.nome(resp)}!")),
+        )
+    }
+
+    private fun deDoisEmDois(): Pergunta {
+        val passo = if (random.nextInt(3) == 0) 5 else 2
+        val inicio = if (passo == 2) listOf(0, 2, 4, 1, 3).um() else 0
+        val fila = List(4) { inicio + it * passo }
+        val resposta = fila.last()
+        return montar(
+            instrucao = "Que número vem depois?",
+            fala = listOf(pt("Contando de ${porExtenso(passo)} em ${porExtenso(passo)}: " + fila.dropLast(1).joinToString(", ") { porExtenso(it) } + ". Qual vem depois?")),
+            cena = Cena.Sequencia(fila.dropLast(1).map { it.toString() } + "?"),
+            certa = opcaoNumero(resposta),
+            erradas = listOf(resposta - 1, resposta + 1, resposta + passo).filter { it >= 0 }.distinct().take(3).map(::opcaoNumero),
+            reforco = listOf(pt(fila.joinToString(", ") { porExtenso(it) } + "!")),
+        )
+    }
+
+    /** Jogo das sombras: qual silhueta é desta figura? */
+    private fun sombra(): Pergunta {
+        val (certa, e1, e2, e3) = (Vocabulario.animais.map { it.emoji } + Vocabulario.brinquedos.map { it.emoji }).distinct().sorteia(4)
+        val op = { e: String -> Opcao(Visual.Sombra(e)) }
+        return montar(
+            instrucao = "Qual é a sombra?",
+            fala = listOf(pt("Qual é a sombra desta figura?")),
+            cena = Cena.Emojis(certa),
+            certa = op(certa),
+            erradas = listOf(op(e1), op(e2), op(e3)),
+            reforco = listOf(pt("Isso! É a sombra dela!")),
+        )
+    }
+
+    private fun quantasSilabas(): Pergunta {
+        val p = Vocabulario.todasAsPalavras.filter { it.silabas.size in 1..4 }.um()
+        val n = p.silabas.size
+        return montar(
+            instrucao = "Quantos pedacinhos?",
+            fala = listOf(pt("Bata palmas comigo: " + p.silabas.joinToString(", ") { it.lowercase() } + ". Quantos pedacinhos tem ${p.texto.lowercase()}?")),
+            cena = Cena.Palavra(p.emoji + " " + p.texto),
+            certa = opcaoNumero(n),
+            erradas = (1..5).filter { it != n }.sorteia(3).map(::opcaoNumero),
+            reforco = listOf(pt(p.silabas.joinToString(", ") { it.lowercase() } + ". ${porExtenso(n)} pedacinhos!")),
+        )
+    }
+
+    private fun minuscula(): Pergunta {
+        val letras = listOf("A", "E", "I", "O", "U", "B", "D", "M", "P", "T")
+        val (certa, e1, e2, e3) = letras.sorteia(4)
+        val op = { l: String -> Opcao(Visual.Texto(l.lowercase()), listOf(pt(falaDaLetra(l)))) }
+        return montar(
+            instrucao = "Ache o ${certa.lowercase()} pequenino",
+            fala = listOf(pt("Esta é a letra ${falaDaLetra(certa)} grande. Toque na letra ${falaDaLetra(certa)} pequenininha.")),
+            cena = Cena.Palavra(certa),
+            certa = op(certa),
+            erradas = listOf(op(e1), op(e2), op(e3)),
+            reforco = listOf(pt("${certa} grande e ${certa.lowercase()} pequeno!")),
+        )
+    }
+
+    private fun comecaIgual(): Pergunta {
+        val porLetra = Vocabulario.palavrasComConsoante.groupBy { it.inicial }.filter { it.value.size >= 2 }
+        val (base, certa) = porLetra.values.toList().um().sorteia(2)
+        val erradas = Vocabulario.palavrasComConsoante.filter { it.inicial != base.inicial }.distinctBy { it.inicial }.sorteia(3)
+        val op = { p: Palavra -> Opcao(Visual.Emoji(p.emoji), listOf(pt(p.texto.lowercase()))) }
+        return montar(
+            instrucao = "Começa igual a ${base.texto}?",
+            fala = listOf(pt("${base.texto.lowercase()}. Qual destes começa com o mesmo som de ${base.texto.lowercase()}?")),
+            cena = Cena.Emojis(base.emoji),
+            certa = op(certa),
+            erradas = erradas.map(op),
+            reforco = listOf(pt("${base.texto.lowercase()} e ${certa.texto.lowercase()}: os dois começam com ${falaDaLetra(base.inicial)}!")),
+        )
+    }
+
+    /** Leitura mais difícil: as opções começam com a mesma letra, então é preciso ler a palavra toda. */
+    private fun lerPalavraDificil(): Pergunta {
+        val porLetra = Vocabulario.palavrasComConsoante.groupBy { it.inicial }.filter { it.value.size >= 2 }
+        val grupo = porLetra.values.toList().um()
+        val certa = grupo.um()
+        val mesmas = grupo.filter { it != certa }
+        val outras = Vocabulario.palavrasComConsoante.filter { it.inicial != certa.inicial }.sorteia(3 - minOf(mesmas.size, 2))
+        val erradas = (mesmas.take(2) + outras).take(3)
+        val op = { p: Palavra -> Opcao(Visual.Emoji(p.emoji), listOf(pt(p.texto.lowercase()))) }
+        return montar(
+            instrucao = "Leia: ${certa.texto}",
+            fala = listOf(pt("Leia com calma. Qual figura é esta palavra?")),
+            cena = Cena.Palavra(certa.texto),
+            certa = op(certa),
+            erradas = erradas.map(op),
+            reforco = listOf(pt("Aqui está escrito ${certa.texto.lowercase()}!")),
+        )
+    }
+
     companion object {
-        const val FASES_POR_TRILHA = 10
+        const val FASES_POR_TRILHA = 25
         const val PERGUNTAS_POR_FASE = 5
     }
 }

@@ -19,6 +19,9 @@ sealed interface Visual {
 
     /** Um círculo colorido (cores em inglês). [argb] no formato 0xAARRGGBB. */
     data class Cor(val argb: Long) : Visual
+
+    /** A silhueta escura de um emoji (jogo das sombras). */
+    data class Sombra(val emoji: String) : Visual
 }
 
 data class Opcao(
@@ -40,6 +43,36 @@ sealed interface Cena {
     data class Sequencia(val itens: List<String>) : Cena
 }
 
+/**
+ * Como a criança responde. Além de tocar na resposta certa, há atividades de mexer:
+ * arrastar para a cesta, jogo da memória, montar a palavra e traçar a letra.
+ */
+sealed interface Atividade {
+    /** Tocar numa das opções (o padrão). */
+    data object Escolha : Atividade
+
+    /** Arrastar figuras para a cesta: contar ([alvo] figuras) ou classificar (só as do grupo). */
+    data class Cesta(
+        /** Figuras que podem ir para a cesta. */
+        val certos: List<String>,
+        /** Quantas devem ir (contar). Em classificação, todas as [certos]. */
+        val alvo: Int,
+        /** Figuras que não pertencem ao grupo (classificar): se forem para a cesta, voltam. */
+        val errados: List<String> = emptyList(),
+    ) : Atividade {
+        val classificar get() = errados.isNotEmpty()
+    }
+
+    /** Jogo da memória: achar os pares. [falas] diz o nome (em inglês, por exemplo) de cada figura ao virar. */
+    data class Memoria(val pares: List<Pair<String, String>>, val falas: Map<String, Trecho> = emptyMap()) : Atividade
+
+    /** Arrastar as sílabas na ordem certa para formar a palavra da figura. */
+    data class MontarPalavra(val emoji: String, val palavra: String, val silabas: List<String>, val extras: List<String>) : Atividade
+
+    /** Passar o dedo por cima da letra pontilhada. */
+    data class Tracar(val letra: String) : Atividade
+}
+
 data class Pergunta(
     /** Texto curto exibido para o adulto que acompanha (a criança ouve). */
     val instrucao: String,
@@ -49,9 +82,16 @@ data class Pergunta(
     val indiceCorreto: Int,
     /** Fala extra depois do acerto, para reforçar o aprendizado (por exemplo, "Cat. Gato."). */
     val reforco: List<Trecho> = emptyList(),
+    val atividade: Atividade = Atividade.Escolha,
 ) {
     init {
         require(indiceCorreto in opcoes.indices) { "Índice correto fora das opções" }
+    }
+
+    companion object {
+        /** Pergunta de mexer (sem opções para tocar). */
+        fun deAtividade(instrucao: String, fala: List<Trecho>, atividade: Atividade, reforco: List<Trecho> = emptyList(), cena: Cena = Cena.Nenhuma) =
+            Pergunta(instrucao, fala, cena, listOf(Opcao(Visual.Texto("✔"))), 0, reforco, atividade)
     }
 }
 
