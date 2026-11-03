@@ -160,10 +160,15 @@ fun TelaTrilha(
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
-    val fases = remember(trilha) { GeradorDeFases().fases(trilha) }
-    val atual = fases.firstOrNull { estado.liberada(it) && estado.estrelasDa(it) == 0 }
+    val todas = remember(trilha) { GeradorDeFases().fases(trilha) }
+    val atual = todas.firstOrNull { estado.liberada(it) && estado.estrelasDa(it) == 0 }
     // Fase para mostrar ao abrir: a atual ou, com tudo vencido, a última vencida.
-    val indiceEmFoco = atual?.numero ?: fases.indexOfLast { estado.estrelasDa(it) > 0 }.coerceAtLeast(0)
+    val indiceEmFoco = atual?.numero ?: todas.indexOfLast { estado.estrelasDa(it) > 0 }.coerceAtLeast(0)
+    // São 250 fases: o caminho mostra até o fim do mundo seguinte ao da vez (o resto aparece quando a
+    // criança chega perto). Menos coisa na tela e sempre um mundo novo para descobrir.
+    val fases = remember(todas, indiceEmFoco) {
+        todas.take(minOf(todas.size, (indiceEmFoco / Mundos.FASES_POR_MUNDO + 2) * Mundos.FASES_POR_MUNDO))
+    }
     val proximoPremio = ItensDaCasa.ordem.getOrNull(estado.fasesVencidas)
     val cor = Color(trilha.corArgb)
     val corEscura = Color(trilha.corEscuraArgb)
@@ -213,7 +218,7 @@ fun TelaTrilha(
                     Text(proximoPremio.icone, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.pulsando())
                 }
             } else {
-                Text("${estado.vencidasNa(trilha)}/${fases.size}", style = MaterialTheme.typography.titleLarge, color = Color.White)
+                Text("${estado.vencidasNa(trilha)}/${todas.size}", style = MaterialTheme.typography.titleLarge, color = Color.White)
             }
         }
 

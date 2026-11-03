@@ -259,7 +259,7 @@ private fun Painel(
                 "• Errar não tira nada: a criança ouve o nome do que tocou e tenta de novo. Depois de dois erros, a resposta certa brilha.\n" +
                 "• Para ganhar o presente da fase, é preciso acertar pelo menos ${EstadoJogo.MINIMO_PARA_VENCER} de 5 de primeira. Assim a casa cresce junto com o aprendizado.\n" +
                 "• Toda fase revisa uma pergunta de uma fase anterior.\n" +
-                "• Cada caminho tem ${GeradorDeFases.FASES_POR_TRILHA} fases em ${Mundos.todos.size} mundos, do básico (contar, vogais, cores) até o 1º ano: " +
+                "• Cada caminho tem ${GeradorDeFases.FASES_POR_TRILHA} fases em ${Mundos.todos.size} mundos, do básico (contar, vogais, cores) até o 2º ano, um degrau de cada vez: " +
                 "somar e tirar até 20, dezenas, horas e moedinhas; famílias silábicas, sílabas difíceis, leitura de frases e letra pequena; " +
                 "frases simples em inglês; labirintos e sudoku de figuras.\n" +
                 "• O botão Treinar, no caminho, faz perguntas sem fim das fases já vencidas, mais das que a criança erra mais, " +
@@ -354,14 +354,16 @@ private fun CaminhoRecolhivel(
             Text(resumo, style = MaterialTheme.typography.bodyMedium, color = Cores.TextoSuave)
             Spacer(Modifier.height(6.dp))
             // Uma fatia por fase: verde (80% ou mais), amarela (aprendendo), cinza (não jogou), clarinha (fechada).
-            Row(Modifier.fillMaxWidth().height(10.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                for (f in fases) {
-                    Box(
-                        Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .background(corDaFase(estado, f), RoundedCornerShape(3.dp)),
-                    )
+            // São 250 fases: desenhadas lado a lado num Canvas, com um risquinho branco entre os mundos.
+            val cores = fases.map { corDaFase(estado, it) }
+            androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(3.dp))) {
+                val largura = size.width / cores.size
+                cores.forEachIndexed { i, c ->
+                    drawRect(c, topLeft = androidx.compose.ui.geometry.Offset(i * largura, 0f), size = androidx.compose.ui.geometry.Size(largura + 0.5f, size.height))
+                }
+                for (m in 1 until (cores.size + Mundos.FASES_POR_MUNDO - 1) / Mundos.FASES_POR_MUNDO) {
+                    val x = m * Mundos.FASES_POR_MUNDO * largura
+                    drawRect(Color.White, topLeft = androidx.compose.ui.geometry.Offset(x - 0.75f, 0f), size = androidx.compose.ui.geometry.Size(1.5f, size.height))
                 }
             }
         }

@@ -11,14 +11,14 @@ import kotlin.random.Random
 class CinquentaFasesTest {
 
     @Test
-    fun `cada caminho tem cinquenta fases em cinco mundos de dez`() {
+    fun `cada caminho tem duzentas e cinquenta fases em vinte e cinco mundos de dez`() {
         val g = GeradorDeFases(Random(1))
-        assertEquals(50, GeradorDeFases.FASES_POR_TRILHA)
-        assertEquals(5, Mundos.todos.size)
+        assertEquals(250, GeradorDeFases.FASES_POR_TRILHA)
+        assertEquals(25, Mundos.todos.size)
         assertEquals(GeradorDeFases.FASES_POR_TRILHA, Mundos.todos.size * Mundos.FASES_POR_MUNDO)
         for (t in Trilha.entries) {
             val fases = g.fases(t)
-            assertEquals(50, fases.size)
+            assertEquals(250, fases.size)
             fases.forEachIndexed { i, f ->
                 assertEquals(i, f.numero)
                 assertTrue("$t $i sem título", f.titulo.isNotBlank() && f.emoji.isNotBlank())
@@ -250,6 +250,7 @@ class CinquentaFasesTest {
                 return
             }
             Atividade.Escolha -> Unit
+            else -> org.junit.Assert.fail("$fase: tipo novo sorteado antes da tela ficar pronta: $a")
         }
         assertEquals("$fase: deve ter 4 opções (${p.instrucao})", 4, p.opcoes.size)
         val certa = p.opcoes[p.indiceCorreto].visual

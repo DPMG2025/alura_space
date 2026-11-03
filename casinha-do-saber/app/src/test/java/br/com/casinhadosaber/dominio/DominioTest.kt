@@ -11,7 +11,7 @@ import kotlin.random.Random
 class GeradorDeFasesTest {
 
     @Test
-    fun `cada trilha tem cinquenta fases`() {
+    fun `cada trilha tem duzentas e cinquenta fases`() {
         val g = GeradorDeFases(Random(1))
         for (t in Trilha.entries) assertEquals(GeradorDeFases.FASES_POR_TRILHA, g.fases(t).size)
     }
@@ -68,6 +68,7 @@ class GeradorDeFasesTest {
                 return
             }
             Atividade.Escolha -> Unit
+            else -> org.junit.Assert.fail("$fase: tipo novo sorteado antes da tela ficar pronta: $a")
         }
         assertEquals("$fase: deve ter 4 opções (${p.instrucao})", 4, p.opcoes.size)
         assertTrue("$fase: sem fala", p.fala.isNotEmpty() && p.fala.all { it.texto.isNotBlank() })

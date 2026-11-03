@@ -36,6 +36,40 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.Atividade
+import br.com.casinhadosaber.dominio.Pescaria
+import br.com.casinhadosaber.dominio.EstourarBaloes
+import br.com.casinhadosaber.dominio.LigarPares
+import br.com.casinhadosaber.dominio.QuebraCabeca
+import br.com.casinhadosaber.dominio.Trem
+import br.com.casinhadosaber.dominio.Balanca
+import br.com.casinhadosaber.dominio.CacaNaCena
+import br.com.casinhadosaber.dominio.SigaASequencia
+import br.com.casinhadosaber.dominio.PintarPorCodigo
+import br.com.casinhadosaber.dominio.Ditado
+import br.com.casinhadosaber.dominio.Domino
+import br.com.casinhadosaber.dominio.EscondeEsconde
+import br.com.casinhadosaber.dominio.CartasViradas
+import br.com.casinhadosaber.dominio.Mercadinho
+import br.com.casinhadosaber.dominio.Relogio
+import br.com.casinhadosaber.dominio.ProgramarRobo
+import br.com.casinhadosaber.dominio.MontarFrase
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadePescaria
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeBaloes
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeLigarPares
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeQuebraCabeca
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeTrem
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeBalanca
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeCacaNaCena
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeSigaASequencia
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadePintar
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeDitado
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeDomino
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeEscondeEsconde
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeCartasViradas
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeMercadinho
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeRelogio
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeProgramarRobo
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeMontarFrase
 import br.com.casinhadosaber.dominio.Trecho
 import br.com.casinhadosaber.dominio.Vocabulario
 import br.com.casinhadosaber.ui.componentes.MaoGuia
@@ -69,6 +103,24 @@ fun AtividadeInterativa(
         is Atividade.MontarPalavra -> AtividadeMontarPalavra(atividade, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
         is Atividade.Tracar -> AtividadeTracar(atividade, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
         Atividade.Escolha -> Unit
+        // Tipos novos (docs/plano-1000-fases.md): cada um tem a sua tela em atividades/novas/.
+        is Pescaria -> AtividadePescaria(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is EstourarBaloes -> AtividadeBaloes(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is LigarPares -> AtividadeLigarPares(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is QuebraCabeca -> AtividadeQuebraCabeca(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is Trem -> AtividadeTrem(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is Balanca -> AtividadeBalanca(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is CacaNaCena -> AtividadeCacaNaCena(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is SigaASequencia -> AtividadeSigaASequencia(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is PintarPorCodigo -> AtividadePintar(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is Ditado -> AtividadeDitado(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is Domino -> AtividadeDomino(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is EscondeEsconde -> AtividadeEscondeEsconde(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is CartasViradas -> AtividadeCartasViradas(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is Mercadinho -> AtividadeMercadinho(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is Relogio -> AtividadeRelogio(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is ProgramarRobo -> AtividadeProgramarRobo(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        is MontarFrase -> AtividadeMontarFrase(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
     }
 }
 
