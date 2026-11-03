@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.platform.testTag
 import br.com.casinhadosaber.audio.Narrador
 import br.com.casinhadosaber.audio.Sons
 import br.com.casinhadosaber.dominio.EstadoJogo
@@ -210,19 +212,26 @@ class CapturasTest {
         )
     }
 
-    /** Regressão: chuva e neve nunca podem aparecer dentro dos cômodos. */
+    /**
+     * Regressão: chuva e neve nunca podem aparecer dentro dos cômodos.
+     *
+     * As três cenas (sem clima, chuva e neve) ficam lado a lado no mesmo quadro, então as
+     * animações estão no mesmo instante. Cada cena tem 120 x 138 dp (a proporção exata da cena,
+     * 1,15) e as três cabem juntas na largura da tela (360 de 393 dp). Cada uma é capturada
+     * sozinha, pelo seu testTag, e comparada pixel a pixel com a cena sem clima só dentro da casa
+     * (paredes e telhado, com margem para o contorno). Qualquer diferença ali é chuva ou neve.
+     */
     @Test fun chuvaNuncaCaiDentroDeCasa() {
         val narrador = Narrador(RuntimeEnvironment.getApplication()).apply { ativo = false }
         val sons = Sons().apply { ativo = false }
         val base = estado(40, 40)
         regra.mainClock.autoAdvance = false
-        // As três cenas no mesmo quadro (mesmo instante das animações): sem clima, chuva e neve.
         regra.setContent {
             TemaCasinha {
                 CompositionLocalProvider(LocalNarrador provides narrador, LocalSons provides sons) {
                     androidx.compose.foundation.layout.Row {
                         for (c in 0..2) {
-                            androidx.compose.foundation.layout.Box(Modifier.size(200.dp, 230.dp)) {
+                            Box(Modifier.size(120.dp, 138.dp).testTag("clima$c")) {
                                 br.com.casinhadosaber.ui.componentes.CenaDaCasa(base.copy(clima = c), Modifier.fillMaxSize())
                             }
                         }
@@ -231,19 +240,49 @@ class CapturasTest {
             }
         }
         regra.mainClock.advanceTimeBy(700)
-        // Mesma captura das outras telas (Roborazzi); depois lê os pixels do arquivo.
-        val arquivo = "build/outputs/roborazzi/23_teste_chuva_fora_de_casa.png"
-        regra.onRoot().captureRoboImage(arquivo)
-        val img = android.graphics.BitmapFactory.decodeFile(java.io.File(arquivo).absolutePath)
-        val w = img.width / 3
-        val h = img.height
-        // Paredes da casa: x de 10% a 90%, y de 30% a 78% (com margem para o contorno).
-        val x0 = (w * 0.12f).toInt(); val x1 = (w * 0.88f).toInt()
-        val y0 = (h * 0.32f).toInt(); val y1 = (h * 0.76f).toInt()
+        // Imagem das três cenas juntas, só para conferir a olho em docs/capturas.
+        regra.onRoot().captureRoboImage("build/outputs/roborazzi/23_teste_chuva_fora_de_casa.png")
+        // Uma captura por cena, lida do arquivo recém gravado (apagado antes para não ler um antigo).
+        val cenas = (0..2).map { c ->
+            val arquivo = java.io.File("build/outputs/roborazzi/teste_chuva/clima_$c.png")
+            arquivo.parentFile?.mkdirs()
+            arquivo.delete()
+            regra.onNodeWithTag("clima$c").captureRoboImage(arquivo.path)
+            org.junit.Assert.assertTrue("captura da cena $c não foi gravada", arquivo.exists())
+            android.graphics.BitmapFactory.decodeFile(arquivo.absolutePath)
+                ?: throw AssertionError("captura da cena $c ilegível")
+        }
+        val w = cenas[0].width
+        val h = cenas[0].height
+        for (img in cenas) org.junit.Assert.assertTrue("cenas com tamanhos diferentes", img.width == w && img.height == h)
+        // A cena precisa ter a proporção certa, senão as frações abaixo não apontam para a casa.
+        org.junit.Assert.assertEquals("proporção da cena", w * 1.15f, h.toFloat(), 3f)
+
+        // Medidas da casa (Planta em CenaDaCasa.kt): paredes de x 0,10 a 0,90 e y 0,30 a 0,78;
+        // telhado é o triângulo (0,04; 0,315), (0,5; 0,075), (0,96; 0,315).
+        val m = 3f // margem em pixels, longe do contorno e da camadinha de neve do telhado
+        fun dentroDasParedes(x: Int, y: Int) =
+            x > 0.10f * w + m && x < 0.90f * w - m && y > 0.30f * h + m && y < 0.78f * h - m
+        fun dentroDoTelhado(x: Int, y: Int): Boolean {
+            // Abaixo da camada de neve (que vai da borda até a linha (0,07; 0,318)-(0,5; 0,095)).
+            val fx = x.toFloat() / w
+            val fy = y.toFloat() / h
+            if (fy > 0.30f) return false
+            val linhaDaNeve = 0.095f + (0.318f - 0.095f) * (kotlin.math.abs(fx - 0.5f) / 0.43f)
+            return y > (linhaDaNeve * h) + m && fx > 0.07f && fx < 0.93f
+        }
+        val referencia = cenas[0]
         for (c in 1..2) {
-            var diferentes = 0
-            for (y in y0 until y1) for (x in x0 until x1) if (img.getPixel(x, y) != img.getPixel(x + c * w, y)) diferentes++
-            org.junit.Assert.assertEquals("clima $c desenhou dentro de casa", 0, diferentes)
+            val img = cenas[c]
+            var dentro = 0
+            var fora = 0
+            for (y in 0 until h) for (x in 0 until w) {
+                if (img.getPixel(x, y) == referencia.getPixel(x, y)) continue
+                if (dentroDasParedes(x, y) || dentroDoTelhado(x, y)) dentro++ else fora++
+            }
+            // Sem isto o teste passaria à toa se o clima não fosse desenhado.
+            org.junit.Assert.assertTrue("clima $c não desenhou nada do lado de fora", fora > 50)
+            org.junit.Assert.assertEquals("clima $c desenhou dentro de casa", 0, dentro)
         }
     }
 
