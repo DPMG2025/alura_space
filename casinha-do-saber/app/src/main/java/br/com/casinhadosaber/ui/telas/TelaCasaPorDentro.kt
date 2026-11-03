@@ -1553,8 +1553,11 @@ private fun montarAndar(
 
     // ---- lâmpadas penduradas, uma por cômodo
     val luzes = PlantaDaCasa.comodosDo(andar).map { c ->
-        val centro = PlantaDaCasa.centroDo(c)
-        val l = proj.ponto(centro.x, centro.y, 2.62f)
+        // No banheiro, a lâmpada do meio caía em cima do patinho da banheira: lá ela fica mais à direita,
+        // longe do patinho, e com o fio mais curto.
+        val banheiro = c == Comodo.BANHEIRO
+        val centro = if (banheiro) Posicao(7.6f, 2.0f) else PlantaDaCasa.centroDo(c)
+        val l = proj.ponto(centro.x, centro.y, if (banheiro) 2.85f else 2.62f)
         val r = tw * 0.2f
         Luz(
             comodo = c,
