@@ -766,6 +766,15 @@ class CapturasTest {
         TelaJogo(gerador.fases(Trilha.LOGICA)[41], menina, {}, { })
     }
 
+    /** Pergunta de lado do labirinto: as quatro respostas são setas desenhadas (não emoji). */
+    @Test fun faseLabirintoSetas() = capturar("66b_fase_labirinto_setas") {
+        val g = GeradorDeFases(Random(7))
+        val fase = g.fases(Trilha.LOGICA)[41]
+        val comSetas = generateSequence { g.perguntas(fase) }.take(50).flatten()
+            .first { p -> p.opcoes.all { it.visual is br.com.casinhadosaber.dominio.Visual.Seta } }
+        TelaJogo(fase, menina, {}, { }, treino = { comSetas })
+    }
+
     /** No treino, o voltar do Android termina como o ✖: entrega os resultados (moedinhas e histórico) e não só sai. */
     @Test fun voltarNoTreinoTerminaComoOX() {
         val fase = gerador.fases(Trilha.MATEMATICA)[1]
