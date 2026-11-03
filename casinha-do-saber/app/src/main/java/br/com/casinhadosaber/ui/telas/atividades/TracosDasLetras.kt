@@ -19,7 +19,7 @@ object TracosDasLetras {
     private const val BASE = 0.85f
     private const val MEIO = 0.5f
 
-    private fun p(x: Float, y: Float) = Offset(x, y)
+    private fun p(x: Float, y: Float) = x to y
 
     /**
      * Arco de elipse com centro ([cx], [cy]) e raios [rx], [ry], de [de] até [ate] graus.
@@ -41,7 +41,8 @@ object TracosDasLetras {
         return r
     }
 
-    private fun reta(vararg pontos: Offset) = pontos.toList()
+    /** Linha reta (ou quebrada) pelos pontos dados. Offset é classe de valor e não pode ser vararg. */
+    private fun reta(vararg pontos: Pair<Float, Float>): List<Offset> = pontos.map { (x, y) -> Offset(x, y) }
 
     private val oval = arco(0.5f, MEIO, 0.32f, 0.35f, -90f, -450f)
 
