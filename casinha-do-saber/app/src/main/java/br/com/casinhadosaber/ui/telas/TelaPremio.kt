@@ -127,6 +127,10 @@ fun TelaPremio(
             sons.toque()
         }
         if (item == null) confete++
+        if (moedas > 0) {
+            delay(250)
+            sons.moeda()
+        }
     }
 
     Box(
@@ -177,7 +181,7 @@ fun TelaPremio(
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Spacer(Modifier.height(8.dp))
-                Presente(item, aberto, onToque = { sons.toque(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) }, onAbrir = ::abrir)
+                Presente(item, aberto, onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) }, onAbrir = ::abrir)
                 if (aberto) {
                     Text(item.nome, style = MaterialTheme.typography.headlineLarge)
                     Text("Em inglês: ${item.nomeEn}", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)

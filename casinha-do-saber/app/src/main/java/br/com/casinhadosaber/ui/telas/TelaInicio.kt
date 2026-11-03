@@ -177,9 +177,15 @@ fun TelaInicio(
             for (linha in Trilha.entries.chunked(2)) {
                 Row(Modifier.height(alturaBotao), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     for (t in linha) {
-                        BotaoTrilha(t, estado.vencidasNa(t), Modifier.weight(1f).fillMaxHeight()) {
-                            sons.toque()
-                            onAbrirTrilha(t)
+                        Box(Modifier.weight(1f).fillMaxHeight()) {
+                            BotaoTrilha(t, estado.vencidasNa(t), Modifier.fillMaxSize()) {
+                                sons.toque()
+                                onAbrirTrilha(t)
+                            }
+                            // Primeira vez: a mãozinha mostra por onde começar.
+                            if (estado.fasesVencidas == 0 && t == Trilha.MATEMATICA) {
+                                MaoGuia(Modifier.align(Alignment.BottomEnd).offset(x = 8.dp, y = 12.dp), espera = 2500)
+                            }
                         }
                     }
                 }

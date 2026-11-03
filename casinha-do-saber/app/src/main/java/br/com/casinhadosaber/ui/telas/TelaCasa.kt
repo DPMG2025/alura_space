@@ -130,7 +130,7 @@ fun TelaCasa(
         if (item.ehEstrutura) {
             novaEstrutura = item.estrutura
             confete++
-            sons.premio()
+            sons.zum()
             narrador.falar(listOf(pt("Construímos ${item.comArtigo}! Em inglês:"), en(item.nomeEn)))
         } else {
             destaque = item.id
@@ -329,7 +329,8 @@ fun TelaCasa(
                         onAtualizar { it.usar(produto) ?: it }
                         if (!jaTinha) {
                             confete++
-                            sons.premio()
+                            sons.moeda()
+                            if (produto.categoria == Categoria.VISITANTE) sons.piu(Loja.produtos.indexOf(produto))
                             narrador.falar(
                                 if (produto.categoria == Categoria.VISITANTE) "${produto.nome} veio passear no seu jardim!" else "Oba! ${produto.nome}!",
                             )

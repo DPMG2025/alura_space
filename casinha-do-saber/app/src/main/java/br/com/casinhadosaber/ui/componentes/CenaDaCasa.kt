@@ -456,6 +456,8 @@ private fun ObjetoNaCena(
     conteudo: @Composable (larguraPx: Float) -> Unit,
 ) {
     val faisca = remember { Animatable(1f) }
+    val sons = br.com.casinhadosaber.ui.LocalSons.current
+    val vibracao = androidx.compose.ui.platform.LocalHapticFeedback.current
     // Cada objeto começa a animação num ponto diferente, para não mexerem todos juntos.
     val defasagem = remember(item?.id) { ((item?.id?.hashCode() ?: 7) and 0xFF) / 255f }
     val densidade = LocalDensity.current
@@ -520,7 +522,11 @@ private fun ObjetoNaCena(
                         }
                         .pointerInput(pos) {
                             detectDragGestures(
-                                onDragStart = { arrastando = true },
+                                onDragStart = {
+                                    arrastando = true
+                                    sons.pegar()
+                                    vibracao.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                },
                                 onDragEnd = {
                                     arrastando = false
                                     val solto = Posicao(pos.x + arrasto.x / larguraCena, pos.y + arrasto.y / alturaCena)
@@ -528,6 +534,8 @@ private fun ObjetoNaCena(
                                     if (final == null) {
                                         arrasto = Offset.Zero
                                     } else {
+                                        sons.pousar()
+                                        vibracao.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                                         // O objeto "cai" de onde foi solto até o chão do cômodo, com um quique.
                                         val diferenca = Offset((solto.x - final.x) * larguraCena, (solto.y - final.y) * alturaCena)
                                         arrasto = diferenca

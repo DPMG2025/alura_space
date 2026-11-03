@@ -84,6 +84,12 @@ class JogoNoEmuladorTest {
         capturar("e01_perfil")
         regra.onAllNodes(hasContentDescription("Pronto")).onFirst().performClick()
 
+        // Boas-vindas: a criança chega ao terreno; um toque pula a cena.
+        regra.waitUntilAtLeastOneExists(hasText("Vamos construir a sua casinha!"), 10_000)
+        avancar(1_500)
+        capturar("e01b_boas_vindas")
+        regra.onAllNodes(hasText("Vamos construir a sua casinha!")).onFirst().performClick()
+
         // Início: abrir o caminho dos números
         esperar("Caminho Números")
         capturar("e02_inicio")

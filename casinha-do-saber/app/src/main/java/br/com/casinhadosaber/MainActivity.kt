@@ -36,6 +36,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.TemaCasinha
 import br.com.casinhadosaber.ui.telas.TelaCasa
+import br.com.casinhadosaber.ui.telas.TelaBoasVindas
 import br.com.casinhadosaber.ui.telas.TelaDormir
 import br.com.casinhadosaber.ui.telas.TelaInicio
 import br.com.casinhadosaber.ui.telas.TelaJogo
@@ -49,6 +50,7 @@ import br.com.casinhadosaber.ui.telas.TelaTrilha
 sealed interface Tela {
     data object Perfil : Tela
     data object Inicio : Tela
+    data object BoasVindas : Tela
     data class Caminho(val trilha: Trilha) : Tela
     data class Jogo(val fase: Fase) : Tela
     data class Premio(val fase: Fase, val estrelas: Int, val item: ItemCasa?, val moedas: Int = 0) : Tela
@@ -169,6 +171,12 @@ class MainActivity : ComponentActivity() {
                 .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Cores.Ceu, Cores.Fundo))),
             contentAlignment = androidx.compose.ui.Alignment.TopCenter,
         ) {
+            val config = androidx.compose.ui.platform.LocalConfiguration.current
+            val densidade = androidx.compose.ui.platform.LocalDensity.current
+            val tablet = config.smallestScreenWidthDp >= 600
+            // Em tablet, textos e botões ficam 30% maiores (do tamanho certo para a mão da criança).
+            val densidadeDoApp = if (tablet) androidx.compose.ui.unit.Density(densidade.density * 1.3f, densidade.fontScale) else densidade
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides densidadeDoApp) {
             AnimatedContent(
                 modifier = Modifier.widthIn(max = 640.dp).fillMaxHeight(),
                 targetState = tela,
@@ -177,9 +185,12 @@ class MainActivity : ComponentActivity() {
             ) { atual ->
                 when (atual) {
                     Tela.Perfil -> TelaPerfil(estado.perfil) { perfil ->
+                        val primeiraVez = estado.perfil == null
                         repo.atualizar { it.copy(perfil = perfil) }
-                        irPara(Tela.Inicio)
+                        irPara(if (primeiraVez) Tela.BoasVindas else Tela.Inicio)
                     }
+
+                    Tela.BoasVindas -> TelaBoasVindas(estado) { irPara(Tela.Inicio) }
 
                     Tela.Inicio -> TelaInicio(
                         estado = estado,
@@ -280,6 +291,7 @@ class MainActivity : ComponentActivity() {
                         onVoltar = { irPara(Tela.Inicio) },
                     )
                 }
+            }
             }
         }
     }

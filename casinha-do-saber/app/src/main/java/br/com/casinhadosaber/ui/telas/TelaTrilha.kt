@@ -120,6 +120,7 @@ fun TelaTrilha(
             }
         }
 
+        Box(Modifier.fillMaxSize()) {
         BoxWithConstraints(
             Modifier
                 .fillMaxSize()
@@ -186,6 +187,14 @@ fun TelaTrilha(
                 }
             }
             Spacer(Modifier.height(alturaTotal))
+        }
+            // Esmaecido no topo: o que sobe some suavemente, sem corte reto.
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(24.dp)
+                    .background(Brush.verticalGradient(listOf(cor, cor.copy(alpha = 0f)))),
+            )
         }
     }
 }

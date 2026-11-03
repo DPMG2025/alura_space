@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
@@ -207,6 +210,40 @@ class CapturasTest {
             estado(40, 40).copy(papelDeParede = 2, corPorta = 1, corTelhado = 2, visitantes = setOf("🦔", "🦊", "🐢")),
             {}, {}, {},
         )
+    }
+
+    /** Regressão: chuva e neve nunca podem aparecer dentro dos cômodos. */
+    @Test fun chuvaNuncaCaiDentroDeCasa() {
+        val narrador = Narrador(RuntimeEnvironment.getApplication()).apply { ativo = false }
+        val sons = Sons().apply { ativo = false }
+        val base = estado(40, 40)
+        regra.mainClock.autoAdvance = false
+        // As três cenas no mesmo quadro (mesmo instante das animações): sem clima, chuva e neve.
+        regra.setContent {
+            TemaCasinha {
+                CompositionLocalProvider(LocalNarrador provides narrador, LocalSons provides sons) {
+                    androidx.compose.foundation.layout.Row {
+                        for (c in 0..2) {
+                            androidx.compose.foundation.layout.Box(Modifier.size(200.dp, 230.dp)) {
+                                br.com.casinhadosaber.ui.componentes.CenaDaCasa(base.copy(clima = c), Modifier.fillMaxSize())
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        regra.mainClock.advanceTimeBy(700)
+        val img = regra.onRoot().captureToImage().asAndroidBitmap()
+        val w = img.width / 3
+        val h = img.height
+        // Paredes da casa: x de 10% a 90%, y de 30% a 78% (com margem para o contorno).
+        val x0 = (w * 0.12f).toInt(); val x1 = (w * 0.88f).toInt()
+        val y0 = (h * 0.32f).toInt(); val y1 = (h * 0.76f).toInt()
+        for (c in 1..2) {
+            var diferentes = 0
+            for (y in y0 until y1) for (x in x0 until x1) if (img.getPixel(x, y) != img.getPixel(x + c * w, y)) diferentes++
+            org.junit.Assert.assertEquals("clima $c desenhou dentro de casa", 0, diferentes)
+        }
     }
 
     @Test fun pais() = capturar("15_area_dos_pais") {
