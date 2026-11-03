@@ -1,10 +1,16 @@
 Emojis do app na fonte embutida (emoji2-bundled), Android API 26 (8.0.0)
-Verificados: 364
-Viraram EmojiSpan (desenho da fonte embutida): 361
+Verificados: 633
+Viraram EmojiSpan (desenho da fonte embutida): 624
 Com glifo na fonte, mas sem FE0F (estilo texto, desenho do sistema): 3
   ▶  U+25B6
   ✔  U+2714
   ✖  U+2716
-Sem glifo na fonte embutida: 0
+Sem glifo na fonte embutida: 6
+  ■  U+25A0
+  ▬  U+25AC
+  ▲  U+25B2
+  ●  U+25CF
+  🁡  U+1F061
+  🁫  U+1F06B
 
 Os novos: 🪙=EmojiSpan 🪶=EmojiSpan 🪟=EmojiSpan
