@@ -34,12 +34,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -83,10 +85,55 @@ private const val FASES_POR_MARCO = 5
 private val LARGURA_DE_REFERENCIA = 400.dp
 private val ALTURA_DE_REFERENCIA = 620.dp
 
-/** Posição horizontal (fração da largura) de cada fase, formando um caminho em zigue-zague. */
-private val zigueZague = listOf(0.5f, 0.74f, 0.5f, 0.26f)
+/**
+ * Posição horizontal (fração da largura) de cada fase, formando um caminho em zigue-zague.
+ * Os saltos de 0,26 da largura deixam o trecho vertical do caminho fora da plaquinha (meia placa
+ * de 80 dp mais o pontinho de 7 dp) já em 360 dp: 0,26 x 360 = 93,6 dp.
+ */
+private val zigueZague = listOf(0.5f, 0.76f, 0.5f, 0.24f)
 
-private fun posicaoX(indice: Int): Float = zigueZague[indice.mod(zigueZague.size)]
+/** Raio das curvas do caminho (cantos arredondados do traçado em "L" e em "U"). */
+private val RAIO_DA_CURVA = 36.dp
+
+/** Paisagem: distância do centro da bolinha da ponta da fileira até a borda (cabe a volta em "U"). */
+private val MARGEM_SERPENTE = 104.dp
+
+/** Paisagem: distância horizontal até o trecho de volta, fora da plaquinha (80 dp + pontinho + folga). */
+private val AFASTAMENTO_DA_VOLTA = 96.dp
+
+/** Paisagem: distância mínima entre bolinhas vizinhas na mesma fileira (as plaquinhas não se encostam). */
+private val ESPACO_MINIMO = 176.dp
+
+/** Constante para desenhar um quarto de círculo com curva de Bézier cúbica. */
+private const val KAPPA = 0.5523f
+
+/**
+ * Onde cada fase fica no caminho. Em pé: uma fase por degrau, em zigue-zague.
+ * Deitada (tela larga): fileiras de [colunas] fases, indo e voltando como num tabuleiro, para
+ * caberem muito mais fases na tela de uma vez.
+ */
+private class Disposicao(val largura: Dp, val colunas: Int) {
+    val serpente: Boolean get() = colunas > 1
+    private val espaco: Dp = if (colunas > 1) (largura - MARGEM_SERPENTE * 2) / (colunas - 1) else 0.dp
+
+    fun linha(indice: Int): Int = if (serpente) indice / colunas else indice
+
+    fun linhas(total: Int): Int = if (total <= 0) 0 else linha(total - 1) + 1
+
+    fun x(indice: Int): Dp {
+        if (!serpente) return largura * zigueZague[indice.mod(zigueZague.size)]
+        val l = indice / colunas
+        val j = indice % colunas
+        val coluna = if (l % 2 == 0) j else colunas - 1 - j
+        return MARGEM_SERPENTE + espaco * coluna
+    }
+}
+
+private fun disposicaoDoCaminho(largura: Dp, altura: Dp): Disposicao {
+    if (largura <= altura) return Disposicao(largura, 1)
+    val cabem = ((largura - MARGEM_SERPENTE * 2) / ESPACO_MINIMO).toInt() + 1
+    return Disposicao(largura, if (cabem < 3) 1 else cabem.coerceAtMost(6))
+}
 
 private fun ehMarco(fase: Fase): Boolean = (fase.numero + 1) % FASES_POR_MARCO == 0
 
@@ -161,11 +208,12 @@ fun TelaTrilha(
             BoxWithConstraints(Modifier.fillMaxSize()) {
             val alturaVisivel = maxHeight
             val densidade = LocalDensity.current
+            val disposicao = remember(maxWidth, maxHeight) { disposicaoDoCaminho(maxWidth, maxHeight) }
             // Ao abrir, a fase atual aparece perto do meio da tela (com 25 fases ela pode estar bem lá embaixo).
             // O topo da área visível cai sempre no começo de um degrau: nenhuma plaquinha fica cortada
             // embaixo do cabeçalho.
             LaunchedEffect(trilha) {
-                val centroDaFase = ALTURA_PASSO * indiceEmFoco + TOPO_BOLINHA + TAMANHO_BOLINHA / 2
+                val centroDaFase = ALTURA_PASSO * disposicao.linha(indiceEmFoco) + TOPO_BOLINHA + TAMANHO_BOLINHA / 2
                 val degraus = ((centroDaFase - alturaVisivel / 2) / ALTURA_PASSO).roundToInt().coerceAtLeast(0)
                 val alvo = with(densidade) { (ALTURA_PASSO * degraus).roundToPx() }
                 if (alvo > 0) {
@@ -180,29 +228,29 @@ fun TelaTrilha(
                     .verticalScroll(rolagem)
                     .padding(top = 12.dp),
             ) {
-                val largura = maxWidth
-                val alturaTotal = ALTURA_PASSO * fases.size + 40.dp
+                val alturaTotal = ALTURA_PASSO * disposicao.linhas(fases.size) + 40.dp
                 val corCaminho = Color.White.copy(alpha = 0.85f)
                 Canvas(Modifier.fillMaxWidth().height(alturaTotal)) {
-                    val passo = ALTURA_PASSO.toPx()
-                    val centroY = TOPO_BOLINHA.toPx() + TAMANHO_BOLINHA.toPx() / 2
                     // Só o caminho pontilhado: os marcos (bandeirinha e troféu) já dividem o caminho em pedacinhos.
-                    for (i in 0 until fases.size - 1) {
-                        val a = Offset(size.width * posicaoX(i), passo * i + centroY)
-                        val b = Offset(size.width * posicaoX(i + 1), passo * (i + 1) + centroY)
-                        drawLine(
-                            corCaminho, a, b, strokeWidth = 14.dp.toPx(), cap = StrokeCap.Round,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f, 34f)),
-                        )
-                    }
+                    // O traçado nunca desce em diagonal por baixo da bolinha: as plaquinhas ficam embaixo delas,
+                    // então ele sai sempre de lado, na altura do centro da bolinha, e só desce longe da plaquinha.
+                    val caminho = caminhoDasFases(disposicao, fases.size, ALTURA_PASSO.toPx(), TOPO_BOLINHA.toPx() + TAMANHO_BOLINHA.toPx() / 2)
+                    drawPath(
+                        caminho,
+                        corCaminho,
+                        style = Stroke(
+                            width = 14.dp.toPx(),
+                            cap = StrokeCap.Round,
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.dp.toPx(), 17.dp.toPx())),
+                        ),
+                    )
                 }
                 for (fase in fases) {
                     val liberada = estado.liberada(fase)
                     val estrelas = estado.estrelasDa(fase)
                     val eAtual = fase == atual
-                    val fracao = posicaoX(fase.numero)
-                    val cx = largura * fracao
-                    val topo = ALTURA_PASSO * fase.numero + TOPO_BOLINHA
+                    val cx = disposicao.x(fase.numero)
+                    val topo = ALTURA_PASSO * disposicao.linha(fase.numero) + TOPO_BOLINHA
                     Box(
                         Modifier
                             .offset(x = cx - LARGURA_PLACA / 2, y = topo)
@@ -230,11 +278,27 @@ fun TelaTrilha(
                     }
                     if (eAtual) {
                         // A criança fica ao lado da fase atual, sempre do lado com mais espaço (nunca sai da tela).
-                        val lado = when {
-                            fracao < 0.5f -> 1
-                            fracao > 0.5f -> -1
-                            posicaoX(fase.numero + 1) > fracao -> -1
-                            else -> 1
+                        val n = fase.numero
+                        val lado = if (disposicao.serpente) {
+                            // Na fileira, fica no vão entre a fase atual e a vizinha (de pé no caminho).
+                            val vizinha = when {
+                                n + 1 < fases.size && disposicao.linha(n + 1) == disposicao.linha(n) -> n + 1
+                                n > 0 && disposicao.linha(n - 1) == disposicao.linha(n) -> n - 1
+                                else -> -1
+                            }
+                            when {
+                                vizinha >= 0 -> if (disposicao.x(vizinha) > cx) 1 else -1
+                                cx > disposicao.largura / 2 -> -1
+                                else -> 1
+                            }
+                        } else {
+                            val fracao = cx / disposicao.largura
+                            when {
+                                fracao < 0.5f -> 1
+                                fracao > 0.5f -> -1
+                                disposicao.x(n + 1) > cx -> -1
+                                else -> 1
+                            }
                         }
                         val larguraCrianca = ALTURA_CRIANCA * PROPORCAO_CRIANCA
                         val x = if (lado > 0) cx + TAMANHO_BOLINHA / 2 + 10.dp else cx - TAMANHO_BOLINHA / 2 - 10.dp - larguraCrianca
@@ -263,6 +327,49 @@ fun TelaTrilha(
         }
     }
     }
+}
+
+/**
+ * O traçado do caminho, passando pelo centro de cada bolinha (o trecho embaixo da bolinha fica escondido).
+ * Em pé: sai de lado até a coluna da próxima fase, faz a curva e desce reto até ela ("L").
+ * Deitada: reto dentro da fileira e, na ponta, uma volta em "U" por fora das plaquinhas.
+ * Assim os pontinhos nunca passam por trás dos nomes das fases.
+ */
+private fun DrawScope.caminhoDasFases(disposicao: Disposicao, total: Int, passo: Float, centroY: Float): Path {
+    val caminho = Path()
+    if (total <= 0) return caminho
+    val raio = RAIO_DA_CURVA.toPx()
+    val solto = raio * (1f - KAPPA)
+    fun xDa(i: Int) = disposicao.x(i).toPx()
+    fun yDa(i: Int) = passo * disposicao.linha(i) + centroY
+    caminho.moveTo(xDa(0), yDa(0))
+    for (i in 0 until total - 1) {
+        val x0 = xDa(i)
+        val y0 = yDa(i)
+        val x1 = xDa(i + 1)
+        val y1 = yDa(i + 1)
+        when {
+            disposicao.linha(i) == disposicao.linha(i + 1) -> caminho.lineTo(x1, y1)
+            disposicao.serpente -> {
+                // Volta em "U" do lado de fora da ponta da fileira.
+                val s = if (x0 > size.width / 2) 1f else -1f
+                val xv = x0 + s * AFASTAMENTO_DA_VOLTA.toPx()
+                caminho.lineTo(xv - s * raio, y0)
+                caminho.cubicTo(xv - s * solto, y0, xv, y0 + solto, xv, y0 + raio)
+                caminho.lineTo(xv, y1 - raio)
+                caminho.cubicTo(xv, y1 - solto, xv - s * solto, y1, xv - s * raio, y1)
+                caminho.lineTo(x1, y1)
+            }
+            else -> {
+                // "L": de lado na altura da bolinha, curva e desce reto até o topo da próxima.
+                val s = if (x1 > x0) 1f else -1f
+                caminho.lineTo(x1 - s * raio, y0)
+                caminho.cubicTo(x1 - s * solto, y0, x1, y0 + solto, x1, y0 + raio)
+                caminho.lineTo(x1, y1)
+            }
+        }
+    }
+    return caminho
 }
 
 @Composable

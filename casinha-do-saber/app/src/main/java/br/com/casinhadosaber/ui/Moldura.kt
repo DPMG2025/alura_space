@@ -32,10 +32,10 @@ val LocalEscalaAplicada = staticCompositionLocalOf { false }
 /** Área mínima de toque de qualquer botão do app (dedos de criança de 4 anos). */
 val TOQUE_MINIMO = 64.dp
 
-/** Largura máxima das telas comuns (jogo, caminho, prêmio): tamanho de um celular grande. */
+/** Largura máxima das telas comuns (jogo, prêmio, caminho em pé): tamanho de um celular grande. */
 val LARGURA_DE_CELULAR = 640.dp
 
-/** Largura máxima das telas que se reorganizam em duas colunas na paisagem (início e casa). */
+/** Largura máxima das telas que se reorganizam na paisagem (início e casa em duas colunas, caminho em fileiras). */
 val LARGURA_DE_PAISAGEM = 1180.dp
 
 /**

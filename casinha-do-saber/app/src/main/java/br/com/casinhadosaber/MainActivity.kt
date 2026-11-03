@@ -178,7 +178,7 @@ class MainActivity : ComponentActivity() {
 
         // Em tablets, o app fica centralizado com largura de celular grande (botões e textos no tamanho certo
         // para a mão da criança), e o fundo de céu ocupa as laterais. Em paisagem, o início e a casa usam
-        // a largura toda, em duas colunas (ver MolduraDoApp).
+        // a largura toda, em duas colunas, e o caminho vira fileiras de fases lado a lado (ver MolduraDoApp).
         Box(
             Modifier
                 .fillMaxSize()
@@ -191,7 +191,7 @@ class MainActivity : ComponentActivity() {
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
                 label = "telas",
             ) { atual ->
-                MolduraDoApp(larga = atual == Tela.Inicio || atual is Tela.Casa) {
+                MolduraDoApp(larga = atual == Tela.Inicio || atual is Tela.Casa || atual is Tela.Caminho) {
                 when (atual) {
                     Tela.Perfil -> TelaPerfil(estado.perfil) { perfil ->
                         val primeiraVez = estado.perfil == null

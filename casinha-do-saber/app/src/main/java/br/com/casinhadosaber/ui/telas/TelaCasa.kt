@@ -168,12 +168,80 @@ fun TelaCasa(
         }
     }
 
+    /**
+     * Deitada, a coluna do baú também reúne os atalhos grandes (espelho, pintar, entrar e jogar):
+     * eles saem de cima da cena e do cabeçalho, para não aparecerem duas vezes.
+     */
+    val atalhosDaColuna: @Composable () -> Unit = {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                AtalhoGrande("🪞", "Espelho", "Espelho: trocar a aparência", Modifier.weight(1f)) {
+                    sons.toque()
+                    onEspelho()
+                }
+                if (estado.temEstrutura(Estrutura.PAREDES)) {
+                    AtalhoGrande(
+                        "🎨",
+                        if (pintando) "Pronto" else "Pintar",
+                        if (pintando) "Parar de pintar" else "Pintar as paredes",
+                        Modifier.weight(1f),
+                        cor = if (pintando) Cores.Estrela else Color.White,
+                    ) {
+                        pintando = !pintando
+                        sons.toque()
+                        if (pintando) narrador.falar("Toque num cômodo para trocar a cor da parede!")
+                    }
+                }
+                if (estado.temEstrutura(Estrutura.PORTA)) {
+                    AtalhoGrande(
+                        "🚪",
+                        "Entrar",
+                        "Entrar na casa",
+                        Modifier.weight(1f),
+                        cor = Color(0xFFFFF3C4),
+                        corBase = Color(0xFFE0A800),
+                    ) {
+                        pintando = false
+                        sons.toque()
+                        narrador.falar("Vamos entrar na casa!")
+                        onEntrar()
+                    }
+                }
+            }
+            BotaoFofo(
+                onClick = onJogar,
+                cor = Cores.Certo,
+                descricao = "Jogar",
+                // Pulsa só quando não há presente esperando no baú (aí o presente é a vez dele).
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(if (bau.isEmpty()) Modifier.pulsando() else Modifier),
+            ) {
+                Text(
+                    "🎮 Jogar",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                )
+            }
+        }
+    }
+
     /** O baú e a loja, embaixo da casa (em pé) ou numa coluna ao lado dela (deitada). */
     @Composable
-    fun BauDaCasa(modificador: Modifier, lateral: Boolean) {
+    fun BauDaCasa(modificador: Modifier, lateral: Boolean, comAtalhos: Boolean = false) {
         Bau(
             modifier = modificador,
             lateral = lateral,
+            atalhosLaterais = if (lateral && comAtalhos) atalhosDaColuna else null,
             itens = bau,
             estado = estado,
             lojaInicial = lojaInicial,
@@ -229,6 +297,9 @@ fun TelaCasa(
     ) {
         // Tela deitada (tablet em paisagem): a casa à esquerda e o baú numa coluna à direita.
         val deitada = maxWidth > maxHeight * 1.15f
+        // Com altura de sobra (tablet deitado), a coluna ganha os atalhos grandes e eles saem da cena e do
+        // cabeçalho. No celular deitado não cabem: tudo fica como antes.
+        val atalhosNaColuna = deitada && maxHeight >= ALTURA_PARA_ATALHOS
         Column(Modifier.fillMaxSize()) {
             Row(
                 Modifier
@@ -262,7 +333,7 @@ fun TelaCasa(
                     tamanho = 52.dp,
                 )
                 Spacer(Modifier.width(8.dp))
-                if (estado.temEstrutura(Estrutura.PAREDES)) {
+                if (estado.temEstrutura(Estrutura.PAREDES) && !atalhosNaColuna) {
                     BotaoRedondo(
                         emoji = "🎨",
                         descricao = if (pintando) "Parar de pintar" else "Pintar as paredes",
@@ -352,8 +423,8 @@ fun TelaCasa(
                     },
                     onMoverCrianca = { pos: Posicao -> onAtualizar { it.copy(posicaoCrianca = pos) } },
                 )
-                // Espelho: trocar a aparência a qualquer momento.
-                BotaoRedondo(
+                // Espelho: trocar a aparência a qualquer momento (deitada, ele fica na coluna ao lado).
+                if (!atalhosNaColuna) BotaoRedondo(
                     "🪞",
                     "Espelho: trocar a aparência",
                     { sons.toque(); onEspelho() },
@@ -363,7 +434,7 @@ fun TelaCasa(
                     tamanho = 52.dp,
                 )
                 // Entrar na casa: só quando a casa já tem porta.
-                if (estado.temEstrutura(Estrutura.PORTA) && !pintando) {
+                if (estado.temEstrutura(Estrutura.PORTA) && !pintando && !atalhosNaColuna) {
                     BotaoFofo(
                         onClick = {
                             sons.toque()
@@ -386,7 +457,7 @@ fun TelaCasa(
                 }
             }
             if (deitada) {
-                BauDaCasa(Modifier.width(LARGURA_DO_BAU_LATERAL).fillMaxHeight().padding(end = 8.dp, bottom = 8.dp), lateral = true)
+                BauDaCasa(Modifier.width(LARGURA_DO_BAU_LATERAL).fillMaxHeight().padding(end = 8.dp, bottom = 8.dp), lateral = true, comAtalhos = atalhosNaColuna)
             }
             }
 
@@ -414,6 +485,9 @@ private fun preposicao(c: Comodo) = when (c) {
     Comodo.COZINHA -> "na cozinha"
 }
 
+/** Altura mínima da tela deitada para a coluna do baú ter também os atalhos grandes. */
+private val ALTURA_PARA_ATALHOS = 460.dp
+
 /** Largura da coluna do baú quando a tela está deitada (3 cartões por linha). */
 private val LARGURA_DO_BAU_LATERAL = 344.dp
 
@@ -426,6 +500,8 @@ private fun Bau(
     lateral: Boolean = false,
     lojaInicial: Boolean = false,
     previa: Produto? = null,
+    /** Atalhos grandes no pé da coluna lateral (só fora da loja). Com eles, o botão Jogar sai do baú vazio. */
+    atalhosLaterais: (@Composable () -> Unit)? = null,
     onEscolher: (ItemCasa) -> Unit,
     onJogar: () -> Unit,
     onComprar: (Produto) -> Unit,
@@ -469,6 +545,7 @@ private fun Bau(
             if (lateral) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
+                    modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -552,10 +629,21 @@ private fun Bau(
                 Column(
                     Modifier.fillMaxWidth().weight(1f).padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+                    verticalArrangement = Arrangement.spacedBy(if (atalhosLaterais != null) 8.dp else 24.dp, Alignment.CenterVertically),
                 ) {
-                    conquista()
-                    jogar()
+                    if (atalhosLaterais != null) {
+                        // Baú vazio na coluna: o próximo presente em destaque, com o nome para os pais lerem.
+                        conquista()
+                        Text(
+                            if (proximo != null) "Próximo presente: ${proximo.nome}" else "Casa completinha!",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Cores.Texto,
+                            textAlign = TextAlign.Center,
+                        )
+                    } else {
+                        conquista()
+                        jogar()
+                    }
                 }
             } else {
                 Row(
@@ -573,6 +661,7 @@ private fun Bau(
         } else if (lateral) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
+                modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -590,6 +679,35 @@ private fun Bau(
                     ItemDoBau(item, primeiro = item == itens.first()) { onEscolher(item) }
                 }
             }
+        }
+        if (lateral && !naLoja && atalhosLaterais != null) {
+            Spacer(Modifier.height(10.dp))
+            atalhosLaterais()
+        }
+    }
+}
+
+/** Atalho grande da coluna lateral (paisagem): emoji e uma palavra, do tamanho da mão da criança. */
+@Composable
+private fun AtalhoGrande(
+    emoji: String,
+    rotulo: String,
+    descricao: String,
+    modifier: Modifier = Modifier,
+    cor: Color = Color.White,
+    corBase: Color = Color(0xFF8E5A34),
+    onClick: () -> Unit,
+) {
+    BotaoFofo(onClick = onClick, modifier = modifier, cor = cor, corBase = corBase, descricao = descricao) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = TOQUE_MINIMO)
+                .padding(vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(emoji, fontSize = 34.sp, maxLines = 1)
+            Text(rotulo, style = MaterialTheme.typography.titleMedium, color = Cores.Texto, maxLines = 1)
         }
     }
 }
