@@ -250,6 +250,9 @@ class CinquentaFasesTest {
                 return
             }
             Atividade.Escolha -> Unit
+            // Tipos novos: as regras de cada um são conferidas no init da data class (AtividadesNovas.kt).
+            is Pescaria, is EstourarBaloes, is LigarPares, is QuebraCabeca, is Trem, is Balanca, is CacaNaCena, is SigaASequencia, is PintarPorCodigo,
+            is Ditado, is Domino, is EscondeEsconde, is CartasViradas, is Mercadinho, is Relogio, is ProgramarRobo, is MontarFrase -> return
             else -> org.junit.Assert.fail("$fase: tipo novo sorteado antes da tela ficar pronta: $a")
         }
         assertEquals("$fase: deve ter 4 opções (${p.instrucao})", 4, p.opcoes.size)
