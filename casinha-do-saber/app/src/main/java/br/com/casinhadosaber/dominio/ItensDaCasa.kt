@@ -30,8 +30,12 @@ data class ItemCasa(
     val tamanho: Float = 0.08f,
     val estrutura: Estrutura? = null,
     val desenho: Desenho? = null,
+    /** Área da casa que cresce ([CasaQueCresce]) a que o item pertence; null nas 40 peças de sempre. */
+    val area: String? = null,
+    /** A obra de uma área nova: como as estruturas, a criança toca para construir e ela fica no lugar. */
+    val obra: Boolean = false,
 ) {
-    val ehEstrutura get() = estrutura != null
+    val ehEstrutura get() = estrutura != null || obra
     val lugar: Lugar get() = ItensDaCasa.lugarDe(id)
     val comodo: Comodo? get() = ItensDaCasa.comodoDe(id)
 }
@@ -112,7 +116,13 @@ object ItensDaCasa {
         objeto("estrela", "Estrela de campeão", "a estrela de campeão", "star", "⭐", 0.50f, 0.095f, 0.07f),
     )
 
-    val porId: Map<String, ItemCasa> = ordem.associateBy { it.id }
+    /**
+     * Todos os prêmios, um por fase vencida: as 40 peças de sempre ([ordem]) e depois as áreas da casa que
+     * cresce ([CasaQueCresce.premios]), até a fase 1000.
+     */
+    val todos: List<ItemCasa> = ordem + CasaQueCresce.premios
+
+    val porId: Map<String, ItemCasa> = todos.associateBy { it.id }
 
     /**
      * Onde as coisas do jardim ficam quando a tela é alta e tem o jardim de baixo (y de 1 a 2, ver [ItemCasa]).
@@ -146,7 +156,11 @@ object ItensDaCasa {
         else -> null
     }
 
-    val total get() = ordem.size
+    /** Quantos prêmios existem ao todo (as 40 peças e as coisas das áreas novas). */
+    val total get() = todos.size
+
+    /** As 40 peças da casa de sempre. */
+    val totalDaCasa get() = ordem.size
 
     /** Altura da cena dividida pela largura (a mesma de `PROPORCAO_CENA`, na interface). */
     const val PROPORCAO_DA_CENA = 1.15f
@@ -192,5 +206,8 @@ object ItensDaCasa {
     }
 
     /** Itens já conquistados, dado o número de fases vencidas (contando todas as trilhas). */
-    fun ganhos(fasesVencidas: Int): List<ItemCasa> = ordem.take(fasesVencidas.coerceIn(0, ordem.size))
+    fun ganhos(fasesVencidas: Int): List<ItemCasa> = todos.take(fasesVencidas.coerceIn(0, todos.size))
+
+    /** O prêmio da próxima fase nova, dado o número de fases já vencidas (null depois do último). */
+    fun proximo(fasesVencidas: Int): ItemCasa? = todos.getOrNull(fasesVencidas)
 }

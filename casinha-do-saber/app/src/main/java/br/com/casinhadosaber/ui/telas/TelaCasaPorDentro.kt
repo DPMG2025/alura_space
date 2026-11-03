@@ -981,6 +981,8 @@ fun TelaCasaPorDentro(
             }
         }
         Confete(confete)
+        // Cômodos novos da casa que cresce (quarto novo, sala de brinquedos...): portinhas na lateral (ComodosNovos.kt).
+        ComodosNovosDaCasa(estado, onAtualizar)
     }
 }
 

@@ -99,6 +99,13 @@ import br.com.casinhadosaber.ui.componentes.DecoracaoDoEvento
 import br.com.casinhadosaber.ui.componentes.MascoteAnimado
 import br.com.casinhadosaber.ui.componentes.PrateleiraDePresentes
 import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.rememberCoroutineScope
+import br.com.casinhadosaber.dominio.AreaDaCasa
+import br.com.casinhadosaber.dominio.CasaQueCresce
+import br.com.casinhadosaber.ui.componentes.CenaDaArea
+import kotlinx.coroutines.launch
 
 @Composable
 fun TelaCasa(
@@ -122,6 +129,8 @@ fun TelaCasa(
     hoje: Data? = null,
     /** Pergunta qual mascote a criança quer, se ela ainda não escolheu (o app liga; as capturas antigas não). */
     perguntarMascote: Boolean = false,
+    /** Abre mostrando uma área nova da casa que cresce (id de [CasaQueCresce.areas]); usado nas capturas. */
+    paginaInicial: String? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -152,9 +161,25 @@ fun TelaCasa(
     var pulo by remember { mutableIntStateOf(0) }
     var confete by remember { mutableIntStateOf(0) }
     val nome = estado.perfil?.nome.orEmpty()
-    val bau = estado.itensNoBau
-    val casaCompleta = estado.colocados.size == ItensDaCasa.total
     val vibracao = LocalHapticFeedback.current
+    // Casa que cresce: cada área construída vira uma página ao lado da casa (arrastar o fundo para o lado).
+    val areasProntas = CasaQueCresce.construidas(estado)
+    val pager = rememberPagerState(initialPage = (areasProntas.indexOfFirst { it.id == paginaInicial } + 1).coerceAtLeast(0)) { 1 + areasProntas.size }
+    val escopo = rememberCoroutineScope()
+    val areaNaTela: AreaDaCasa? = if (areasProntas.isEmpty()) null else areasProntas.getOrNull(pager.currentPage - 1)
+    var areaNova by remember { mutableStateOf<String?>(null) }
+    var irParaArea by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(irParaArea, areasProntas.size) {
+        val alvo = irParaArea ?: return@LaunchedEffect
+        val i = areasProntas.indexOfFirst { it.id == alvo }
+        if (i >= 0) {
+            pager.animateScrollToPage(i + 1)
+            irParaArea = null
+        }
+    }
+    // O baú mostra primeiro as coisas da área que está na tela.
+    val bau = estado.itensNoBau.let { b -> if (areaNaTela == null) b else b.sortedBy { if (it.area == areaNaTela.id) 0 else 1 } }
+    val pecasDaCasa = estado.colocados.keys.count { id -> ItensDaCasa.porId[id]?.area == null }
 
     // Presente do evento: entregue uma vez por evento e ano, com a saudação do narrador.
     LaunchedEffect(evento, escolhendoMascote) {
@@ -173,8 +198,10 @@ fun TelaCasa(
 
     LaunchedEffect(Unit) {
         if (colocarAoAbrir != null || escolhendoMascote) return@LaunchedEffect
+        val obraEsperando = bau.firstOrNull { it.obra }
         narrador.falar(
             when {
+                obraEsperando != null -> "A sua casa vai crescer! Toque no martelinho do baú para construir ${obraEsperando.comArtigo}!"
                 bau.isNotEmpty() -> "Toque num presente do baú para colocar na casa!"
                 estado.colocados.isEmpty() -> "Jogue nos caminhos para ganhar coisas para a casa!"
                 else -> "Arraste as coisas com o dedo para arrumar a casa do seu jeito!"
@@ -182,10 +209,54 @@ fun TelaCasa(
         )
     }
 
+    /** Toque numa coisa da casa ou de uma área: diz o nome; os bichinhos falam do jeito deles. */
+    fun tocarNoItem(item: ItemCasa) {
+        when (CasaQueCresce.tipoDe(item.id)) {
+            "cachorro", "poodle" -> {
+                sons.piu(2)
+                narrador.falar(listOf(pt("Au au! ${item.nome}! Em inglês:"), en("Woof woof! ${item.nomeEn}")))
+            }
+            "gato" -> {
+                sons.piu(3)
+                narrador.falar(listOf(pt("Miau! ${item.nome}! Em inglês:"), en("Meow! ${item.nomeEn}")))
+            }
+            else -> {
+                sons.toque()
+                narrador.falar(listOf(pt("${item.nome}!"), en(item.nomeEn)))
+            }
+        }
+    }
+
     fun colocarDoBau(item: ItemCasa) {
+        val area = item.area?.let { CasaQueCresce.porId[it] }
+        // Coisa de uma área que ainda não foi construída: primeiro a obra.
+        if (area != null && !item.obra && area.obra.id !in estado.colocados) {
+            colocarDoBau(area.obra)
+            return
+        }
         pintando = false
         vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
         onAtualizar { it.colocar(item) }
+        if (area != null) {
+            irParaArea = area.id
+            if (item.obra) {
+                areaNova = area.id
+                confete++
+                sons.zum()
+                narrador.falar(listOf(pt("A casa cresceu! Construímos ${item.comArtigo}! Em inglês:"), en(item.nomeEn)))
+            } else {
+                destaque = item.id
+                sons.colocar()
+                narrador.falar(listOf(pt("${item.nome}! Em inglês:"), en(item.nomeEn)))
+                val p = CasaQueCresce.progresso(estado, area)
+                if (p.colocadas + 1 == p.total) {
+                    confete++
+                    narrador.falar("Uau! Você completou ${area.comArtigo}! E a casa vai crescer mais!")
+                }
+            }
+            pulo++
+            return
+        }
         if (item.ehEstrutura) {
             novaEstrutura = item.estrutura
             confete++
@@ -201,9 +272,9 @@ fun TelaCasa(
             )
         }
         pulo++
-        if (estado.colocados.size + 1 == ItensDaCasa.total) {
+        if (pecasDaCasa + 1 == ItensDaCasa.totalDaCasa) {
             confete++
-            narrador.falar("Uau! A casa está completinha! Parabéns!")
+            narrador.falar("Uau! A casa está completinha! Parabéns! E ela ainda vai crescer!")
         }
     }
 
@@ -364,9 +435,10 @@ fun TelaCasa(
                         maxLines = 1,
                     )
                     Text(
-                        "${estado.colocados.size} de ${ItensDaCasa.total} coisas",
+                        areaNaTela?.let { CasaQueCresce.progresso(estado, it).rotulo } ?: "$pecasDaCasa de ${ItensDaCasa.totalDaCasa} coisas",
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White,
+                        maxLines = 1,
                     )
                 }
                 BotaoRedondo(
@@ -398,6 +470,15 @@ fun TelaCasa(
                 }
             }
 
+            if (areasProntas.isNotEmpty()) {
+                LugaresDaCasa(estado, areasProntas, pager.currentPage) { i ->
+                    sons.toque()
+                    escopo.launch { pager.animateScrollToPage(i) }
+                    val a = areasProntas.getOrNull(i - 1)
+                    narrador.falar(if (a == null) listOf(pt("A casa!")) else listOf(pt("${a.nome}! Em inglês:"), en(a.nomeEn)))
+                }
+            }
+
             Row(Modifier.weight(1f).fillMaxWidth()) {
             Box(
                 Modifier
@@ -406,75 +487,106 @@ fun TelaCasa(
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.BottomCenter,
             ) {
-                CenaDaCasa(
-                    estado = estadoNaCena,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .shadow(6.dp, RoundedCornerShape(24.dp))
-                        .clip(RoundedCornerShape(24.dp)),
-                    preencherAltura = true,
-                    interativa = true,
-                    pintando = pintando,
-                    novaEstrutura = novaEstrutura,
-                    destaqueId = destaque,
-                    puloDaCrianca = pulo,
-                    noite = noite,
-                    onTocarItem = { item ->
-                        sons.toque()
-                        narrador.falar(listOf(pt("${item.nome}!"), en(item.nomeEn)))
-                    },
-                    onMoverItem = { item, pos ->
-                        onAtualizar { it.colocar(item, pos) }
-                        // Elogio de arrumação: o móvel foi para o cômodo dele.
-                        val comodo = comodoEm(pos.x, pos.y - 0.02f)
-                        val certo = item.comodo
-                        if (comodo != null && comodo == certo) {
-                            sons.acerto()
-                            narrador.falar("Isso! ${item.comArtigo.replaceFirstChar { it.uppercase() }} fica ${preposicao(comodo)}!")
-                        } else if (comodo != null && certo != null) {
-                            // Não proíbe (casa engraçada também vale), só dá a dica: o cômodo certo brilha de leve na cena.
-                            narrador.falar("${item.comArtigo.replaceFirstChar { it.uppercase() }} gosta mais de ficar ${preposicao(certo)}! Olha onde está brilhando.")
+                val formaDaCena = Modifier
+                    .fillMaxSize()
+                    .shadow(6.dp, RoundedCornerShape(24.dp))
+                    .clip(RoundedCornerShape(24.dp))
+                val casaDeFora: @Composable () -> Unit = {
+                    CenaDaCasa(
+                        estado = estadoNaCena,
+                        modifier = formaDaCena,
+                        preencherAltura = true,
+                        interativa = true,
+                        pintando = pintando,
+                        novaEstrutura = novaEstrutura,
+                        destaqueId = destaque,
+                        puloDaCrianca = pulo,
+                        noite = noite,
+                        onTocarItem = { item -> tocarNoItem(item) },
+                        onTocarVisitante = { emoji ->
+                            val nomeDoBicho = (Loja.produtos + Surpresas.catalogo).firstOrNull { it.categoria == Categoria.VISITANTE && it.valor == emoji }?.nome
+                            narrador.falar(if (nomeDoBicho != null) "Oi, ${nomeDoBicho.lowercase()}! Que pulo!" else "Oi, bichinho!")
+                        },
+                        onMoverItem = { item, pos ->
+                            onAtualizar { it.colocar(item, pos) }
+                            // Elogio de arrumação: o móvel foi para o cômodo dele.
+                            val comodo = comodoEm(pos.x, pos.y - 0.02f)
+                            val certo = item.comodo
+                            if (comodo != null && comodo == certo) {
+                                sons.acerto()
+                                narrador.falar("Isso! ${item.comArtigo.replaceFirstChar { it.uppercase() }} fica ${preposicao(comodo)}!")
+                            } else if (comodo != null && certo != null) {
+                                // Não proíbe (casa engraçada também vale), só dá a dica: o cômodo certo brilha de leve na cena.
+                                narrador.falar("${item.comArtigo.replaceFirstChar { it.uppercase() }} gosta mais de ficar ${preposicao(certo)}! Olha onde está brilhando.")
+                            }
+                        },
+                        onRecusarItem = { item ->
+                            sons.erro()
+                            // A cena mostra o "não" (peça volta tremendo, balão 🚫 desenhado) e faz o lugar certo brilhar.
+                            val quem = item.comArtigo.replaceFirstChar { it.uppercase() }
+                            val certo = item.comodo
+                            narrador.falar(
+                                when {
+                                    item.lugar == Lugar.DENTRO && certo != null -> "Aí não! $quem mora dentro de casa, ${preposicao(certo)}. Olha onde está brilhando!"
+                                    item.lugar == Lugar.DENTRO -> "Aí não! $quem mora dentro de casa. Olha onde está brilhando!"
+                                    else -> "Aí não! $quem mora lá fora, no jardim. Olha onde está brilhando!"
+                                },
+                            )
+                        },
+                        onGuardarItem = { item ->
+                            onAtualizar { it.guardar(item) }
+                            sons.toque()
+                            narrador.falar("Guardei no baú.")
+                        },
+                        onPintar = { comodo ->
+                            onAtualizar { it.pintar(comodo) }
+                            sons.colocar()
+                            narrador.falar(comodo.nome)
+                        },
+                        onTocarCrianca = {
+                            pulo++
+                            val frases = listOf(
+                                if (nome.isBlank()) "Oi! Que casa linda!" else "Oi! Eu sou $nome! Que casa linda!",
+                                "Eu adoro a minha casinha!",
+                                "Vamos jogar para ganhar mais coisas?",
+                                "Iupiii!",
+                            )
+                            narrador.falar(frases.random())
+                        },
+                        onMoverCrianca = { pos: Posicao -> onAtualizar { it.copy(posicaoCrianca = pos) } },
+                    )
+                }
+                if (areasProntas.isEmpty()) {
+                    casaDeFora()
+                } else {
+                    // A casa e as áreas novas lado a lado: arrastar o fundo (não um objeto) passa de uma para outra.
+                    HorizontalPager(pager, Modifier.fillMaxSize(), pageSpacing = 8.dp, key = { if (it == 0) "casa" else areasProntas[it - 1].id }) { pagina ->
+                        val area = areasProntas.getOrNull(pagina - 1)
+                        if (area == null) {
+                            casaDeFora()
+                        } else {
+                            CenaDaArea(
+                                area = area,
+                                estado = estadoNaCena,
+                                modifier = formaDaCena,
+                                noite = noite,
+                                construindo = areaNova == area.id,
+                                destaqueId = destaque,
+                                onTocarItem = { item -> tocarNoItem(item) },
+                                onMoverItem = { item, pos -> onAtualizar { it.colocar(item, pos) } },
+                                onGuardarItem = { item ->
+                                    onAtualizar { it.guardar(item) }
+                                    sons.toque()
+                                    narrador.falar("Guardei no baú.")
+                                },
+                            )
                         }
-                    },
-                    onRecusarItem = { item ->
-                        sons.erro()
-                        // A cena mostra o "não" (peça volta tremendo, balão 🚫 desenhado) e faz o lugar certo brilhar.
-                        val quem = item.comArtigo.replaceFirstChar { it.uppercase() }
-                        val certo = item.comodo
-                        narrador.falar(
-                            when {
-                                item.lugar == Lugar.DENTRO && certo != null -> "Aí não! $quem mora dentro de casa, ${preposicao(certo)}. Olha onde está brilhando!"
-                                item.lugar == Lugar.DENTRO -> "Aí não! $quem mora dentro de casa. Olha onde está brilhando!"
-                                else -> "Aí não! $quem mora lá fora, no jardim. Olha onde está brilhando!"
-                            },
-                        )
-                    },
-                    onGuardarItem = { item ->
-                        onAtualizar { it.guardar(item) }
-                        sons.toque()
-                        narrador.falar("Guardei no baú.")
-                    },
-                    onPintar = { comodo ->
-                        onAtualizar { it.pintar(comodo) }
-                        sons.colocar()
-                        narrador.falar(comodo.nome)
-                    },
-                    onTocarCrianca = {
-                        pulo++
-                        val frases = listOf(
-                            if (nome.isBlank()) "Oi! Que casa linda!" else "Oi! Eu sou $nome! Que casa linda!",
-                            "Eu adoro a minha casinha!",
-                            "Vamos jogar para ganhar mais coisas?",
-                            "Iupiii!",
-                        )
-                        narrador.falar(frases.random())
-                    },
-                    onMoverCrianca = { pos: Posicao -> onAtualizar { it.copy(posicaoCrianca = pos) } },
-                )
+                    }
+                }
                 // Enfeites do evento do dia, por cima da cena (sem pegar os toques).
                 evento?.let { DecoracaoDoEvento(it.tipo, Modifier.clip(RoundedCornerShape(24.dp))) }
                 // Presentes dos eventos ficam para sempre numa prateleira no alto.
-                PrateleiraDePresentes(estado.presentesGanhos, Modifier.align(Alignment.TopCenter).padding(top = 14.dp))
+                if (areaNaTela == null) PrateleiraDePresentes(estado.presentesGanhos, Modifier.align(Alignment.TopCenter).padding(top = 14.dp))
                 // O mascote mora na casa: tocar abre o cantinho dele (enfeites e quanto falta para crescer).
                 estado.mascote.especie?.let { especie ->
                     Box(
@@ -505,7 +617,7 @@ fun TelaCasa(
                     tamanho = 52.dp,
                 )
                 // Entrar na casa: só quando a casa já tem porta.
-                if (estado.temEstrutura(Estrutura.PORTA) && !pintando && !atalhosNaColuna) {
+                if (estado.temEstrutura(Estrutura.PORTA) && !pintando && !atalhosNaColuna && areaNaTela == null) {
                     BotaoFofo(
                         onClick = {
                             sons.toque()
@@ -685,7 +797,8 @@ private fun Bau(
                 }
             }
         } else if (itens.isEmpty()) {
-            val proximo = ItensDaCasa.ordem.getOrNull(estado.itensGanhos.size)
+            val proximo = ItensDaCasa.proximo(estado.fasesVencidas)
+            val proximoEhObra = proximo?.obra == true
             val conquista: @Composable () -> Unit = {
                 if (proximo != null) {
                     // O próximo presente aparece "apagadinho", com cadeado: sempre há um objetivo à vista.
@@ -698,7 +811,10 @@ private fun Bau(
                             .semantics { contentDescription = "Próximo presente: ${proximo.nome}. Jogue para ganhar." }
                             .clickable {
                                 sons.toque()
-                                narrador.falar("O próximo presente é ${proximo.comArtigo}! Jogue para ganhar.")
+                                narrador.falar(
+                                    if (proximoEhObra) "O próximo presente é ${proximo.comArtigo}! A casa vai crescer! Jogue mais uma fase para ganhar."
+                                    else "O próximo presente é ${proximo.comArtigo}! Jogue para ganhar.",
+                                )
                             },
                         contentAlignment = Alignment.Center,
                     ) {
@@ -711,7 +827,7 @@ private fun Bau(
                         onClick = {
                             sons.acerto()
                             narrador.falar(
-                                "Você ganhou todas as ${ItensDaCasa.total} coisas! A casa está completinha. " +
+                                "Você ganhou todas as ${ItensDaCasa.total} coisas! A casa cresceu até o fim e está completinha. " +
                                     "Agora cada fase nova dá um presente da lojinha!",
                             )
                         },
@@ -769,7 +885,7 @@ private fun Bau(
                             color = Cores.Texto,
                             textAlign = TextAlign.Center,
                         )
-                        BarraDaCasa(estado.itensGanhos.size.coerceAtMost(ItensDaCasa.total), ItensDaCasa.total)
+                        BarraDaCasa(estado.itensGanhos.size, CasaQueCresce.metaAtual(estado.fasesVencidas))
                     } else {
                         conquista()
                         jogar()
@@ -976,6 +1092,78 @@ private fun ItemDoBau(item: ItemCasa, primeiro: Boolean, onClick: () -> Unit) {
                 if (primeiro) MaoGuia(Modifier.align(Alignment.BottomStart).offset(x = (-6).dp, y = 22.dp), espera = 1500)
             }
             Text(item.nome, style = MaterialTheme.typography.bodyMedium, maxLines = 1, textAlign = TextAlign.Center)
+        }
+    }
+}
+
+/**
+ * Lugares da casa que cresce: a casa e cada área construída, com quantas coisas já estão lá ("🏊 3/44").
+ * Tocar leva até o lugar (também dá para arrastar o fundo para o lado). No fim, a próxima área, trancada,
+ * diz quantas fases faltam para ela chegar: sempre há um objetivo à vista.
+ */
+@Composable
+private fun LugaresDaCasa(estado: EstadoJogo, areas: List<AreaDaCasa>, paginaAtual: Int, onIr: (Int) -> Unit) {
+    val narrador = LocalNarrador.current
+    val sons = LocalSons.current
+    val proxima = CasaQueCresce.proxima(estado.fasesVencidas)
+    // O lugar que está na tela fica sempre à vista na fileira.
+    val lista = androidx.compose.foundation.lazy.rememberLazyListState()
+    LaunchedEffect(paginaAtual) { lista.animateScrollToItem((paginaAtual - 1).coerceAtLeast(0)) }
+    LazyRow(
+        Modifier
+            .fillMaxWidth()
+            .testTag("lugares_da_casa"),
+        state = lista,
+        contentPadding = PaddingValues(horizontal = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(areas.size + 1) { i ->
+            val area = areas.getOrNull(i - 1)
+            val selecionado = i == paginaAtual
+            val texto = if (area == null) "🏠" else {
+                val p = CasaQueCresce.progresso(estado, area)
+                "${area.icone} ${p.colocadas}/${p.total}"
+            }
+            Text(
+                texto,
+                style = MaterialTheme.typography.titleMedium,
+                color = Cores.Texto,
+                maxLines = 1,
+                modifier = Modifier
+                    .heightIn(min = TOQUE_MINIMO)
+                    .clip(RoundedCornerShape(50))
+                    .background(if (selecionado) Cores.Estrela else Color.White.copy(alpha = 0.75f))
+                    .border(if (selecionado) 3.dp else 0.dp, if (selecionado) Color(0xFFE0A800) else Color.Transparent, RoundedCornerShape(50))
+                    .semantics { contentDescription = area?.let { CasaQueCresce.progresso(estado, it).rotulo } ?: "Casa" }
+                    .testTag(if (area == null) "lugar_casa" else "lugar_${area.id}")
+                    .clickable { onIr(i) }
+                    .wrapContentHeight(Alignment.CenterVertically)
+                    .padding(horizontal = 14.dp, vertical = 4.dp),
+            )
+        }
+        if (proxima != null) {
+            item {
+                val (area, faltam) = proxima
+                Text(
+                    "🔒 ${area.icone}",
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .heightIn(min = TOQUE_MINIMO)
+                        .clip(RoundedCornerShape(50))
+                        .background(Color.White.copy(alpha = 0.35f))
+                        .semantics { contentDescription = "${area.nome}: faltam $faltam fases" }
+                        .clickable {
+                            sons.toque()
+                            narrador.falar(
+                                if (faltam == 1) "Falta só uma fase para a casa ganhar ${area.comArtigo}!"
+                                else "Faltam $faltam fases para a casa ganhar ${area.comArtigo}!",
+                            )
+                        }
+                        .wrapContentHeight(Alignment.CenterVertically)
+                        .padding(horizontal = 14.dp, vertical = 4.dp),
+                )
+            }
         }
     }
 }

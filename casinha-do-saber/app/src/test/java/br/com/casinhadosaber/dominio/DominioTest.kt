@@ -19,16 +19,16 @@ class GeradorDeFasesTest {
     @Test
     fun `fases suficientes para a casa inteira`() {
         assertTrue(Trilha.entries.size * GeradorDeFases.FASES_POR_TRILHA >= ItensDaCasa.total)
-        assertEquals("ids repetidos", ItensDaCasa.ordem.size, ItensDaCasa.porId.size)
+        assertEquals("ids repetidos", ItensDaCasa.todos.size, ItensDaCasa.porId.size)
     }
 
     @Test
-    fun `depois das quarenta pecas cada fase nova da um presente da loja`() {
+    fun `depois de todos os premios da casa cada fase nova da um presente da loja`() {
         val todas = Trilha.entries.flatMap { t -> GeradorDeFases(Random(2)).fases(t) }
-        var e = EstadoJogo()
-        for (f in todas.take(ItensDaCasa.total)) e = e.registrarPartida(f, 5, 5).estado
+        // As 1000 fases dão 1000 prêmios; o brinde da loja fica para depois do último (fases fictícias aqui).
+        val e = comTodosOsPremios(EstadoJogo())
         assertEquals(ItensDaCasa.total, e.itensGanhos.size)
-        val r = e.registrarPartida(todas[ItensDaCasa.total], 5, 5)
+        val r = e.registrarPartida(todas[0], 5, 5)
         assertNull(r.item)
         assertNotNull(r.brinde)
         assertTrue(r.brinde!!.id in r.estado.comprados)
@@ -416,16 +416,15 @@ class LojaDaCasaPorDentroTest {
         // Tudo comprado, menos uma comida e uma roupa: o brinde vem delas.
         val g = GeradorDeFases(Random(3))
         val todas = Trilha.entries.flatMap { g.fases(it) }
-        var e = EstadoJogo(perfil = menina)
-        for (f in todas.take(ItensDaCasa.total)) e = e.registrarPartida(f, 5, 5).estado
+        var e = comTodosOsPremios(EstadoJogo(perfil = menina))
         val comida = Loja.produtos.first { it.categoria == Categoria.COMIDA }
         val roupa = Loja.produtos.first { it.categoria == Categoria.ROUPA }
         e = e.copy(comprados = Loja.produtos.map { it.id }.toSet() - comida.id - roupa.id)
-        val r1 = e.registrarPartida(todas[ItensDaCasa.total], 5, 5)
+        val r1 = e.registrarPartida(todas[0], 5, 5)
         assertEquals(comida, r1.brinde)
         assertTrue(comida in Loja.naGeladeira(r1.estado))
         assertTrue(r1.faseNova)
-        val r2 = r1.estado.registrarPartida(todas[ItensDaCasa.total + 1], 5, 5)
+        val r2 = r1.estado.registrarPartida(todas[1], 5, 5)
         assertEquals(roupa, r2.brinde)
         assertTrue(roupa in Loja.noGuardaRoupa(r2.estado))
         assertEquals(roupa.valor, r2.estado.perfil!!.traje)
@@ -488,3 +487,7 @@ class SobreposicaoDaCasaTest {
         }
     }
 }
+
+/** Estado com todos os prêmios da casa já ganhos, por fases fictícias (números que não existem nos caminhos). */
+fun comTodosOsPremios(e: EstadoJogo): EstadoJogo =
+    e.copy(estrelas = e.estrelas + (0 until ItensDaCasa.total).associate { "LOGICA:${10_000 + it}" to 3 })

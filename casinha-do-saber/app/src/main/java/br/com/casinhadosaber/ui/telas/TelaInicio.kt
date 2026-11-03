@@ -106,7 +106,7 @@ fun TelaInicio(
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Casinha do Saber", style = MaterialTheme.typography.headlineMedium, color = Color.White)
                 Text(
-                    "🏠 ${estado.itensGanhos.size} de ${ItensDaCasa.total} coisas",
+                    "🏠 ${estado.itensGanhos.size} de ${br.com.casinhadosaber.dominio.CasaQueCresce.metaAtual(estado.fasesVencidas)} coisas",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White,
                 )

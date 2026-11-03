@@ -158,10 +158,14 @@ fun TelaPremio(
         vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
         sons.premio()
         if (item != null) {
-            val ultima = item == ItensDaCasa.ordem.last()
+            val ultima = item == ItensDaCasa.todos.last()
             narrador.falar(
                 listOf(pt("Você ganhou ${item.comArtigo}! Em inglês:"), en(item.nomeEn)) +
-                    if (ultima) listOf(pt("Sua casa está completa! Você é um campeão!")) else listOf(pt("Vamos colocar na sua casa?")),
+                    when {
+                        ultima -> listOf(pt("Sua casa está completa! Você é um campeão!"))
+                        item.obra -> listOf(pt("A sua casa vai crescer! Vamos construir?"))
+                        else -> listOf(pt("Vamos colocar na sua casa?"))
+                    },
             )
         } else if (brindeDaLoja != null) {
             narrador.falar(falaDoBrinde(brindeDaLoja))
