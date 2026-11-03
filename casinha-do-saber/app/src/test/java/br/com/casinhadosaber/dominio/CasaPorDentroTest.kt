@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.math.abs
 
 class CasaPorDentroTest {
 
@@ -227,5 +228,136 @@ class CasaPorDentroTest {
         assertEquals(PrateleiraDaGeladeira.FRUTAS, PrateleiraDaGeladeira.inicial(emptyList()))
         val soLeite = comidas.filter { it.valor == "🥛" }
         assertEquals(PrateleiraDaGeladeira.LEITE, PrateleiraDaGeladeira.inicial(soLeite))
+    }
+
+    // ---------------------------------------------------------------- arrastar móveis
+
+    private fun daLista(l: List<Movel>, id: String) = l.first { it.id == id }
+
+    @Test
+    fun `o lugar de sempre de cada movel e valido para arrastar`() {
+        for (a in Andar.entries) {
+            val m = PlantaDaCasa.moveisDe(tudo, a)
+            for (x in m) if (PlantaDaCasa.arrastavel(x)) assertTrue("${x.id} fora do lugar", PlantaDaCasa.cabeNoLugar(m, x))
+            assertTrue(PlantaDaCasa.tudoAlcancavel(m, a))
+        }
+        // Escada, guarda-roupa, pia e vaso ficam presos; enfeites vão com o móvel de baixo.
+        for (id in listOf("escada", "escadaDeCima", "guardaroupa", "pia", "vaso", "quadro", "espelho", "tapete")) {
+            assertFalse(id, PlantaDaCasa.arrastavel(PlantaDaCasa.porId.getValue(id)))
+        }
+        assertEquals("sofa", PlantaDaCasa.quemArrasta(PlantaDaCasa.porId.getValue("gato")))
+        assertEquals("criado", PlantaDaCasa.quemArrasta(PlantaDaCasa.porId.getValue("abajur")))
+        assertEquals(null, PlantaDaCasa.quemArrasta(PlantaDaCasa.porId.getValue("pia")))
+    }
+
+    @Test
+    fun `mover para um ladrilho livre funciona e leva o que esta em cima`() {
+        val antes = PlantaDaCasa.moveisDe(tudo)
+        val depois = PlantaDaCasa.mover(antes, "mesa", -1, 0)
+        // A mesa da cozinha não pode ir para a sala atravessando a parede...
+        assertEquals(null, depois)
+        // ...nem tapar a passagem entre os cômodos (logo na frente dela)...
+        assertEquals(null, PlantaDaCasa.mover(antes, "mesa", 0, 1))
+        // ...mas pode ir um ladrilho para a direita, com o bolo junto.
+        val frente = PlantaDaCasa.mover(antes, "mesa", 1, 0)!!
+        val mesa = daLista(frente, "mesa")
+        val bolo = daLista(frente, "bolo")
+        assertEquals(daLista(antes, "mesa").x0 + 1, mesa.x0, 0.0001f)
+        assertEquals(daLista(antes, "bolo").x0 + 1, bolo.x0, 0.0001f)
+        assertEquals(Comodo.COZINHA, mesa.comodo)
+        // O caminho é recalculado: o ladrilho novo fica ocupado e o velho, livre.
+        val mapa = Mapa(frente, Andar.DE_BAIXO)
+        assertFalse(mapa.livre(7, 2))
+        assertTrue(mapa.livre(5, 2))
+        assertFalse(Mapa(antes, Andar.DE_BAIXO).livre(5, 2))
+        assertTrue(PlantaDaCasa.tudoAlcancavel(frente, Andar.DE_BAIXO))
+        // O violão vai do quarto para o banheiro pela grade e muda de cômodo.
+        val violao = PlantaDaCasa.mover(antes, "violao", 1, 1)!!.let { daLista(it, "violao") }
+        assertEquals(Comodo.BANHEIRO, violao.comodo)
+    }
+
+    @Test
+    fun `mover para lugar proibido nao vale`() {
+        val m = PlantaDaCasa.moveisDe(tudo)
+        // Em cima de outro móvel (sofá na TV).
+        assertEquals(null, PlantaDaCasa.mover(m, "sofa", 2, 0))
+        // Para fora do piso.
+        assertEquals(null, PlantaDaCasa.mover(m, "geladeira", 1, 0))
+        assertEquals(null, PlantaDaCasa.mover(m, "livros", 0, -1))
+        // Atravessando a parede interna (a TV fica metade na sala, metade na cozinha).
+        assertEquals(null, PlantaDaCasa.mover(m, "tv", 1, 0))
+        // Tapando o pé da escada, a porta da rua ou a passagem entre os cômodos.
+        val livros = daLista(m, "livros")
+        for ((x, y) in PlantaDaCasa.reservados(Andar.DE_BAIXO)) {
+            val dx = x - floorInt(livros.x0)
+            val dy = y - floorInt(livros.y0)
+            assertEquals("livros em ($x,$y)", null, PlantaDaCasa.mover(m, "livros", dx, dy))
+        }
+        // Presos não saem do lugar.
+        assertEquals(null, PlantaDaCasa.mover(m, "pia", 0, 1))
+        assertEquals(null, PlantaDaCasa.mover(m, "escada", 1, 0))
+        // Nada pode deixar um canto da casa sem caminho: nenhuma mudança válida isola um ladrilho.
+        for (a in Andar.entries) for (x in PlantaDaCasa.moveisDe(tudo, a)) if (PlantaDaCasa.arrastavel(x)) {
+            for (dx in -7..7) for (dy in -4..4) {
+                val r = PlantaDaCasa.mover(m, x.id, dx, dy) ?: continue
+                assertTrue("${x.id} $dx,$dy", PlantaDaCasa.tudoAlcancavel(r, a))
+                val novo = daLista(r, x.id)
+                assertTrue(PlantaDaCasa.ladrilhosDe(novo).none { it in PlantaDaCasa.reservados(a) })
+            }
+        }
+    }
+
+    private fun floorInt(v: Float) = kotlin.math.floor(v).toInt()
+
+    @Test
+    fun `o lugar novo fica salvo e saves antigos continuam iguais`() {
+        // Save antigo: sem lugares, tudo no lugar de sempre.
+        assertEquals(PlantaDaCasa.moveis.filter { it.id in PlantaDaCasa.moveisDe(tudo).map { m -> m.id } }, PlantaDaCasa.moveisDe(tudo))
+        // Um ladrilho só para a frente deixaria o cantinho atrás do sofá sem caminho: dois, pode.
+        assertEquals(null, PlantaDaCasa.mover(PlantaDaCasa.moveisDe(tudo), "sofa", 0, 1))
+        val movido = PlantaDaCasa.mover(PlantaDaCasa.moveisDe(tudo), "sofa", 0, 2)!!.let { daLista(it, "sofa") }
+        val e = tudo.comMovelEm("sofa", movido.x0, movido.y0)
+        assertEquals(1, e.moveisDentro.size)
+        val texto = Serializacao.posicoesParaTexto(e.moveisDentro)
+        val lido = tudo.copy(moveisDentro = Serializacao.textoParaMoveisDentro(texto))
+        val sofa = daLista(PlantaDaCasa.moveisDe(lido), "sofa")
+        assertEquals(movido.y0, sofa.y0, 0.0001f)
+        // O gato vai junto com o sofá.
+        assertEquals(PlantaDaCasa.porId.getValue("gato").y0 + 2, daLista(PlantaDaCasa.moveisDe(lido), "gato").y0, 0.0001f)
+        // Voltar para o lugar de sempre apaga o registro.
+        val padrao = PlantaDaCasa.porId.getValue("sofa")
+        assertTrue(e.comMovelEm("sofa", padrao.x0, padrao.y0).moveisDentro.isEmpty())
+        // Texto estragado, id desconhecido ou lugar que não vale mais: ignorado, móvel no lugar de sempre.
+        assertTrue(Serializacao.textoParaMoveisDentro("xyz;foguete,1,2;sofa,a,b").isEmpty())
+        assertTrue(Serializacao.textoParaMoveisDentro(null).isEmpty())
+        val ruim = tudo.copy(moveisDentro = mapOf("sofa" to Posicao(padrao.x0 + 2, padrao.y0)))
+        assertEquals(padrao.x0, daLista(PlantaDaCasa.moveisDe(ruim), "sofa").x0, 0.0001f)
+    }
+
+    @Test
+    fun `peca nova que chega onde um movel foi posto manda o movel de volta`() {
+        // Sem o fogão ainda, a lixeira vai para o lugar dele; quando o fogão chega, a lixeira volta.
+        val m = PlantaDaCasa.moveisDe(EstadoJogo())
+        assertTrue(m.none { it.id == "fogao" })
+        val r = PlantaDaCasa.mover(m, "lixeira", 1, 0)!!
+        val l = daLista(r, "lixeira")
+        val salvo = tudo.copy(moveisDentro = mapOf("lixeira" to Posicao(l.x0, l.y0)))
+        assertEquals(l.x0, daLista(PlantaDaCasa.moveisDe(EstadoJogo(moveisDentro = salvo.moveisDentro)), "lixeira").x0, 0.0001f)
+        val todos = PlantaDaCasa.moveisDe(salvo, Andar.DE_BAIXO)
+        assertEquals(PlantaDaCasa.porId.getValue("lixeira").x0, daLista(todos, "lixeira").x0, 0.0001f)
+        assertTrue(todos.filter { PlantaDaCasa.arrastavel(it) }.all { PlantaDaCasa.cabeNoLugar(todos, it) })
+    }
+
+    @Test
+    fun `o violao nao encosta no abajur e o patinho so vem com a banheira`() {
+        val violao = PlantaDaCasa.porId.getValue("violao")
+        val abajur = PlantaDaCasa.porId.getValue("abajur")
+        // Na tela (x - y), o violão fica bem longe do abajur, ou bem mais na frente (x + y).
+        val longeNaTela = abs((violao.centroX - violao.centroY) - (abajur.centroX - abajur.centroY)) > 1f
+        val naFrente = (violao.centroX + violao.centroY) - (abajur.centroX + abajur.centroY) > 1.5f
+        assertTrue(longeNaTela || naFrente)
+        assertTrue(PlantaDaCasa.moveisDe(EstadoJogo()).none { it.id == "patinho" })
+        assertTrue(PlantaDaCasa.moveisDe(tudo).any { it.id == "patinho" })
+        assertTrue(PlantaDaCasa.moveisDe(EstadoJogo()).any { it.id == "lixeira" })
     }
 }

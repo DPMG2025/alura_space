@@ -119,6 +119,7 @@ class Repositorio(context: Context) {
             visitantes = prefs.getString(VISITANTES, "").orEmpty().split(",").filter { it.isNotBlank() }.toSet(),
             historico = Serializacao.textoParaMapaDeTexto(prefs.getString(HISTORICO, null)),
             diaDaMissao = prefs.getLong(DIA_MISSAO, -1),
+            moveisDentro = Serializacao.textoParaMoveisDentro(prefs.getString(MOVEIS_DENTRO, null)),
         )
     }
 
@@ -153,6 +154,7 @@ class Repositorio(context: Context) {
         putString(HISTORICO, Serializacao.mapaDeTextoParaTexto(e.historico))
         putLong(DIA_MISSAO, e.diaDaMissao)
         putString(VISITANTES, e.visitantes.joinToString(","))
+        putString(MOVEIS_DENTRO, Serializacao.posicoesParaTexto(e.moveisDentro))
     }
 
     private companion object {
@@ -190,5 +192,6 @@ class Repositorio(context: Context) {
         const val COR_TELHADO = "cor_telhado"
         const val VISITANTES = "visitantes"
         const val MUSICA = "musica"
+        const val MOVEIS_DENTRO = "moveis_dentro"
     }
 }

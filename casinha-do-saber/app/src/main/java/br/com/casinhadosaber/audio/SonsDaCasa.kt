@@ -23,7 +23,7 @@ class SonsDaCasa(private val sons: Sons) {
     private var proximo = 0
 
     init {
-        trabalho.execute { runCatching { listOf(aguaPcm, cliquePcm, portaPcm, tvPcm, descargaPcm, bolhasPcm, nhamPcm, passoPcm, chiadoPcm) } }
+        trabalho.execute { runCatching { listOf(aguaPcm, cliquePcm, portaPcm, tvPcm, descargaPcm, bolhasPcm, nhamPcm, passoPcm, chiadoPcm, pegarPcm, pousarPcm, quackPcm, tampaPcm) } }
     }
 
     fun agua() = tocar(aguaPcm)
@@ -35,6 +35,18 @@ class SonsDaCasa(private val sons: Sons) {
     fun nham() = tocar(nhamPcm)
     fun passo() = tocar(passoPcm, volumeVariado = true)
     fun chiado() = tocar(chiadoPcm)
+
+    /** Levantou um móvel para arrastar (um "fiu" subindo). */
+    fun pegar() = tocar(pegarPcm)
+
+    /** Pousou o móvel no lugar novo (um "tum" macio de madeira). */
+    fun pousar() = tocar(pousarPcm)
+
+    /** Patinho de borracha: quac quac. */
+    fun quack() = tocar(quackPcm)
+
+    /** Tampa da lixeira abrindo e fechando. */
+    fun tampa() = tocar(tampaPcm)
 
     // ----------------------------------------------------------------- síntese
 
@@ -100,6 +112,13 @@ class SonsDaCasa(private val sons: Sons) {
     }
     private val nhamPcm by lazy { juntar(deslizar(330.0, 260.0, 120, 0.2), silencio(60), deslizar(350.0, 270.0, 140, 0.2)) }
     private val passoPcm by lazy { misturar(tom(150.0, 40, 0.18, 9.0), ruido(30, 0.06, 9, { 0.3 }, { 1 - it })) }
+    private val pegarPcm by lazy { deslizar(380.0, 760.0, 120, 0.14) }
+    private val pousarPcm by lazy { misturar(tom(110.0, 140, 0.42, 6.0), misturar(ruido(60, 0.12, 17, { 0.25 }, { 1 - it }), tom(660.0, 70, 0.08, 7.0), 900)) }
+    private val quackPcm by lazy {
+        val q = { misturar(deslizar(760.0, 520.0, 110, 0.16), deslizar(1520.0, 1040.0, 110, 0.06)) }
+        juntar(q(), silencio(70), q())
+    }
+    private val tampaPcm by lazy { juntar(tom(520.0, 50, 0.14, 6.0), silencio(160), misturar(tom(180.0, 80, 0.3, 6.0), ruido(40, 0.12, 19, { 0.5 }, { 1 - it }))) }
     private val chiadoPcm by lazy { ruido(700, 0.16, 13, { 0.8 }, { p -> if (p < 0.1) p * 10 else 1 - p }) }
 
     // ----------------------------------------------------------------- reprodução

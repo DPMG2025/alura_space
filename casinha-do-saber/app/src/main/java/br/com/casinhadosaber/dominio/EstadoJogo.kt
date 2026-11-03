@@ -59,6 +59,11 @@ data class EstadoJogo(
     val historico: Map<String, String> = emptyMap(),
     /** Dia em que a missão do dia já foi feita. */
     val diaDaMissao: Long = -1,
+    /**
+     * Casa por dentro: móveis que a criança arrastou para outro lugar (id -> canto (x0, y0) da pegada, em
+     * ladrilhos). Vazio = tudo no lugar de sempre (saves antigos não têm este campo).
+     */
+    val moveisDentro: Map<String, Posicao> = emptyMap(),
 ) {
     /** A missão do dia aparece uma vez por dia, depois que a criança já venceu alguma fase. */
     fun missaoDisponivel(dia: Long): Boolean = fasesVencidas > 0 && diaDaMissao != dia
@@ -263,6 +268,15 @@ object Serializacao {
         if (p.size != 3 || p[0] !in ItensDaCasa.porId) return@mapNotNull null
         val x = p[1].toFloatOrNull() ?: return@mapNotNull null
         val y = p[2].toFloatOrNull() ?: return@mapNotNull null
+        p[0] to Posicao(x, y)
+    }.toMap()
+
+    /** Lugares dos móveis de dentro: só ids da planta ([PlantaDaCasa.porId]) e números válidos. */
+    fun textoParaMoveisDentro(s: String?): Map<String, Posicao> = s.orEmpty().split(";").mapNotNull { parte ->
+        val p = parte.split(",")
+        if (p.size != 3 || p[0] !in PlantaDaCasa.porId) return@mapNotNull null
+        val x = p[1].toFloatOrNull()?.takeIf { it.isFinite() } ?: return@mapNotNull null
+        val y = p[2].toFloatOrNull()?.takeIf { it.isFinite() } ?: return@mapNotNull null
         p[0] to Posicao(x, y)
     }.toMap()
 

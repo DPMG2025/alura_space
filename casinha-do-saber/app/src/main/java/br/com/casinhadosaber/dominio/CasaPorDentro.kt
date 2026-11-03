@@ -1,8 +1,10 @@
 package br.com.casinhadosaber.dominio
 
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.hypot
+import kotlin.math.roundToInt
 
 /**
  * A casa por dentro, vista de cima em perspectiva isométrica (2,5D). Aqui fica só a "planta":
@@ -37,7 +39,7 @@ val Comodo.andar: Andar get() = if (this == Comodo.QUARTO || this == Comodo.BANH
 enum class Frente { X, Y }
 
 /** O que acontece ao tocar no móvel. */
-enum class Acao { NENHUMA, GELADEIRA, GUARDA_ROUPA, TORNEIRA, TV, FOGAO, BANHEIRA, CAMA, ESPELHO, DESCARGA, ESCADA }
+enum class Acao { NENHUMA, GELADEIRA, GUARDA_ROUPA, TORNEIRA, TV, FOGAO, BANHEIRA, CAMA, ESPELHO, DESCARGA, ESCADA, PATINHO, LIXEIRA }
 
 /**
  * Um móvel da casa por dentro. A "pegada" no chão vai de ([x0], [y0]) a ([x1], [y1]) em ladrilhos;
@@ -69,6 +71,13 @@ data class Movel(
     val centroX get() = (x0 + x1) / 2
     val centroY get() = (y0 + y1) / 2
     val andar: Andar get() = comodo.andar
+
+    /** O mesmo móvel [dx] ladrilhos para a direita e [dy] para a frente, no cômodo onde ele cai. */
+    fun deslocado(dx: Int, dy: Int): Movel {
+        if (dx == 0 && dy == 0) return this
+        val n = copy(x0 = x0 + dx, y0 = y0 + dy, x1 = x1 + dx, y1 = y1 + dy)
+        return n.copy(comodo = PlantaDaCasa.comodoEm(andar, n.centroX, n.centroY))
+    }
 }
 
 /** Algo que precisa de ordem de desenho: um móvel, um pedaço de parede interna, etc. (caixa no chão). */
@@ -159,6 +168,7 @@ object PlantaDaCasa {
         // Cozinha: a mesa com o bolo, o fogão e a geladeira (no canto, encostada na parede da cozinha).
         daPeca("mesa", Comodo.COZINHA, 5.6f, 2.0f, 6.7f, 2.98f, 0.72f),
         daPeca("bolo", Comodo.COZINHA, 5.9f, 2.25f, 6.4f, 2.75f, 0.45f, z = 0.72f, bloqueia = false),
+        Movel("lixeira", "Lixeira", "trash can", Comodo.COZINHA, 5.17f, 0.12f, 5.62f, 0.57f, 0.55f, acao = Acao.LIXEIRA),
         daPeca("fogao", Comodo.COZINHA, 5.95f, 0.1f, 6.8f, 0.92f, 0.85f, acao = Acao.FOGAO),
         daPeca("geladeira", Comodo.COZINHA, 6.98f, 0.1f, 7.9f, 0.95f, 2.0f, acao = Acao.GELADEIRA),
         // Andar de cima. Quarto: a escada que desce, o quadro, a cama, o criado-mudo com o abajur e o violão.
@@ -168,7 +178,8 @@ object PlantaDaCasa {
         daPeca("ursinho", Comodo.QUARTO, 1.6f, 1.2f, 2.15f, 1.7f, 0.5f, z = 0.55f, bloqueia = false),
         Movel("criado", "Criado-mudo", "nightstand", Comodo.QUARTO, 2.65f, 0.1f, 3.2f, 0.65f, 0.5f),
         daPeca("abajur", Comodo.QUARTO, 2.7f, 0.13f, 3.15f, 0.62f, 0.55f, z = 0.5f, bloqueia = false),
-        daPeca("violao", Comodo.QUARTO, 3.32f, 0.12f, 3.8f, 0.6f, 0.9f),
+        // O violão fica encostado na parede baixinha do banheiro, longe do abajur (antes o desenho encostava nele).
+        daPeca("violao", Comodo.QUARTO, 3.35f, 1.35f, 3.85f, 1.85f, 0.9f),
         Movel("guardaroupa", "Guarda-roupa", "wardrobe", Comodo.QUARTO, 0.1f, 3.0f, 0.72f, 4.85f, 2.2f, frente = Frente.X, acao = Acao.GUARDA_ROUPA),
         daPeca("planta", Comodo.QUARTO, 3.3f, 4.3f, 3.85f, 4.85f, 0.7f),
         // Banheiro: pia com o espelho em cima, vaso e banheira (embaixo da janela redonda).
@@ -176,6 +187,11 @@ object PlantaDaCasa {
         daPeca("espelho", Comodo.BANHEIRO, 4.4f, 0f, 5.15f, 0.04f, 0.8f, z = 1.3f, acao = Acao.ESPELHO, bloqueia = false, naParede = true),
         Movel("vaso", "Vaso sanitário", "toilet", Comodo.BANHEIRO, 5.45f, 0.1f, 6.05f, 0.7f, 0.7f, acao = Acao.DESCARGA),
         daPeca("banheira", Comodo.BANHEIRO, 6.25f, 0.1f, 7.9f, 1.35f, 0.6f, acao = Acao.BANHEIRA),
+        // O patinho de borracha boia na banheira (só aparece quando a banheira já chegou).
+        Movel(
+            "patinho", "Patinho de borracha", "rubber duck", Comodo.BANHEIRO, 6.75f, 0.45f, 7.2f, 0.9f, 0.4f,
+            z = 0.6f, acao = Acao.PATINHO, bloqueia = false,
+        ),
     )
 
     val porId: Map<String, Movel> = moveis.associateBy { it.id }
@@ -183,10 +199,148 @@ object PlantaDaCasa {
     /** As peças da casa que moram dentro e aparecem aqui (as outras ficam no jardim ou no céu). */
     val pecasDeDentro: Set<String> = moveis.mapNotNull { it.itemId }.toSet()
 
-    /** Móveis que aparecem para este estado: os fixos e as peças já ganhas. */
+    /**
+     * Móveis que aparecem para este estado: os fixos e as peças já ganhas, cada um no lugar para onde a
+     * criança o arrastou ([EstadoJogo.moveisDentro]) ou, se nunca mexeu (ou se o lugar salvo não vale mais),
+     * no lugar de sempre.
+     */
     fun moveisDe(e: EstadoJogo): List<Movel> {
         val ganhos = e.itensGanhos.mapTo(HashSet()) { it.id }
-        return moveis.filter { it.itemId == null || it.itemId in ganhos }
+        val presentes = moveis.filter { it.itemId == null || it.itemId in ganhos }
+        val ids = presentes.mapTo(HashSet()) { it.id }
+        // Um enfeite fixo que fica em cima de uma peça (o patinho na banheira) só aparece com ela.
+        val visiveis = presentes.filter { m -> m.itemId != null || apoios[m.id]?.let { it in ids } ?: true }
+        return aplicarPosicoes(visiveis, e.moveisDentro)
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Arrastar móveis: a criança segura um móvel e solta noutro ladrilho livre do mesmo andar.
+    // ------------------------------------------------------------------------------------------
+
+    /** Enfeites que ficam em cima de outro móvel e vão junto quando ele é arrastado (enfeite -> móvel de baixo). */
+    val apoios: Map<String, String> = mapOf(
+        "gato" to "sofa", "bolo" to "mesa", "ursinho" to "cama", "abajur" to "criado", "patinho" to "banheira",
+    )
+
+    /** Presos na parede ou no encanamento: não saem do lugar. */
+    private val presos = setOf("escada", "escadaDeCima", "guardaroupa", "pia", "vaso")
+
+    /** Folga mínima entre dois móveis arrastados (em ladrilhos), para os desenhos não se encostarem. */
+    const val FOLGA = 0.08f
+
+    /** Este móvel pode ser arrastado? (no chão, sólido, sem estar preso na parede). */
+    fun arrastavel(m: Movel): Boolean =
+        m.id !in presos && m.acao != Acao.ESCADA && !m.naParede && !m.noChao && m.bloqueia && m.z == 0f
+
+    /** Quem se mexe quando a criança arrasta [m]: ele mesmo, ou o móvel de baixo (arrastar o gato leva o sofá). */
+    fun quemArrasta(m: Movel): String? = (apoios[m.id] ?: m.id).takeIf { id -> porId[id]?.let { arrastavel(it) } == true }
+
+    /** Ladrilhos que a pegada do móvel ocupa (a mesma conta do [Mapa]). */
+    fun ladrilhosDe(m: Movel): List<Pair<Int, Int>> {
+        val margem = 0.05f
+        val lista = ArrayList<Pair<Int, Int>>()
+        for (cy in 0 until FUNDO) for (cx in 0 until LARGURA) {
+            if (m.x0 < cx + 1 - margem && m.x1 > cx + margem && m.y0 < cy + 1 - margem && m.y1 > cy + margem) lista += cx to cy
+        }
+        return lista
+    }
+
+    /**
+     * Ladrilhos que ficam sempre livres: o pé da escada, as passagens da parede interna, a porta da rua
+     * (embaixo) e a frente do guarda-roupa (em cima, onde as portas abrem).
+     */
+    fun reservados(andar: Andar): Set<Pair<Int, Int>> = buildSet {
+        add(floor(peDaEscada.x).toInt() to floor(peDaEscada.y).toInt())
+        val m = meio(andar)
+        val y = portasNaParedeInterna.min()
+        add(m - 1 to y)
+        add(m to y)
+        if (andar == Andar.DE_BAIXO) {
+            for (yy in floor(portaDaRua.x).toInt()..floor(portaDaRua.y).toInt().coerceAtMost(FUNDO - 1)) add(0 to yy)
+            add(floor(entrada.x).toInt() to floor(entrada.y).toInt())
+        } else {
+            val g = porId.getValue("guardaroupa")
+            val frente = floor(g.x1 + 0.5f).toInt()
+            for (yy in floor(g.y0).toInt()..floor(g.y1 - 0.01f).toInt()) add(frente to yy)
+        }
+    }
+
+    /** Até onde dá para empurrar o móvel sem sair do piso do andar: o deslocamento já limitado. */
+    fun limitarDeslocamento(m: Movel, dx: Int, dy: Int): Pair<Int, Int> {
+        val minX = ceil(-m.x0 - 0.001f).toInt()
+        val maxX = floor(LARGURA - m.x1 + 0.001f).toInt()
+        val minY = ceil(-m.y0 - 0.001f).toInt()
+        val maxY = floor(FUNDO - m.y1 + 0.001f).toInt()
+        return dx.coerceIn(minX, maxOf(minX, maxX)) to dy.coerceIn(minY, maxOf(minY, maxY))
+    }
+
+    /** Desloca [id] (e o que está em cima dele) sem conferir nada: para mostrar a prévia enquanto arrasta. */
+    fun deslocar(atuais: List<Movel>, id: String, dx: Int, dy: Int): List<Movel> =
+        atuais.map { if (it.id == id || apoios[it.id] == id) it.deslocado(dx, dy) else it }
+
+    /**
+     * O móvel [novo] (já no lugar novo) cabe ali? Dentro de um cômodo só (sem atravessar a parede interna),
+     * longe dos outros móveis sólidos do andar e fora dos ladrilhos [reservados].
+     */
+    fun cabeNoLugar(atuais: List<Movel>, novo: Movel): Boolean {
+        val eps = 0.001f
+        val andar = novo.andar
+        if (novo.x0 < -eps || novo.y0 < -eps || novo.x1 > LARGURA + eps || novo.y1 > FUNDO + eps) return false
+        val c = limitesDo(comodoEm(andar, novo.centroX, novo.centroY))
+        val parede = 0.06f
+        val esq = if (c.x0 > 0f) c.x0 + parede else c.x0
+        val dir = if (c.x1 < LARGURA) c.x1 - parede else c.x1
+        if (novo.x0 < esq - eps || novo.x1 > dir + eps) return false
+        val reservado = reservados(andar)
+        if (ladrilhosDe(novo).any { it in reservado }) return false
+        for (o in atuais) {
+            if (o.id == novo.id || o.andar != andar || !o.bloqueia || o.naParede || o.noChao || apoios[o.id] == novo.id) continue
+            val cruza = novo.x0 < o.x1 + FOLGA && o.x0 < novo.x1 + FOLGA && novo.y0 < o.y1 + FOLGA && o.y0 < novo.y1 + FOLGA
+            if (cruza) return false
+        }
+        return true
+    }
+
+    /** Todo ladrilho livre do andar continua alcançável a partir do pé da escada (nada fica isolado). */
+    fun tudoAlcancavel(moveis: List<Movel>, andar: Andar): Boolean {
+        val mapa = Mapa(moveis, andar)
+        if (!mapa.livre(floor(peDaEscada.x).toInt(), floor(peDaEscada.y).toInt())) return false
+        val alcance = mapa.alcancaveis(peDaEscada)
+        for (y in 0 until FUNDO) for (x in 0 until LARGURA) if (mapa.livre(x, y) && (x to y) !in alcance) return false
+        return true
+    }
+
+    /**
+     * Arrasta o móvel [id] [dx] ladrilhos para a direita e [dy] para a frente (encaixado na grade), levando o
+     * que está em cima dele. Devolve a lista nova, ou null se ali não pode (fora do piso, atravessando parede,
+     * em cima de outro móvel, tapando a escada ou uma porta, ou deixando algum canto sem caminho).
+     */
+    fun mover(atuais: List<Movel>, id: String, dx: Int, dy: Int): List<Movel>? {
+        val m = atuais.firstOrNull { it.id == id } ?: return null
+        if (!arrastavel(m)) return null
+        if (dx == 0 && dy == 0) return atuais
+        val novo = m.deslocado(dx, dy)
+        if (!cabeNoLugar(atuais, novo)) return null
+        val resultado = deslocar(atuais, id, dx, dy)
+        if (!tudoAlcancavel(resultado, m.andar)) return null
+        return resultado
+    }
+
+    /**
+     * Põe cada móvel no lugar salvo. Um lugar que não vale mais (por exemplo, uma peça nova chegou
+     * onde ele estava) é ignorado e o móvel volta para o lugar de sempre, que fica livre por construção.
+     */
+    fun aplicarPosicoes(padrao: List<Movel>, salvas: Map<String, Posicao>): List<Movel> {
+        if (salvas.isEmpty()) return padrao
+        var atual = padrao
+        for ((id, p) in salvas) {
+            val m = atual.firstOrNull { it.id == id } ?: continue
+            val dx = (p.x - m.x0).roundToInt()
+            val dy = (p.y - m.y0).roundToInt()
+            if (dx == 0 && dy == 0) continue
+            atual = mover(atual, id, dx, dy) ?: atual
+        }
+        return atual
     }
 
     /** Móveis de um andar só. */
@@ -489,5 +643,18 @@ class Mapa(moveis: List<Movel>, val andar: Andar) {
         val VIZINHOS4 = listOf(1 to 0, -1 to 0, 0 to 1, 0 to -1)
         val VIZINHOS8 = VIZINHOS4 + listOf(1 to 1, 1 to -1, -1 to 1, -1 to -1)
         val LARGURA = listOf(0f to 0f, 0.18f to 0f, -0.18f to 0f, 0f to 0.18f, 0f to -0.18f)
+    }
+}
+
+/**
+ * Guarda o lugar novo de um móvel arrastado (o canto (x0, y0) da pegada). Voltar ao lugar de sempre
+ * apaga o registro, para o save ficar pequeno e saves antigos (sem nada) continuarem iguais.
+ */
+fun EstadoJogo.comMovelEm(id: String, x0: Float, y0: Float): EstadoJogo {
+    val padrao = PlantaDaCasa.porId[id] ?: return this
+    return if (abs(x0 - padrao.x0) < 0.01f && abs(y0 - padrao.y0) < 0.01f) {
+        copy(moveisDentro = moveisDentro - id)
+    } else {
+        copy(moveisDentro = moveisDentro + (id to Posicao(x0, y0)))
     }
 }

@@ -6,7 +6,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -89,6 +91,7 @@ import br.com.casinhadosaber.dominio.Andar
 import br.com.casinhadosaber.dominio.Aparencia
 import br.com.casinhadosaber.dominio.Caixa
 import br.com.casinhadosaber.dominio.Categoria
+import br.com.casinhadosaber.dominio.comMovelEm
 import br.com.casinhadosaber.dominio.Comodo
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Estrutura
@@ -125,9 +128,11 @@ import br.com.casinhadosaber.ui.tema.Cores
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /** Altura da criança, nas unidades de altura da planta (a parede tem 3). */
@@ -200,11 +205,27 @@ fun TelaCasaPorDentro(
     }
     val estadoNaCena = remember(estado, previa) { previa?.let { p -> estado.copy(moedas = Int.MAX_VALUE / 2).usar(p) } ?: estado }
     val perfil = estadoNaCena.perfil ?: Perfil()
-    val moveis = remember(estado.fasesVencidas) { PlantaDaCasa.moveisDe(estado) }
+    val moveis = remember(estado.fasesVencidas, estado.moveisDentro) { PlantaDaCasa.moveisDe(estado) }
     val mapas = remember(moveis) { Andar.entries.associateWith { Mapa(moveis, it) } }
     val temGeladeira = moveis.any { it.acao == Acao.GELADEIRA }
     val geometria = remember { RefGeometria() }
     val andarDaCrianca = cena.andar
+
+    // Arrastando um móvel: a cena mostra o móvel já no ladrilho de destino, com o realce verde ou vermelho.
+    // Só recompõe quando o móvel muda de ladrilho (não a cada movimento do dedo).
+    val arrastandoId = cena.arrastando
+    val arrasteDx = cena.arrasteDx
+    val arrasteDy = cena.arrasteDy
+    val (moveisNaCena, destaque) = remember(moveis, arrastandoId, arrasteDx, arrasteDy) {
+        val m = arrastandoId?.let { id -> moveis.firstOrNull { it.id == id } }
+        if (m == null) {
+            moveis to null
+        } else {
+            val valido = PlantaDaCasa.mover(moveis, m.id, arrasteDx, arrasteDy)
+            val mostrados = valido ?: PlantaDaCasa.deslocar(moveis, m.id, arrasteDx, arrasteDy)
+            mostrados to Destaque(m.andar, PlantaDaCasa.ladrilhosDe(m.deslocado(arrasteDx, arrasteDy)), valido != null)
+        }
+    }
 
     LaunchedEffect(Unit) {
         if (abrirInicial == Acao.NENHUMA && !lojaInicial) {
@@ -381,6 +402,14 @@ fun TelaCasaPorDentro(
                 onEspelho()
                 return
             }
+            Acao.PATINHO -> {
+                sonsCasa.quack()
+                narrador.falar(listOf(pt("Quac, quac! Patinho de borracha! Pato em inglês:"), en("duck")))
+            }
+            Acao.LIXEIRA -> {
+                sonsCasa.tampa()
+                narrador.falar(listOf(pt("Lixo no lixo! Lixeira em inglês:"), en("trash can")))
+            }
             Acao.NENHUMA -> {
                 sons.toque()
                 falarNome(m)
@@ -427,22 +456,9 @@ fun TelaCasaPorDentro(
             }
         }
         // 3) móveis, da frente para trás (o andar de baixo é desenhado por último)
-        for (ga in g.andares.asReversed()) {
-            for (i in ga.pecas.indices.reversed()) {
-                val p = ga.pecas[i]
-                val m = p.movel ?: continue
-                if (p.toque.contains(toque)) {
-                    interagir(m)
-                    return
-                }
-            }
-            for (p in ga.naParede) {
-                val m = p.movel ?: continue
-                if (p.toque.contains(toque)) {
-                    interagir(m)
-                    return
-                }
-            }
+        movelNoToque(g, toque)?.let {
+            interagir(it)
+            return
         }
         // 4) o chão: anda até lá (no andar tocado)
         val largura = PlantaDaCasa.LARGURA.toFloat()
@@ -460,6 +476,96 @@ fun TelaCasaPorDentro(
     }
 
     val tocar by rememberUpdatedState<(Offset) -> Unit>({ o -> tocarNaCena(o) })
+
+    // ---- arrastar móveis: segurar (ou já sair arrastando) e soltar noutro ladrilho livre do mesmo andar
+
+    /** O móvel que um dedo pousado em [toque] arrastaria (null: lâmpada, criança, chão ou móvel preso). */
+    fun alvoDoArraste(toque: Offset): Movel? {
+        val g = geometria.g ?: return null
+        for (ga in g.andares) for (luz in ga.luzes) {
+            if (hypot(toque.x - luz.lampada.x, toque.y - luz.lampada.y) < g.raioLampada) return null
+        }
+        g.geo(cena.andar)?.let { ga ->
+            val pe = ga.proj.ponto(cena.x, cena.y)
+            if (toque.x in pe.x - g.larguraCrianca / 2..pe.x + g.larguraCrianca / 2 && toque.y in pe.y - g.alturaCrianca..pe.y) return null
+        }
+        val tocado = movelNoToque(g, toque) ?: return null
+        val id = PlantaDaCasa.quemArrasta(tocado) ?: return null
+        return moveis.firstOrNull { it.id == id }
+    }
+
+    fun comecarArraste(m: Movel, toque: Offset, segurou: Boolean) {
+        val ga = geometria.g?.geo(m.andar) ?: return
+        cena.arrasteDe = Posicao(ga.proj.gradeX(toque.x, toque.y), ga.proj.gradeY(toque.x, toque.y))
+        cena.arrasteDx = 0
+        cena.arrasteDy = 0
+        cena.arrastando = m.id
+        jaAndou = true
+        sonsCasa.pegar()
+        if (segurou) narrador.falar("Arraste para mudar de lugar!")
+    }
+
+    fun moverArraste(toque: Offset) {
+        val id = cena.arrastando ?: return
+        val m = moveis.firstOrNull { it.id == id } ?: return
+        val ga = geometria.g?.geo(m.andar) ?: return
+        val dx = (ga.proj.gradeX(toque.x, toque.y) - cena.arrasteDe.x).roundToInt()
+        val dy = (ga.proj.gradeY(toque.x, toque.y) - cena.arrasteDe.y).roundToInt()
+        val (lx, ly) = PlantaDaCasa.limitarDeslocamento(m, dx, dy)
+        if (lx != cena.arrasteDx || ly != cena.arrasteDy) {
+            cena.arrasteDx = lx
+            cena.arrasteDy = ly
+        }
+    }
+
+    fun cancelarArraste() {
+        cena.arrastando = null
+        cena.arrasteDx = 0
+        cena.arrasteDy = 0
+    }
+
+    fun soltarArraste() {
+        val id = cena.arrastando ?: return
+        val dx = cena.arrasteDx
+        val dy = cena.arrasteDy
+        cancelarArraste()
+        val antes = moveis.firstOrNull { it.id == id } ?: return
+        cena.tocadoId = id
+        cena.tocadoEm = cena.tempo
+        if (dx == 0 && dy == 0) {
+            sonsCasa.pousar()
+            return
+        }
+        val novos = PlantaDaCasa.mover(moveis, id, dx, dy)
+        if (novos == null) {
+            sons.erro()
+            narrador.falar("Aí não cabe! Procure um lugar verde.")
+            return
+        }
+        val m = novos.first { it.id == id }
+        onAtualizar { it.comMovelEm(id, m.x0, m.y0) }
+        sonsCasa.pousar()
+        narrador.falar(listOf(pt("${m.nome} mudou de lugar! Em inglês:"), en(m.nomeEn)))
+        // O caminho da criança muda: se ela estava andando nesse andar, para; se o móvel caiu onde ela está, ela dá um passinho.
+        if (cena.andar == antes.andar) {
+            cena.caminho = emptyList()
+            cena.indice = 0
+            cena.andando = false
+            cena.aoChegar = null
+            val mapa = Mapa(novos, antes.andar)
+            if (!mapa.livre(floor(cena.x).toInt(), floor(cena.y).toInt())) {
+                val (lx, ly) = mapa.livreMaisPerto(floor(cena.x).toInt(), floor(cena.y).toInt())
+                cena.x = lx + 0.5f
+                cena.y = ly + 0.5f
+            }
+        }
+    }
+
+    val pegarParaArrastar by rememberUpdatedState<(Offset) -> Movel?>({ o -> alvoDoArraste(o) })
+    val comecar by rememberUpdatedState<(Movel, Offset, Boolean) -> Unit>({ m, o, s -> comecarArraste(m, o, s) })
+    val arrastar by rememberUpdatedState<(Offset) -> Unit>({ o -> moverArraste(o) })
+    val soltar by rememberUpdatedState<() -> Unit>({ soltarArraste() })
+    val cancelar by rememberUpdatedState<() -> Unit>({ cancelarArraste() })
 
     fun comprar(produto: Produto) {
         val jaTinha = produto.id in estado.comprados
@@ -563,15 +669,73 @@ fun TelaCasaPorDentro(
                 CenaIsometrica(
                     estado = estadoNaCena,
                     perfil = perfil,
-                    moveis = moveis,
+                    moveis = moveisNaCena,
                     andarDaCrianca = andarDaCrianca,
                     cena = cena,
                     medidor = medidor,
                     ref = geometria,
+                    destaque = destaque,
                     modifier = Modifier
                         .fillMaxSize()
-                        .semantics { contentDescription = "Casa por dentro, com dois andares. Toque no chão para andar e na escada para subir ou descer." }
-                        .pointerInput(Unit) { detectTapGestures(onTap = { tocar(it) }) },
+                        .semantics {
+                            contentDescription = "Casa por dentro, com dois andares. Toque no chão para andar e na escada para subir ou descer. " +
+                                "Segure e arraste um móvel para mudar de lugar."
+                        }
+                        .pointerInput(Unit) {
+                            // Tocar e soltar: anda ou mexe no móvel (como antes). Segurar um móvel, ou sair arrastando
+                            // em cima dele, leva o móvel junto, ladrilho por ladrilho.
+                            awaitEachGesture {
+                                val down = awaitFirstDown()
+                                val alvo = pegarParaArrastar(down.position)
+                                if (alvo == null) {
+                                    val up = waitForUpOrCancellation()
+                                    if (up != null) {
+                                        up.consume()
+                                        tocar(up.position)
+                                    }
+                                    return@awaitEachGesture
+                                }
+                                val limite = down.uptimeMillis + viewConfiguration.longPressTimeoutMillis
+                                var ultimo = down
+                                var segurou = false
+                                var arrastando = false
+                                while (!arrastando) {
+                                    val resta = (limite - ultimo.uptimeMillis).coerceAtLeast(1L)
+                                    val evento = withTimeoutOrNull(resta) { awaitPointerEvent() }
+                                    if (evento == null) {
+                                        segurou = true
+                                        arrastando = true
+                                    } else {
+                                        val ch = evento.changes.firstOrNull { it.id == down.id } ?: return@awaitEachGesture
+                                        if (ch.isConsumed) return@awaitEachGesture
+                                        ultimo = ch
+                                        if (!ch.pressed) {
+                                            ch.consume()
+                                            tocar(ch.position)
+                                            return@awaitEachGesture
+                                        }
+                                        if ((ch.position - down.position).getDistance() > viewConfiguration.touchSlop) arrastando = true
+                                    }
+                                }
+                                comecar(alvo, down.position, segurou)
+                                var terminou = false
+                                try {
+                                    arrastar(ultimo.position)
+                                    while (true) {
+                                        val ch = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
+                                        ch.consume()
+                                        if (!ch.pressed) {
+                                            terminou = true
+                                            soltar()
+                                            break
+                                        }
+                                        arrastar(ch.position)
+                                    }
+                                } finally {
+                                    if (!terminou) cancelar()
+                                }
+                            }
+                        },
                 )
                 if (!jaAndou && abrirInicial == Acao.NENHUMA && !lojaInicial) {
                     MaoGuia(Modifier.align(Alignment.Center).padding(top = 120.dp), espera = 2500)
@@ -724,11 +888,37 @@ private class Cena {
     var comendoAte by mutableFloatStateOf(-1f)
     var tocadoId by mutableStateOf<String?>(null)
     var tocadoEm by mutableFloatStateOf(-10f)
+
+    /** Móvel sendo arrastado (ou null) e quantos ladrilhos ele já andou na grade. */
+    var arrastando by mutableStateOf<String?>(null)
+    var arrasteDx by mutableIntStateOf(0)
+    var arrasteDy by mutableIntStateOf(0)
+    /** Onde o dedo pegou o móvel, em ladrilhos do chão (o deslocamento conta a partir daqui). */
+    var arrasteDe = Posicao(0f, 0f)
 }
+
+/** Realce dos ladrilhos de destino enquanto um móvel é arrastado: verde se cabe, vermelho se não. */
+private class Destaque(val andar: Andar, val ladrilhos: List<Pair<Int, Int>>, val valido: Boolean)
 
 /** A geometria pronta (guardada para os toques saberem onde está cada coisa). */
 private class RefGeometria {
     var g: Geometria? = null
+}
+
+/** O móvel tocado em [toque], da frente para trás (o andar de baixo é desenhado por último). */
+private fun movelNoToque(g: Geometria, toque: Offset): Movel? {
+    for (ga in g.andares.asReversed()) {
+        for (i in ga.pecas.indices.reversed()) {
+            val p = ga.pecas[i]
+            val m = p.movel ?: continue
+            if (p.toque.contains(toque)) return m
+        }
+        for (p in ga.naParede) {
+            val m = p.movel ?: continue
+            if (p.toque.contains(toque)) return m
+        }
+    }
+    return null
 }
 
 /** Um móvel (ou pedaço de parede) já convertido em formas para desenhar. */
@@ -773,6 +963,7 @@ private class GeoAndar(
     val pecas: List<Peca>,
     val luzes: List<Luz>,
     val sombra: Rect?,
+    val realce: Forma? = null,
 )
 
 private class Geometria(
@@ -800,11 +991,12 @@ private fun CenaIsometrica(
     cena: Cena,
     medidor: TextMeasurer,
     ref: RefGeometria,
+    destaque: Destaque?,
     modifier: Modifier,
 ) {
     Box(
         modifier.drawWithCache {
-            val g = montarGeometria(size, this, estado, perfil, moveis, andarDaCrianca, medidor)
+            val g = montarGeometria(size, this, estado, perfil, moveis, andarDaCrianca, medidor, destaque)
             ref.g = g
             onDrawBehind { desenharCena(g, cena, perfil) }
         },
@@ -839,6 +1031,8 @@ private fun emojiDe(id: String): String? = when (id) {
     "gato" -> "🐱"
     "bolo" -> "🎂"
     "vaso" -> "🚽"
+    "patinho" -> "🦆"
+    "lixeira" -> "🗑️"
     else -> null
 }
 
@@ -850,6 +1044,7 @@ private fun montarGeometria(
     moveis: List<Movel>,
     andarDaCrianca: Andar,
     medidor: TextMeasurer,
+    destaque: Destaque? = null,
 ): Geometria {
     val dp = densidade.density
     // Enquadramento: a planta inteira cabe na largura (menos as margens) e fica no meio do espaço livre.
@@ -876,7 +1071,7 @@ private fun montarGeometria(
         val proj = Projecao(tw, origemX, origemY)
         // A sombra no gramado fica só embaixo do andar que pisa no chão (ou do andar sozinho).
         val noChao = a == Andar.DE_BAIXO || !doisAndares
-        montarAndar(a, proj, noChao, estado, perfil, moveis.filter { it.andar == a }, medidor, densidade)
+        montarAndar(a, proj, noChao, estado, perfil, moveis.filter { it.andar == a }, medidor, densidade, destaque?.takeIf { it.andar == a })
     }
 
     // ---- criança, chapéu e comidas na mão
@@ -913,6 +1108,7 @@ private fun montarAndar(
     moveis: List<Movel>,
     medidor: TextMeasurer,
     densidade: Density,
+    destaque: Destaque? = null,
 ): GeoAndar {
     val tw = proj.ladrilho
     val lado = PlantaDaCasa.LARGURA.toFloat()
@@ -1157,7 +1353,13 @@ private fun montarAndar(
 
     val fim = proj.ponto(lado, fundo)
     val sombra = if (noChao) Rect(proj.x(0f, fundo) - tw * 0.6f, fim.y - tw * 0.6f, proj.x(lado, 0f) + tw * 0.6f, fim.y + tw * 0.3f) else null
-    return GeoAndar(andar, proj, chao, paredes, padrao, naParede, pecas, luzes, sombra)
+    // realce dos ladrilhos para onde o móvel arrastado vai (verde: cabe; vermelho: não cabe)
+    val realce = destaque?.let { d ->
+        val caminho = Path()
+        with(proj) { for ((x, y) in d.ladrilhos) caminho.losango(x + 0.06f, y + 0.06f, x + 0.94f, y + 0.94f, 0.02f) }
+        Forma(caminho, if (d.valido) Color(0x8C3DBE6B) else Color(0x8CEF476F))
+    }
+    return GeoAndar(andar, proj, chao, paredes, padrao, naParede, pecas, luzes, sombra, realce)
 }
 
 /** Converte um móvel em formas prontas (desenho isométrico feito de caixinhas). */
@@ -1199,6 +1401,8 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
             "violao" -> 0.8f
             "gato" -> 0.6f
             "ursinho" -> 0.62f
+            "patinho" -> 0.42f
+            "lixeira" -> 0.6f
             else -> 0.55f
         }
         val layout = medirEmoji(medidor, densidade, e, tw * escala)
@@ -1459,6 +1663,11 @@ private fun DrawScope.desenharCena(g: Geometria, cena: Cena, perfil: Perfil) {
         ga.padrao?.let { drawPath(it, g.corDoPadrao) }
         for (luz in ga.luzes) if (luz.comodo in apagadas) sombrearFormas(luz.paredes, Escuro)
         for (i in ga.naParede.indices) desenharPeca(g, ga.naParede[i], cena, apagadas)
+        ga.realce?.let {
+            val pulso = 0.75f + 0.25f * sin(t * 7f)
+            drawPath(it.caminho, it.cor, alpha = pulso)
+            drawPath(it.caminho, Color.White.copy(alpha = 0.8f), style = g.traco)
+        }
 
         // marca de onde a criança vai
         val marca = cena.marca
@@ -1520,7 +1729,12 @@ private fun DrawScope.desenharPeca(g: Geometria, p: Peca, cena: Cena, apagadas: 
     val m = p.movel
     val t = cena.tempo
     val idade = if (m != null && cena.tocadoId == m.id) t - cena.tocadoEm else 10f
-    if (idade < 0.45f) {
+    val arrastado = cena.arrastando
+    if (m != null && arrastado != null && (m.id == arrastado || PlantaDaCasa.apoios[m.id] == arrastado)) {
+        // O móvel arrastado flutua um pouquinho acima do chão (o realce embaixo faz a sombra).
+        val alto = g.ladrilho * (0.16f + 0.03f * sin(t * 7f))
+        translate(top = -alto) { desenharPecaSemPulo(g, p, cena, apagadas) }
+    } else if (idade < 0.45f) {
         // pulinho de quem foi tocado
         val s = 1f + 0.14f * sin(idade / 0.45f * PI.toFloat()) * (1f - idade / 0.45f)
         scale(s, s, pivot = p.ancora) { desenharPecaSemPulo(g, p, cena, apagadas) }
