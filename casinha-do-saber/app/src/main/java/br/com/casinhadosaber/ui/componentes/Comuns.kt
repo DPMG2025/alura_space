@@ -138,7 +138,10 @@ fun BotaoFofo(
 private fun Modifier.baseDoBotao(forma: Shape, cor: Color, profundidade: Dp, sombra: Color?, contorno: Color?): Modifier =
     drawWithCache {
         val p = profundidade.toPx()
-        val tamanho = Size(size.width, size.height - p)
+        // Botão mais baixo que a própria profundidade (ou ainda sem tamanho): nada para desenhar.
+        // Altura negativa faria o createOutline da forma arredondada travar o app.
+        val tamanho = Size(size.width.coerceAtLeast(0f), (size.height - p).coerceAtLeast(0f))
+        if (tamanho.isEmpty()) return@drawWithCache onDrawBehind { }
         val contornoDaBase = forma.createOutline(tamanho, layoutDirection, this)
         val traco = Stroke(2.dp.toPx())
         val passo = 2.dp.toPx()

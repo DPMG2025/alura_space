@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import br.com.casinhadosaber.ui.componentes.fundoDecorado
+import br.com.casinhadosaber.ui.componentes.FundoDecorado
 import br.com.casinhadosaber.ui.tema.Cores
 
 /** Verdadeiro quando a escala de tablet já foi aplicada mais acima (evita aplicar duas vezes). */
@@ -96,15 +96,18 @@ fun EscalaDeTablet(conteudo: @Composable () -> Unit) {
 fun MolduraDoApp(larga: Boolean = false, corDeFundo: Color? = null, conteudo: @Composable () -> Unit) {
     val paisagem = emPaisagem()
     EscalaDeTablet {
-        val tela = if (corDeFundo != null) Modifier.fillMaxSize().fundoDecorado(corDeFundo) else Modifier.fillMaxSize()
-        BoxWithConstraints(tela, contentAlignment = Alignment.TopCenter) {
-            val maxima: Dp = if (larga && paisagem) LARGURA_DE_PAISAGEM else LARGURA_DE_CELULAR
-            // Quando sobra céu dos lados (tablet deitado), a coluna ganha uma sombra suave nas bordas
-            // de fora: parece uma página em cima do céu, e não um recorte com a borda dura.
-            val sobraLado = maxWidth > maxima + 8.dp
-            val coluna = Modifier.widthIn(max = maxima).fillMaxHeight()
-            Box(if (sobraLado) coluna.drawBehind { sombraDosLados(16.dp.toPx()) } else coluna) { conteudo() }
+        val corpo: @Composable () -> Unit = {
+            BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                val maxima: Dp = if (larga && paisagem) LARGURA_DE_PAISAGEM else LARGURA_DE_CELULAR
+                // Quando sobra céu dos lados (tablet deitado), a coluna ganha uma sombra suave nas bordas
+                // de fora: parece uma página em cima do céu, e não um recorte com a borda dura.
+                val sobraLado = maxWidth > maxima + 8.dp
+                val coluna = Modifier.widthIn(max = maxima).fillMaxHeight()
+                Box(if (sobraLado) coluna.drawBehind { sombraDosLados(16.dp.toPx()) } else coluna) { conteudo() }
+            }
         }
+        // Os enfeites que derivam ficam numa camada só deles (FundoDecorado), sem redesenhar a tela toda.
+        if (corDeFundo != null) FundoDecorado(corDeFundo, Modifier.fillMaxSize()) { corpo() } else corpo()
     }
 }
 

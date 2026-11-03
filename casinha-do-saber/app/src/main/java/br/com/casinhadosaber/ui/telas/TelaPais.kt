@@ -108,7 +108,7 @@ fun TelaPais(
         Modifier
             .fillMaxSize()
             // Área dos adultos: calma, sem bolhas, lilás clarinho que vira creme.
-            .fundoDecorado(FUNDO_DOS_PAIS, EnfeiteDoFundo.Nenhum, animado = false)
+            .fundoDecorado(FUNDO_DOS_PAIS, EnfeiteDoFundo.Nenhum)
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
@@ -354,7 +354,7 @@ private fun Painel(
     }
 
     if (confirmar) {
-        JanelaDosPais(onFechar = { confirmar = false }) {
+        JanelaDosPais(onFechar = { confirmar = false }, titulo = if (variasCriancas) "Apagar o progresso" else "Apagar tudo") {
             CaixaDeDialogo(
                 titulo = if (variasCriancas) "Apagar o progresso desta criança?" else "Apagar tudo?",
                 // O caderno da criança é apagado pelo Repositorio junto com o progresso (cada criança tem o seu).

@@ -2518,7 +2518,7 @@ private fun Lojinha(estado: EstadoJogo, previa: Produto?, temGeladeira: Boolean,
                 ) {
                     Column(Modifier.width(92.dp).padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         if (produto.categoria == Categoria.ROUPA) {
-                            Crianca((estado.perfil ?: Perfil()).copy(traje = produto.valor, chapeu = ""), Modifier.height(52.dp))
+                            Crianca((estado.perfil ?: Perfil()).copy(traje = produto.valor, chapeu = ""), Modifier.height(52.dp), animado = false)
                         } else {
                             Text(produto.icone, fontSize = 34.sp, maxLines = 1)
                         }

@@ -92,8 +92,9 @@ import br.com.casinhadosaber.ui.componentes.Confete
 import br.com.casinhadosaber.ui.componentes.EnfeiteDoFundo
 import br.com.casinhadosaber.ui.componentes.ExplosaoDeEstrelas
 import br.com.casinhadosaber.ui.componentes.RaiosDeLuz
-import br.com.casinhadosaber.ui.componentes.fundoDecorado
+import br.com.casinhadosaber.ui.componentes.FundoDecorado
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -214,10 +215,10 @@ fun TelaPremio(
     fun marcarCentro(c: LayoutCoordinates) {
         centroNaJanela = c.positionInRoot() + Offset(c.size.width / 2f, c.size.height / 2f)
     }
+    FundoDecorado(corDaTrilha, Modifier.fillMaxSize(), enfeite = EnfeiteDoFundo.Estrelas) {
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .fundoDecorado(corDaTrilha, EnfeiteDoFundo.Estrelas)
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .onGloballyPositioned {
                 origemDaTela = it.positionInRoot()
@@ -283,7 +284,9 @@ fun TelaPremio(
                             )
                             ExplosaoDeEstrelas(
                                 disparo = if (estrelasVisiveis >= i) i else 0,
-                                modifier = Modifier.requiredSize(150.dp),
+                                // Sem ocupar lugar: do tamanho da estrela (matchParentSize), mas desenhado em 150 dp
+                                // centrado. Antes a caixa crescia para 150 dp durante o estouro e empurrava a tela.
+                                modifier = Modifier.matchParentSize().wrapContentSize(unbounded = true).requiredSize(150.dp),
                                 quantidade = 10,
                                 duracao = 700,
                             )
@@ -415,6 +418,7 @@ fun TelaPremio(
             FestaDoMascote(mascote, fasesAntes, fasesDepois) { festaDoMascote = false }
         }
     }
+    }
 }
 
 /** O que o narrador diz ao abrir o brinde: o que ganhou, onde já está e as moedinhas extras. */
@@ -485,7 +489,7 @@ private fun DesenhoDoBrinde(p: Produto, lado: Dp, modifier: Modifier = Modifier,
             // Roupa e acessório: a própria criança vestida, com o ícone do presente no cantinho.
             Categoria.ROUPA, Categoria.ACESSORIO -> if (perfil != null) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Crianca(perfil.vestindo(p), Modifier.height(lado * 0.92f))
+                    Crianca(perfil.vestindo(p), Modifier.height(lado * 0.92f), animado = false)
                     Text(
                         p.icone,
                         style = MaterialTheme.typography.displayLarge.copy(fontSize = (lado.value * 0.26f).sp, lineHeight = (lado.value * 0.3f).sp),

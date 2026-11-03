@@ -71,7 +71,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import br.com.casinhadosaber.ui.componentes.PROPORCAO_CENA
 import br.com.casinhadosaber.ui.componentes.brilhoDoTopo
-import br.com.casinhadosaber.ui.componentes.fundoDecorado
+import br.com.casinhadosaber.ui.componentes.FundoDecorado
 import br.com.casinhadosaber.ui.tema.Formas
 
 /** Conta as chegadas ao início (só enquanto o app está aberto) para variar a saudação sem sorteio. */
@@ -113,10 +113,10 @@ fun TelaInicio(
         narrador.falarPartes(br.com.casinhadosaber.dominio.VozesDaFamilia.saudacao(oi) + br.com.casinhadosaber.dominio.ParteDaFala(pt(resto)))
     }
 
+    FundoDecorado(Cores.Ceu, Modifier.fillMaxSize()) {
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .fundoDecorado(Cores.Ceu)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
     // Tela deitada (tablet em paisagem): a casa à esquerda e os quatro caminhos numa coluna à direita.
@@ -276,6 +276,7 @@ fun TelaInicio(
                 }
             }
         }
+    }
     }
     }
 }

@@ -41,6 +41,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -265,7 +267,7 @@ fun TelaPerfil(
                     contentAlignment = Alignment.TopCenter,
                 ) {
                     // Só a cabeça: o personagem grande, recortado no círculo.
-                    Crianca(perfil.copy(estiloCabelo = i, chapeu = ""), Modifier.height(110.dp).padding(top = 6.dp))
+                    Crianca(perfil.copy(estiloCabelo = i, chapeu = ""), Modifier.height(110.dp).padding(top = 6.dp), animado = false)
                 }
             }
         }
@@ -375,43 +377,74 @@ private fun Bolinha(cor: Color, escolhida: Boolean, descricao: String, onClick: 
  */
 @Composable
 private fun TerrenoDaCasinha(modifier: Modifier) {
-    val brilho by rememberInfiniteTransition(label = "terreno").animateFloat(
+    val brilho = rememberInfiniteTransition(label = "terreno").animateFloat(
         0.35f, 1f, infiniteRepeatable(androidx.compose.animation.core.tween(1100), RepeatMode.Reverse), label = "brilho",
     )
-    Canvas(modifier.semantics { contentDescription = "O terreno onde a casinha vai nascer" }) {
-        val w = size.width
-        val h = size.height
-        // Morro de trás (mais claro) e o da frente.
-        val tras = Path().apply {
-            moveTo(0f, h * 0.55f)
-            cubicTo(w * 0.25f, h * 0.38f, w * 0.55f, h * 0.5f, w * 0.75f, h * 0.42f)
-            cubicTo(w * 0.88f, h * 0.37f, w, h * 0.45f, w, h * 0.45f)
-            lineTo(w, h); lineTo(0f, h); close()
-        }
-        drawPath(tras, Color(0xFFA9DE8F))
-        val frente = Path().apply {
-            moveTo(0f, h * 0.72f)
-            cubicTo(w * 0.3f, h * 0.6f, w * 0.7f, h * 0.62f, w, h * 0.7f)
-            lineTo(w, h); lineTo(0f, h); close()
-        }
-        drawPath(frente, Brush.verticalGradient(listOf(Color(0xFF8ACF6E), Color(0xFF6DB85A)), startY = h * 0.6f, endY = h))
-        // A casinha que ainda vai nascer: só o contorno tracejado, em cima do morro.
-        val base = Offset(w * 0.5f, h * 0.56f)
-        val lw = h * 0.42f
-        val lh = h * 0.26f
-        val casa = Path().apply {
-            moveTo(base.x - lw / 2f, base.y)
-            lineTo(base.x - lw / 2f, base.y - lh)
-            lineTo(base.x, base.y - lh - h * 0.2f)
-            lineTo(base.x + lw / 2f, base.y - lh)
-            lineTo(base.x + lw / 2f, base.y)
-            close()
-        }
-        drawPath(casa, Color.White.copy(alpha = 0.45f))
-        drawPath(
-            casa, Color.White,
-            style = Stroke(h * 0.018f, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(h * 0.05f, h * 0.035f))),
+    Box(modifier.semantics { contentDescription = "O terreno onde a casinha vai nascer" }) {
+        // O terreno é montado uma vez por tamanho; só as estrelinhas (numa camada pequena, só delas) piscam.
+        Spacer(Modifier.fillMaxSize().drawWithCache { val desenho = terrenoParado(); onDrawBehind { desenho() } })
+        Spacer(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer()
+                .drawWithCache {
+                    val w = size.width
+                    val h = size.height
+                    val base = Offset(w * 0.5f, h * 0.56f)
+                    // Estrelinhas mágicas em volta da casinha (as formas são feitas uma vez; o brilho só muda a cor).
+                    val estrelas = listOf(-0.36f to 0.18f, 0.34f to 0.12f, -0.2f to 0.02f, 0.22f to 0.36f).map { e ->
+                        caminhoEstrela(Offset(base.x + w * e.first, h * e.second + h * 0.08f), h * 0.04f)
+                    }
+                    onDrawBehind {
+                        val b = brilho.value
+                        for ((k, estrela) in estrelas.withIndex()) {
+                            val a = if (k % 2 == 0) b else 1.35f - b
+                            drawPath(estrela, Color(0xFFFFE27A).copy(alpha = a.coerceIn(0f, 1f)))
+                        }
+                    }
+                },
         )
+    }
+}
+
+/**
+ * A parte parada do [TerrenoDaCasinha] (morros, casinha tracejada, caminho e flores): as formas e os pincéis são
+ * montados aqui uma vez por tamanho, e o que volta só desenha.
+ */
+private fun androidx.compose.ui.draw.CacheDrawScope.terrenoParado(): DrawScope.() -> Unit {
+    val w = size.width
+    val h = size.height
+    // Morro de trás (mais claro) e o da frente.
+    val tras = Path().apply {
+        moveTo(0f, h * 0.55f)
+        cubicTo(w * 0.25f, h * 0.38f, w * 0.55f, h * 0.5f, w * 0.75f, h * 0.42f)
+        cubicTo(w * 0.88f, h * 0.37f, w, h * 0.45f, w, h * 0.45f)
+        lineTo(w, h); lineTo(0f, h); close()
+    }
+    val frente = Path().apply {
+        moveTo(0f, h * 0.72f)
+        cubicTo(w * 0.3f, h * 0.6f, w * 0.7f, h * 0.62f, w, h * 0.7f)
+        lineTo(w, h); lineTo(0f, h); close()
+    }
+    val gramado = Brush.verticalGradient(listOf(Color(0xFF8ACF6E), Color(0xFF6DB85A)), startY = h * 0.6f, endY = h)
+    // A casinha que ainda vai nascer: só o contorno tracejado, em cima do morro.
+    val base = Offset(w * 0.5f, h * 0.56f)
+    val lw = h * 0.42f
+    val lh = h * 0.26f
+    val casa = Path().apply {
+        moveTo(base.x - lw / 2f, base.y)
+        lineTo(base.x - lw / 2f, base.y - lh)
+        lineTo(base.x, base.y - lh - h * 0.2f)
+        lineTo(base.x + lw / 2f, base.y - lh)
+        lineTo(base.x + lw / 2f, base.y)
+        close()
+    }
+    val tracejado = Stroke(h * 0.018f, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(h * 0.05f, h * 0.035f)))
+    val desenho: DrawScope.() -> Unit = {
+        drawPath(tras, Color(0xFFA9DE8F))
+        drawPath(frente, gramado)
+        drawPath(casa, Color.White.copy(alpha = 0.45f))
+        drawPath(casa, Color.White, style = tracejado)
         drawRoundRect(
             Color.White.copy(alpha = 0.8f), Offset(base.x - lw * 0.1f, base.y - lh * 0.55f), Size(lw * 0.2f, lh * 0.55f),
             androidx.compose.ui.geometry.CornerRadius(h * 0.02f), style = Stroke(h * 0.012f),
@@ -444,10 +477,6 @@ private fun TerrenoDaCasinha(modifier: Modifier) {
             drawCircle(Color(0xFF5FAE4E), h * 0.05f, Offset(c.x + h * 0.06f, c.y + h * 0.02f))
             drawCircle(Color(0x33FFFFFF), h * 0.025f, Offset(c.x - h * 0.02f, c.y - h * 0.025f))
         }
-        // Estrelinhas mágicas em volta da casinha.
-        for ((k, e) in listOf(-0.36f to 0.18f, 0.34f to 0.12f, -0.2f to 0.02f, 0.22f to 0.36f).withIndex()) {
-            val a = if (k % 2 == 0) brilho else 1.35f - brilho
-            drawPath(caminhoEstrela(Offset(base.x + w * e.first, h * e.second + h * 0.08f), h * 0.04f), Color(0xFFFFE27A).copy(alpha = a.coerceIn(0f, 1f)))
-        }
     }
+    return desenho
 }

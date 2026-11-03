@@ -63,7 +63,7 @@ import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.Raios
 import br.com.casinhadosaber.ui.componentes.EnfeiteDoFundo
 import br.com.casinhadosaber.ui.componentes.cartaoFofo
-import br.com.casinhadosaber.ui.componentes.fundoDecorado
+import br.com.casinhadosaber.ui.componentes.FundoDecorado
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.translate
@@ -135,10 +135,10 @@ fun TelaMapa(
     }
 
     EscalaDeTablet {
+        FundoDecorado(cor, Modifier.fillMaxSize(), enfeite = EnfeiteDoFundo.Estrelas) {
         Column(
             Modifier
                 .fillMaxSize()
-                .fundoDecorado(cor, EnfeiteDoFundo.Estrelas)
                 .windowInsetsPadding(WindowInsets.safeDrawing),
         ) {
             Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -209,6 +209,7 @@ fun TelaMapa(
                         .background(Brush.verticalGradient(0f to cor.copy(alpha = 0.6f), 0.4f to cor.copy(alpha = 0.3f), 1f to cor.copy(alpha = 0f))),
                 )
             }
+        }
         }
     }
 }

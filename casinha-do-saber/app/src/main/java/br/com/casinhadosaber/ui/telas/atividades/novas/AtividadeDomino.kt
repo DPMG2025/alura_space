@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -86,6 +87,8 @@ private class PecaNaMaoN2(val id: Int, val domino: PecaDomino) {
 /** Peça já na fileira: [virada] quando entrou com a metade b encostada na ponta (gira ao encaixar). */
 private class EncaixeN2(val id: Int, val esquerda: MeiaPeca, val direita: MeiaPeca, val virada: Boolean) {
     val giro = Animatable(if (virada) 0f else 1f)
+    /** Ainda não festejou: o festejo toca só uma vez, quando a peça é colocada (não ao recompor de novo). */
+    var festejar = true
 }
 
 private fun falaDaMeiaN2(m: MeiaPeca) = falaDoVisualN2(m.visual, m.fala)
@@ -291,8 +294,12 @@ internal fun AtividadeDomino(
             ) {
                 DesenhoDoDominoN2(null, domino.ponta, ladoDp, cor, pontaLivre = primeiraEhPonta && !terminou, ajuda = ajuda)
             }
-            for ((k, e) in fileira.withIndex()) {
+            for ((k, e) in fileira.withIndex()) key(e.id) {
                 val ultima = k == fileira.lastIndex
+                // Festeja só na colocação de verdade: depois de aparecer uma vez, a peça não festeja de novo
+                // se sair e voltar para a composição.
+                val festejarAgora = e.festejar
+                SideEffect { e.festejar = false }
                 Box(
                     Modifier
                         .offset { IntOffset(xDaFileira(k + 1).roundToInt(), fileiraY.roundToInt()) }
@@ -302,7 +309,7 @@ internal fun AtividadeDomino(
                             translationX = if (ultima) tremidaPonta.value * density else 0f
                             alpha = visivelNaFileira(xDaFileira(k + 1))
                         }
-                        .festejo(true, aoAparecer = true),
+                        .festejo(true, aoAparecer = festejarAgora),
                 ) {
                     val trocou = e.giro.value >= 0.5f
                     val esq = if (trocou) e.esquerda else e.direita

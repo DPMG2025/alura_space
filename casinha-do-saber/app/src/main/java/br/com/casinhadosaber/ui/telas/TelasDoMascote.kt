@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.graphicsLayer
 import br.com.casinhadosaber.ui.componentes.caminhoEstrela
 import kotlin.math.PI
@@ -440,43 +442,57 @@ private fun RotuloQueCabe(texto: String, estilo: TextStyle, cor: Color, modifier
 @Composable
 private fun RaiosDeFesta(modifier: Modifier) {
     val festa = rememberInfiniteTransition(label = "raios")
-    val giro by festa.animateFloat(0f, 360f, infiniteRepeatable(tween(14_000, easing = LinearEasing)), label = "giro")
-    val pulso by festa.animateFloat(0.85f, 1.1f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "pulso")
-    Canvas(modifier) {
-        val c = center
-        val r = size.minDimension / 2f
-        rotate(giro, c) {
-            val raios = 14
-            for (k in 0 until raios) {
-                val a0 = (k * 2 * PI / raios).toFloat()
-                val a1 = a0 + (PI / raios).toFloat() * 0.75f
-                val raio = Path().apply {
-                    moveTo(c.x, c.y)
-                    lineTo(c.x + cos(a0) * r * 1.1f, c.y + sin(a0) * r * 1.1f)
-                    lineTo(c.x + cos(a1) * r * 1.1f, c.y + sin(a1) * r * 1.1f)
+    val giro = festa.animateFloat(0f, 360f, infiniteRepeatable(tween(14_000, easing = LinearEasing)), label = "giro")
+    val pulso = festa.animateFloat(0.85f, 1.1f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "pulso")
+    // Formas e degradês montados uma vez por tamanho; a cada quadro só giram e pulsam (numa camada própria).
+    Spacer(
+        modifier
+            .graphicsLayer()
+            .drawWithCache {
+                val c = Offset(size.width / 2f, size.height / 2f)
+                val r = size.minDimension / 2f
+                val raios = Path()
+                val quantos = 14
+                for (k in 0 until quantos) {
+                    val a0 = (k * 2 * PI / quantos).toFloat()
+                    val a1 = a0 + (PI / quantos).toFloat() * 0.75f
+                    raios.moveTo(c.x, c.y)
+                    raios.lineTo(c.x + cos(a0) * r * 1.1f, c.y + sin(a0) * r * 1.1f)
+                    raios.lineTo(c.x + cos(a1) * r * 1.1f, c.y + sin(a1) * r * 1.1f)
+                    raios.close()
+                }
+                val luzDosRaios = Brush.radialGradient(listOf(Color(0x99FFD54F), Color(0x00FFD54F)), c, r * 1.05f)
+                // Explosão: um brilho redondo com borda de estrela (no tamanho do pulso 1, depois só escala).
+                val burst = Path().apply {
+                    val pontas = 16
+                    for (i in 0 until pontas * 2) {
+                        val a = (i * PI / pontas).toFloat()
+                        val rr = if (i % 2 == 0) r * 0.62f else r * 0.5f
+                        val p = Offset(c.x + cos(a) * rr, c.y + sin(a) * rr)
+                        if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+                    }
                     close()
                 }
-                drawPath(raio, Brush.radialGradient(listOf(Color(0x99FFD54F), Color(0x00FFD54F)), c, r * 1.05f))
-            }
-        }
-        // Explosão: um brilho redondo com borda de estrela.
-        val burst = Path().apply {
-            val pontas = 16
-            for (i in 0 until pontas * 2) {
-                val a = (i * PI / pontas).toFloat() - giro * 0.0087f
-                val rr = if (i % 2 == 0) r * 0.62f * pulso else r * 0.5f * pulso
-                val p = Offset(c.x + cos(a) * rr, c.y + sin(a) * rr)
-                if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
-            }
-            close()
-        }
-        drawPath(burst, Brush.radialGradient(listOf(Color(0xFFFFF6C8), Color(0xFFFFE27A)), c, r * 0.62f))
-        drawCircle(Color.White.copy(alpha = 0.55f), r * 0.38f, c)
-        for (k in 0 until 6) {
-            val a = (k * PI / 3).toFloat() + 0.3f
-            val d = r * (0.78f + 0.06f * (k % 2))
-            val e = r * (if (k % 2 == 0) 0.07f else 0.05f) * (if (k % 2 == 0) pulso else 1.95f - pulso)
-            drawPath(caminhoEstrela(Offset(c.x + cos(a) * d, c.y + sin(a) * d), e), Color(0xFFFFC93C))
-        }
-    }
+                val luzDoBurst = Brush.radialGradient(listOf(Color(0xFFFFF6C8), Color(0xFFFFE27A)), c, r * 0.62f)
+                val estrelas = List(6) { k ->
+                    val a = (k * PI / 3).toFloat() + 0.3f
+                    val d = r * (0.78f + 0.06f * (k % 2))
+                    val centro = Offset(c.x + cos(a) * d, c.y + sin(a) * d)
+                    centro to caminhoEstrela(centro, r * (if (k % 2 == 0) 0.07f else 0.05f))
+                }
+                onDrawBehind {
+                    val g = giro.value
+                    val pu = pulso.value
+                    rotate(g, c) { drawPath(raios, luzDosRaios) }
+                    // O burst gira bem devagar no sentido contrário (0,0087 rad por grau de giro).
+                    rotate(-g * 0.0087f * 180f / PI.toFloat(), c) {
+                        scale(pu, c) { drawPath(burst, luzDoBurst) }
+                    }
+                    drawCircle(Color.White.copy(alpha = 0.55f), r * 0.38f, c)
+                    for ((k, estrela) in estrelas.withIndex()) {
+                        scale(if (k % 2 == 0) pu else 1.95f - pu, estrela.first) { drawPath(estrela.second, Color(0xFFFFC93C)) }
+                    }
+                }
+            },
+    )
 }

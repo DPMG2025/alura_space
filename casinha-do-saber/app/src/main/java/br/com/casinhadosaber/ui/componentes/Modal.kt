@@ -1,6 +1,9 @@
 package br.com.casinhadosaber.ui.componentes
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,30 +51,48 @@ import br.com.casinhadosaber.ui.tema.Raios
 /**
  * Véu violeta que cobre a tela e segura os toques (nada atrás dele responde). Mais claro no meio,
  * para o cartão "acender". Com [onTocarFora], tocar fora do conteúdo chama a função (fechar).
+ *
+ * O véu é um irmão atrás do [conteudo] (e não o pai dele): assim o toque no véu não junta o conteúdo da
+ * janela num nó só de acessibilidade ("Fechar"), e cada texto e botão da janela continua sendo lido e achado
+ * sozinho. Com [titulo], a janela é anunciada como painel com esse nome.
  */
 @Composable
 fun VeuDoModal(
     modifier: Modifier = Modifier,
     onTocarFora: (() -> Unit)? = null,
     descricaoFora: String? = null,
+    titulo: String? = null,
     conteudo: @Composable BoxScope.() -> Unit,
 ) {
     Box(
         modifier
             .fillMaxSize()
-            .drawWithCache {
-                val pincel = Brush.radialGradient(
-                    listOf(Cores.Veu.copy(alpha = Cores.Veu.alpha * 0.75f), Cores.Veu, lerp(Cores.Veu, Color(0xFF1E1440), 0.35f)),
-                    center = Offset(size.width / 2, size.height * 0.45f),
-                    radius = maxOf(size.width, size.height) * 0.75f,
-                )
-                onDrawBehind { drawRect(pincel) }
-            }
-            .clickable(remember { MutableInteractionSource() }, indication = null) { onTocarFora?.invoke() }
-            .then(if (descricaoFora != null) Modifier.semantics { contentDescription = descricaoFora } else Modifier),
+            .then(if (titulo != null) Modifier.semantics { paneTitle = titulo } else Modifier),
         contentAlignment = Alignment.Center,
-        content = conteudo,
-    )
+    ) {
+        Box(
+            Modifier
+                .matchParentSize()
+                .drawWithCache {
+                    val pincel = Brush.radialGradient(
+                        listOf(Cores.Veu.copy(alpha = Cores.Veu.alpha * 0.75f), Cores.Veu, lerp(Cores.Veu, Color(0xFF1E1440), 0.35f)),
+                        center = Offset(size.width / 2, size.height * 0.45f),
+                        radius = maxOf(size.width, size.height) * 0.75f,
+                    )
+                    onDrawBehind { drawRect(pincel) }
+                }
+                .then(
+                    if (onTocarFora != null) {
+                        Modifier.clickable(remember { MutableInteractionSource() }, indication = null) { onTocarFora() }
+                    } else {
+                        // Sem fechar por fora: só segura os toques (sem virar um botão para a acessibilidade).
+                        Modifier.pointerInput(Unit) { detectTapGestures { } }
+                    },
+                )
+                .then(if (descricaoFora != null) Modifier.semantics { contentDescription = descricaoFora } else Modifier),
+        )
+        conteudo()
+    }
 }
 
 /** Altura da fita do título e quanto ela sobe acima do cartão. */
@@ -98,8 +119,10 @@ fun CartaoModal(
             .padding(16.dp)
             .widthIn(max = larguraMaxima)
             .fillMaxWidth()
-            // Segura os toques dentro do cartão (não fecha a janela pelo véu).
-            .clickable(remember { MutableInteractionSource() }, indication = null) { },
+            // Segura os toques dentro do cartão (não fecha a janela pelo véu). Sem `clickable`: ele juntaria
+            // todo o conteúdo do cartão num nó só para a acessibilidade.
+            .pointerInput(Unit) { detectTapGestures { } }
+            .then(if (titulo != null) Modifier.semantics { paneTitle = titulo } else Modifier),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (titulo != null) {
@@ -251,7 +274,8 @@ fun JanelaModal(
 ) {
     VeuDoModal(
         onTocarFora = if (fecharTocandoFora) onFechar else null,
-        descricaoFora = if (fecharTocandoFora && onFechar != null) "Fechar" else null,
+        // Nome diferente do ✖ ("Fechar"), para os dois não se confundirem (nem nos testes).
+        descricaoFora = if (fecharTocandoFora && onFechar != null) "Fechar tocando fora da janela" else null,
     ) {
         CartaoModal(titulo, modifier, corDaFita, larguraMaxima, onFechar = onFechar, conteudo = conteudo)
     }

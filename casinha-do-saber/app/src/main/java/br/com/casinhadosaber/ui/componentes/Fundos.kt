@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableFloatStateOf
+import android.provider.Settings
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -39,8 +42,10 @@ enum class EnfeiteDoFundo {
  * Fundo das telas: degradê de duas cores a partir de [cor] (viva em cima, sem cinza; clara em baixo),
  * um brilho largo no alto e [enfeite] bem suaves (bolhas a 7 a 12%, estrelinhas a 10 a 18%), que derivam devagar.
  *
- * Barato: uma única animação infinita (`rememberInfiniteTransition`, que deixa a tela ficar ociosa
- * nos testes) lida só na hora de desenhar, então nada é recomposto a cada quadro.
+ * Barato: o degradê é desenhado no próprio [Box] e só muda com o tamanho; os enfeites que se mexem ficam numa
+ * camada só deles ([EnfeitesDoFundo]), o primeiro filho, então a deriva redesenha só essa camada e nunca a tela
+ * inteira. Uma única animação infinita (`rememberInfiniteTransition`, que deixa a tela ficar ociosa nos testes).
+ * Com [animado] false, ou com as animações desligadas no aparelho, os enfeites ficam parados.
  */
 @Composable
 fun FundoDecorado(
@@ -50,40 +55,87 @@ fun FundoDecorado(
     animado: Boolean = true,
     conteudo: @Composable BoxScope.() -> Unit = {},
 ) {
-    Box(modifier.fundoDecorado(cor, enfeite, animado), content = conteudo)
+    Box(modifier.degradeDoFundo(cor)) {
+        EnfeitesDoFundo(enfeite, animado)
+        conteudo()
+    }
 }
 
-/** O mesmo fundo do [FundoDecorado] como modificador (para telas que já têm o seu `Box`). */
-@Composable
-fun Modifier.fundoDecorado(
-    cor: Color,
-    enfeite: EnfeiteDoFundo = EnfeiteDoFundo.Bolhas,
-    animado: Boolean = true,
-): Modifier {
-    val fase: State<Float> = if (animado) {
-        rememberInfiniteTransition(label = "fundo")
-            .animateFloat(0f, 1f, infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "deriva")
-    } else {
-        remember { mutableFloatStateOf(0.15f) }
+/**
+ * O mesmo fundo do [FundoDecorado] como modificador, com os enfeites parados (telas que não querem nada se
+ * mexendo atrás, como a do jogo e a dos pais). Para enfeites que derivam, use [FundoDecorado].
+ */
+fun Modifier.fundoDecorado(cor: Color, enfeite: EnfeiteDoFundo = EnfeiteDoFundo.Bolhas): Modifier =
+    degradeDoFundo(cor).enfeitesParados(enfeite)
+
+/** Só o degradê e o brilho do alto: montados uma vez por tamanho e cor, nada se mexe. */
+fun Modifier.degradeDoFundo(cor: Color): Modifier = drawWithCache {
+    val degrade = Degrades.fundo(cor)
+    val luz = Brush.radialGradient(
+        listOf(Color.White.copy(alpha = 0.22f), Color.Transparent),
+        center = Offset(size.width * 0.5f, 0f),
+        radius = maxOf(size.width, 1f) * 0.9f,
+    )
+    onDrawBehind {
+        drawRect(degrade)
+        drawRect(luz)
     }
-    return drawWithCache {
-        val degrade = Degrades.fundo(cor)
-        val luz = Brush.radialGradient(
-            listOf(Color.White.copy(alpha = 0.22f), Color.Transparent),
-            center = Offset(size.width * 0.5f, 0f),
-            radius = maxOf(size.width, 1f) * 0.9f,
-        )
+}
+
+/** Fase fixa dos enfeites quando não se mexem. */
+private const val FASE_PARADA = 0.15f
+
+private fun Modifier.enfeitesParados(enfeite: EnfeiteDoFundo): Modifier =
+    if (enfeite == EnfeiteDoFundo.Nenhum) this else drawWithCache {
         val estrela = Path()
         val bolhasProntas = if (enfeite == EnfeiteDoFundo.Bolhas) montarBolhas(size.width, size.height) else null
-        onDrawBehind {
-            drawRect(degrade)
-            drawRect(luz)
-            when (enfeite) {
-                EnfeiteDoFundo.Bolhas -> if (bolhasProntas != null) bolhas(bolhasProntas, fase.value)
-                EnfeiteDoFundo.Estrelas -> estrelinhas(fase.value, estrela)
-                EnfeiteDoFundo.Nenhum -> Unit
-            }
-        }
+        onDrawBehind { desenharEnfeites(enfeite, bolhasProntas, estrela, FASE_PARADA) }
+    }
+
+private fun DrawScope.desenharEnfeites(enfeite: EnfeiteDoFundo, bolhasProntas: Bolhas?, estrela: Path, fase: Float) {
+    when (enfeite) {
+        EnfeiteDoFundo.Bolhas -> if (bolhasProntas != null) bolhas(bolhasProntas, fase)
+        EnfeiteDoFundo.Estrelas -> estrelinhas(fase, estrela)
+        EnfeiteDoFundo.Nenhum -> Unit
+    }
+}
+
+/**
+ * Os enfeites do fundo numa camada própria, do tamanho do [Box] pai (ponha como primeiro filho, atrás de tudo).
+ * A fase é lida só no desenho desta camada: a cada quadro só ela é redesenhada.
+ */
+@Composable
+fun BoxScope.EnfeitesDoFundo(enfeite: EnfeiteDoFundo, animado: Boolean = true) {
+    if (enfeite == EnfeiteDoFundo.Nenhum) return
+    if (!(animado && animacoesLigadas())) {
+        Spacer(Modifier.matchParentSize().enfeitesParados(enfeite))
+        return
+    }
+    val fase: State<Float> = rememberInfiniteTransition(label = "fundo")
+        .animateFloat(0f, 1f, infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "deriva")
+    Spacer(
+        Modifier
+            .matchParentSize()
+            .graphicsLayer()
+            .drawWithCache {
+                val estrela = Path()
+                val bolhasProntas = if (enfeite == EnfeiteDoFundo.Bolhas) montarBolhas(size.width, size.height) else null
+                onDrawBehind { desenharEnfeites(enfeite, bolhasProntas, estrela, fase.value) }
+            },
+    )
+}
+
+/**
+ * false quando a pessoa desligou as animações do aparelho (Opções do desenvolvedor ou acessibilidade:
+ * "Escala de duração do Animator" em 0). Aí os enfeites e figuras ficam parados. Lido uma vez por contexto.
+ */
+@Composable
+fun animacoesLigadas(): Boolean {
+    val contexto = LocalContext.current
+    return remember(contexto) {
+        runCatching {
+            Settings.Global.getFloat(contexto.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
+        }.getOrDefault(true)
     }
 }
 

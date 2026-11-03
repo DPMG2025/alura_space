@@ -280,6 +280,7 @@ fun TelaJogo(
             .fillMaxSize()
             // Fundo opaco na cor do caminho, clarinha e viva (a cor translúcida de antes ficava cinza-esverdeada
             // no aparelho, sobre o fundo escuro da janela).
+            // Enfeites parados: no jogo nada se mexe atrás das atividades (e a tela não é redesenhada à toa).
             .fundoDecorado(lerp(cor, Color.White, 0.45f))
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {

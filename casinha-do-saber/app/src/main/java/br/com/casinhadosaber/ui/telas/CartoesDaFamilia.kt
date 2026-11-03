@@ -127,7 +127,7 @@ fun CartaoDasCriancas(familia: AcoesDaFamilia) {
             ) {
                 Box(Modifier.size(width = 48.dp, height = 64.dp), contentAlignment = Alignment.BottomCenter) {
                     val perfil = c.perfil
-                    if (perfil != null) Crianca(perfil, Modifier.height(64.dp)) else Text("🌱", style = MaterialTheme.typography.headlineMedium)
+                    if (perfil != null) Crianca(perfil, Modifier.height(64.dp), animado = false) else Text("🌱", style = MaterialTheme.typography.headlineMedium)
                 }
                 Spacer(Modifier.width(8.dp))
                 Column(Modifier.weight(1f)) {
@@ -192,7 +192,7 @@ fun CartaoDasCriancas(familia: AcoesDaFamilia) {
         if (c == null) {
             apagando = null
         } else {
-            JanelaDosPais(onFechar = { apagando = null }) {
+            JanelaDosPais(onFechar = { apagando = null }, titulo = "Apagar ${c.nomeParaMostrar()}?") {
                 CaixaDeDialogo(
                     titulo = "Apagar ${c.nomeParaMostrar()}?",
                     texto = "A casa, as estrelas, o mascote, o álbum e o personagem dessa criança serão apagados. " +
@@ -211,7 +211,7 @@ fun CartaoDasCriancas(familia: AcoesDaFamilia) {
 @Composable
 private fun DialogoRenomear(atual: String, onSalvar: (String) -> Unit, onCancelar: () -> Unit) {
     var nome by rememberSaveable { mutableStateOf(atual) }
-    JanelaDosPais(onFechar = onCancelar) {
+    JanelaDosPais(onFechar = onCancelar, titulo = "Nome da criança") {
         Column(
             Modifier
                 .widthIn(max = 420.dp)
@@ -350,12 +350,12 @@ private fun LinhaDoResumo(r: ResumoDaCrianca) {
 @Composable
 fun DialogosDaCopia(copia: AcoesDaCopia) {
     copia.pendente?.let { p ->
-        JanelaDosPais(onFechar = copia.onCancelar) {
+        JanelaDosPais(onFechar = copia.onCancelar, titulo = "Recuperar a cópia") {
             ConfirmarRecuperarCopia(p, copia.onConfirmar, copia.onCancelar, copia.atual)
         }
     }
     copia.aviso?.let { texto ->
-        JanelaDosPais(onFechar = copia.onFecharAviso) {
+        JanelaDosPais(onFechar = copia.onFecharAviso, titulo = "Cópia do progresso") {
             CaixaDeDialogo(
                 titulo = "Cópia do progresso",
                 texto = texto,
@@ -373,12 +373,13 @@ fun DialogosDaCopia(copia: AcoesDaCopia) {
  * escurecido preto da janela do Android (que ficava marrom), e tocar fora fecha.
  */
 @Composable
-internal fun JanelaDosPais(onFechar: () -> Unit, conteudo: @Composable () -> Unit) {
+internal fun JanelaDosPais(onFechar: () -> Unit, titulo: String? = null, conteudo: @Composable () -> Unit) {
     Dialog(onDismissRequest = onFechar, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         // Tira o escurecido da janela do diálogo: quem escurece é o véu.
         val vista = LocalView.current
         SideEffect { (vista.parent as? DialogWindowProvider)?.window?.setDimAmount(0f) }
-        VeuDoModal(onTocarFora = onFechar, descricaoFora = "Fechar") {
+        // O véu fica atrás, como irmão do conteúdo: o texto e os botões da janela continuam acessíveis um a um.
+        VeuDoModal(onTocarFora = onFechar, descricaoFora = "Fechar", titulo = titulo) {
             // Toque dentro do cartão não fecha (o véu atrás é que fecha).
             Box(Modifier.pointerInput(Unit) { detectTapGestures { } }, contentAlignment = Alignment.Center) { conteudo() }
         }

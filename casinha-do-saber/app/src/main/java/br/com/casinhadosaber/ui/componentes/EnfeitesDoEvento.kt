@@ -61,7 +61,8 @@ fun EnfeitesDoEvento(tipo: TipoDeEvento, modifier: Modifier = Modifier, beiral: 
     val brilho = transicao.animateFloat(0f, 1f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "brilho")
     Box(modifier) {
         Spacer(Modifier.fillMaxSize().graphicsLayer().drawBehind { enfeitesParados(tipo, beiral) })
-        Spacer(Modifier.fillMaxSize().drawBehind { enfeitesQueMexem(tipo, beiral, brilho.value) })
+        // Camada própria também para o que mexe: o brilho redesenha só esta camada, e não a cena em volta.
+        Spacer(Modifier.fillMaxSize().graphicsLayer().drawBehind { enfeitesQueMexem(tipo, beiral, brilho.value) })
     }
 }
 

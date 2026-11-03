@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
@@ -55,8 +57,10 @@ fun Confete(disparo: Int, modifier: Modifier = Modifier, quantidade: Int = 36) {
         }
     }
     LaunchedEffect(disparo) { progresso.animateTo(1f, tween(1400, easing = LinearEasing)) }
-    if (progresso.value >= 1f) return
-    Canvas(modifier.fillMaxSize()) {
+    // O progresso é lido só no desenho (camada própria); a composição só fica sabendo quando termina.
+    val terminou = remember(progresso) { derivedStateOf { progresso.value >= 1f } }
+    if (terminou.value) return
+    Canvas(modifier.fillMaxSize().graphicsLayer()) {
         val t = progresso.value
         val origem = Offset(size.width / 2, size.height * 0.55f)
         val alcance = size.minDimension * 0.7f
@@ -109,8 +113,10 @@ fun ExplosaoDeEstrelas(
         }
     }
     LaunchedEffect(disparo) { progresso.animateTo(1f, tween(duracao, easing = LinearEasing)) }
-    if (progresso.value >= 1f) return
-    Canvas(modifier.fillMaxSize()) {
+    // O progresso é lido só no desenho (camada própria); a composição só fica sabendo quando termina.
+    val terminou = remember(progresso) { derivedStateOf { progresso.value >= 1f } }
+    if (terminou.value) return
+    Canvas(modifier.fillMaxSize().graphicsLayer()) {
         val t = progresso.value
         // Sai rápido e freia (ease out cúbico); cresce no começo e encolhe no fim.
         val saida = 1f - (1f - t) * (1f - t) * (1f - t)
@@ -157,7 +163,7 @@ fun RaiosDeLuz(
     centroX: Float = 0.5f,
     centroY: Float = 0.5f,
 ) {
-    val angulo = if (girando) {
+    val angulo = if (girando && animacoesLigadas()) {
         rememberInfiniteTransition(label = "raios").animateFloat(0f, 360f, infiniteRepeatable(tween(24000, easing = LinearEasing)), label = "giro")
     } else {
         null
@@ -166,6 +172,8 @@ fun RaiosDeLuz(
         modifier
             .fillMaxSize()
             .clipToBounds()
+            // Camada própria: o giro redesenha só os raios, não o que está em volta.
+            .graphicsLayer()
             .drawWithCache {
                 val c = Offset(size.width * centroX, size.height * centroY)
                 val raio = size.minDimension * 0.75f

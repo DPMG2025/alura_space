@@ -75,7 +75,7 @@ import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.Raios
 import br.com.casinhadosaber.ui.componentes.cartaoFofo
 import br.com.casinhadosaber.ui.componentes.clarear
-import br.com.casinhadosaber.ui.componentes.fundoDecorado
+import br.com.casinhadosaber.ui.componentes.FundoDecorado
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.translate
@@ -213,10 +213,10 @@ fun TelaTrilha(
 
     // No tablet (também quando a tela é usada sozinha, como nas capturas) tudo cresce na mesma proporção.
     EscalaDeTablet {
+    FundoDecorado(cor, Modifier.fillMaxSize()) {
     Column(
         Modifier
             .fillMaxSize()
-            .fundoDecorado(cor)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -481,6 +481,7 @@ fun TelaTrilha(
                 }
             }
         }
+    }
     }
     }
 }

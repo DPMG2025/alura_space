@@ -149,10 +149,11 @@ internal fun Modifier.festejo(
 
 /**
  * Estrelinhas do acerto: 8 estrelas saem do centro, giram, encolhem e somem. [p] vai de 0 a 1.
+ * Ficam a no máximo ~1,1 [raio] do centro: indo mais longe, eram cortadas pelos painéis e grades em volta.
  */
 internal fun DrawScope.estrelinhasDoAcerto(centro: Offset, raio: Float, p: Float, cor: Color) {
     if (p <= 0f || p >= 1f) return
-    val alcance = raio * (0.7f + 0.9f * p)
+    val alcance = raio * (0.7f + 0.4f * p)
     val alfa = (1f - p).coerceIn(0f, 1f)
     val tamanho = raio * 0.2f * (1f - 0.5f * p)
     val caminho = Path()
@@ -166,7 +167,7 @@ internal fun DrawScope.estrelinhasDoAcerto(centro: Offset, raio: Float, p: Float
         drawPath(caminho, maisEscura(cor, 0.85f).copy(alpha = alfa * 0.6f), style = Stroke(r * 0.18f))
     }
     // Um anel que abre e some.
-    drawCircle(cor.copy(alpha = 0.45f * alfa), radius = raio * (0.6f + 0.7f * p), center = centro, style = Stroke(raio * 0.08f * (1f - p)))
+    drawCircle(cor.copy(alpha = 0.45f * alfa), radius = raio * (0.6f + 0.5f * p), center = centro, style = Stroke(raio * 0.08f * (1f - p)))
 }
 
 /** Estrela de 5 pontas no [caminho] (sem fechar outros contornos). */

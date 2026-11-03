@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -307,8 +308,29 @@ internal fun AtividadeTracar(
                         }
                         if (fim >= 2) {
                             // Tinta com degradê (do tom forte no começo ao clarinho no fim do traço).
-                            val degrade = Brush.linearGradient(listOf(escurecer(cor, 0.9f), cor, clarear(cor, 0.35f)), t[0], t.last())
-                            drawPath(caminhoDe(t.take(fim)), degrade, style = Stroke(tinta, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                            // Traço fechado (O, 0): começo e fim quase no mesmo ponto deixariam o degradê sem direção
+                            // (a tinta sairia de uma cor só, ou com uma emenda dura). Aí o degradê vai na diagonal da caixa
+                            // do traço.
+                            var de = t[0]
+                            var ate = t.last()
+                            if ((ate - de).getDistance() < 1f) {
+                                var minX = Float.MAX_VALUE; var minY = Float.MAX_VALUE
+                                var maxX = -Float.MAX_VALUE; var maxY = -Float.MAX_VALUE
+                                for (q in t) {
+                                    if (q.x < minX) minX = q.x
+                                    if (q.y < minY) minY = q.y
+                                    if (q.x > maxX) maxX = q.x
+                                    if (q.y > maxY) maxY = q.y
+                                }
+                                de = Offset(minX, minY)
+                                ate = Offset(maxX, maxY)
+                            }
+                            val tinteiro = if ((ate - de).getDistance() < 1f) {
+                                SolidColor(cor)
+                            } else {
+                                Brush.linearGradient(listOf(escurecer(cor, 0.9f), cor, clarear(cor, 0.35f)), de, ate)
+                            }
+                            drawPath(caminhoDe(t.take(fim)), tinteiro, style = Stroke(tinta, cap = StrokeCap.Round, join = StrokeJoin.Round))
                             drawPath(caminhoDe(t.take(fim)), Color.White.copy(alpha = 0.35f), style = Stroke(tinta * 0.25f, cap = StrokeCap.Round, join = StrokeJoin.Round))
                         } else if (fim == 1) drawCircle(cor, tinta / 2f, t[0])
                         // Traço pronto ganha brilhinhos ao longo dele.
