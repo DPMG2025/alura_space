@@ -740,9 +740,9 @@ class CapturasTest {
         }
     }
 
-    /** Caminho com fases vencidas até o mundo 3 (Praia): plaquinhas de mundo e o botão Treinar embaixo. */
+    /** Caminho com o mundo 2 vencido, entrando no mundo 3 (Praia): plaquinhas de mundo e o botão Treinar embaixo. */
     @Test fun trilhaComTreinoEMundos() = capturar("61_trilha_treinar_mundos") {
-        TelaTrilha(Trilha.MATEMATICA, trilhaVencida(Trilha.MATEMATICA, 24), {}, {}, onTreinar = {})
+        TelaTrilha(Trilha.MATEMATICA, trilhaVencida(Trilha.MATEMATICA, 20), {}, {}, onTreinar = {})
     }
 
     /** Fases novas dos mundos 4 e 5, uma de cada caminho, e o labirinto. */

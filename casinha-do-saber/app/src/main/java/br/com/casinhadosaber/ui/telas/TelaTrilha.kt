@@ -392,6 +392,14 @@ fun TelaTrilha(
                     .background(Brush.verticalGradient(listOf(cor, cor.copy(alpha = 0f)))),
             )
             if (podeTreinar) {
+                // Esmaecido embaixo: as bolinhas que passam por trás do botão somem suavemente.
+                Box(
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(ESPACO_DO_TREINO + 16.dp)
+                        .background(Brush.verticalGradient(listOf(Cores.Fundo.copy(alpha = 0f), Cores.Fundo.copy(alpha = 0.92f), Cores.Fundo))),
+                )
                 // Treino sem fim: botão grande, sempre à mão embaixo do caminho.
                 BotaoFofo(
                     onClick = {
