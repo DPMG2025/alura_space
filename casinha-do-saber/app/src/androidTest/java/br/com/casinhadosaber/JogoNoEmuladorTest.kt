@@ -762,6 +762,45 @@ class JogoNoEmuladorTest {
         avancar(500)
     }
 
+    /**
+     * "Já sei bastante!" num caminho novo não atrapalha nada: o convite abre e fecha ("Agora não"), a partida do
+     * nível pode ser largada no meio, e a fase 1 continua abrindo normalmente.
+     */
+    @Test
+    fun jaSeiBastanteNaoAtrapalha() {
+        prefs.edit().putString("genero", "MENINA").putString("nome", "Ana").commit()
+        cenario = ActivityScenario.launch(MainActivity::class.java)
+
+        esperar("Caminho Números", 15_000)
+        regra.onAllNodes(hasContentDescription("Caminho Números", substring = true)).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("abrir_nivel"), 10_000)
+        avancar(800)
+        capturar("e35_caminho_novo_ja_sei_bastante")
+        regra.onAllNodes(hasTestTag("abrir_nivel")).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("nivel_agora_nao"), 10_000)
+        avancar(800)
+        capturar("e36_convite_descobrir_nivel")
+        regra.onAllNodes(hasTestTag("nivel_agora_nao")).onFirst().performClick()
+        esperar("Fase 1, Contar até 3")
+
+        // Começa o nível e larga logo na primeira pergunta (voltar do sistema): nada muda no caminho.
+        regra.onAllNodes(hasTestTag("abrir_nivel")).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("nivel_comecar"), 10_000)
+        regra.onAllNodes(hasTestTag("nivel_comecar")).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(qualquerPergunta, 10_000)
+        avancar(800)
+        capturar("e37_nivel_primeira_pergunta")
+        cenario?.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        avancar(800)
+        if (existe("sair_sim")) regra.onAllNodes(hasTestTag("sair_sim")).onFirst().performClick()
+        esperar("Fase 1, Contar até 3")
+        assertEquals("largar o nível no meio não muda as estrelas", "", prefs.getString("estrelas", "").orEmpty())
+
+        // A fase 1 continua abrindo (com a história do mundo antes).
+        regra.onAllNodes(hasContentDescription("Fase 1, Contar até 3", substring = true)).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("historia_continuar"), 10_000)
+    }
+
     /** Modo criativo: entrar na casa, pintar no ateliê (o desenho fica guardado) e tocar o piano. */
     @Test
     fun pintarNoAtelieETocarOPiano() {
