@@ -151,9 +151,32 @@ Criar a chave de upload e os segredos `CASINHA_KEYSTORE_*`, conta no Play Consol
 * Comunicação em português, sem hífen nem travessão no texto corrido.
 * Quer ver o app no celular: manter o link da Release `casinha-teste` atualizado a cada build.
 
-## 10. Sugestões 1 a 7: base de domínio
+## 10. Sugestões 1 a 7: implementadas
 
-Pronta a base em Kotlin puro (sem telas) para as 7 sugestões de engajamento. As telas ainda vão ser feitas por cima desta API; tudo é offline, determinístico (nada sorteado como prêmio), sem notificação e sem punição. O nome da criança nunca fica no código: vem só de `Perfil.nome`. Testes em `test/.../dominio/SugestoesTest.kt` (24 testes; o domínio passa a ter 148).
+**Estado: as 7 sugestões estão prontas, com telas, capturas e teste no emulador** (build, emulador com Android 14 e emuladores com Android 7.0 e 8.0 verdes na run 41687792865). Tudo é offline, determinístico (nada sorteado como prêmio, nada pago), sem notificação e sem punição; o mascote só cresce e está sempre feliz; o limite de tempo do dia vale para todas as telas novas (ateliê e piano inclusive), porque a tela de dormir fica acima de tudo em `MainActivity`. O nome da criança nunca fica no código: vem só de `Perfil.nome`. Domínio testado em `test/.../dominio/SugestoesTest.kt` e `VariedadeDasFasesTest.kt`.
+
+**Telas de cada sugestão** (capturas em `docs/capturas`, emulador em `docs/emulador`)
+
+| Sugestão | Telas | Capturas principais |
+|---|---|---|
+| 1. Personalização | Aniversário e temas favoritos na área dos pais; elogios e vitória com o nome da criança | `s7_03`, `s7_07`, `s2_41` |
+| 2. Mascote | Escolha na primeira visita à casa, mascote no canto do jardim, cantinho do mascote com enfeites, festa de crescer no prêmio | `s2_01`, `s2_22`, `s2_30`, `s2_40`, `e11a` |
+| 3. História | Abertura do mundo com a Corujinha antes da primeira fase, cena do chefão vencido | `s3_01`, `s3_04`, `e03b` |
+| 4. Eventos e visita da semana | Enfeites do Natal, Páscoa, Festa Junina, Dia das Crianças e aniversário, aviso do presente, prateleira de presentes, visitante na loja | `s4_01` a `s4_07` |
+| 5. Ateliê e piano | Botões do cantinho criativo na sala, ateliê 12 por 12 (guarda sozinho, até 3 quadros na parede), piano livre e "siga a música" | `s5_`, `e32`, `e33`, `e34` |
+| 6. Mapa, diplomas e álbum | Botão do mapa no caminho, mapa dos 25 mundos, diplomas, álbum com silhuetas, aviso de conquista ao sair do prêmio | `s6_`, `e30_mapa_dos_mundos`, `e31_album` |
+| 7. Pais | Desafio do dia em família com "Fizemos!", resumo da semana, registro das partidas | `s7_01`, `s7_05`, `s7_06`, `e30_pais`, `e31_pais` |
+
+**Correções feitas na junção** (3 de novembro): a casa por dentro deixou de pedir quadros sem fim (relógio das animações e dica de arrastar com `withInfiniteAnimationFrameNanos`; a caminhada só pede quadros enquanto anda), então o emulador agora entra na casa, pinta no ateliê e toca o piano (`pintarNoAtelieETocarOPiano`); o ateliê lê o quadro e a cor na hora do toque (um traço logo depois de outro não se perde) e a fileira de desenhos tem altura fixa (o quadro não pula); o título do caminho diminui a letra em vez de cortar quando há o botão do mapa; o mascote da casa ficou com 84 dp e o cachorrinho do jardim de baixo subiu para não ficar escondido atrás dele; o álbum completo comemora; o desafio dos pais virou "em família"; a captura dos pais travava (rolagem animada com o relógio parado) e foi corrigida. O APK da Release `casinha-teste` agora só é publicado por um job final, depois do build e dos três emuladores.
+
+**Revisão de qualidade e pedagógica: nota 9/10.** Pontos fortes: as sete sugestões conversam entre si (a Corujinha abre cada mundo, o chefão é um amigo, o diploma e a figurinha dourada aparecem na saída do prêmio, o mascote cresce com as fases novas), tudo calculado das estrelas que já existiam, então saves antigos ganham diplomas e figurinhas na hora; recompensas só por aprender (fase nova ou 3 estrelas), nunca por sorte; o modo criativo é livre e sem erro (no piano a tecla errada não muda nada); o resumo da semana dá aos pais o que a criança treinou e ideias de conversa fora da tela. Pedagogicamente, a história dá contexto sem atrasar (um toque pula), o álbum reforça voltar às fases para fazer 3 estrelas e o desafio em família leva o conteúdo para o mundo real.
+
+**Riscos que restam:**
+* O mascote no canto de baixo à esquerda ainda pode cobrir uma coisa que a criança arrastar para lá (toques nesse canto abrem o cantinho do mascote) e, nas telas baixas sem jardim de baixo (tablet deitado), fica perto da árvore e do cachorrinho.
+* A casa tem duas entradas para o criativo (botões na sala e o mascote no jardim): coerentes nas capturas, mas só o uso com crianças mostra se elas acham o ateliê sozinhas.
+* A cena do chefão nomeia o guardião mas não o desenha.
+* Os textos da história e do resumo dos pais são longos para quem não lê; dependem da narração (TTS), que só o celular de verdade confirma.
+* Nenhum evento cai na data do CI (3 de novembro); os enfeites são conferidos só nas capturas com data fixa.
 
 **Persistência** (`dados/Repositorio.kt`): chaves novas `aniversario`, `temas_favoritos`, `mascote`, `presentes_especiais`, `eventos_recebidos`, `desenhos`, `quadros_parede`, `desafios_pais` e `sessoes`. Saves antigos não têm essas chaves e cada leitura tolera chave ausente ou texto estragado (vira o padrão). `Repositorio.hojeData()` dá a data de hoje como `Data`. As mudanças de estado ficam em `dominio/Novidades.kt` (funções de extensão de `EstadoJogo`, chamadas por `repo.atualizar { ... }`).
 
