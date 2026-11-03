@@ -1419,9 +1419,13 @@ private fun montarEscada(m: Movel, proj: Projecao, medidor: TextMeasurer, densid
         }
     }
     // Setinha que balança em cima da escada: para onde ela leva. A de descer fica logo acima do
-    // corrimão, abaixo da lâmpada pendurada do quarto.
+    // corrimão e mais para a frente da escada, longe da lâmpada pendurada no meio do quarto.
     val seta = medirEmoji(medidor, densidade, if (sobe) "⬆️" else "⬇️", tw * 0.42f)
-    val topo = proj.ponto((x0 + x1) / 2, (y0 + y1) / 2, if (sobe) m.altura + 0.15f else m.altura + 0.05f)
+    val topo = if (sobe) {
+        proj.ponto((x0 + x1) / 2, (y0 + y1) / 2, m.altura + 0.15f)
+    } else {
+        proj.ponto((x0 + x1) / 2, y0 + (y1 - y0) * 0.72f, m.altura + 0.05f)
+    }
     val em = Offset(topo.x - seta.size.width / 2f, topo.y - seta.size.height)
     // A escada inteira é tocável, e também a setinha.
     val alvo = Rect(min(toque.left, em.x), min(toque.top, em.y), max(toque.right, em.x + seta.size.width), max(toque.bottom, em.y + seta.size.height))

@@ -11,8 +11,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -91,11 +95,26 @@ fun MolduraDoApp(larga: Boolean = false, conteudo: @Composable () -> Unit) {
     EscalaDeTablet {
         BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             val maxima: Dp = if (larga && paisagem) LARGURA_DE_PAISAGEM else LARGURA_DE_CELULAR
-            // Quando sobra céu dos lados (tablet deitado), a coluna ganha uma sombra suave: parece uma
-            // página de livro em cima do céu, e não um recorte com a borda dura.
+            // Quando sobra céu dos lados (tablet deitado), a coluna ganha uma sombra suave nas bordas
+            // de fora: parece uma página em cima do céu, e não um recorte com a borda dura.
             val sobraLado = maxWidth > maxima + 8.dp
             val coluna = Modifier.widthIn(max = maxima).fillMaxHeight()
-            Box(if (sobraLado) coluna.shadow(14.dp, RectangleShape, clip = false) else coluna) { conteudo() }
+            Box(if (sobraLado) coluna.drawBehind { sombraDosLados(16.dp.toPx()) } else coluna) { conteudo() }
         }
     }
+}
+
+/** Duas faixas de sombra que somem para fora, à esquerda e à direita da área desenhada. */
+private fun DrawScope.sombraDosLados(largura: Float) {
+    val escura = Color(0x22203050)
+    drawRect(
+        Brush.horizontalGradient(listOf(Color.Transparent, escura), startX = -largura, endX = 0f),
+        topLeft = Offset(-largura, 0f),
+        size = Size(largura, size.height),
+    )
+    drawRect(
+        Brush.horizontalGradient(listOf(escura, Color.Transparent), startX = size.width, endX = size.width + largura),
+        topLeft = Offset(size.width, 0f),
+        size = Size(largura, size.height),
+    )
 }
