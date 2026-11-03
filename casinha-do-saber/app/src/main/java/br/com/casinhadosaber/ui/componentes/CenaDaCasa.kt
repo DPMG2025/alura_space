@@ -817,10 +817,10 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
 
     // Chuva ou neve compradas na loja.
     when (e.clima) {
-        1 -> for (i in 0 until 40) {
+        1 -> for (i in 0 until 55) {
             val x = ((i * 0.173f) % 1f)
             val y = ((i * 0.071f + t * 2f) % 1f)
-            drawLine(Color(0xAA7FB8FF), Offset(X(x), Y(y)), Offset(X(x - 0.008f), Y(y + 0.03f)), 3f)
+            drawLine(Color(0xCC3F7FD9), Offset(X(x), Y(y)), Offset(X(x - 0.01f), Y(y + 0.04f)), X(0.006f))
         }
         2 -> for (i in 0 until 36) {
             val x = ((i * 0.173f) % 1f) + 0.01f * kotlin.math.sin((t * 4f + i) * Math.PI.toFloat())

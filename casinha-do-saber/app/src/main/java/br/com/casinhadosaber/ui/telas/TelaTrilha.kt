@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -262,8 +263,10 @@ private fun BolinhaDaFase(
             textAlign = TextAlign.Center,
             maxLines = 1,
             color = if (liberada) Cores.Texto else Cores.TextoSuave,
+            softWrap = false,
             modifier = Modifier
                 .padding(top = 2.dp)
+                .wrapContentWidth(unbounded = true)
                 .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(50))
                 .padding(horizontal = 10.dp, vertical = 2.dp),
         )
