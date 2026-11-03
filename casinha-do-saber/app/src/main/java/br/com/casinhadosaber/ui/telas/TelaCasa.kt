@@ -560,7 +560,7 @@ fun TelaCasa(
                     casaDeFora()
                 } else {
                     // A casa e as áreas novas lado a lado: arrastar o fundo (não um objeto) passa de uma para outra.
-                    HorizontalPager(pager, Modifier.fillMaxSize(), pageSpacing = 8.dp, key = { if (it == 0) "casa" else areasProntas[it - 1].id }) { pagina ->
+                    HorizontalPager(pager, Modifier.fillMaxSize(), pageSpacing = 8.dp, key = { if (it == 0) "casa" else areasProntas.getOrNull(it - 1)?.id ?: "pagina$it" }) { pagina ->
                         val area = areasProntas.getOrNull(pagina - 1)
                         if (area == null) {
                             casaDeFora()
