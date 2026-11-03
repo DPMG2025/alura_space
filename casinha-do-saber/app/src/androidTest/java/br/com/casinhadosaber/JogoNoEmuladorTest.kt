@@ -257,9 +257,9 @@ class JogoNoEmuladorTest {
      * Traçar: a instrução diz a letra ("Trace a letra A"); passa o dedo por cada traço da letra, na
      * ordem e no sentido certos, como a criança (os traços vêm de TracosDasLetras, no mesmo quadro).
      */
-    private fun fazerTracar() {
+    private fun fazerTracar(letraDada: String? = null) {
         avancar(500)
-        val letra = Regex("""Trace a letra (\S+)""").find(textoDaInstrucao())?.groupValues?.get(1)
+        val letra = letraDada ?: Regex("""Trace (?:a letra|o número) (\S+)""").find(textoDaInstrucao())?.groupValues?.get(1)
             ?: throw AssertionError("instrução de traçar sem a letra: ${textoDaInstrucao()}")
         for (traco in TracosDasLetras.tracosDe(letra)) {
             if (!existe("area_tracar")) break
@@ -417,6 +417,12 @@ class JogoNoEmuladorTest {
                 tocarNo("robo_play", 1_000)
             }
             is MontarFrase -> for (k in a.palavras.indices) arrastarAte("frase_certa_$k", "frase_lugar_$k")
+            // O que traçar vem da atividade ("Trace o algarismo das dezenas de 62" não diz o algarismo).
+            is Atividade.Tracar -> {
+                regra.waitUntilAtLeastOneExists(hasTestTag("area_tracar"), 10_000)
+                fazerTracar(a.letra)
+                return "tracar"
+            }
             else -> return responderSemErrar()
         }
         return a::class.simpleName ?: "?"
