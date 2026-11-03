@@ -5,13 +5,11 @@ OK
 Marcas de carros: 108
 Valor: VW - VolksWagen Gol 1.0 Flex 12V 5p 2023 Flex 005490-9 = R$ 54.695,00 (novembro de 2026)
 references: HTTP 200 [{"code":"338","month":"outubro/2026"},{"code":"337","month":"setembro/2026"},{"code":"336","month":"agosto/2026"},{"code":"335","month":"julho/2026"},{"code":"334","month":"junho/2026"},{"code":"333","month":"maio/2026"},{"code":"332","month":"abril/2026"},{"code":"331","month":"março/2026"},{"code":"330","month":"fevereiro/2026"},{"code":"329","month":"janeiro/2026"},{"code":"328","mont
-anos por codigo: HTTP 200 [{"code":"2019-5","name":"2019 Flex"},{"code":"2020-5","name":"2020 Flex"},{"code":"2021-5","name":"2021 Flex"},{"code":"2022-5","name":"2022 Flex"},{"code":"2023-5","name":"2023 Flex"}]
+anos por codigo: HTTP 200 [{"code":"2023-5","name":"2023 Flex"},{"code":"2022-5","name":"2022 Flex"},{"code":"2021-5","name":"2021 Flex"},{"code":"2020-5","name":"2020 Flex"},{"code":"2019-5","name":"2019 Flex"}]
 valor por codigo: HTTP 200 {"vehicleType":1,"price":"R$ 54.695,00","brand":"VW - VolksWagen","model":"Gol 1.0 Flex 12V 5p","modelYear":2023,"fuel":"Flex","codeFipe":"005490-9","referenceMonth":"novembro de 2026","fuelAcronym":"F"}
-  falha mes 336 agosto/2026 v2: HttpException 402 HTTP 402
   falha mes 335 julho/2026 v2: HttpException 402 HTTP 402
-  falha mes 334 junho/2026 v2: HttpException 402 HTTP 402
-  falha mes 333 maio/2026 v2: HttpException 402 HTTP 402
-Historico 12 meses: 3 de 12 pontos, 10 exigem token, em 2.724 s
+  falha mes 336 agosto/2026 v2: HttpException 402 HTTP 402
+Historico 12 meses: 3 de 12 pontos, 10 exigem token, em 2.716 s
   setembro de 2026: R$ 54.821,00
   outubro de 2026: R$ 54.401,00
   novembro de 2026: R$ 54.695,00
