@@ -1,15 +1,18 @@
 package br.com.casinhadosaber.ui.telas
 
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,8 +23,12 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,12 +48,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -57,6 +67,8 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -64,13 +76,16 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.audio.SonsDaCasa
 import br.com.casinhadosaber.dominio.Acao
+import br.com.casinhadosaber.dominio.Andar
 import br.com.casinhadosaber.dominio.Aparencia
 import br.com.casinhadosaber.dominio.Caixa
 import br.com.casinhadosaber.dominio.Categoria
@@ -83,6 +98,7 @@ import br.com.casinhadosaber.dominio.Movel
 import br.com.casinhadosaber.dominio.Perfil
 import br.com.casinhadosaber.dominio.PlantaDaCasa
 import br.com.casinhadosaber.dominio.Posicao
+import br.com.casinhadosaber.dominio.PrateleiraDaGeladeira
 import br.com.casinhadosaber.dominio.Produto
 import br.com.casinhadosaber.dominio.en
 import br.com.casinhadosaber.dominio.pt
@@ -128,10 +144,19 @@ private val Branco = Color(0xFFF7F9FB)
 private val Metal = Color(0xFFB0BEC5)
 private val CoresDoArcoIris = listOf(Color(0xFFEF476F), Color(0xFFFFA62B), Color(0xFFFFD166), Color(0xFF3DBE6B), Color(0xFF4D96FF))
 
+/** As mesmas cores das peças na casa de fora (os emojis 🛏️ e 🛋️ da fonte Noto são azuis). */
+private val CorDoCobertor = Color(0xFF4F8FE6)
+private val CorDoSofa = Color(0xFF4A90E2)
+
+/** Fundo das abas da geladeira (a aba escolhida "cola" na prateleira de baixo). */
+private val CorDaPrateleira = Color(0xFFDDF3FF)
+
 /**
- * A casa por dentro, em perspectiva isométrica: a criança anda pelos cômodos (toque no chão),
- * abre a geladeira e o guarda-roupa, acende as luzes, liga a TV e a torneira. A lojinha daqui vende
- * comidas (para a geladeira) e roupas (para o guarda-roupa).
+ * A casa por dentro, em perspectiva isométrica: a mesma casa de fora, com os dois andares ligados pela
+ * escada (em cima, quarto e banheiro; embaixo, sala e cozinha) e as cores de parede escolhidas pela criança.
+ * A criança anda pelos cômodos (toque no chão), sobe e desce a escada, abre a geladeira e o guarda-roupa,
+ * acende as luzes, liga a TV e a torneira. A lojinha daqui vende comidas (para a geladeira) e roupas
+ * (para o guarda-roupa).
  */
 @Composable
 fun TelaCasaPorDentro(
@@ -153,6 +178,12 @@ fun TelaCasaPorDentro(
         Cena().apply {
             geladeiraAberta = abrirInicial == Acao.GELADEIRA
             guardaRoupaAberto = abrirInicial == Acao.GUARDA_ROUPA
+            // O guarda-roupa fica no quarto, lá em cima: a criança já começa no andar de cima.
+            if (abrirInicial == Acao.GUARDA_ROUPA) {
+                andar = Andar.DE_CIMA
+                x = PlantaDaCasa.peDaEscada.x
+                y = PlantaDaCasa.peDaEscada.y
+            }
         }
     }
     var lojaAberta by remember { mutableStateOf(lojaInicial) }
@@ -170,17 +201,18 @@ fun TelaCasaPorDentro(
     val estadoNaCena = remember(estado, previa) { previa?.let { p -> estado.copy(moedas = Int.MAX_VALUE / 2).usar(p) } ?: estado }
     val perfil = estadoNaCena.perfil ?: Perfil()
     val moveis = remember(estado.fasesVencidas) { PlantaDaCasa.moveisDe(estado) }
-    val mapa = remember(moveis) { Mapa(moveis) }
+    val mapas = remember(moveis) { Andar.entries.associateWith { Mapa(moveis, it) } }
     val temGeladeira = moveis.any { it.acao == Acao.GELADEIRA }
     val geometria = remember { RefGeometria() }
+    val andarDaCrianca = cena.andar
 
     LaunchedEffect(Unit) {
         if (abrirInicial == Acao.NENHUMA && !lojaInicial) {
-            narrador.falar(listOf(pt("Que casa linda por dentro! Toque no chão para andar. Em inglês, casa é:"), en("house")))
+            narrador.falar(listOf(pt("Que casa linda por dentro! Toque no chão para andar, e na escada para subir. Em inglês, casa é:"), en("house")))
         }
     }
 
-    // Laço de quadros: anda pelo caminho, faz a câmera seguir e passa o tempo das animações.
+    // Laço de quadros: anda pelo caminho e passa o tempo das animações.
     // Só mexe em estados lidos no desenho: não recompõe a tela a cada quadro.
     LaunchedEffect(Unit) {
         var ultimo = -1L
@@ -220,29 +252,53 @@ fun TelaCasaPorDentro(
                         sonsCasa.passo()
                     }
                 }
-                val g = geometria.g
-                if (g != null && cena.seguir) {
-                    val alvoCam = ((cena.x - cena.y) * g.proj.meioL).coerceIn(-g.camMax, g.camMax)
-                    cena.camX += (alvoCam - cena.camX) * min(1f, dt * 3.5f)
-                }
             }
         }
     }
 
-    fun andarPara(p: Posicao, aoChegar: (() -> Unit)? = null) {
-        val c = mapa.caminho(Posicao(cena.x, cena.y), p)
+    fun trocarDeAndar(novo: Andar) {
+        cena.caminho = emptyList()
+        cena.indice = 0
+        cena.andando = false
+        cena.andar = novo
+        cena.x = PlantaDaCasa.peDaEscada.x
+        cena.y = PlantaDaCasa.peDaEscada.y
+        cena.trocouEm = cena.tempo
+        cena.marca = null
+        sonsCasa.passo()
+        narrador.falar(
+            if (novo == Andar.DE_CIMA) listOf(pt("Subimos a escada! Aqui em cima tem o quarto e o banheiro. Em inglês:"), en("upstairs"))
+            else listOf(pt("Descemos a escada! Aqui embaixo tem a sala e a cozinha. Em inglês:"), en("downstairs")),
+        )
+    }
+
+    /** Anda até [destino] no [andar]; se for no outro andar, passa pela escada antes. */
+    fun andarPara(destino: Posicao, andar: Andar = cena.andar, aoChegar: (() -> Unit)? = null) {
+        if (andar != cena.andar) {
+            andarPara(PlantaDaCasa.peDaEscada, cena.andar) {
+                trocarDeAndar(andar)
+                andarPara(destino, andar, aoChegar)
+            }
+            return
+        }
+        val c = mapas.getValue(andar).caminho(Posicao(cena.x, cena.y), destino)
         cena.caminho = c
         cena.indice = 0
-        cena.seguir = true
         cena.aoChegar = aoChegar
         if (c.isEmpty()) {
             cena.aoChegar = null
             aoChegar?.invoke()
         } else {
-            val fim = c.last()
-            cena.marca = fim
+            cena.marca = c.last()
+            cena.marcaAndar = andar
             cena.marcaEm = cena.tempo
         }
+    }
+
+    fun usarEscada() {
+        jaAndou = true
+        val destino = cena.andar.outro
+        andarPara(PlantaDaCasa.peDaEscada) { trocarDeAndar(destino) }
     }
 
     fun falarNome(m: Movel, extra: String? = null) {
@@ -250,15 +306,28 @@ fun TelaCasaPorDentro(
     }
 
     fun interagir(m: Movel) {
+        if (m.andar != cena.andar) {
+            // Móvel do outro andar: a criança sobe (ou desce) a escada e vai até ele.
+            jaAndou = true
+            sons.toque()
+            andarPara(mapas.getValue(m.andar).pertoDo(m), m.andar) { interagir(m) }
+            return
+        }
         cena.tocadoId = m.id
         cena.tocadoEm = cena.tempo
         val t = cena.tempo
         when (m.acao) {
+            Acao.ESCADA -> {
+                sons.toque()
+                usarEscada()
+                return
+            }
             Acao.GELADEIRA -> {
                 sonsCasa.porta()
                 cena.geladeiraAberta = !cena.geladeiraAberta
                 cena.guardaRoupaAberto = false
                 if (cena.geladeiraAberta) {
+                    lojaAberta = false
                     val comidas = Loja.naGeladeira(estado)
                     falarNome(m, if (comidas.isEmpty()) "Está vazia! Compre comidas na lojinha." else "Toque numa comida para comer!")
                 }
@@ -267,7 +336,10 @@ fun TelaCasaPorDentro(
                 sonsCasa.porta()
                 cena.guardaRoupaAberto = !cena.guardaRoupaAberto
                 cena.geladeiraAberta = false
-                if (cena.guardaRoupaAberto) falarNome(m, "Escolha uma roupa!")
+                if (cena.guardaRoupaAberto) {
+                    lojaAberta = false
+                    falarNome(m, "Escolha uma roupa!")
+                }
             }
             Acao.TORNEIRA -> {
                 sonsCasa.agua()
@@ -316,7 +388,7 @@ fun TelaCasaPorDentro(
         }
         if (!jaAndou) jaAndou = true
         // A criança vai até o móvel (sem atravessar paredes).
-        andarPara(mapa.pertoDo(m))
+        andarPara(mapas.getValue(m.andar).pertoDo(m))
     }
 
     fun alternarLuz(c: Comodo) {
@@ -328,56 +400,62 @@ fun TelaCasaPorDentro(
 
     fun tocarNaCena(toque: Offset) {
         val g = geometria.g ?: return
-        val wx = toque.x + cena.camX
-        val wy = toque.y
         // 1) lâmpadas
-        for (c in Comodo.entries) {
-            val l = g.lampadas[c.ordinal]
-            if (hypot(wx - l.x, wy - l.y) < g.raioLampada) {
-                alternarLuz(c)
+        for (ga in g.andares) for (luz in ga.luzes) {
+            if (hypot(toque.x - luz.lampada.x, toque.y - luz.lampada.y) < g.raioLampada) {
+                alternarLuz(luz.comodo)
                 return
             }
         }
         // 2) a própria criança
-        val pe = g.proj.ponto(cena.x, cena.y)
-        if (wx in pe.x - g.larguraCrianca / 2..pe.x + g.larguraCrianca / 2 && wy in pe.y - g.alturaCrianca..pe.y) {
-            cena.puloEm = cena.tempo
-            sons.toque()
-            val nome = estado.perfil?.nome.orEmpty()
-            narrador.falar(
-                listOf(
-                    if (nome.isBlank()) "Oi! Eu moro aqui!" else "Oi! Eu sou $nome e moro aqui!",
-                    "Que casa gostosa!",
-                    "Vamos passear pelos cômodos?",
-                    "Iupiii!",
-                ).random(),
-            )
-            return
-        }
-        // 3) móveis, da frente para trás
-        for (i in g.pecas.indices.reversed()) {
-            val p = g.pecas[i]
-            val m = p.movel ?: continue
-            if (p.toque.contains(Offset(wx, wy))) {
-                interagir(m)
+        val daCrianca = g.geo(cena.andar)
+        if (daCrianca != null) {
+            val pe = daCrianca.proj.ponto(cena.x, cena.y)
+            if (toque.x in pe.x - g.larguraCrianca / 2..pe.x + g.larguraCrianca / 2 && toque.y in pe.y - g.alturaCrianca..pe.y) {
+                cena.puloEm = cena.tempo
+                sons.toque()
+                val nome = estado.perfil?.nome.orEmpty()
+                narrador.falar(
+                    listOf(
+                        if (nome.isBlank()) "Oi! Eu moro aqui!" else "Oi! Eu sou $nome e moro aqui!",
+                        "Que casa gostosa!",
+                        "Vamos passear pelos cômodos?",
+                        "Iupiii!",
+                    ).random(),
+                )
                 return
             }
         }
-        for (p in g.naParede) {
-            val m = p.movel ?: continue
-            if (p.toque.contains(Offset(wx, wy))) {
-                interagir(m)
-                return
+        // 3) móveis, da frente para trás (o andar de baixo é desenhado por último)
+        for (ga in g.andares.asReversed()) {
+            for (i in ga.pecas.indices.reversed()) {
+                val p = ga.pecas[i]
+                val m = p.movel ?: continue
+                if (p.toque.contains(toque)) {
+                    interagir(m)
+                    return
+                }
+            }
+            for (p in ga.naParede) {
+                val m = p.movel ?: continue
+                if (p.toque.contains(toque)) {
+                    interagir(m)
+                    return
+                }
             }
         }
-        // 4) o chão: anda até lá
-        val gx = g.proj.gradeX(wx, wy)
-        val gy = g.proj.gradeY(wx, wy)
-        val lado = PlantaDaCasa.LADO.toFloat()
-        if (gx in -0.3f..lado + 0.3f && gy in -0.3f..lado + 0.3f) {
-            jaAndou = true
-            sons.toque()
-            andarPara(Posicao(gx.coerceIn(0.05f, lado - 0.05f), gy.coerceIn(0.05f, lado - 0.05f)))
+        // 4) o chão: anda até lá (no andar tocado)
+        val largura = PlantaDaCasa.LARGURA.toFloat()
+        val fundo = PlantaDaCasa.FUNDO.toFloat()
+        for (ga in g.andares.asReversed()) {
+            val gx = ga.proj.gradeX(toque.x, toque.y)
+            val gy = ga.proj.gradeY(toque.x, toque.y)
+            if (gx in -0.3f..largura + 0.3f && gy in -0.3f..fundo + 0.3f) {
+                jaAndou = true
+                sons.toque()
+                andarPara(Posicao(gx.coerceIn(0.05f, largura - 0.05f), gy.coerceIn(0.05f, fundo - 0.05f)), ga.andar)
+                return
+            }
         }
     }
 
@@ -442,22 +520,25 @@ fun TelaCasaPorDentro(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
+                    .padding(horizontal = 10.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 BotaoRedondo("⬅️", "Voltar para o jardim", onVoltar, tamanho = 52.dp)
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(6.dp))
                 Text(
                     "🪙 ${estado.moedas}",
                     style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
                     modifier = Modifier
                         .background(Color.White.copy(alpha = 0.7f), RoundedCornerShape(50))
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
                         .semantics { contentDescription = "Você tem ${estado.moedas} moedinhas" },
                 )
                 Spacer(Modifier.weight(1f))
+                BotaoDoAndar(andarDaCrianca) { sons.toque(); usarEscada() }
+                Spacer(Modifier.width(6.dp))
                 BotaoRedondo("🪞", "Espelho: trocar a aparência", { sons.toque(); onEspelho() }, tamanho = 52.dp)
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(6.dp))
                 BotaoRedondo(
                     "🛒",
                     if (lojaAberta) "Fechar a lojinha" else "Lojinha de comidas e roupas",
@@ -473,6 +554,7 @@ fun TelaCasaPorDentro(
                 )
             }
 
+            // A cena ocupa só o espaço livre entre a barra de cima e o painel aberto, e a casa cabe nele inteira.
             Box(
                 Modifier
                     .weight(1f)
@@ -482,70 +564,68 @@ fun TelaCasaPorDentro(
                     estado = estadoNaCena,
                     perfil = perfil,
                     moveis = moveis,
+                    andarDaCrianca = andarDaCrianca,
                     cena = cena,
                     medidor = medidor,
                     ref = geometria,
                     modifier = Modifier
                         .fillMaxSize()
-                        .semantics { contentDescription = "Casa por dentro. Toque no chão para andar." }
-                        .pointerInput(Unit) { detectTapGestures(onTap = { tocar(it) }) }
-                        .pointerInput(Unit) {
-                            detectHorizontalDragGestures { change, arrasto ->
-                                change.consume()
-                                val g = geometria.g ?: return@detectHorizontalDragGestures
-                                cena.seguir = false
-                                cena.camX = (cena.camX - arrasto).coerceIn(-g.camMax, g.camMax)
-                            }
-                        },
+                        .semantics { contentDescription = "Casa por dentro, com dois andares. Toque no chão para andar e na escada para subir ou descer." }
+                        .pointerInput(Unit) { detectTapGestures(onTap = { tocar(it) }) },
                 )
                 if (!jaAndou && abrirInicial == Acao.NENHUMA && !lojaInicial) {
                     MaoGuia(Modifier.align(Alignment.Center).padding(top = 120.dp), espera = 2500)
                 }
-                if (cena.geladeiraAberta) {
-                    PainelGeladeira(
-                        comidas = Loja.naGeladeira(estado),
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        onComer = { c ->
-                            sonsCasa.nham()
-                            cena.comendo = c.valor
-                            cena.comendoAte = cena.tempo + 2.5f
-                            narrador.falar(listOf(pt("Nham nham! ${c.nome}! Em inglês:"), en(c.nomeEn)))
-                        },
-                        onLoja = {
-                            cena.geladeiraAberta = false
-                            lojaAberta = true
-                            sons.toque()
-                        },
-                        onFechar = {
-                            sonsCasa.porta()
-                            cena.geladeiraAberta = false
-                        },
-                    )
-                }
-                if (cena.guardaRoupaAberto) {
-                    PainelGuardaRoupa(
-                        estado = estado,
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        onVestir = { traje ->
-                            onAtualizar { it.vestir(traje) }
-                            cena.puloEm = cena.tempo
-                            sons.colocar()
-                            val t = Loja.trajes.firstOrNull { it.id == traje }
-                            narrador.falar(if (t == null) listOf(pt("A roupa de sempre!")) else listOf(pt("${t.nome}! Em inglês:"), en(t.nomeEn)))
-                        },
-                        onExperimentar = { p ->
-                            cena.guardaRoupaAberto = false
-                            lojaAberta = true
-                            comprar(p)
-                        },
-                        onFechar = {
-                            sonsCasa.porta()
-                            cena.guardaRoupaAberto = false
-                        },
-                    )
-                }
             }
 
+            if (cena.geladeiraAberta) {
+                PainelGeladeira(
+                    comidas = Loja.naGeladeira(estado),
+                    onAba = { p, vazia ->
+                        sons.toque()
+                        narrador.falar(
+                            listOf(pt("${p.nome}! Em inglês:"), en(p.nomeEn)) +
+                                if (vazia) listOf(pt("Ainda está vazia. Compre comidas na lojinha!")) else emptyList(),
+                        )
+                    },
+                    onComer = { c ->
+                        sonsCasa.nham()
+                        cena.comendo = c.valor
+                        cena.comendoAte = cena.tempo + 2.5f
+                        narrador.falar(listOf(pt("Nham nham! ${c.nome}! Em inglês:"), en(c.nomeEn)))
+                    },
+                    onLoja = {
+                        cena.geladeiraAberta = false
+                        lojaAberta = true
+                        sons.toque()
+                    },
+                    onFechar = {
+                        sonsCasa.porta()
+                        cena.geladeiraAberta = false
+                    },
+                )
+            }
+            if (cena.guardaRoupaAberto) {
+                PainelGuardaRoupa(
+                    estado = estado,
+                    onVestir = { traje ->
+                        onAtualizar { it.vestir(traje) }
+                        cena.puloEm = cena.tempo
+                        sons.colocar()
+                        val t = Loja.trajes.firstOrNull { it.id == traje }
+                        narrador.falar(if (t == null) listOf(pt("A roupa de sempre!")) else listOf(pt("${t.nome}! Em inglês:"), en(t.nomeEn)))
+                    },
+                    onExperimentar = { p ->
+                        cena.guardaRoupaAberto = false
+                        lojaAberta = true
+                        comprar(p)
+                    },
+                    onFechar = {
+                        sonsCasa.porta()
+                        cena.guardaRoupaAberto = false
+                    },
+                )
+            }
             if (lojaAberta) {
                 Lojinha(
                     estado = estado,
@@ -559,22 +639,77 @@ fun TelaCasaPorDentro(
     }
 }
 
+/** Botão da escada na barra de cima: uma casinha de dois andares com o andar da criança aceso. */
+@Composable
+private fun BotaoDoAndar(andar: Andar, onClick: () -> Unit) {
+    val emCima = andar == Andar.DE_CIMA
+    BotaoFofo(
+        onClick = onClick,
+        cor = Color.White,
+        corBase = Color(0x33000000),
+        forma = CircleShape,
+        descricao = if (emCima) "Descer a escada para a sala e a cozinha" else "Subir a escada para o quarto e o banheiro",
+        profundidade = 4.dp,
+    ) {
+        Canvas(Modifier.size(52.dp)) {
+            val w = size.width
+            val h = size.height
+            val esq = w * 0.24f
+            val dir = w * 0.76f
+            val topo = h * 0.42f
+            val meio = h * 0.6f
+            val base = h * 0.78f
+            val telhado = Path().apply {
+                moveTo(w * 0.16f, topo + h * 0.01f)
+                lineTo(w * 0.5f, h * 0.16f)
+                lineTo(w * 0.84f, topo + h * 0.01f)
+                close()
+            }
+            drawPath(telhado, Color(0xFFEF476F))
+            val aceso = Cores.Estrela
+            val apagado = Color(0xFFE3E7EE)
+            drawRect(if (emCima) aceso else apagado, Offset(esq, topo), Size(dir - esq, meio - topo))
+            drawRect(if (emCima) apagado else aceso, Offset(esq, meio), Size(dir - esq, base - meio))
+            drawRect(Color(0xFF8E5A34), Offset(esq, topo), Size(dir - esq, base - topo), style = Stroke(w * 0.035f))
+            drawLine(Color(0xFF8E5A34), Offset(esq, meio), Offset(dir, meio), strokeWidth = w * 0.035f)
+            // degraus da escada, do lado esquerdo
+            val degrau = (base - topo) / 4f
+            for (k in 0 until 4) {
+                val y = base - (k + 1) * degrau
+                drawRect(Color(0xFFC98B5B), Offset(esq, y), Size(w * (0.2f - k * 0.04f), degrau))
+            }
+            // setinha: para onde a escada leva
+            val sx = w * 0.62f
+            val sy = if (emCima) meio + (base - meio) * 0.5f else topo + (meio - topo) * 0.5f
+            val ponta = if (emCima) 1f else -1f
+            val seta = Path().apply {
+                moveTo(sx - w * 0.07f, sy - ponta * h * 0.035f)
+                lineTo(sx + w * 0.07f, sy - ponta * h * 0.035f)
+                lineTo(sx, sy + ponta * h * 0.06f)
+                close()
+            }
+            drawPath(seta, Color(0xFF3B4C8C))
+        }
+    }
+}
+
 /** Estado da cena que muda a cada quadro ou a cada toque. Lido só no desenho, para não recompor a tela toda. */
 @Stable
 private class Cena {
+    var andar by mutableStateOf(Andar.DE_BAIXO)
     var x by mutableFloatStateOf(PlantaDaCasa.entrada.x)
     var y by mutableFloatStateOf(PlantaDaCasa.entrada.y)
     var tempo by mutableFloatStateOf(0f)
-    var camX by mutableFloatStateOf(0f)
     var passada by mutableFloatStateOf(0f)
     var andando by mutableStateOf(false)
     var virado by mutableStateOf(false)
-    var seguir = true
     var caminho: List<Posicao> = emptyList()
     var indice = 0
     var aoChegar: (() -> Unit)? = null
     var marca by mutableStateOf<Posicao?>(null)
+    var marcaAndar by mutableStateOf(Andar.DE_BAIXO)
     var marcaEm by mutableFloatStateOf(-10f)
+    var trocouEm by mutableFloatStateOf(-10f)
     var puloEm by mutableFloatStateOf(-10f)
     var luzApagada by mutableStateOf(emptySet<Comodo>())
     var geladeiraAberta by mutableStateOf(false)
@@ -616,38 +751,52 @@ private class Peca(
     val emojisAbertos: List<Pair<TextLayoutResult, Offset>> = emptyList(),
 )
 
-private class Geometria(
-    val proj: Projecao,
-    val camMax: Float,
-    val chao: List<Forma>,
-    val chaoDoComodo: Array<Path>,
+/** A luz de um cômodo: a lâmpada pendurada e o que escurece quando ela apaga. */
+private class Luz(
+    val comodo: Comodo,
+    val lampada: Offset,
+    val corda: Offset,
+    val cupula: Path,
+    val brilho: Brush,
+    val chao: Path,
     val paredes: List<Forma>,
-    val paredesDoComodo: Array<List<Forma>>,
+)
+
+/** Um andar pronto para desenhar, com a sua própria projeção (os dois andares podem aparecer empilhados). */
+private class GeoAndar(
+    val andar: Andar,
+    val proj: Projecao,
+    val chao: List<Forma>,
+    val paredes: List<Forma>,
     val padrao: Path?,
-    val corDoPadrao: Color,
     val naParede: List<Peca>,
     val pecas: List<Peca>,
-    val lampadas: Array<Offset>,
-    val cordas: Array<Offset>,
-    val cupulas: Array<Path>,
-    val brilhoDasLampadas: Array<Brush>,
+    val luzes: List<Luz>,
+    val sombra: Rect?,
+)
+
+private class Geometria(
+    val andares: List<GeoAndar>,
+    val ladrilho: Float,
+    val corDoPadrao: Color,
     val raioLampada: Float,
     val alturaCrianca: Float,
     val larguraCrianca: Float,
     val chapeu: TextLayoutResult?,
-    val chapeuFonte: Float,
     val comidas: Map<String, TextLayoutResult>,
     val zzz: TextLayoutResult,
-    val sombraDaCasa: Rect,
     val traco: Stroke,
     val tracoFino: Stroke,
-)
+) {
+    fun geo(a: Andar): GeoAndar? = andares.firstOrNull { it.andar == a }
+}
 
 @Composable
 private fun CenaIsometrica(
     estado: EstadoJogo,
     perfil: Perfil,
     moveis: List<Movel>,
+    andarDaCrianca: Andar,
     cena: Cena,
     medidor: TextMeasurer,
     ref: RefGeometria,
@@ -655,7 +804,7 @@ private fun CenaIsometrica(
 ) {
     Box(
         modifier.drawWithCache {
-            val g = montarGeometria(size, this, estado, perfil, moveis, medidor)
+            val g = montarGeometria(size, this, estado, perfil, moveis, andarDaCrianca, medidor)
             ref.g = g
             onDrawBehind { desenharCena(g, cena, perfil) }
         },
@@ -672,11 +821,14 @@ private fun medirEmoji(medidor: TextMeasurer, densidade: Density, emoji: String,
         style = TextStyle(fontSize = (px / (densidade.density * densidade.fontScale)).sp, textAlign = TextAlign.Center),
     )
 
-private fun corDoPiso(c: Comodo): Pair<Color, Color> = when (c) {
-    Comodo.QUARTO -> Color(0xFFEBCB9F) to Color(0xFFDDB98A)
-    Comodo.BANHEIRO -> Color(0xFFE6F6FC) to Color(0xFFC3E5F2)
-    Comodo.SALA -> Color(0xFFF2D3A6) to Color(0xFFE4BF8E)
-    Comodo.COZINHA -> Color(0xFFFFF4E0) to Color(0xFFF4C9A6)
+/** Piso de cada cômodo: tábuas de madeira no quarto e na sala, lajotas lisas no banheiro e na cozinha (sem xadrez). */
+private class Piso(val base: Color, val linha: Color, val madeira: Boolean)
+
+private fun pisoDo(c: Comodo): Piso = when (c) {
+    Comodo.QUARTO -> Piso(Color(0xFFE9C39A), Color(0xFFD3A677), madeira = true)
+    Comodo.SALA -> Piso(Color(0xFFE6BD90), Color(0xFFCF9F6F), madeira = true)
+    Comodo.BANHEIRO -> Piso(Color(0xFFE6F5FA), Color(0xFFC7E3EE), madeira = false)
+    Comodo.COZINHA -> Piso(Color(0xFFFFF4E3), Color(0xFFEBD5B8), madeira = false)
 }
 
 private fun emojiDe(id: String): String? = when (id) {
@@ -696,102 +848,238 @@ private fun montarGeometria(
     estado: EstadoJogo,
     perfil: Perfil,
     moveis: List<Movel>,
+    andarDaCrianca: Andar,
     medidor: TextMeasurer,
 ): Geometria {
-    val lado = PlantaDaCasa.LADO.toFloat()
-    val h = PlantaDaCasa.ALTURA_PAREDE
-    // O ladrilho cresce até a casa ocupar a altura; em celular a casa fica mais larga que a tela e a câmera segue a criança.
-    val tw = min(tamanho.height / 6.5f, tamanho.width / 8.4f * 1.3f).coerceAtLeast(1f)
-    val alturaTotal = lado * tw / 2f + (h + 0.35f) * tw * 0.56f
-    val origemY = (tamanho.height - alturaTotal) / 2f + h * tw * 0.56f + tw * 0.1f
-    val proj = Projecao(tw, tamanho.width / 2f, origemY)
-    val camMax = max(0f, lado * proj.meioL + tw * 0.25f - tamanho.width / 2f)
     val dp = densidade.density
+    // Enquadramento: a planta inteira cabe na largura (menos as margens) e fica no meio do espaço livre.
+    // Quando cabem, os dois andares aparecem empilhados, como na casa de fora; senão, só o andar da criança.
+    val margemX = 16f * dp
+    val margemY = 8f * dp
+    val livreL = (tamanho.width - 2 * margemX).coerceAtLeast(1f)
+    val livreA = (tamanho.height - 2 * margemY).coerceAtLeast(1f)
+    val enq = PlantaDaCasa.enquadramento()
+    val doisAndares = PlantaDaCasa.mostrarDoisAndares(livreL, livreA, enq)
+    val tw = PlantaDaCasa.ladrilhoQueCabe(livreL, livreA, doisAndares, enq)
+    val alturaTotal = tw * (enq.altura + if (doisAndares) enq.entreAndares else 0f)
+    val topo = (tamanho.height - alturaTotal) / 2f
+    val largura = PlantaDaCasa.LARGURA.toFloat()
+    val fundo = PlantaDaCasa.FUNDO.toFloat()
+    // O meio da planta na tela fica em x(L/2, F/2): a origem anda para a esquerda o quanto a planta é mais larga que funda.
+    val origemX = tamanho.width / 2f - (largura - fundo) * tw / 4f
+    val visiveis = if (doisAndares) listOf(Andar.DE_CIMA, Andar.DE_BAIXO) else listOf(andarDaCrianca)
     val traco = Stroke(max(1f, 1.2f * dp))
     val tracoFino = Stroke(max(1f, 0.8f * dp))
 
+    val andares = visiveis.mapIndexed { i, a ->
+        val origemY = topo + tw * (enq.acima + i * enq.entreAndares)
+        val proj = Projecao(tw, origemX, origemY)
+        // A sombra no gramado fica só embaixo do andar que pisa no chão (ou do andar sozinho).
+        val noChao = a == Andar.DE_BAIXO || !doisAndares
+        montarAndar(a, proj, noChao, estado, perfil, moveis.filter { it.andar == a }, medidor, densidade)
+    }
+
+    // ---- criança, chapéu e comidas na mão
+    val proj0 = andares.first().proj
+    val alturaCrianca = ALTURA_CRIANCA * proj0.unidadeZ
+    val larguraCrianca = alturaCrianca * PROPORCAO_CRIANCA
+    val chapeuFonte = larguraCrianca * 0.34f * 2f * 0.9f * 0.82f
+    val chapeu = perfil.chapeu.takeIf { it.isNotEmpty() }?.let { medirEmoji(medidor, densidade, it, chapeuFonte) }
+    val comidas = Loja.comidas.associate { (e, _, _) -> e to medirEmoji(medidor, densidade, e, larguraCrianca * 0.42f) }
+    val zzz = medirEmoji(medidor, densidade, "💤", larguraCrianca * 0.5f)
+
+    return Geometria(
+        andares = andares,
+        ladrilho = tw,
+        corDoPadrao = if (estado.papelDeParede == 3) Color(0x80FFC93C) else Color(0x1F000000),
+        raioLampada = max(tw * 0.4f, 26f * dp),
+        alturaCrianca = alturaCrianca,
+        larguraCrianca = larguraCrianca,
+        chapeu = chapeu,
+        comidas = comidas,
+        zzz = zzz,
+        traco = traco,
+        tracoFino = tracoFino,
+    )
+}
+
+/** Monta um andar: piso, paredes do fundo com a cor de cada cômodo, janelas, porta, móveis e luzes. */
+private fun montarAndar(
+    andar: Andar,
+    proj: Projecao,
+    noChao: Boolean,
+    estado: EstadoJogo,
+    perfil: Perfil,
+    moveis: List<Movel>,
+    medidor: TextMeasurer,
+    densidade: Density,
+): GeoAndar {
+    val tw = proj.ladrilho
+    val lado = PlantaDaCasa.LARGURA.toFloat()
+    val fundo = PlantaDaCasa.FUNDO.toFloat()
+    val h = PlantaDaCasa.ALTURA_PAREDE
+    val meio = PlantaDaCasa.meio(andar).toFloat()
+    val (esquerda, direita) = PlantaDaCasa.comodosDo(andar)
+
     // ---- chão
     val chao = ArrayList<Forma>()
-    val chaoDoComodo = Array(4) { Path() }
+    val chaoDoComodo = HashMap<Comodo, Path>()
     // espessura do piso (a casa parece uma maquete)
-    chao += Forma(proj.paredeX(lado, 0f, lado, -0.35f, 0f), Color(0xFFB98A5E))
-    chao += Forma(proj.paredeY(lado, 0f, lado, -0.35f, 0f), Color(0xFFD6A574))
-    for (c in Comodo.entries) {
+    chao += Forma(proj.paredeX(lado, 0f, fundo, -0.35f, 0f), Color(0xFFB98A5E))
+    chao += Forma(proj.paredeY(fundo, 0f, lado, -0.35f, 0f), Color(0xFFD6A574))
+    for (c in PlantaDaCasa.comodosDo(andar)) {
         val l = PlantaDaCasa.limitesDo(c)
-        val (claro, escuro) = corDoPiso(c)
-        val pClaro = Path()
-        val pEscuro = Path()
+        val piso = pisoDo(c)
+        chaoDoComodo[c] = proj.piso(l.x0, l.y0, l.x1, l.y1)
+        chao += Forma(proj.piso(l.x0, l.y0, l.x1, l.y1), piso.base, contorno = false)
+        val linhas = Path()
         with(proj) {
-            for (cy in l.y0.toInt() until l.y1.toInt()) for (cx in l.x0.toInt() until l.x1.toInt()) {
-                (if ((cx + cy) % 2 == 0) pClaro else pEscuro).losango(cx.toFloat(), cy.toFloat(), cx + 1f, cy + 1f)
+            if (piso.madeira) {
+                // tábuas compridas, com as emendas desencontradas
+                val tabua = 0.5f
+                var y = l.y0
+                var fileira = 0
+                while (y < l.y1 - 0.01f) {
+                    linhas.losango(l.x0, y - 0.012f, l.x1, y + 0.012f)
+                    var x = l.x0 + if (fileira % 2 == 0) 1.3f else 0.6f
+                    while (x < l.x1 - 0.1f) {
+                        linhas.losango(x - 0.012f, y, x + 0.012f, min(y + tabua, l.y1))
+                        x += 1.6f
+                    }
+                    y += tabua
+                    fileira++
+                }
+            } else {
+                // lajotas: rejunte fininho, da mesma cor clara
+                var x = l.x0 + 1f
+                while (x < l.x1 - 0.01f) {
+                    linhas.losango(x - 0.012f, l.y0, x + 0.012f, l.y1)
+                    x += 1f
+                }
+                var y = l.y0 + 1f
+                while (y < l.y1 - 0.01f) {
+                    linhas.losango(l.x0, y - 0.012f, l.x1, y + 0.012f)
+                    y += 1f
+                }
             }
         }
-        chao += Forma(pClaro, claro, contorno = false)
-        chao += Forma(pEscuro, escuro, contorno = false)
-        chaoDoComodo[c.ordinal] = proj.piso(l.x0, l.y0, l.x1, l.y1)
+        chao += Forma(linhas, piso.linha, contorno = false)
     }
     for (m in moveis) if (m.noChao) {
-        chao += Forma(proj.piso(m.x0, m.y0, m.x1, m.y1, 0.01f), Color(0xFFB9A8FF), contorno = false)
-        chao += Forma(proj.piso(m.x0 + 0.15f, m.y0 + 0.15f, m.x1 - 0.15f, m.y1 - 0.15f, 0.012f), Color(0xFFD4CAFF), contorno = false)
-        chao += Forma(proj.piso(m.x0 + 0.5f, m.y0 + 0.5f, m.x1 - 0.5f, m.y1 - 0.5f, 0.014f), Color(0xFFFFD6E8), contorno = false)
+        chao += Forma(proj.piso(m.x0, m.y0, m.x1, m.y1, 0.01f), Color(0xFFF2D9A0), contorno = false)
+        chao += Forma(proj.piso(m.x0 + 0.15f, m.y0 + 0.15f, m.x1 - 0.15f, m.y1 - 0.15f, 0.012f), Color(0xFFFFF0C9), contorno = false)
+        chao += Forma(proj.piso(m.x0 + 0.45f, m.y0 + 0.45f, m.x1 - 0.45f, m.y1 - 0.45f, 0.014f), Color(0xFFF7C9A8), contorno = false)
     }
 
     // ---- paredes do fundo (com a cor de cada cômodo, a mesma da casa de fora)
     val paredes = ArrayList<Forma>()
-    val paredesDoComodo = Array(4) { ArrayList<Forma>() }
-    val m4 = PlantaDaCasa.MEIO.toFloat()
+    val paredesDoComodo = HashMap<Comodo, ArrayList<Forma>>()
+    fun daParede(c: Comodo, f: List<Forma>) {
+        paredes += f
+        paredesDoComodo.getOrPut(c) { ArrayList() }.addAll(f)
+    }
     fun paredeFundoY(c: Comodo, x0: Float, x1: Float) {
         val cor = Color(estado.corDo(c))
-        val f = listOf(
-            Forma(proj.paredeY(0f, x0, x1, 0f, h), cor, contorno = false),
-            Forma(proj.paredeY(0f, x0, x1, 0f, 0.16f), escurecer(cor, 0.82f), contorno = false),
+        daParede(
+            c,
+            listOf(
+                Forma(proj.paredeY(0f, x0, x1, 0f, h), cor, contorno = false),
+                Forma(proj.paredeY(0f, x0, x1, 0f, 0.16f), escurecer(cor, 0.82f), contorno = false),
+            ),
         )
-        paredes += f
-        paredesDoComodo[c.ordinal].addAll(f)
     }
-    fun paredeFundoX(c: Comodo, y0: Float, y1: Float) {
-        val cor = escurecer(Color(estado.corDo(c)), 0.9f)
-        val f = listOf(
-            Forma(proj.paredeX(0f, y0, y1, 0f, h), cor, contorno = false),
-            Forma(proj.paredeX(0f, y0, y1, 0f, 0.16f), escurecer(cor, 0.82f), contorno = false),
+    paredeFundoY(esquerda, 0f, meio)
+    paredeFundoY(direita, meio, lado)
+    run {
+        val cor = escurecer(Color(estado.corDo(esquerda)), 0.9f)
+        daParede(
+            esquerda,
+            listOf(
+                Forma(proj.paredeX(0f, 0f, fundo, 0f, h), cor, contorno = false),
+                Forma(proj.paredeX(0f, 0f, fundo, 0f, 0.16f), escurecer(cor, 0.82f), contorno = false),
+            ),
         )
-        paredes += f
-        paredesDoComodo[c.ordinal].addAll(f)
     }
-    paredeFundoY(Comodo.QUARTO, 0f, m4)
-    paredeFundoY(Comodo.BANHEIRO, m4, lado)
-    paredeFundoX(Comodo.QUARTO, 0f, m4)
-    paredeFundoX(Comodo.SALA, m4, lado)
-    // janelas (quando a casa já tem janelas)
+    // azulejos no banheiro (até meia parede) e na cozinha (faixa atrás do fogão), como na fachada
+    for (c in PlantaDaCasa.comodosDo(andar)) {
+        val (z0, z1) = when (c) {
+            Comodo.BANHEIRO -> 0.16f to 1.25f
+            Comodo.COZINHA -> 0.9f to 1.55f
+            else -> continue
+        }
+        val l = PlantaDaCasa.limitesDo(c)
+        val rejunte = Path()
+        var x = l.x0 + 0.35f
+        while (x < l.x1) {
+            rejunte.addPath(proj.paredeY(0.002f, x - 0.01f, x + 0.01f, z0, z1))
+            x += 0.35f
+        }
+        var z = z0 + 0.3f
+        while (z < z1) {
+            rejunte.addPath(proj.paredeY(0.002f, l.x0, l.x1, z - 0.012f, z + 0.012f))
+            z += 0.3f
+        }
+        daParede(
+            c,
+            listOf(
+                Forma(proj.paredeY(0.001f, l.x0, l.x1, z0, z1), Color(0x30FFFFFF), contorno = false),
+                Forma(rejunte, Color(0x14000000), contorno = false),
+            ),
+        )
+    }
+    // a divisória de madeira entre os dois cômodos, no alto da parede (igual à fachada)
+    paredes += Forma(proj.paredeY(0.003f, meio - 0.05f, meio + 0.05f, 0f, h), Color(0xFFE9D8C4), contorno = false)
+
+    // janelas (quando a casa já tem janelas): uma em cada cômodo, como na fachada; a do banheiro é redonda
     if (estado.temEstrutura(Estrutura.JANELAS)) {
         val vidro = Color(0xFFBDE7FF)
         val moldura = Color(0xFFFFFFFF)
-        for ((a, b) in listOf(0.3f to 1.3f, 6.2f to 7.4f)) {
-            val c = if (a < m4) Comodo.QUARTO else Comodo.BANHEIRO
-            val f = listOf(
-                Forma(proj.paredeY(0f, a - 0.08f, b + 0.08f, 1.32f, 2.58f), moldura),
-                Forma(proj.paredeY(0f, a, b, 1.4f, 2.5f), vidro, contorno = false),
-                Forma(proj.paredeY(0f, (a + b) / 2 - 0.03f, (a + b) / 2 + 0.03f, 1.4f, 2.5f), moldura, contorno = false),
-                Forma(proj.paredeY(0f, a, b, 1.92f, 1.98f), moldura, contorno = false),
+        val retas = if (andar == Andar.DE_CIMA) listOf(2.72f to 3.72f) else listOf(1.6f to 2.6f, 5.55f to 6.55f)
+        for ((a, b) in retas) {
+            val c = PlantaDaCasa.comodoEm(andar, (a + b) / 2, 0.1f)
+            daParede(
+                c,
+                listOf(
+                    Forma(proj.paredeY(0.004f, a - 0.08f, b + 0.08f, 1.32f, 2.58f), moldura),
+                    Forma(proj.paredeY(0.005f, a, b, 1.4f, 2.5f), vidro, contorno = false),
+                    Forma(proj.paredeY(0.006f, (a + b) / 2 - 0.03f, (a + b) / 2 + 0.03f, 1.4f, 2.5f), moldura, contorno = false),
+                    Forma(proj.paredeY(0.006f, a, b, 1.92f, 1.98f), moldura, contorno = false),
+                    // cortininhas cor-de-rosa, iguais às de fora
+                    Forma(proj.paredeY(0.007f, a - 0.1f, a + 0.06f, 1.3f, 2.62f), Color(0xFFFF8FB1), contorno = false),
+                    Forma(proj.paredeY(0.007f, b - 0.06f, b + 0.1f, 1.3f, 2.62f), Color(0xFFFF8FB1), contorno = false),
+                ),
             )
-            paredes += f
-            paredesDoComodo[c.ordinal].addAll(f)
         }
-        val (a, b) = 4.3f to 5.3f
-        val f = listOf(
-            Forma(proj.paredeX(0f, a - 0.08f, b + 0.08f, 1.32f, 2.58f), moldura),
-            Forma(proj.paredeX(0f, a, b, 1.4f, 2.5f), vidro, contorno = false),
-            Forma(proj.paredeX(0f, (a + b) / 2 - 0.03f, (a + b) / 2 + 0.03f, 1.4f, 2.5f), moldura, contorno = false),
-            Forma(proj.paredeX(0f, a, b, 1.92f, 1.98f), moldura, contorno = false),
+        if (andar == Andar.DE_CIMA) {
+            daParede(
+                Comodo.BANHEIRO,
+                listOf(
+                    Forma(proj.circuloY(0.004f, 7.1f, 2.05f, 0.5f), moldura),
+                    Forma(proj.circuloY(0.005f, 7.1f, 2.05f, 0.4f), vidro, contorno = false),
+                ),
+            )
+        }
+    }
+    // a porta da rua, na sala (com a cor escolhida na loja de fora)
+    if (andar == Andar.DE_BAIXO && estado.temEstrutura(Estrutura.PORTA)) {
+        val corPorta = Color(Loja.coresDaPorta.getOrElse(estado.corPorta) { Loja.coresDaPorta[0] })
+        val (a, b) = PlantaDaCasa.portaDaRua.x to PlantaDaCasa.portaDaRua.y
+        val centro = proj.ponto(0.006f, (a + b) / 2, 1.75f)
+        daParede(
+            Comodo.SALA,
+            listOf(
+                Forma(proj.paredeX(0.004f, a - 0.08f, b + 0.08f, 0f, 2.25f), Color(0xFFFDF3E4)),
+                Forma(proj.paredeX(0.005f, a, b, 0f, 2.15f), corPorta),
+                Forma(Path().apply { addOval(Rect(centro, tw * 0.13f)) }, Color(0xFFFFE9A8)),
+                Forma(Path().apply { addOval(Rect(proj.ponto(0.006f, b - 0.18f, 1.0f), tw * 0.045f)) }, Color(0xFFFFD166), contorno = false),
+            ),
         )
-        paredes += f
-        paredesDoComodo[Comodo.SALA.ordinal].addAll(f)
     }
     // espessura e acabamento no alto das paredes
     val acabamento = Color(0xFFFDF3E4)
     paredes += Forma(proj.piso(-0.14f, -0.14f, lado, 0f, h), acabamento)
-    paredes += Forma(proj.piso(-0.14f, 0f, 0f, lado, h), acabamento)
-    paredes += Forma(proj.paredeY(lado, -0.14f, 0f, -0.35f, h), Color(0xFFE8D6BE))
+    paredes += Forma(proj.piso(-0.14f, 0f, 0f, fundo, h), acabamento)
+    paredes += Forma(proj.paredeY(fundo, -0.14f, 0f, -0.35f, h), Color(0xFFE8D6BE))
     paredes += Forma(proj.paredeX(lado, -0.14f, 0f, -0.35f, h), Color(0xFFD9C3A5))
 
     // papel de parede comprado na loja (listras, bolinhas ou estrelinhas)
@@ -800,7 +1088,7 @@ private fun montarGeometria(
             var t = 0.25f
             while (t < lado) {
                 addPath(proj.paredeY(0f, t - 0.06f, t + 0.06f, 0.16f, h))
-                addPath(proj.paredeX(0f, t - 0.06f, t + 0.06f, 0.16f, h))
+                if (t < fundo) addPath(proj.paredeX(0f, t - 0.06f, t + 0.06f, 0.16f, h))
                 t += 0.5f
             }
         }
@@ -810,7 +1098,8 @@ private fun montarGeometria(
             while (t < lado) {
                 var z = 0.5f + (linha % 2) * 0.3f
                 while (z < h - 0.2f) {
-                    for (p in listOf(proj.ponto(t, 0f, z), proj.ponto(0f, t, z))) {
+                    val pontos = if (t < fundo) listOf(proj.ponto(t, 0f, z), proj.ponto(0f, t, z)) else listOf(proj.ponto(t, 0f, z))
+                    for (p in pontos) {
                         if (estado.papelDeParede == 2) addOval(Rect(p, tw * 0.05f)) else addPath(caminhoEstrela(p, tw * 0.07f))
                     }
                     z += 0.6f
@@ -821,7 +1110,6 @@ private fun montarGeometria(
         }
         else -> null
     }
-    val corDoPadrao = if (estado.papelDeParede == 3) Color(0x80FFC93C) else Color(0x1F000000)
 
     // ---- móveis
     val naParede = ArrayList<Peca>()
@@ -831,14 +1119,13 @@ private fun montarGeometria(
         val p = montarPeca(m, proj, estado, perfil, medidor, densidade)
         if (m.naParede) naParede += p else soltas += p
     }
-    // pedaços das paredes internas (baixinhas, cortadas para ver dentro)
-    for (c in PlantaDaCasa.paredesInternas) {
-        val cor = Color(0xFFF3E6D3)
+    // pedaços da parede interna (baixinha, cortada para ver dentro)
+    for (c in PlantaDaCasa.paredesInternas(andar)) {
         soltas += Peca(
             movel = null,
             caixa = c,
             comodo = null,
-            formas = proj.caixa(c.x0, c.y0, c.x1, c.y1, c.z0, c.z1, cor),
+            formas = proj.caixa(c.x0, c.y0, c.x1, c.y1, c.z0, c.z1, Color(0xFFF3E6D3)),
             toque = Rect.Zero,
             ancora = Offset.Zero,
         )
@@ -846,66 +1133,31 @@ private fun montarGeometria(
     val ordem = PlantaDaCasa.ordenarParaDesenho(soltas.map { it.caixa })
     val pecas = ordem.map { soltas[it] }
 
-    // ---- lâmpadas penduradas
-    val lampadas = Array(4) { i ->
-        val c = PlantaDaCasa.centroDo(Comodo.entries[i])
-        proj.ponto(c.x, c.y, 2.62f)
-    }
-    val cordas = Array(4) { i ->
-        val c = PlantaDaCasa.centroDo(Comodo.entries[i])
-        proj.ponto(c.x, c.y, 3.5f)
-    }
-    val cupulas = Array(4) { i ->
-        val p = lampadas[i]
+    // ---- lâmpadas penduradas, uma por cômodo
+    val luzes = PlantaDaCasa.comodosDo(andar).map { c ->
+        val centro = PlantaDaCasa.centroDo(c)
+        val l = proj.ponto(centro.x, centro.y, 2.62f)
         val r = tw * 0.2f
-        Path().apply {
-            moveTo(p.x - r * 0.35f, p.y - r * 0.9f)
-            lineTo(p.x + r * 0.35f, p.y - r * 0.9f)
-            lineTo(p.x + r, p.y - r * 0.05f)
-            lineTo(p.x - r, p.y - r * 0.05f)
-            close()
-        }
-    }
-    val brilho = Array(4) { i ->
-        Brush.radialGradient(listOf(Color(0x99FFF3B0), Color(0x00FFF3B0)), center = lampadas[i], radius = tw * 0.9f)
+        Luz(
+            comodo = c,
+            lampada = l,
+            corda = proj.ponto(centro.x, centro.y, 3.5f),
+            cupula = Path().apply {
+                moveTo(l.x - r * 0.35f, l.y - r * 0.9f)
+                lineTo(l.x + r * 0.35f, l.y - r * 0.9f)
+                lineTo(l.x + r, l.y - r * 0.05f)
+                lineTo(l.x - r, l.y - r * 0.05f)
+                close()
+            },
+            brilho = Brush.radialGradient(listOf(Color(0x99FFF3B0), Color(0x00FFF3B0)), center = l, radius = tw * 0.9f),
+            chao = chaoDoComodo.getValue(c),
+            paredes = paredesDoComodo[c] ?: emptyList(),
+        )
     }
 
-    // ---- criança, chapéu e comidas na mão
-    val alturaCrianca = ALTURA_CRIANCA * proj.unidadeZ
-    val larguraCrianca = alturaCrianca * PROPORCAO_CRIANCA
-    val chapeuFonte = larguraCrianca * 0.34f * 2f * 0.9f * 0.82f
-    val chapeu = perfil.chapeu.takeIf { it.isNotEmpty() }?.let { medirEmoji(medidor, densidade, it, chapeuFonte) }
-    val comidas = Loja.comidas.associate { (e, _, _) -> e to medirEmoji(medidor, densidade, e, larguraCrianca * 0.42f) }
-    val zzz = medirEmoji(medidor, densidade, "💤", larguraCrianca * 0.5f)
-    val fim = proj.ponto(lado, lado)
-    val sombraDaCasa = Rect(proj.x(0f, lado) - tw * 0.6f, fim.y - tw * 0.6f, proj.x(lado, 0f) + tw * 0.6f, fim.y + tw * 0.5f)
-
-    return Geometria(
-        proj = proj,
-        camMax = camMax,
-        chao = chao,
-        chaoDoComodo = chaoDoComodo,
-        paredes = paredes,
-        paredesDoComodo = Array(4) { paredesDoComodo[it] },
-        padrao = padrao,
-        corDoPadrao = corDoPadrao,
-        naParede = naParede,
-        pecas = pecas,
-        lampadas = lampadas,
-        cordas = cordas,
-        cupulas = cupulas,
-        brilhoDasLampadas = brilho,
-        raioLampada = max(tw * 0.4f, 26f * dp),
-        alturaCrianca = alturaCrianca,
-        larguraCrianca = larguraCrianca,
-        chapeu = chapeu,
-        chapeuFonte = chapeuFonte,
-        comidas = comidas,
-        zzz = zzz,
-        sombraDaCasa = sombraDaCasa,
-        traco = traco,
-        tracoFino = tracoFino,
-    )
+    val fim = proj.ponto(lado, fundo)
+    val sombra = if (noChao) Rect(proj.x(0f, fundo) - tw * 0.6f, fim.y - tw * 0.6f, proj.x(lado, 0f) + tw * 0.6f, fim.y + tw * 0.3f) else null
+    return GeoAndar(andar, proj, chao, paredes, padrao, naParede, pecas, luzes, sombra)
 }
 
 /** Converte um móvel em formas prontas (desenho isométrico feito de caixinhas). */
@@ -938,6 +1190,8 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
         pontos = pontos, tela = tela, telaRect = tela?.getBounds() ?: Rect.Zero, brilho = brilho, emojisAbertos = emojisAbertos,
     )
 
+    if (m.acao == Acao.ESCADA) return montarEscada(m, proj, medidor, densidade, toque, ancora, caixaDoMovel)
+
     emojiDe(m.id)?.let { e ->
         val escala = when (m.id) {
             "planta" -> 0.85f
@@ -962,7 +1216,7 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
     return with(proj) {
         when (m.id) {
             "cama" -> {
-                val cobertor = Color(perfil.corDaRoupa)
+                val cobertor = CorDoCobertor
                 peca(
                     caixa(x0, y0, x1, y0 + 0.14f, 0f, 1.05f, Madeira) +
                         caixa(x0, y0 + 0.14f, x1, y1, 0f, 0.3f, Madeira) +
@@ -987,33 +1241,34 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
                 )
             }
             "guardaroupa" -> {
-                val xm = (x0 + x1) / 2
-                val meia = (x1 - x0) / 2 - 0.04f
+                // Encostado na parede x = 0: a frente (com as portas) olha para +x.
+                val ym = (y0 + y1) / 2
+                val meia = (y1 - y0) / 2 - 0.04f
                 val portaCor = Color(0xFFD9A06E)
                 val roupas = ArrayList<Forma>()
                 // Cabides: as roupas que a criança tem (as compradas primeiro, depois as cores de sempre).
                 val cores = Loja.noGuardaRoupa(estado).map { corDoTraje(it.valor, perfil) } + Aparencia.roupas.map { Color(it) }
-                var a = x0 + 0.14f
+                var a = y0 + 0.14f
                 var i = 0
-                while (a + 0.2f < x1 - 0.1f && i < cores.size) {
-                    roupas += Forma(paredeY(y1 - 0.05f, a, a + 0.2f, 0.95f, 1.75f), cores[i])
+                while (a + 0.2f < y1 - 0.1f && i < cores.size) {
+                    roupas += Forma(paredeX(x1 - 0.05f, a, a + 0.2f, 0.95f, 1.75f), cores[i])
                     a += 0.26f
                     i++
                 }
                 peca(
-                    caixa(x0, y0, x1, y1, 0f, 2.2f, Madeira) + caixa(x0 - 0.04f, y0, x1 + 0.04f, y1 + 0.04f, 2.2f, 2.3f, escurecer(Madeira, 0.85f)),
+                    caixa(x0, y0, x1, y1, 0f, 2.2f, Madeira) + caixa(x0, y0 - 0.04f, x1 + 0.04f, y1 + 0.04f, 2.2f, 2.3f, escurecer(Madeira, 0.85f)),
                     fechado = listOf(
-                        Forma(paredeY(y1 + 0.001f, x0 + 0.06f, xm - 0.02f, 0.08f, 2.12f), portaCor),
-                        Forma(paredeY(y1 + 0.001f, xm + 0.02f, x1 - 0.06f, 0.08f, 2.12f), portaCor),
-                        Forma(paredeY(y1 + 0.002f, xm - 0.12f, xm - 0.07f, 1.0f, 1.3f), Color(0xFF8D5A3B), contorno = false),
-                        Forma(paredeY(y1 + 0.002f, xm + 0.07f, xm + 0.12f, 1.0f, 1.3f), Color(0xFF8D5A3B), contorno = false),
+                        Forma(paredeX(x1 + 0.001f, y0 + 0.06f, ym - 0.02f, 0.08f, 2.12f), portaCor),
+                        Forma(paredeX(x1 + 0.001f, ym + 0.02f, y1 - 0.06f, 0.08f, 2.12f), portaCor),
+                        Forma(paredeX(x1 + 0.002f, ym - 0.12f, ym - 0.07f, 1.0f, 1.3f), Color(0xFF8D5A3B), contorno = false),
+                        Forma(paredeX(x1 + 0.002f, ym + 0.07f, ym + 0.12f, 1.0f, 1.3f), Color(0xFF8D5A3B), contorno = false),
                     ),
                     aberto = listOf(
-                        Forma(paredeY(y1 + 0.001f, x0 + 0.06f, x1 - 0.06f, 0.08f, 2.12f), Color(0xFF5A3A22)),
-                        Forma(paredeY(y1 - 0.04f, x0 + 0.08f, x1 - 0.08f, 1.78f, 1.82f), Metal, contorno = false),
+                        Forma(paredeX(x1 + 0.001f, y0 + 0.06f, y1 - 0.06f, 0.08f, 2.12f), Color(0xFF5A3A22)),
+                        Forma(paredeX(x1 + 0.002f, y0 + 0.08f, y1 - 0.08f, 1.78f, 1.82f), Metal, contorno = false),
                     ) + roupas + listOf(
-                        Forma(paredeX(x0 + 0.06f, y1, y1 + meia, 0.08f, 2.12f), clarear(portaCor, 0.15f)),
-                        Forma(paredeX(x1 - 0.06f, y1, y1 + meia, 0.08f, 2.12f), portaCor),
+                        Forma(paredeY(y0 + 0.06f, x1, x1 + meia, 0.08f, 2.12f), portaCor),
+                        Forma(paredeY(y1 - 0.06f, x1, x1 + meia, 0.08f, 2.12f), clarear(portaCor, 0.15f)),
                     ),
                 )
             }
@@ -1038,10 +1293,10 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
             )
             "quadro" -> peca(
                 listOf(
-                    Forma(paredeX(0.005f, y0 - 0.06f, y1 + 0.06f, z0 - 0.06f, z1 + 0.06f), Color(0xFF8D5A3B)),
-                    Forma(paredeX(0.006f, y0, y1, z0, z1), Color(0xFFBDE7FF), contorno = false),
-                    Forma(paredeX(0.007f, y0, y1, z0, z0 + 0.3f), Color(0xFF7CC56B), contorno = false),
-                    Forma(Path().apply { addOval(Rect(ponto(0.007f, y0 + 0.35f, z1 - 0.2f), tw * 0.07f)) }, Color(0xFFFFC93C), contorno = false),
+                    Forma(paredeY(0.005f, x0 - 0.06f, x1 + 0.06f, z0 - 0.06f, z1 + 0.06f), Color(0xFFD4A24C)),
+                    Forma(paredeY(0.006f, x0, x1, z0, z1), Color(0xFFBDE7FF), contorno = false),
+                    Forma(paredeY(0.007f, x0, x1, z0, z0 + 0.25f), Color(0xFF7CC56B), contorno = false),
+                    Forma(Path().apply { addOval(Rect(ponto(x1 - 0.22f, 0.007f, z1 - 0.18f), tw * 0.06f)) }, Color(0xFFFFC93C), contorno = false),
                 ),
             )
             "banheira" -> peca(
@@ -1062,44 +1317,47 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
                 )
             }
             "sofa" -> {
-                val cor = Color(0xFFFF8A80)
-                val meioY = (y0 + y1) / 2
+                // Azul como o da fachada, encostado na parede do fundo (o encosto atrás, os braços dos lados).
+                val cor = CorDoSofa
+                val meioX = (x0 + x1) / 2
+                val braco = 0.24f
                 peca(
                     caixa(x0, y0, x1, y1, 0f, 0.36f, escurecer(cor, 0.9f)) +
-                        caixa(x0, y0, x0 + 0.28f, y1, 0.36f, 0.88f, cor) +
-                        caixa(x0 + 0.28f, y0, x1, y0 + 0.25f, 0.36f, 0.6f, cor) +
-                        caixa(x0 + 0.28f, y0 + 0.27f, x1 - 0.03f, meioY - 0.02f, 0.36f, 0.5f, clarear(cor, 0.2f)) +
-                        caixa(x0 + 0.28f, meioY + 0.02f, x1 - 0.03f, y1 - 0.27f, 0.36f, 0.5f, clarear(cor, 0.2f)) +
-                        caixa(x0 + 0.28f, y1 - 0.25f, x1, y1, 0.36f, 0.6f, cor),
+                        caixa(x0, y0, x1, y0 + 0.28f, 0.36f, 0.95f, cor) +
+                        caixa(x0, y0 + 0.28f, x0 + braco, y1, 0.36f, 0.62f, cor) +
+                        caixa(x0 + braco + 0.02f, y0 + 0.28f, meioX - 0.02f, y1 - 0.03f, 0.36f, 0.5f, clarear(cor, 0.2f)) +
+                        caixa(meioX + 0.02f, y0 + 0.28f, x1 - braco - 0.02f, y1 - 0.03f, 0.36f, 0.5f, clarear(cor, 0.2f)) +
+                        caixa(x1 - braco, y0 + 0.28f, x1, y1, 0.36f, 0.62f, cor),
                 )
             }
             "geladeira" -> {
-                val profundidade = y1 - y0
+                // Encostada na parede da cozinha, de frente; a porta abre para a direita (dobradiça em x1).
+                val largura = x1 - x0
                 val comidas = Loja.naGeladeira(estado)
                 val emojis = ArrayList<Pair<TextLayoutResult, Offset>>()
                 comidas.take(9).forEachIndexed { i, c ->
                     val prateleira = i / 3
                     val z = 0.12f + prateleira * 0.5f
-                    val y = y0 + 0.18f + (i % 3) * (profundidade - 0.3f) / 2f
+                    val x = x0 + 0.18f + (i % 3) * (largura - 0.36f) / 2f
                     val l = medirEmoji(medidor, densidade, c.valor, tw * 0.26f)
-                    val p = ponto(x1, y, z)
+                    val p = ponto(x, y1, z)
                     emojis += l to Offset(p.x - l.size.width / 2f, p.y - l.size.height * 0.92f)
                 }
                 peca(
                     caixa(x0, y0, x1, y1, 0f, 2.0f, Color(0xFFF4F7FA)),
                     fechado = listOf(
-                        Forma(paredeX(x1 + 0.001f, y0 + 0.04f, y1 - 0.04f, 1.3f, 1.34f), Color(0xFFC9D3DB), contorno = false),
-                        Forma(paredeX(x1 + 0.002f, y0 + 0.1f, y0 + 0.16f, 0.75f, 1.2f), Metal, contorno = false),
-                        Forma(paredeX(x1 + 0.002f, y0 + 0.1f, y0 + 0.16f, 1.45f, 1.75f), Metal, contorno = false),
+                        Forma(paredeY(y1 + 0.001f, x0 + 0.04f, x1 - 0.04f, 1.3f, 1.34f), Color(0xFFC9D3DB), contorno = false),
+                        Forma(paredeY(y1 + 0.002f, x0 + 0.1f, x0 + 0.16f, 0.75f, 1.2f), Metal, contorno = false),
+                        Forma(paredeY(y1 + 0.002f, x0 + 0.1f, x0 + 0.16f, 1.45f, 1.75f), Metal, contorno = false),
                     ),
                     aberto = listOf(
-                        Forma(paredeX(x1 + 0.001f, y0 + 0.06f, y1 - 0.06f, 0.08f, 1.94f), Color(0xFFDDF3FF)),
-                        Forma(paredeX(x1 + 0.002f, y0 + 0.06f, y1 - 0.06f, 0.6f, 0.63f), Color.White, contorno = false),
-                        Forma(paredeX(x1 + 0.002f, y0 + 0.06f, y1 - 0.06f, 1.1f, 1.13f), Color.White, contorno = false),
-                        Forma(paredeX(x1 + 0.002f, y0 + 0.06f, y1 - 0.06f, 1.5f, 1.53f), Color.White, contorno = false),
-                        Forma(paredeY(y0, x1, x1 + profundidade - 0.02f, 0.05f, 1.95f), Color(0xFFE8EEF2)),
-                        Forma(paredeY(y0 + 0.001f, x1 + 0.08f, x1 + profundidade - 0.1f, 0.5f, 0.56f), Color(0xFFB9D7E8), contorno = false),
-                        Forma(paredeY(y0 + 0.001f, x1 + 0.08f, x1 + profundidade - 0.1f, 1.2f, 1.26f), Color(0xFFB9D7E8), contorno = false),
+                        Forma(paredeY(y1 + 0.001f, x0 + 0.06f, x1 - 0.06f, 0.08f, 1.94f), Color(0xFFDDF3FF)),
+                        Forma(paredeY(y1 + 0.002f, x0 + 0.06f, x1 - 0.06f, 0.6f, 0.63f), Color.White, contorno = false),
+                        Forma(paredeY(y1 + 0.002f, x0 + 0.06f, x1 - 0.06f, 1.1f, 1.13f), Color.White, contorno = false),
+                        Forma(paredeY(y1 + 0.002f, x0 + 0.06f, x1 - 0.06f, 1.5f, 1.53f), Color.White, contorno = false),
+                        Forma(paredeX(x1, y1, y1 + largura - 0.02f, 0.05f, 1.95f), Color(0xFFE8EEF2)),
+                        Forma(paredeX(x1 + 0.001f, y1 + 0.08f, y1 + largura - 0.1f, 0.5f, 0.56f), Color(0xFFB9D7E8), contorno = false),
+                        Forma(paredeX(x1 + 0.001f, y1 + 0.08f, y1 + largura - 0.1f, 1.2f, 1.26f), Color(0xFFB9D7E8), contorno = false),
                     ),
                     emojisAbertos = emojis,
                 )
@@ -1110,8 +1368,8 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
                     Posicao(x0 + 0.22f, y1 - 0.22f), Posicao(x1 - 0.22f, y1 - 0.22f),
                 )
                 val formas = caixa(x0, y0, x1, y1, 0f, 0.85f, Color.White) +
-                    Forma(paredeX(x1 + 0.001f, y0 + 0.15f, y1 - 0.15f, 0.18f, 0.6f), Color(0xFF3A3A44)) +
-                    Forma(paredeX(x1 + 0.002f, y0 + 0.15f, y1 - 0.15f, 0.66f, 0.7f), Metal, contorno = false) +
+                    Forma(paredeY(y1 + 0.001f, x0 + 0.15f, x1 - 0.15f, 0.18f, 0.6f), Color(0xFF3A3A44)) +
+                    Forma(paredeY(y1 + 0.002f, x0 + 0.15f, x1 - 0.15f, 0.66f, 0.7f), Metal, contorno = false) +
                     bocas.map { b -> Forma(piso(b.x - 0.12f, b.y - 0.12f, b.x + 0.12f, b.y + 0.12f, 0.851f), Color(0xFF4A4A55), contorno = false) }
                 peca(formas, pontos = bocas.map { ponto(it.x, it.y, 0.86f) })
             }
@@ -1132,6 +1390,43 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
     }
 }
 
+/** A escada: embaixo, degraus de madeira subindo para o fundo; em cima, o vão com os degraus descendo e o corrimão. */
+private fun montarEscada(m: Movel, proj: Projecao, medidor: TextMeasurer, densidade: Density, toque: Rect, ancora: Offset, caixaDaPeca: Caixa): Peca {
+    val (x0, y0, x1, y1) = listOf(m.x0, m.y0, m.x1, m.y1)
+    val tw = proj.ladrilho
+    val formas = ArrayList<Forma>()
+    val sobe = m.andar == Andar.DE_BAIXO
+    with(proj) {
+        if (sobe) {
+            val n = 7
+            val d = (y1 - y0) / n
+            val hs = m.altura / n
+            for (i in 0 until n) formas += caixa(x0, y0, x1, y1 - i * d, i * hs, (i + 1) * hs, if (i % 2 == 0) Madeira else clarear(Madeira, 0.08f))
+        } else {
+            val n = 5
+            val d = (y1 - y0) / n
+            formas += Forma(piso(x0, y0, x1, y1, 0.004f), Color(0xFF5C3D28))
+            for (k in 0 until n) {
+                formas += Forma(piso(x0 + 0.06f, y0 + k * d + d * 0.45f, x1 - 0.06f, y0 + (k + 1) * d, 0.006f), escurecer(Madeira, 0.75f + k * 0.05f), contorno = false)
+            }
+            // corrimão do lado de dentro do quarto
+            var y = y0 + 0.1f
+            while (y < y1 - 0.05f) {
+                formas += caixa(x1 - 0.06f, y, x1 - 0.01f, y + 0.05f, 0f, m.altura - 0.08f, Madeira)
+                y += 0.5f
+            }
+            formas += caixa(x1 - 0.08f, y0, x1, y1, m.altura - 0.08f, m.altura, escurecer(Madeira, 0.9f))
+        }
+    }
+    // Setinha que balança em cima da escada: para onde ela leva.
+    val seta = medirEmoji(medidor, densidade, if (sobe) "⬆️" else "⬇️", tw * 0.42f)
+    val topo = proj.ponto((x0 + x1) / 2, (y0 + y1) / 2, if (sobe) m.altura + 0.15f else 1.1f)
+    val em = Offset(topo.x - seta.size.width / 2f, topo.y - seta.size.height)
+    // A escada inteira é tocável, e também a setinha.
+    val alvo = Rect(min(toque.left, em.x), min(toque.top, em.y), max(toque.right, em.x + seta.size.width), max(toque.bottom, em.y + seta.size.height))
+    return Peca(m, caixaDaPeca, m.comodo, formas, alvo, ancora, emoji = seta, emojiEm = em)
+}
+
 private fun corDoTraje(traje: String, perfil: Perfil): Color = when (traje) {
     "pijama" -> Color(0xFF3B4C8C)
     "abelha" -> Color(0xFFFFC93C)
@@ -1148,23 +1443,24 @@ private fun corDoTraje(traje: String, perfil: Perfil): Color = when (traje) {
 private fun DrawScope.desenharCena(g: Geometria, cena: Cena, perfil: Perfil) {
     val t = cena.tempo
     val apagadas = cena.luzApagada
-    translate(left = -cena.camX) {
-        // sombra da casa no gramado
-        drawOval(Color(0x2A2E5A1E), topLeft = g.sombraDaCasa.topLeft, size = g.sombraDaCasa.size)
+    // O andar de cima primeiro: o de baixo fica na frente, como na casa de fora.
+    for (ga in g.andares) {
+        val proj = ga.proj
+        ga.sombra?.let { drawOval(Color(0x2A2E5A1E), topLeft = it.topLeft, size = it.size) }
         // chão e paredes do fundo
-        desenharFormas(g.chao, Contorno, g.tracoFino)
-        for (c in Comodo.entries) if (c in apagadas) drawPath(g.chaoDoComodo[c.ordinal], Escuro)
-        desenharFormas(g.paredes, Contorno, g.tracoFino)
-        g.padrao?.let { drawPath(it, g.corDoPadrao) }
-        for (c in Comodo.entries) if (c in apagadas) sombrearFormas(g.paredesDoComodo[c.ordinal], Escuro)
-        for (i in g.naParede.indices) desenharPeca(g, g.naParede[i], cena, apagadas)
+        desenharFormas(ga.chao, Contorno, g.tracoFino)
+        for (luz in ga.luzes) if (luz.comodo in apagadas) drawPath(luz.chao, Escuro)
+        desenharFormas(ga.paredes, Contorno, g.tracoFino)
+        ga.padrao?.let { drawPath(it, g.corDoPadrao) }
+        for (luz in ga.luzes) if (luz.comodo in apagadas) sombrearFormas(luz.paredes, Escuro)
+        for (i in ga.naParede.indices) desenharPeca(g, ga.naParede[i], cena, apagadas)
 
         // marca de onde a criança vai
         val marca = cena.marca
         val idadeMarca = t - cena.marcaEm
-        if (marca != null && idadeMarca < 0.7f) {
-            val p = g.proj.ponto(marca.x, marca.y)
-            val r = g.proj.ladrilho * (0.15f + idadeMarca * 0.4f)
+        if (marca != null && cena.marcaAndar == ga.andar && idadeMarca < 0.7f) {
+            val p = proj.ponto(marca.x, marca.y)
+            val r = g.ladrilho * (0.15f + idadeMarca * 0.4f)
             drawOval(
                 Color.White.copy(alpha = 0.9f * (1f - idadeMarca / 0.7f)),
                 topLeft = Offset(p.x - r, p.y - r / 2f), size = Size(r * 2f, r),
@@ -1173,28 +1469,44 @@ private fun DrawScope.desenharCena(g: Geometria, cena: Cena, perfil: Perfil) {
         }
 
         // móveis e paredes internas, do fundo para a frente, com a criança no lugar certo
-        val x = cena.x
-        val y = cena.y
-        for (i in g.pecas.indices) {
-            val p = g.pecas[i]
-            if (PlantaDaCasa.criancaNaFrente(x, y, p.caixa)) desenharPeca(g, p, cena, apagadas)
-        }
-        desenharCriancaNaCena(g, cena, perfil)
-        for (i in g.pecas.indices) {
-            val p = g.pecas[i]
-            if (!PlantaDaCasa.criancaNaFrente(x, y, p.caixa)) desenharPeca(g, p, cena, apagadas)
+        if (cena.andar == ga.andar) {
+            val x = cena.x
+            val y = cena.y
+            for (i in ga.pecas.indices) {
+                val p = ga.pecas[i]
+                if (PlantaDaCasa.criancaNaFrente(x, y, p.caixa)) desenharPeca(g, p, cena, apagadas)
+            }
+            desenharCriancaNaCena(g, proj, cena, perfil)
+            for (i in ga.pecas.indices) {
+                val p = ga.pecas[i]
+                if (!PlantaDaCasa.criancaNaFrente(x, y, p.caixa)) desenharPeca(g, p, cena, apagadas)
+            }
+            // acabou de subir ou descer a escada: um brilho em volta da criança
+            val idadeTroca = t - cena.trocouEm
+            if (idadeTroca < 0.6f) {
+                val pe = proj.ponto(x, y)
+                val f = idadeTroca / 0.6f
+                val centro = Offset(pe.x, pe.y - g.alturaCrianca * 0.5f)
+                drawCircle(Color.White.copy(alpha = 0.55f * (1f - f)), radius = g.alturaCrianca * (0.4f + 0.5f * f), center = centro)
+                for (k in 0 until 6) {
+                    val ang = k * PI.toFloat() / 3f + f * 2f
+                    val r = g.alturaCrianca * (0.35f + 0.4f * f)
+                    drawCircle(Cores.Estrela.copy(alpha = 1f - f), radius = g.ladrilho * 0.05f, center = Offset(centro.x + r * kotlin.math.cos(ang), centro.y + r * sin(ang)))
+                }
+            }
+        } else {
+            for (i in ga.pecas.indices) desenharPeca(g, ga.pecas[i], cena, apagadas)
         }
 
         // lâmpadas penduradas (tocar acende e apaga)
-        for (c in Comodo.entries) {
-            val i = c.ordinal
-            val acesa = c !in apagadas
-            val l = g.lampadas[i]
-            drawLine(Color(0xFF6B5B4B), g.cordas[i], l, strokeWidth = max(1f, g.proj.ladrilho * 0.02f))
-            if (acesa) drawCircle(g.brilhoDasLampadas[i], radius = g.proj.ladrilho * 0.9f, center = l)
-            drawCircle(if (acesa) Color(0xFFFFF3B0) else Color(0xFFB0B4C0), radius = g.proj.ladrilho * 0.09f, center = Offset(l.x, l.y + g.proj.ladrilho * 0.02f))
-            drawPath(g.cupulas[i], if (acesa) Color(0xFFFF9F6E) else Color(0xFFB57B62))
-            drawPath(g.cupulas[i], Contorno, style = g.tracoFino)
+        for (luz in ga.luzes) {
+            val acesa = luz.comodo !in apagadas
+            val l = luz.lampada
+            drawLine(Color(0xFF6B5B4B), luz.corda, l, strokeWidth = max(1f, g.ladrilho * 0.02f))
+            if (acesa) drawCircle(luz.brilho, radius = g.ladrilho * 0.9f, center = l)
+            drawCircle(if (acesa) Color(0xFFFFF3B0) else Color(0xFFB0B4C0), radius = g.ladrilho * 0.09f, center = Offset(l.x, l.y + g.ladrilho * 0.02f))
+            drawPath(luz.cupula, if (acesa) Color(0xFFFF9F6E) else Color(0xFFB57B62))
+            drawPath(luz.cupula, Contorno, style = g.tracoFino)
         }
     }
 }
@@ -1231,12 +1543,16 @@ private fun DrawScope.desenharPecaSemPulo(g: Geometria, p: Peca, cena: Cena, apa
     } else {
         desenharFormas(p.fechado, Contorno, g.tracoFino)
     }
-    p.emoji?.let { drawText(it, topLeft = p.emojiEm, alpha = if (escuro) 0.55f else 1f) }
+    p.emoji?.let {
+        // A setinha da escada balança devagar, chamando para subir ou descer.
+        val balanco = if (acao == Acao.ESCADA) sin(t * 3.2f) * g.ladrilho * 0.06f else 0f
+        drawText(it, topLeft = Offset(p.emojiEm.x, p.emojiEm.y + balanco), alpha = if (escuro) 0.55f else 1f)
+    }
     if (escuro) {
         sombrearFormas(p.formas, Escuro)
         sombrearFormas(if (aberto) p.aberto else p.fechado, Escuro)
     }
-    val tw = g.proj.ladrilho
+    val tw = g.ladrilho
     when (p.movel?.id) {
         "abajur" -> if (!escuro) p.brilho?.let { drawCircle(it, radius = tw * 0.7f, center = p.pontos[0]) }
         "pia" -> if (t < cena.aguaAte) {
@@ -1295,9 +1611,9 @@ private fun DrawScope.desenharPecaSemPulo(g: Geometria, p: Peca, cena: Cena, apa
     }
 }
 
-private fun DrawScope.desenharCriancaNaCena(g: Geometria, cena: Cena, perfil: Perfil) {
+private fun DrawScope.desenharCriancaNaCena(g: Geometria, proj: Projecao, cena: Cena, perfil: Perfil) {
     val t = cena.tempo
-    val pe = g.proj.ponto(cena.x, cena.y)
+    val pe = proj.ponto(cena.x, cena.y)
     val altura = g.alturaCrianca
     val largura = g.larguraCrianca
     val andando = cena.andando
@@ -1350,9 +1666,14 @@ private fun DrawScope.desenharCriancaNaCena(g: Geometria, cena: Cena, perfil: Pe
 // ---------------------------------------------------------------------------------------------
 
 @Composable
-private fun Painel(modifier: Modifier, titulo: String, descricao: String, onFechar: () -> Unit, conteudo: @Composable () -> Unit) {
+private fun Painel(
+    descricao: String,
+    onFechar: () -> Unit,
+    cabecalho: @Composable RowScope.() -> Unit,
+    conteudo: @Composable () -> Unit,
+) {
     Column(
-        modifier
+        Modifier
             .fillMaxWidth()
             .padding(10.dp)
             .shadow(10.dp, RoundedCornerShape(28.dp))
@@ -1361,47 +1682,103 @@ private fun Painel(modifier: Modifier, titulo: String, descricao: String, onFech
             .padding(12.dp)
             .semantics { contentDescription = descricao },
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(titulo, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-            BotaoRedondo("✖️", "Fechar", onFechar, tamanho = 48.dp)
+        Row(verticalAlignment = Alignment.Bottom) {
+            cabecalho()
+            Spacer(Modifier.width(8.dp))
+            BotaoRedondo("✖️", "Fechar", onFechar, tamanho = 48.dp, modifier = Modifier.align(Alignment.CenterVertically))
         }
-        Spacer(Modifier.height(8.dp))
         conteudo()
     }
 }
 
 @Composable
-private fun PainelGeladeira(comidas: List<Produto>, modifier: Modifier, onComer: (Produto) -> Unit, onLoja: () -> Unit, onFechar: () -> Unit) {
-    Painel(modifier, "🧊 🍎 🥛", "Geladeira aberta", onFechar) {
+private fun PainelGeladeira(
+    comidas: List<Produto>,
+    onAba: (PrateleiraDaGeladeira, Boolean) -> Unit,
+    onComer: (Produto) -> Unit,
+    onLoja: () -> Unit,
+    onFechar: () -> Unit,
+) {
+    var aba by remember { mutableStateOf(PrateleiraDaGeladeira.inicial(comidas)) }
+    val daAba = PrateleiraDaGeladeira.filtrar(comidas, aba)
+    Painel("Geladeira aberta", onFechar, cabecalho = {
+        // Abas de verdade: fundo de aba, a escolhida colada na prateleira, toque de 64 dp e narração.
+        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) {
+            for (p in PrateleiraDaGeladeira.entries) {
+                val escolhida = p == aba
+                val quantas = PrateleiraDaGeladeira.filtrar(comidas, p).size
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .height(if (escolhida) 68.dp else 64.dp)
+                        .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                        .background(if (escolhida) CorDaPrateleira else Color(0xFFEEF1F6))
+                        .selectable(
+                            selected = escolhida,
+                            role = Role.Tab,
+                            onClick = {
+                                aba = p
+                                onAba(p, quantas == 0)
+                            },
+                        )
+                        .semantics { contentDescription = "${p.nome}: $quantas" },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        p.icone,
+                        fontSize = if (escolhida) 34.sp else 28.sp,
+                        modifier = Modifier.graphicsLayer { alpha = if (escolhida) 1f else 0.65f },
+                    )
+                    if (quantas > 0) {
+                        Text(
+                            "$quantas",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 5.dp, end = 6.dp)
+                                .size(20.dp)
+                                .background(Cores.Certo, CircleShape),
+                        )
+                    }
+                }
+            }
+        }
+    }) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFDDF3FF), RoundedCornerShape(20.dp))
+                .background(
+                    CorDaPrateleira,
+                    RoundedCornerShape(topStart = if (aba.ordinal == 0) 0.dp else 20.dp, topEnd = 20.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                )
                 .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            if (comidas.isEmpty()) {
+            if (daAba.isEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("🫙", fontSize = 48.sp)
                     Spacer(Modifier.weight(1f))
                     BotaoFofo(onClick = onLoja, cor = Cores.Certo, descricao = "Comprar comidas", modifier = Modifier.pulsando()) {
-                        Text("🛒 🍎", style = MaterialTheme.typography.headlineMedium, color = Color.White, modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp))
+                        Text("🛒 ${aba.icone}", style = MaterialTheme.typography.headlineMedium, color = Color.White, modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp))
                     }
                 }
             } else {
-                for (linha in comidas.chunked(5)) {
+                for (linha in daAba.chunked(4)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         for (c in linha) {
                             Box(
                                 Modifier
-                                    .size(60.dp)
+                                    .size(64.dp)
                                     .clip(RoundedCornerShape(16.dp))
                                     .background(Color.White)
                                     .semantics { contentDescription = c.nome }
                                     .clickable { onComer(c) },
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text(c.icone, fontSize = 34.sp)
+                                Text(c.icone, fontSize = 36.sp)
                             }
                         }
                     }
@@ -1414,11 +1791,22 @@ private fun PainelGeladeira(comidas: List<Produto>, modifier: Modifier, onComer:
 }
 
 @Composable
-private fun PainelGuardaRoupa(estado: EstadoJogo, modifier: Modifier, onVestir: (String) -> Unit, onExperimentar: (Produto) -> Unit, onFechar: () -> Unit) {
+private fun PainelGuardaRoupa(estado: EstadoJogo, onVestir: (String) -> Unit, onExperimentar: (Produto) -> Unit, onFechar: () -> Unit) {
     val perfil = estado.perfil ?: Perfil()
     val minhas = Loja.noGuardaRoupa(estado).map { it.valor }.toSet()
-    Painel(modifier, "🚪 👕 👗", "Guarda-roupa aberto", onFechar) {
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(horizontal = 4.dp)) {
+    Painel("Guarda-roupa aberto", onFechar, cabecalho = {
+        Box(
+            Modifier
+                .size(56.dp)
+                .background(Color(0xFFFFF0F6), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("👗", fontSize = 30.sp)
+        }
+        Spacer(Modifier.weight(1f))
+    }) {
+        Spacer(Modifier.height(8.dp))
+        ListaComDica(contentPadding = PaddingValues(horizontal = 4.dp), espaco = 10.dp) {
             item(key = "sempre") {
                 CabideDaRoupa(perfil.copy(traje = ""), perfil.traje.isEmpty(), "Roupa de sempre", null) { onVestir("") }
             }
@@ -1436,6 +1824,52 @@ private fun PainelGuardaRoupa(estado: EstadoJogo, modifier: Modifier, onVestir: 
             }
         }
     }
+}
+
+/**
+ * Lista que rola para o lado e mostra que tem mais: a borda some num degradê (onde há mais cartões)
+ * e, ao abrir, a lista dá um balancinho para o lado e volta, convidando a arrastar.
+ */
+@Composable
+private fun ListaComDica(contentPadding: PaddingValues, espaco: Dp, conteudo: LazyListScope.() -> Unit) {
+    val lista = rememberLazyListState()
+    val balanco = with(LocalDensity.current) { 56.dp.toPx() }
+    LaunchedEffect(lista) {
+        delay(700)
+        if (lista.canScrollForward) {
+            lista.animateScrollBy(balanco, tween(durationMillis = 450))
+            delay(150)
+            lista.animateScrollBy(-balanco, tween(durationMillis = 550))
+        }
+    }
+    LazyRow(
+        state = lista,
+        contentPadding = contentPadding,
+        horizontalArrangement = Arrangement.spacedBy(espaco),
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+            .drawWithContent {
+                drawContent()
+                val borda = min(40.dp.toPx(), size.width / 4f)
+                if (lista.canScrollForward) {
+                    drawRect(
+                        Brush.horizontalGradient(listOf(Color.Black, Color.Transparent), startX = size.width - borda, endX = size.width),
+                        topLeft = Offset(size.width - borda, 0f),
+                        size = Size(borda, size.height),
+                        blendMode = BlendMode.DstIn,
+                    )
+                }
+                if (lista.canScrollBackward) {
+                    drawRect(
+                        Brush.horizontalGradient(listOf(Color.Transparent, Color.Black), startX = 0f, endX = borda),
+                        size = Size(borda, size.height),
+                        blendMode = BlendMode.DstIn,
+                    )
+                }
+            },
+        content = conteudo,
+    )
 }
 
 @Composable
@@ -1474,10 +1908,7 @@ private fun Lojinha(estado: EstadoJogo, previa: Produto?, temGeladeira: Boolean,
             .border(4.dp, Color(0xFF8E5A34), RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .padding(top = 12.dp, bottom = 14.dp),
     ) {
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        ListaComDica(contentPadding = PaddingValues(horizontal = 14.dp), espaco = 12.dp) {
             items(Loja.vitrine(estado, Loja.categoriasDeDentro), key = { it.id }) { produto ->
                 val tem = produto.id in estado.comprados
                 val preco = Loja.preco(produto, estado)

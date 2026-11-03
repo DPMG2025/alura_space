@@ -9,21 +9,35 @@ import kotlin.math.hypot
  * ladrilhos, paredes, portas, onde cada móvel mora, por onde a criança pode andar e em que ordem
  * desenhar as coisas. Kotlin puro, testável sem Android. O desenho fica em ui/telas/TelaCasaPorDentro.kt.
  *
- * Coordenadas em ladrilhos: x cresce para baixo e para a direita na tela, y cresce para baixo e para a
- * esquerda. A planta tem [LADO] x [LADO] ladrilhos, dividida em 4 cômodos por duas paredes internas
- * (em x = [MEIO] e em y = [MEIO]), cada uma com duas passagens (portas).
+ * É a mesma casa de fora (CenaDaCasa): dois andares ligados pela escada. Em cima, o quarto (à esquerda)
+ * e o banheiro; embaixo, a sala (com a escada e a porta da rua) e a cozinha. Cada andar tem
+ * [PlantaDaCasa.LARGURA] x [PlantaDaCasa.FUNDO] ladrilhos e uma parede interna baixinha em
+ * x = [PlantaDaCasa.meio], com uma passagem.
  *
- *            (0,0)
- *        QUARTO   BANHEIRO
- *        SALA     COZINHA
- *            (8,8)
+ * Coordenadas em ladrilhos: x cresce para baixo e para a direita na tela (da esquerda para a direita da
+ * fachada), y cresce para baixo e para a esquerda (do fundo da casa para a frente). As paredes do fundo
+ * ficam em y = 0 (a comprida, onde os móveis se encostam) e em x = 0.
+ *
+ *     andar de cima:   QUARTO | BANHEIRO
+ *     andar de baixo:  SALA   | COZINHA
  */
+
+/** Os dois andares da casa. */
+enum class Andar(val nome: String, val nomeEn: String) {
+    DE_BAIXO("Andar de baixo", "downstairs"),
+    DE_CIMA("Andar de cima", "upstairs");
+
+    val outro: Andar get() = if (this == DE_BAIXO) DE_CIMA else DE_BAIXO
+}
+
+/** Em que andar fica cada cômodo (igual à casa de fora). */
+val Comodo.andar: Andar get() = if (this == Comodo.QUARTO || this == Comodo.BANHEIRO) Andar.DE_CIMA else Andar.DE_BAIXO
 
 /** Para que lado fica a frente do móvel (o lado que a câmera enxerga). */
 enum class Frente { X, Y }
 
 /** O que acontece ao tocar no móvel. */
-enum class Acao { NENHUMA, GELADEIRA, GUARDA_ROUPA, TORNEIRA, TV, FOGAO, BANHEIRA, CAMA, ESPELHO, DESCARGA }
+enum class Acao { NENHUMA, GELADEIRA, GUARDA_ROUPA, TORNEIRA, TV, FOGAO, BANHEIRA, CAMA, ESPELHO, DESCARGA, ESCADA }
 
 /**
  * Um móvel da casa por dentro. A "pegada" no chão vai de ([x0], [y0]) a ([x1], [y1]) em ladrilhos;
@@ -54,49 +68,71 @@ data class Movel(
     val fixo get() = itemId == null
     val centroX get() = (x0 + x1) / 2
     val centroY get() = (y0 + y1) / 2
+    val andar: Andar get() = comodo.andar
 }
 
 /** Algo que precisa de ordem de desenho: um móvel, um pedaço de parede interna, etc. (caixa no chão). */
 data class Caixa(val x0: Float, val y0: Float, val x1: Float, val y1: Float, val z0: Float = 0f, val z1: Float = 1f)
 
+/**
+ * As prateleiras (abas) da geladeira: cada comida mora numa delas.
+ * [icone] é o desenho da aba; o narrador fala [nome] e [nomeEn] quando a criança toca nela.
+ */
+enum class PrateleiraDaGeladeira(val icone: String, val nome: String, val nomeEn: String, val emojis: Set<String>) {
+    FRUTAS("🍎", "Frutas e legumes", "fruits", setOf("🍎", "🍌", "🥕", "🍓", "🍉")),
+    LEITE("🥛", "Leite, queijo e ovos", "milk", setOf("🥛", "🧀", "🥚")),
+    CONGELADOR("🧊", "Congelador, bem geladinho", "freezer", setOf("🍦", "🍕"));
+
+    companion object {
+        /** A prateleira de uma comida (pelo emoji); o que não estiver em nenhuma vai para as frutas. */
+        fun de(emoji: String): PrateleiraDaGeladeira = entries.firstOrNull { emoji in it.emojis } ?: FRUTAS
+
+        /** As comidas desta prateleira, na ordem em que vieram. */
+        fun filtrar(comidas: List<Produto>, p: PrateleiraDaGeladeira): List<Produto> = comidas.filter { de(it.valor) == p }
+
+        /** A aba que abre primeiro: a primeira que tem comida (ou as frutas, se a geladeira estiver vazia). */
+        fun inicial(comidas: List<Produto>): PrateleiraDaGeladeira = entries.firstOrNull { p -> comidas.any { de(it.valor) == p } } ?: FRUTAS
+    }
+}
+
 object PlantaDaCasa {
-    const val LADO = 8
-    const val MEIO = 4
+    /** Ladrilhos de cada andar: da esquerda para a direita da fachada ([LARGURA]) e do fundo para a frente ([FUNDO]). */
+    const val LARGURA = 8
+    const val FUNDO = 5
 
     /** Altura das paredes do fundo e das paredes internas (cortadas baixinhas, para ver dentro). */
     const val ALTURA_PAREDE = 3.0f
     const val ALTURA_PAREDE_INTERNA = 0.45f
 
-    /** Na parede interna x = MEIO, as passagens ficam nas linhas y destes ladrilhos. */
-    val portasNaParedeX = setOf(1, 6)
+    /** Onde fica a parede entre os dois cômodos do andar (como na fachada: a sala é maior que a cozinha). */
+    fun meio(andar: Andar): Int = if (andar == Andar.DE_CIMA) 4 else 5
 
-    /** Na parede interna y = MEIO, as passagens ficam nas colunas x destes ladrilhos. */
-    val portasNaParedeY = setOf(2, 6)
+    /** Na parede interna, as passagens ficam nas linhas y destes ladrilhos (na frente, longe dos móveis). */
+    val portasNaParedeInterna = setOf(3, 4)
 
-    /** Onde a criança aparece quando entra (na sala, perto da porta da rua). */
-    val entrada = Posicao(2.5f, 6.5f)
+    /** Os dois cômodos do andar: o da esquerda e o da direita. */
+    fun comodosDo(andar: Andar): List<Comodo> =
+        if (andar == Andar.DE_CIMA) listOf(Comodo.QUARTO, Comodo.BANHEIRO) else listOf(Comodo.SALA, Comodo.COZINHA)
+
+    /** Onde a criança aparece quando entra pela porta da rua (na sala). */
+    val entrada = Posicao(0.6f, 4.3f)
+
+    /** A porta da rua, na parede x = 0 da sala: de [portaDaRua].x a [portaDaRua].y em ladrilhos. */
+    val portaDaRua = Posicao(3.35f, 4.55f)
+
+    /** Onde a criança pisa para subir ou descer (ao pé da escada, igual nos dois andares). */
+    val peDaEscada = Posicao(1.45f, 3.2f)
 
     /** Ponto das lâmpadas penduradas no meio de cada cômodo. */
-    fun centroDo(c: Comodo): Posicao = when (c) {
-        Comodo.QUARTO -> Posicao(2f, 2f)
-        Comodo.BANHEIRO -> Posicao(6f, 2f)
-        Comodo.SALA -> Posicao(2f, 6f)
-        Comodo.COZINHA -> Posicao(6f, 6f)
+    fun centroDo(c: Comodo): Posicao = limitesDo(c).let { Posicao((it.x0 + it.x1) / 2, (it.y0 + it.y1) / 2) }
+
+    fun limitesDo(c: Comodo): Caixa {
+        val m = meio(c.andar).toFloat()
+        val esquerda = comodosDo(c.andar)[0] == c
+        return if (esquerda) Caixa(0f, 0f, m, FUNDO.toFloat()) else Caixa(m, 0f, LARGURA.toFloat(), FUNDO.toFloat())
     }
 
-    fun limitesDo(c: Comodo): Caixa = when (c) {
-        Comodo.QUARTO -> Caixa(0f, 0f, MEIO.toFloat(), MEIO.toFloat())
-        Comodo.BANHEIRO -> Caixa(MEIO.toFloat(), 0f, LADO.toFloat(), MEIO.toFloat())
-        Comodo.SALA -> Caixa(0f, MEIO.toFloat(), MEIO.toFloat(), LADO.toFloat())
-        Comodo.COZINHA -> Caixa(MEIO.toFloat(), MEIO.toFloat(), LADO.toFloat(), LADO.toFloat())
-    }
-
-    fun comodoEm(x: Float, y: Float): Comodo = when {
-        x < MEIO && y < MEIO -> Comodo.QUARTO
-        y < MEIO -> Comodo.BANHEIRO
-        x < MEIO -> Comodo.SALA
-        else -> Comodo.COZINHA
-    }
+    fun comodoEm(andar: Andar, x: Float, y: Float): Comodo = comodosDo(andar)[if (x < meio(andar)) 0 else 1]
 
     private fun item(id: String) = ItensDaCasa.porId.getValue(id)
 
@@ -108,33 +144,38 @@ object PlantaDaCasa {
         return Movel(id, i.nome, i.nomeEn, comodo, x0, y0, x1, y1, altura, z, frente, acao, bloqueia, naParede, false, id)
     }
 
-    /** Todos os móveis possíveis. As peças ganhas aparecem no cômodo certo; os fixos estão sempre lá. */
+    /**
+     * Todos os móveis possíveis, na mesma ordem da fachada (da esquerda para a direita), encostados na parede
+     * do fundo. As peças ganhas aparecem no cômodo certo; os fixos (escada, guarda-roupa, pia...) estão sempre lá.
+     */
     val moveis: List<Movel> = listOf(
-        // Quarto
-        daPeca("cama", Comodo.QUARTO, 0.12f, 0.12f, 1.3f, 2.1f, 0.55f, acao = Acao.CAMA),
-        Movel("criado", "Criado-mudo", "nightstand", Comodo.QUARTO, 1.45f, 0.12f, 2.02f, 0.7f, 0.5f),
-        daPeca("abajur", Comodo.QUARTO, 1.5f, 0.15f, 1.97f, 0.65f, 0.55f, z = 0.5f, bloqueia = false),
-        daPeca("ursinho", Comodo.QUARTO, 0.45f, 1.3f, 1.0f, 1.8f, 0.5f, z = 0.55f, bloqueia = false),
-        Movel("guardaroupa", "Guarda-roupa", "wardrobe", Comodo.QUARTO, 2.4f, 0.1f, 3.88f, 0.7f, 2.2f, acao = Acao.GUARDA_ROUPA),
-        daPeca("violao", Comodo.QUARTO, 0.1f, 3.0f, 0.55f, 3.6f, 0.9f),
-        // Banheiro
-        Movel("pia", "Pia", "sink", Comodo.BANHEIRO, 4.3f, 0.1f, 5.3f, 0.75f, 0.9f, acao = Acao.TORNEIRA),
-        daPeca("espelho", Comodo.BANHEIRO, 4.4f, 0f, 5.2f, 0.04f, 0.8f, z = 1.3f, acao = Acao.ESPELHO, bloqueia = false, naParede = true),
-        daPeca("banheira", Comodo.BANHEIRO, 6.0f, 0.12f, 7.88f, 1.35f, 0.6f, acao = Acao.BANHEIRA),
-        Movel("vaso", "Vaso sanitário", "toilet", Comodo.BANHEIRO, 7.2f, 2.8f, 7.88f, 3.5f, 0.7f, frente = Frente.X, acao = Acao.DESCARGA),
-        // Sala (o gatinho dorme em cima do sofá)
-        daPeca("tv", Comodo.SALA, 0.4f, 4.1f, 1.6f, 4.6f, 1.3f, acao = Acao.TV),
-        daPeca("sofa", Comodo.SALA, 0.1f, 5.4f, 1.0f, 7.6f, 0.75f, frente = Frente.X),
-        daPeca("quadro", Comodo.SALA, 0f, 5.6f, 0.04f, 7.0f, 0.7f, z = 1.45f, frente = Frente.X, bloqueia = false, naParede = true),
-        daPeca("livros", Comodo.SALA, 1.2f, 7.3f, 1.75f, 7.85f, 0.5f),
-        daPeca("planta", Comodo.SALA, 3.3f, 7.3f, 3.85f, 7.85f, 0.7f),
-        daPeca("gato", Comodo.SALA, 0.3f, 6.5f, 0.8f, 7.0f, 0.45f, z = 0.75f, bloqueia = false),
-        Movel("tapete", "Tapete", "rug", Comodo.SALA, 1.3f, 5.0f, 3.4f, 7.0f, 0f, bloqueia = false, noChao = true),
-        // Cozinha
-        daPeca("geladeira", Comodo.COZINHA, 4.1f, 4.1f, 4.95f, 4.95f, 2.0f, frente = Frente.X, acao = Acao.GELADEIRA),
-        daPeca("fogao", Comodo.COZINHA, 4.1f, 5.05f, 4.95f, 5.9f, 0.85f, frente = Frente.X, acao = Acao.FOGAO),
-        daPeca("mesa", Comodo.COZINHA, 6.0f, 6.0f, 7.3f, 7.3f, 0.72f),
-        daPeca("bolo", Comodo.COZINHA, 6.4f, 6.4f, 6.9f, 6.9f, 0.45f, z = 0.72f, bloqueia = false),
+        // Andar de baixo. Sala: escada, porta da rua, sofá com o gatinho, livros e TV.
+        Movel("escada", "Escada", "stairs", Comodo.SALA, 0.08f, 0.08f, 0.95f, 2.6f, 2.7f, acao = Acao.ESCADA),
+        daPeca("sofa", Comodo.SALA, 1.25f, 0.1f, 3.0f, 0.98f, 0.88f),
+        daPeca("gato", Comodo.SALA, 1.85f, 0.35f, 2.35f, 0.85f, 0.45f, z = 0.5f, bloqueia = false),
+        daPeca("livros", Comodo.SALA, 3.1f, 0.12f, 3.55f, 0.57f, 0.5f),
+        daPeca("tv", Comodo.SALA, 3.7f, 0.1f, 4.85f, 0.6f, 1.3f, acao = Acao.TV),
+        Movel("tapete", "Tapete", "rug", Comodo.SALA, 1.5f, 1.45f, 3.9f, 3.45f, 0f, bloqueia = false, noChao = true),
+        // Cozinha: a mesa com o bolo, o fogão e a geladeira (no canto, encostada na parede da cozinha).
+        daPeca("mesa", Comodo.COZINHA, 5.6f, 2.0f, 6.7f, 2.98f, 0.72f),
+        daPeca("bolo", Comodo.COZINHA, 5.9f, 2.25f, 6.4f, 2.75f, 0.45f, z = 0.72f, bloqueia = false),
+        daPeca("fogao", Comodo.COZINHA, 5.95f, 0.1f, 6.8f, 0.92f, 0.85f, acao = Acao.FOGAO),
+        daPeca("geladeira", Comodo.COZINHA, 6.98f, 0.1f, 7.9f, 0.95f, 2.0f, acao = Acao.GELADEIRA),
+        // Andar de cima. Quarto: a escada que desce, o quadro, a cama, o criado-mudo com o abajur e o violão.
+        Movel("escadaDeCima", "Escada", "stairs", Comodo.QUARTO, 0.08f, 0.08f, 0.95f, 2.6f, 0.75f, acao = Acao.ESCADA),
+        daPeca("quadro", Comodo.QUARTO, 1.45f, 0f, 2.3f, 0.04f, 0.65f, z = 1.5f, bloqueia = false, naParede = true),
+        daPeca("cama", Comodo.QUARTO, 1.25f, 0.1f, 2.5f, 1.98f, 0.55f, acao = Acao.CAMA),
+        daPeca("ursinho", Comodo.QUARTO, 1.6f, 1.2f, 2.15f, 1.7f, 0.5f, z = 0.55f, bloqueia = false),
+        Movel("criado", "Criado-mudo", "nightstand", Comodo.QUARTO, 2.65f, 0.1f, 3.2f, 0.65f, 0.5f),
+        daPeca("abajur", Comodo.QUARTO, 2.7f, 0.13f, 3.15f, 0.62f, 0.55f, z = 0.5f, bloqueia = false),
+        daPeca("violao", Comodo.QUARTO, 3.32f, 0.12f, 3.8f, 0.6f, 0.9f),
+        Movel("guardaroupa", "Guarda-roupa", "wardrobe", Comodo.QUARTO, 0.1f, 3.0f, 0.72f, 4.85f, 2.2f, frente = Frente.X, acao = Acao.GUARDA_ROUPA),
+        daPeca("planta", Comodo.QUARTO, 3.3f, 4.3f, 3.85f, 4.85f, 0.7f),
+        // Banheiro: pia com o espelho em cima, vaso e banheira (embaixo da janela redonda).
+        Movel("pia", "Pia", "sink", Comodo.BANHEIRO, 4.3f, 0.1f, 5.25f, 0.75f, 0.9f, acao = Acao.TORNEIRA),
+        daPeca("espelho", Comodo.BANHEIRO, 4.4f, 0f, 5.15f, 0.04f, 0.8f, z = 1.3f, acao = Acao.ESPELHO, bloqueia = false, naParede = true),
+        Movel("vaso", "Vaso sanitário", "toilet", Comodo.BANHEIRO, 5.45f, 0.1f, 6.05f, 0.7f, 0.7f, acao = Acao.DESCARGA),
+        daPeca("banheira", Comodo.BANHEIRO, 6.25f, 0.1f, 7.9f, 1.35f, 0.6f, acao = Acao.BANHEIRA),
     )
 
     val porId: Map<String, Movel> = moveis.associateBy { it.id }
@@ -148,21 +189,27 @@ object PlantaDaCasa {
         return moveis.filter { it.itemId == null || it.itemId in ganhos }
     }
 
+    /** Móveis de um andar só. */
+    fun moveisDe(e: EstadoJogo, andar: Andar): List<Movel> = moveisDe(e).filter { it.andar == andar }
+
+    /** A escada do andar (a que sobe, embaixo; a que desce, em cima). */
+    fun escadaDo(andar: Andar): Movel = porId.getValue(if (andar == Andar.DE_BAIXO) "escada" else "escadaDeCima")
+
     /**
-     * Pode passar do ladrilho (ax, ay) para o vizinho (bx, by)? Só bloqueia quando cruza uma parede
-     * interna fora das portas. Vizinhos na diagonal são tratados em [Mapa].
+     * Pode passar do ladrilho (ax, ay) para o vizinho (bx, by)? Só bloqueia quando cruza a parede
+     * interna fora das passagens. Vizinhos na diagonal são tratados em [Mapa].
      */
-    fun atravessa(ax: Int, ay: Int, bx: Int, by: Int): Boolean {
-        if (ax != bx && minOf(ax, bx) == MEIO - 1 && maxOf(ax, bx) == MEIO && ay == by) return ay in portasNaParedeX
-        if (ay != by && minOf(ay, by) == MEIO - 1 && maxOf(ay, by) == MEIO && ax == bx) return ax in portasNaParedeY
+    fun atravessa(andar: Andar, ax: Int, ay: Int, bx: Int, by: Int): Boolean {
+        val m = meio(andar)
+        if (ax != bx && minOf(ax, bx) == m - 1 && maxOf(ax, bx) == m && ay == by) return ay in portasNaParedeInterna
         return true
     }
 
-    /** Pedaços (de um ladrilho) das paredes internas, sem as portas. Para desenhar e ordenar. */
-    val paredesInternas: List<Caixa> = buildList {
+    /** Pedaços (de um ladrilho) da parede interna do andar, sem as passagens. Para desenhar e ordenar. */
+    fun paredesInternas(andar: Andar): List<Caixa> = buildList {
         val e = 0.06f
-        for (y in 0 until LADO) if (y !in portasNaParedeX) add(Caixa(MEIO - e, y.toFloat(), MEIO + e, y + 1f, 0f, ALTURA_PAREDE_INTERNA))
-        for (x in 0 until LADO) if (x !in portasNaParedeY) add(Caixa(x.toFloat(), MEIO - e, x + 1f, MEIO + e, 0f, ALTURA_PAREDE_INTERNA))
+        val m = meio(andar)
+        for (y in 0 until FUNDO) if (y !in portasNaParedeInterna) add(Caixa(m - e, y.toFloat(), m + e, y + 1f, 0f, ALTURA_PAREDE_INTERNA))
     }
 
     /**
@@ -209,44 +256,84 @@ object PlantaDaCasa {
     fun criancaNaFrente(x: Float, y: Float, c: Caixa): Boolean = x >= c.x1 || y >= c.y1
 
     fun caixaDo(m: Movel) = Caixa(m.x0, m.y0, m.x1, m.y1, m.z, m.z + m.altura)
+
+    /**
+     * Enquadramento: quanto mede a planta de um andar na tela, em larguras de ladrilho ([largura]) e
+     * de cima (alto da parede do fundo) até embaixo (espessura do piso e sombra) ([altura]). [acima] é
+     * quanto da altura fica acima do canto (0, 0) do chão. [entreAndares] é a distância vertical entre o canto
+     * (0, 0) de um andar e o do outro quando os dois aparecem empilhados, sem se encostarem.
+     * [unidadeZ] é a altura de uma unidade z, em ladrilhos (a mesma de ui/componentes/Isometrico.kt).
+     */
+    data class Enquadramento(val largura: Float, val altura: Float, val acima: Float, val entreAndares: Float)
+
+    fun enquadramento(unidadeZ: Float = 0.56f, espessuraParede: Float = 0.14f, espessuraPiso: Float = 0.35f): Enquadramento {
+        val l = LARGURA.toFloat()
+        val f = FUNDO.toFloat()
+        val largura = (l + f + 2 * espessuraParede) / 2f
+        val acima = espessuraParede * 2 / 4f + ALTURA_PAREDE * unidadeZ
+        val abaixo = (l + f) / 4f + espessuraPiso * unidadeZ + 0.3f
+        // Empilhados: a beirada da frente do piso de cima tem de ficar acima do alto das paredes de baixo, com
+        // folga. No mesmo ponto da tela, a beirada (y = FUNDO) e a parede do fundo (y = 0) diferem de FUNDO / 2.
+        val entre = f / 2f + espessuraPiso * unidadeZ + ALTURA_PAREDE * unidadeZ + 0.4f
+        return Enquadramento(largura, acima + abaixo, acima, entre)
+    }
+
+    /**
+     * Ladrilho que faz a planta caber em [largura] x [altura] pixels (já sem as margens).
+     * Com [doisAndares], os dois andares aparecem empilhados.
+     */
+    fun ladrilhoQueCabe(largura: Float, altura: Float, doisAndares: Boolean, enq: Enquadramento = enquadramento()): Float {
+        val alturaTotal = enq.altura + if (doisAndares) enq.entreAndares else 0f
+        return minOf(largura / enq.largura, altura / alturaTotal).coerceAtLeast(1f)
+    }
+
+    /**
+     * Mostra os dois andares empilhados quando cabem quase do mesmo tamanho que um andar sozinho; senão
+     * (painel aberto ou tela baixa), mostra só o andar onde a criança está, bem grande.
+     */
+    fun mostrarDoisAndares(largura: Float, altura: Float, enq: Enquadramento = enquadramento()): Boolean =
+        ladrilhoQueCabe(largura, altura, true, enq) >= 0.85f * ladrilhoQueCabe(largura, altura, false, enq)
 }
 
 /**
  * Mapa de passagem pré-calculado para um conjunto de móveis: quais ladrilhos estão livres
  * e como chegar de um ponto a outro sem atravessar paredes nem móveis.
  */
-class Mapa(moveis: List<Movel>) {
-    private val n = PlantaDaCasa.LADO
-    private val bloqueado = BooleanArray(n * n)
+class Mapa(moveis: List<Movel>, val andar: Andar) {
+    private val n = PlantaDaCasa.LARGURA
+    private val f = PlantaDaCasa.FUNDO
+    private val bloqueado = BooleanArray(n * f)
 
     init {
         val margem = 0.05f
-        for (m in moveis) if (m.bloqueia) {
-            for (cy in 0 until n) for (cx in 0 until n) {
+        for (m in moveis) if (m.bloqueia && m.andar == andar) {
+            for (cy in 0 until f) for (cx in 0 until n) {
                 if (m.x0 < cx + 1 - margem && m.x1 > cx + margem && m.y0 < cy + 1 - margem && m.y1 > cy + margem) bloqueado[cy * n + cx] = true
             }
         }
     }
 
-    fun livre(cx: Int, cy: Int): Boolean = cx in 0 until n && cy in 0 until n && !bloqueado[cy * n + cx]
+    fun livre(cx: Int, cy: Int): Boolean = cx in 0 until n && cy in 0 until f && !bloqueado[cy * n + cx]
 
     private fun celula(v: Float) = floor(v).toInt().coerceIn(0, n - 1)
+    private fun celulaY(v: Float) = floor(v).toInt().coerceIn(0, f - 1)
+    private fun atravessa(ax: Int, ay: Int, bx: Int, by: Int) = PlantaDaCasa.atravessa(andar, ax, ay, bx, by)
 
     /** Dá para ir de um ladrilho ao vizinho (inclusive na diagonal, sem cortar quina de parede ou móvel)? */
     fun passa(ax: Int, ay: Int, bx: Int, by: Int): Boolean {
         if (!livre(bx, by)) return false
-        if (ax == bx || ay == by) return PlantaDaCasa.atravessa(ax, ay, bx, by)
+        if (ax == bx || ay == by) return atravessa(ax, ay, bx, by)
         // Diagonal: os dois caminhos em L precisam estar livres.
         return livre(bx, ay) && livre(ax, by) &&
-            PlantaDaCasa.atravessa(ax, ay, bx, ay) && PlantaDaCasa.atravessa(bx, ay, bx, by) &&
-            PlantaDaCasa.atravessa(ax, ay, ax, by) && PlantaDaCasa.atravessa(ax, by, bx, by)
+            atravessa(ax, ay, bx, ay) && atravessa(bx, ay, bx, by) &&
+            atravessa(ax, ay, ax, by) && atravessa(ax, by, bx, by)
     }
 
     /** O ladrilho livre mais perto (sem atravessar paredes), começando por (cx, cy). */
     fun livreMaisPerto(cx: Int, cy: Int): Pair<Int, Int> {
-        val inicio = cy.coerceIn(0, n - 1) * n + cx.coerceIn(0, n - 1)
-        val visto = BooleanArray(n * n)
-        val fila = IntArray(n * n)
+        val inicio = cy.coerceIn(0, f - 1) * n + cx.coerceIn(0, n - 1)
+        val visto = BooleanArray(n * f)
+        val fila = IntArray(n * f)
         var ini = 0
         var fim = 0
         fila[fim++] = inicio
@@ -259,9 +346,9 @@ class Mapa(moveis: List<Movel>) {
             for ((dx, dy) in VIZINHOS4) {
                 val vx = x + dx
                 val vy = y + dy
-                if (vx !in 0 until n || vy !in 0 until n) continue
+                if (vx !in 0 until n || vy !in 0 until f) continue
                 val v = vy * n + vx
-                if (!visto[v] && PlantaDaCasa.atravessa(x, y, vx, vy)) {
+                if (!visto[v] && atravessa(x, y, vx, vy)) {
                     visto[v] = true
                     fila[fim++] = v
                 }
@@ -271,7 +358,7 @@ class Mapa(moveis: List<Movel>) {
     }
 
     private fun x0y0Livre(): Pair<Int, Int> {
-        for (i in 0 until n * n) if (!bloqueado[i]) return (i % n) to (i / n)
+        for (i in 0 until n * f) if (!bloqueado[i]) return (i % n) to (i / n)
         return 0 to 0
     }
 
@@ -282,9 +369,9 @@ class Mapa(moveis: List<Movel>) {
      */
     fun caminho(de: Posicao, para: Posicao): List<Posicao> {
         val sx = celula(de.x)
-        val sy = celula(de.y)
+        val sy = celulaY(de.y)
         var tx = celula(para.x)
-        var ty = celula(para.y)
+        var ty = celulaY(para.y)
         var destino = Posicao(para.x.coerceIn(tx + MARGEM, tx + 1 - MARGEM), para.y.coerceIn(ty + MARGEM, ty + 1 - MARGEM))
         if (!livre(tx, ty)) {
             val (lx, ly) = livreMaisPerto(tx, ty)
@@ -296,7 +383,7 @@ class Mapa(moveis: List<Movel>) {
             return if (hypot(destino.x - de.x, destino.y - de.y) < 0.01f) emptyList() else listOf(destino)
         }
         // Busca em largura (8 vizinhos; diagonal custa o mesmo, mas o caminho é alisado depois).
-        val total = n * n
+        val total = n * f
         val anterior = IntArray(total) { -1 }
         val fila = IntArray(total)
         var ini = 0
@@ -313,7 +400,7 @@ class Mapa(moveis: List<Movel>) {
             for ((dx, dy) in VIZINHOS8) {
                 val vx = x + dx
                 val vy = y + dy
-                if (vx !in 0 until n || vy !in 0 until n) continue
+                if (vx !in 0 until n || vy !in 0 until f) continue
                 val v = vy * n + vx
                 if (anterior[v] < 0 && passa(x, y, vx, vy)) {
                     anterior[v] = c
@@ -349,7 +436,7 @@ class Mapa(moveis: List<Movel>) {
         val dist = hypot(b.x - a.x, b.y - a.y)
         val passos = (dist / 0.05f).toInt().coerceAtLeast(1)
         var cx = celula(a.x)
-        var cy = celula(a.y)
+        var cy = celulaY(a.y)
         for (k in 1..passos) {
             val t = k.toFloat() / passos
             val px = a.x + (b.x - a.x) * t
@@ -357,11 +444,11 @@ class Mapa(moveis: List<Movel>) {
             // O corpo da criança tem um pouco de largura: verifica também os lados.
             for ((ox, oy) in LARGURA) {
                 val qx = celula(px + ox)
-                val qy = celula(py + oy)
-                if (!livre(qx, qy) && !(qx == celula(a.x) && qy == celula(a.y))) return false
+                val qy = celulaY(py + oy)
+                if (!livre(qx, qy) && !(qx == celula(a.x) && qy == celulaY(a.y))) return false
             }
             val nx = celula(px)
-            val ny = celula(py)
+            val ny = celulaY(py)
             if (nx != cx || ny != cy) {
                 if (abs(nx - cx) > 1 || abs(ny - cy) > 1 || !passa(cx, cy, nx, ny)) return false
                 cx = nx
@@ -381,14 +468,14 @@ class Mapa(moveis: List<Movel>) {
     fun alcancaveis(de: Posicao): Set<Pair<Int, Int>> {
         val visto = HashSet<Pair<Int, Int>>()
         val fila = ArrayDeque<Pair<Int, Int>>()
-        val ini = celula(de.x) to celula(de.y)
+        val ini = celula(de.x) to celulaY(de.y)
         fila.add(ini)
         visto.add(ini)
         while (fila.isNotEmpty()) {
             val (x, y) = fila.removeFirst()
             for ((dx, dy) in VIZINHOS8) {
                 val v = (x + dx) to (y + dy)
-                if (v !in visto && v.first in 0 until n && v.second in 0 until n && passa(x, y, v.first, v.second)) {
+                if (v !in visto && v.first in 0 until n && v.second in 0 until f && passa(x, y, v.first, v.second)) {
                     visto.add(v)
                     fila.add(v)
                 }

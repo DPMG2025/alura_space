@@ -6,6 +6,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Projeção isométrica 2:1 (o estilo "2,5D" dos jogos de casinha). Converte ladrilhos (x, y) e altura (z)
@@ -53,6 +56,16 @@ class Projecao(val ladrilho: Float, val origemX: Float, val origemY: Float) {
     /** Face em pé no plano y = [y] (a câmera vê o lado de +y). */
     fun paredeY(y: Float, x0: Float, x1: Float, z0: Float, z1: Float): Path =
         quad(ponto(x0, y, z0), ponto(x1, y, z0), ponto(x1, y, z1), ponto(x0, y, z1))
+
+    /** Círculo em pé no plano y = [y] (janela redonda), centrado em ([cx], [cz]), com raio [r] em ladrilhos. */
+    fun circuloY(y: Float, cx: Float, cz: Float, r: Float, lados: Int = 28): Path = Path().apply {
+        for (k in 0..lados) {
+            val a = k * 2.0 * PI / lados
+            val p = ponto(cx + r * cos(a).toFloat(), y, cz + r * sin(a).toFloat())
+            if (k == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+        }
+        close()
+    }
 
     /** Retângulo da tela que contém a caixa (para tocar). */
     fun contorno(x0: Float, y0: Float, x1: Float, y1: Float, z0: Float, z1: Float): Rect =
