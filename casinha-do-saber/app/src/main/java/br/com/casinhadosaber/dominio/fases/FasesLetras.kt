@@ -41,7 +41,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun letraInicial(palavras: List<Palavra>, letrasPossiveis: List<String>): Pergunta {
-        val p = palavras.um()
+        val p = palavras.umDoTema { it.emoji }
         val erradas = letrasPossiveis.filter { it != p.inicial }.sorteia(3)
         return montar(
             instrucao = "Com que letra começa?",
@@ -55,7 +55,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
 
     /** Mostra a palavra escrita, sem falar qual é: a criança usa a primeira letra como pista. */
     private fun lerPalavra(): Pergunta {
-        val certa = Vocabulario.palavrasComConsoante.um()
+        val certa = Vocabulario.palavrasComConsoante.umDoTema { it.emoji }
         val erradas = Vocabulario.todasAsPalavras
             .filter { it.inicial != certa.inicial }
             .distinctBy { it.inicial }
@@ -97,7 +97,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun completarPalavra(): Pergunta {
-        val p = Vocabulario.palavrasComConsoante.um()
+        val p = Vocabulario.palavrasComConsoante.umDoTema { it.emoji }
         val erradas = Vocabulario.consoantes.filter { it != p.inicial }.sorteia(3)
         return montar(
             instrucao = "Que letra está faltando?",
@@ -165,7 +165,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun montarPalavra(silabas: Int): Pergunta {
-        val p = Vocabulario.todasAsPalavras.filter { it.silabas.size == silabas && it.silabas.all { s -> s.length <= 3 } }.um()
+        val p = Vocabulario.todasAsPalavras.filter { it.silabas.size == silabas && it.silabas.all { s -> s.length <= 3 } }.umDoTema { it.emoji }
         val extras = Vocabulario.todasAsPalavras.flatMap { it.silabas }.distinct().filter { it !in p.silabas && it.length == 2 }.sorteia(2)
         return Pergunta.deAtividade(
             instrucao = "Monte: ${p.texto}",
@@ -186,7 +186,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun quantasSilabas(): Pergunta {
-        val p = Vocabulario.todasAsPalavras.filter { it.silabas.size in 1..4 }.um()
+        val p = Vocabulario.todasAsPalavras.filter { it.silabas.size in 1..4 }.umDoTema { it.emoji }
         val n = p.silabas.size
         return montar(
             instrucao = "Quantos pedacinhos?",

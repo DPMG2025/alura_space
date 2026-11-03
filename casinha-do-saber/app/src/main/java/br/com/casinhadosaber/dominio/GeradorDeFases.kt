@@ -16,10 +16,16 @@ import kotlin.random.Random
  * O conteúdo de cada caminho fica num arquivo próprio em `dominio/fases/` ([FasesNumeros], [FasesLetras],
  * [FasesIngles], [FasesLogica]); aqui fica só o que vale para todos: montar a partida, a revisão e a missão.
  */
-class GeradorDeFases(private val random: Random = Random.Default) {
+class GeradorDeFases(
+    private val random: Random = Random.Default,
+    /** Temas favoritos do perfil ([Perfil.temasFavoritos]): contar e palavras das letras preferem figuras desses temas. */
+    private val temasFavoritos: Collection<TemaFavorito> = emptyList(),
+) {
 
     private val caminhos: Map<Trilha, FasesDoCaminho> by lazy {
-        listOf(FasesNumeros(random), FasesLetras(random), FasesIngles(random), FasesLogica(random)).associateBy { it.trilha }
+        listOf(FasesNumeros(random), FasesLetras(random), FasesIngles(random), FasesLogica(random))
+            .onEach { it.temasFavoritos = temasFavoritos.toSet() }
+            .associateBy { it.trilha }
     }
 
     /** O modelo da fase de índice [indice] (começa em 0, como [Fase.numero]). */

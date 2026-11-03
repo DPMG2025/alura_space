@@ -41,6 +41,18 @@ abstract class FasesDoCaminho(protected val random: Random) {
         require(numero in 1..TOTAL_DE_FASES) { "Fase $numero fora de 1..$TOTAL_DE_FASES" }
     }
 
+    /**
+     * Temas favoritos da criança ([Perfil.temasFavoritos]): algumas listas (contar e palavras das letras) preferem
+     * figuras desses temas, sem mudar a dificuldade. Vazio = sorteio igual ao de antes.
+     */
+    var temasFavoritos: Set<TemaFavorito> = emptySet()
+
+    /** Objeto para contar, preferindo os temas favoritos ([PreferenciaDeTema.objetoParaContar]). */
+    protected fun objetoParaContar(): Objeto = PreferenciaDeTema.objetoParaContar(temasFavoritos, random)
+
+    /** Sorteia um item da lista preferindo os temas favoritos ([PreferenciaDeTema.escolher]). */
+    protected fun <T> List<T>.umDoTema(emojiDe: (T) -> String): T = PreferenciaDeTema.escolher(this, temasFavoritos, random, emojiDe)
+
     // ------------------------------------------------------------------ utilidades
 
     protected fun <T> List<T>.sorteia(n: Int): List<T> = shuffled(random).take(n)

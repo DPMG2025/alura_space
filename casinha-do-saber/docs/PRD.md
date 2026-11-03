@@ -21,7 +21,7 @@ App Android educativo para crianças a partir de 4 anos. A criança escolhe ser 
 * Repositório: `DPMG2025/alura_space`, branch **`claude/educational-kids-android-app-7bdyy3`**, pasta `casinha-do-saber/`.
 * Kotlin + Jetpack Compose, minSdk 24, targetSdk 35, AGP 8.7.3, Kotlin 2.0.21, Compose BOM 2024.12.01, Gradle 8.14.3.
 * Pacote `br.com.casinhadosaber`:
-  * `dominio/` (Kotlin puro, testável): `Modelos.kt` (Pergunta, Opcao, Visual, Cena, Atividade, Trilha, Fase), `AtividadesNovas.kt` (data classes dos 17 desafios novos do plano, sorteados nas fases 51 a 250), `GeradorDeFases.kt` (monta a partida: 5 perguntas, revisão, missão), `fases/` (um gerador por caminho: `FasesNumeros.kt`, `FasesLetras.kt`, `FasesIngles.kt`, `FasesLogica.kt`, a base `FasesComum.kt` e um `Vocabulario` por caminho), `Vocabulario.kt`, `ItensDaCasa.kt` (40 peças, Lugar, Comodo, caixas de sobreposição), `EstadoJogo.kt` (progresso, moedas, loja, missão, histórico, brinde, serialização), `Loja.kt` (produtos, comidas, 16 roupas e 18 acessórios em 6 partes do corpo), `Mundos.kt` (25 mundos de 10 fases), `Treino.kt` (treino sem fim), `VocabularioDosMundos.kt`, `CasaPorDentro.kt` (planta da casa por dentro: dois andares, móveis, escada, `Acao`, caminhada).
+  * `dominio/` (Kotlin puro, testável): `Modelos.kt` (Pergunta, Opcao, Visual, Cena, Atividade, Trilha, Fase), `AtividadesNovas.kt` (data classes dos 17 desafios novos do plano, sorteados nas fases 51 a 250), `GeradorDeFases.kt` (monta a partida: 5 perguntas, revisão, missão), `fases/` (um gerador por caminho: `FasesNumeros.kt`, `FasesLetras.kt`, `FasesIngles.kt`, `FasesLogica.kt`, a base `FasesComum.kt` e um `Vocabulario` por caminho), `Vocabulario.kt`, `ItensDaCasa.kt` (40 peças, Lugar, Comodo, caixas de sobreposição), `EstadoJogo.kt` (progresso, moedas, loja, missão, histórico, brinde, serialização), `Loja.kt` (produtos, comidas, 16 roupas e 18 acessórios em 6 partes do corpo), `Mundos.kt` (25 mundos de 10 fases), `Treino.kt` (treino sem fim), `VocabularioDosMundos.kt`, `CasaPorDentro.kt` (planta da casa por dentro: dois andares, móveis, escada, `Acao`, caminhada); e a base das sugestões 1 a 7 (seção 10): `Personalizacao.kt`, `Mascote.kt`, `Historia.kt`, `Calendario.kt`, `Criativo.kt`, `Conquistas.kt`, `Pais.kt` e `Novidades.kt`.
   * `dados/Repositorio.kt` (SharedPreferences, limite de tempo diário, som e música).
   * `audio/` : `Narrador.kt` (melhor voz offline por idioma, pausas, inglês mais lento, estado `falando`), `Sons.kt` e `SonsDaCasa.kt` (efeitos sintetizados), `Musica.kt` (música de caixinha gerada).
   * `ui/Moldura.kt` : escala de tablet, toque mínimo de 64dp, largura máxima e paisagem em duas colunas.
@@ -108,7 +108,7 @@ Lições das capturas (Robolectric): a tela só é desenhada na hora da captura,
 * Material da Play Store: `docs/play-store.md` (textos e respostas dos formulários do Play Console), `docs/politica-de-privacidade.md` e `.html` (contato guilhermegatdef@gmail.com), `docs/publicar.md` (passo a passo com Windows, link da política e teste fechado de 12 testadores por 14 dias) e as imagens da ficha em `docs/loja/`, geradas pelo CI no tamanho exato por `LojaPlayTest.kt`: ícone 512 x 512 (RGBA opaco), destaque 1024 x 500, 8 capturas de celular 1080 x 1920, 4 de tablet de 7 polegadas 1200 x 1920 e 4 de tablet de 10 polegadas 1920 x 1200, todas em PNG RGB sem alfa. O CI também confere o manifesto final do release: falha se aparecer `AD_ID` ou `INTERNET`.
 
 **Testes**
-* 124 testes de domínio, inclusive as regras das 1000 fases (nenhuma atividade de mexer 3 vezes seguidas, robô com fila que comporta o menor caminho, balança e mercadinho sempre com solução exata), mais os testes de captura e jogada dos desafios novos (`CapturasNovas1Test` a `CapturasNovas4Test`). Antes eram 85 (inclusive acessórios, mundos e treino; material dourado, sudoku com uma casinha só a descobrir, labirinto compacto sem atalho e balão que nunca entrega a frase de ler). Capturas novas: 58 a 60 (roupas, acessórios, provador), 61 (caminho com treino e mundo 3), 62 a 66 (dezenas e unidades, ler frases, I like, sudoku 4 por 4, labirinto grande) e 66b (labirinto com as setas desenhadas).
+* 148 testes de domínio (24 deles das sugestões 1 a 7, em `SugestoesTest.kt`), inclusive as regras das 1000 fases (nenhuma atividade de mexer 3 vezes seguidas, robô com fila que comporta o menor caminho, balança e mercadinho sempre com solução exata), mais os testes de captura e jogada dos desafios novos (`CapturasNovas1Test` a `CapturasNovas4Test`). Antes eram 85 (inclusive acessórios, mundos e treino; material dourado, sudoku com uma casinha só a descobrir, labirinto compacto sem atalho e balão que nunca entrega a frase de ler). Capturas novas: 58 a 60 (roupas, acessórios, provador), 61 (caminho com treino e mundo 3), 62 a 66 (dezenas e unidades, ler frases, I like, sudoku 4 por 4, labirinto grande) e 66b (labirinto com as setas desenhadas).
 * Sobreposição dos objetos da casa completa, chapéu na cabeça (menina e menino, todos os chapéus), chuva só fora (teste corrigido), cama recusada, capturas em paisagem, planta da casa por dentro (`CasaPorDentroTest.kt`), emulador jogando todos os tipos de atividade.
 
 ## 6. O que resta (começar por aqui)
@@ -150,3 +150,44 @@ Criar a chave de upload e os segredos `CASINHA_KEYSTORE_*`, conta no Play Consol
 
 * Comunicação em português, sem hífen nem travessão no texto corrido.
 * Quer ver o app no celular: manter o link da Release `casinha-teste` atualizado a cada build.
+
+## 10. Sugestões 1 a 7: base de domínio
+
+Pronta a base em Kotlin puro (sem telas) para as 7 sugestões de engajamento. As telas ainda vão ser feitas por cima desta API; tudo é offline, determinístico (nada sorteado como prêmio), sem notificação e sem punição. O nome da criança nunca fica no código: vem só de `Perfil.nome`. Testes em `test/.../dominio/SugestoesTest.kt` (24 testes; o domínio passa a ter 148).
+
+**Persistência** (`dados/Repositorio.kt`): chaves novas `aniversario`, `temas_favoritos`, `mascote`, `presentes_especiais`, `eventos_recebidos`, `desenhos`, `quadros_parede`, `desafios_pais` e `sessoes`. Saves antigos não têm essas chaves e cada leitura tolera chave ausente ou texto estragado (vira o padrão). `Repositorio.hojeData()` dá a data de hoje como `Data`. As mudanças de estado ficam em `dominio/Novidades.kt` (funções de extensão de `EstadoJogo`, chamadas por `repo.atualizar { ... }`).
+
+**1. Personalização** (`dominio/Personalizacao.kt`)
+* `Perfil.aniversario: Aniversario?` (dia e mês) e `Perfil.temasFavoritos: List<TemaFavorito>` (no máximo 3). `TemaFavorito`: ANIMAIS, DINOSSAUROS, ESPACO, PRINCESAS_E_CASTELOS, FUNDO_DO_MAR, CARROS, COMIDAS, MUSICA, ESPORTES, FAZENDA (com `nome`, `emoji`, `emojis` e `objetosExtras`).
+* `TemaFavorito.alternar(atuais, tema)`, `EstadoJogo.alternarTema(t)`, `EstadoJogo.comAniversario(a)`.
+* `FrasesComNome.elogio(nome, indice)`, `incentivo`, `chegada`, `vitoria(nome, estrelas)`, `parabensAniversario(nome)` e `montar(comNome, semNome, nome)` (troca `{nome}`; nome vazio usa a versão sem nome).
+* `GeradorDeFases(random, temasFavoritos)`: as perguntas de contar de Números (`PreferenciaDeTema.objetoParaContar`) e cinco listas de palavras de Letras (`PreferenciaDeTema.escolher`) preferem, metade das vezes, figuras dos temas. Sem temas, o sorteio é exatamente o de antes. `TelaJogo` já passa `perfil.temasFavoritos`.
+
+**2. Mascote** (`dominio/Mascote.kt`)
+* `EspecieMascote` (CACHORRINHO, GATINHO, DRAGAOZINHO), `EstadoJogo.mascote: Mascote(especie?, nome, acessorio)`; `especie` null quer dizer que a criança ainda não escolheu.
+* `Crescimento.estagio(fasesVencidas)`: BEBE (0), PEQUENO (10), CRIANCA (40), GRANDE (100), CAMPEAO (250). Também `proximo`, `faltamParaCrescer`, `progressoNoEstagio`, `cresceu(antes, depois)`, `acessoriosLiberados`, `acessoriosNovos` e `fala(mascote, fasesVencidas, nomeDaCrianca, indice)` (sempre alegre). O mascote só cresce, nunca fica triste, doente ou com fome.
+* `EstadoJogo.escolherMascote(e)`, `nomearMascote(nome)`, `vestirMascote(acessorio)`, `estagioDoMascote`, `acessoriosDoMascote`.
+
+**3. História** (`dominio/Historia.kt`)
+* `Personagem` (Corujinha Professora, que narra, e um amigo por caminho: Tito, o esquilo contador; Lia, a lagartinha das letras; Bob, o ursinho viajante; Pipo, o robozinho curioso).
+* `Historia.capitulo(trilha, mundo)` e `capitulo(fase)` dão `Capitulo(introducao, guardiao, cenaDoChefao)`; `Historia.introducao(fase)` só na primeira fase do mundo e `Historia.cenaDoChefao(fase)` só na 10ª (null nas outras); `capitulos(trilha)` lista os 25. Os guardiões dos chefões são amigos, nunca vilões.
+
+**4. Eventos e surpresa da semana** (`dominio/Calendario.kt`)
+* `Data(ano, mes, dia)` com `diaEpoca`, `diaDaSemana`, `semana`, `maisDias` e `Data.deDiaEpoca(dia)`; `Calendario.pascoa(ano)`. Nada lê o relógio: as telas passam `repo.hojeData()`.
+* `Eventos.doDia(data, aniversario)` e `Eventos.principal(data, aniversario)` devolvem `EventoAtivo` (`tipo`, `decoracao`, `presente`, `chave`, `saudacao(nome)`). Janelas: Natal de 1 a 26 de dezembro, Páscoa do Domingo de Ramos até a segunda depois, Festa Junina em junho, Dia das Crianças de 9 a 12 de outubro e o aniversário no próprio dia (29 de fevereiro comemora no dia 28 nos outros anos). O aniversário vem primeiro.
+* `EstadoJogo.receberPresenteDoEvento(evento)` entrega o enfeite do ano uma vez por evento e ano (gira pela lista do evento a cada ano); `EstadoJogo.presentesGanhos` lista os enfeites (`PresenteEspecial`, desenhar como emoji na casa).
+* `Surpresas.daSemana(data)`: a partir de 2 de novembro de 2026, toda segunda um bichinho visita a casa (de graça a semana toda, mostrar junto dos `visitantes`) e entra na loja para sempre; `Surpresas.liberadas(data)` dá os produtos que já entraram (categoria VISITANTE, compra pelo `EstadoJogo.usar` de sempre). Não estão em `Loja.produtos`: a vitrine precisa somar `Surpresas.liberadas(hoje)`.
+
+**5. Ateliê e piano** (`dominio/Criativo.kt`)
+* `Pintura(id, celulas)` de 12 por 12 quadradinhos com índices de `Atelie.paleta` (0 é o branco); `pintar`, `tracar` (linha sem buracos para o dedo arrastado), `encher` (balde) e `limpar`. O nome `Desenho` já é usado pelos itens da casa.
+* `EstadoJogo.salvarDesenho(p)` (null quando há 12 e a pintura é nova: a tela pede para apagar uma), `apagarDesenho(id)`, `alternarNaParede(id)` (no máximo 3 quadros; o mais antigo da parede sai) e `quadrosPendurados`. `Atelie.novoId(desenhos)`.
+* `Nota` (dó a dó agudo, com `frequencia` e cor), `Piano.musicas` (Brilha brilha estrelinha, Hino da alegria, A ovelhinha da Maria e a escadinha), `Piano.seguir(musica, posicao, tocada)` e `Piano.terminou`. Tocar livre usa só `Nota`.
+
+**6. Diplomas e álbum** (`dominio/Conquistas.kt`), calculados só de `EstadoJogo.estrelas` (valem para saves antigos na hora)
+* `Conquistas.mundoCompleto(estrelas, trilha, mundo)`, `diplomas(estrelas)`, `diplomasNovos(antes, depois)` e `Diploma.texto(nome)`.
+* Álbum: 11 figurinhas por mundo e caminho (uma por fase com 3 estrelas e a dourada do chefão vencido). `Conquistas.album(trilha, estrelas)` dá as 25 `PaginaDoAlbum`; também `figurinhasDoMundo`, `figurinhasGanhas`, `figurinhasNovas(antes, depois)` (para a tela de prêmio) e `Figurinha.comoGanhar` (para a silhueta da que falta).
+
+**7. Pais** (`dominio/Pais.kt`)
+* `Pais.desafioDoDia(dia)` gira pelos 60 desafios (15 por área, alternando leitura, matemática, inglês e lógica). `EstadoJogo.concluirDesafioDosPais(dia)` (atrás do portão de adulto) dá `Pais.MOEDAS_DO_DESAFIO` uma vez por dia; `desafioDosPaisFeito(dia)`.
+* Registro das partidas: `EstadoJogo.registrarSessao(fase, resultado, acertos, total, segundos, dia)` depois de `registrarPartida` (a tela do jogo precisa medir os segundos da partida; ainda não está ligado em `MainActivity`). Fica só no aparelho, cortado em 60 dias e 600 partidas.
+* `Pais.relatorioDaSemana(sessoes, dia, nomeDaFase)` dá `RelatorioSemanal` (semana de segunda a domingo): minutos, dias jogados, partidas, fases novas, fases vencidas, minutos por caminho, até 3 pontos fortes (90% ou mais de primeira), até 3 para reforçar (abaixo de 70%) e 2 ou 3 ideias de conversa. Passar `{ t, n -> gerador.fases(t)[n].titulo }` para os nomes das fases.

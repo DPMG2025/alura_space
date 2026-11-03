@@ -26,7 +26,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
     // ------------------------------------------------------------------ MATEMÁTICA
 
     private fun contar(min: Int, max: Int, opcoes: Int): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val n = (min..max).random(random)
         val qual = if (obj.feminino) "Quantas" else "Quantos"
         return montar(
@@ -40,7 +40,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun acharQuantidade(): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val n = (1..5).random(random)
         val grupo = { k: Int -> Opcao(Visual.Emoji(obj.emoji.repeat(k)), listOf(pt(porExtenso(k, obj.feminino)))) }
         return montar(
@@ -54,7 +54,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun maisOuMenos(): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val mais = random.nextBoolean()
         // Uma das opções erradas sempre fica a 1 de distância da certa, para a criança comparar de verdade.
         val base = (2..5).random(random)
@@ -75,7 +75,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun somar(maxTotal: Int, opcoes: Int): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val a = (1 until maxTotal).random(random)
         val b = (1..(maxTotal - a)).random(random)
         val total = a + b
@@ -91,7 +91,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun subtrair(maxInicio: Int, opcoes: Int): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val a = (2..maxInicio).random(random)
         val b = (1 until a).random(random).coerceAtMost(5)
         val resto = a - b
@@ -141,7 +141,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
 
     /** Arrastar N figuras para a cesta (sobram algumas de propósito: é preciso contar e parar). */
     private fun cesta(min: Int, max: Int): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val n = (min..max).random(random)
         val disponiveis = n + (2..3).random(random)
         val f = obj.feminino
@@ -155,7 +155,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
 
     /** Memória de quantidade: o número com o grupo que tem aquela quantidade. */
     private fun memoriaDeNumeros(): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val nums = (1..5).toList().sorteia(3)
         return Pergunta.deAtividade(
             instrucao = "Número com a quantidade",
@@ -208,7 +208,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
     /** Continhas contadas como historinha, com nomes de crianças. */
     private fun historia(soma: Boolean, max: Int): Pergunta {
         val nome = Vocabulario.nomesDeCriancas.um()
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val f = obj.feminino
         val a = (2..max - 1).random(random)
         val b = if (soma) (1..(max - a)).random(random) else (1 until a).random(random)
@@ -262,7 +262,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun somarAte20(): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val a = (4..15).random(random)
         val b = (2..(20 - a)).random(random)
         val total = a + b
@@ -277,7 +277,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun tirarAte20(): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val a = (11..20).random(random)
         val b = (2..minOf(10, a - 1)).random(random)
         val resto = a - b
@@ -292,7 +292,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun dobro(max: Int): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val n = (1..max).random(random)
         return montar(
             instrucao = "O dobro de $n",
@@ -305,7 +305,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     private fun metade(max: Int): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val n = 2 * (1..max / 2).random(random)
         val f = obj.feminino
         val quantos = if (f) "Quantas" else "Quantos"
@@ -545,7 +545,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
     /** Problemas narrados até 20. Com [doisPassos], ganha e depois dá (ou o contrário). */
     private fun problema(soma: Boolean, doisPassos: Boolean = false): Pergunta {
         val nome = Vocabulario.nomesDeCriancas.um()
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val f = obj.feminino
         val quantos = if (f) "Quantas" else "Quantos"
         if (doisPassos) {
@@ -643,7 +643,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
 
     /** Memória: o número com o grupo que tem aquela quantidade (até 9). */
     private fun memoriaDeQuantidades(): Pergunta {
-        val obj = Vocabulario.objetosParaContar.um()
+        val obj = objetoParaContar()
         val nums = (1..9).toList().sorteia(4)
         return Pergunta.deAtividade(
             instrucao = "Número com a quantidade",

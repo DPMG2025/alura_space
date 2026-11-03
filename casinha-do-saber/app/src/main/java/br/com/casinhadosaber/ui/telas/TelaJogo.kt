@@ -141,8 +141,10 @@ fun TelaJogo(
         val iniciais = when {
             treino != null -> listOf(treino(emptyList()))
             else -> {
-                val normais = perguntasProntas.ifEmpty { GeradorDeFases().perguntas(fase) }
-                if (facilitada) listOf(GeradorDeFases().perguntas(fase, 1).first()) + normais else normais
+                // Os temas favoritos do perfil deixam as figuras de contar e das letras mais do gosto da criança.
+                val gerador = GeradorDeFases(temasFavoritos = perfil?.temasFavoritos.orEmpty())
+                val normais = perguntasProntas.ifEmpty { gerador.perguntas(fase) }
+                if (facilitada) listOf(gerador.perguntas(fase, 1).first()) + normais else normais
             }
         }
         mutableStateListOf<Pergunta>().apply { addAll(iniciais) }

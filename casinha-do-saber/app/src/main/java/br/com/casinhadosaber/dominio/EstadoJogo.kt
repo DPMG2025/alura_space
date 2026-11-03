@@ -21,6 +21,10 @@ data class Perfil(
      * Vazio por padrão: saves antigos não têm este campo.
      */
     val acessorios: Map<ParteDoCorpo, String> = emptyMap(),
+    /** Dia e mês do aniversário (opcional; saves antigos não têm). Liga a festa de aniversário ([Eventos]). */
+    val aniversario: Aniversario? = null,
+    /** Até 3 temas de que a criança mais gosta ([TemaFavorito]); as perguntas preferem figuras desses temas. */
+    val temasFavoritos: List<TemaFavorito> = emptyList(),
 ) {
     val corDaRoupa: Long
         get() = Aparencia.roupas.getOrNull(roupa) ?: if (genero == Genero.MENINA) Aparencia.roupas[1] else Aparencia.roupas[0]
@@ -71,6 +75,19 @@ data class EstadoJogo(
     val moveisDentro: Map<String, Posicao> = emptyMap(),
     /** A mãozinha já mostrou que os móveis da casa por dentro podem ser arrastados (a dica da primeira visita). */
     val viuDicaDeArrastar: Boolean = false,
+    /** Mascote da casa ([Mascote.especie] null = ainda não escolheu). O estágio vem de [fasesVencidas] ([Crescimento]). */
+    val mascote: Mascote = Mascote(),
+    /** Enfeites ganhos nos eventos do ano (ids de [Eventos.todosOsPresentes]). */
+    val presentesEspeciais: Set<String> = emptySet(),
+    /** Eventos cujo presente do ano já foi entregue ([EventoAtivo.chave], como "NATAL:2026"). */
+    val eventosRecebidos: Set<String> = emptySet(),
+    /** Desenhos do ateliê ([Atelie.MAXIMO_DE_DESENHOS] no máximo) e os que estão pendurados na parede (ids). */
+    val desenhos: List<Pintura> = emptyList(),
+    val quadrosNaParede: List<String> = emptyList(),
+    /** Dias (dia época) em que o desafio dos pais foi marcado como feito (últimos [Pais.DIAS_GUARDADOS] dias). */
+    val desafiosDosPaisFeitos: Set<Long> = emptySet(),
+    /** Registro curto das partidas para o relatório da semana (últimos [Pais.DIAS_GUARDADOS] dias). */
+    val sessoes: List<RegistroDeSessao> = emptyList(),
 ) {
     /** A missão do dia aparece uma vez por dia, depois que a criança já venceu alguma fase. */
     fun missaoDisponivel(dia: Long): Boolean = fasesVencidas > 0 && diaDaMissao != dia
