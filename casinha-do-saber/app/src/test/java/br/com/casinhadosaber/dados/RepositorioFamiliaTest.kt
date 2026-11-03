@@ -115,10 +115,11 @@ class RepositorioFamiliaTest {
         val repo = Repositorio(contexto)
         repo.novaCrianca()
         repo.atualizar { it.copy(perfil = Perfil("", Genero.MENINO), moedas = 8) }
-        val texto = Copia.paraTexto(repo.copiaDoProgresso())
         val estadoDe2 = repo.estado
         repo.trocarCrianca("1")
         val estadoDe1 = repo.estado
+        // A cópia é feita com a criança 1 jogando: é ela que volta ativa.
+        val texto = Copia.paraTexto(repo.copiaDoProgresso())
 
         // Outro aparelho (ou depois de apagar tudo): uma criança nova, sem nada.
         limpar()
