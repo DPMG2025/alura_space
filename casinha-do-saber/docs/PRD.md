@@ -40,11 +40,11 @@ O ambiente da sessão **não acessa o Google Maven**, então o APK é compilado 
 4. **Versão de teste para celular**: o CI publica `CasinhaDoSaber.apk` na Release `casinha-teste`:
    https://github.com/DPMG2025/alura_space/releases/download/casinha-teste/CasinhaDoSaber.apk
 5. **Emulador Android real** (`JogoNoEmuladorTest.kt`): perfil, boas vindas, fase inteira com um erro (cada tipo de atividade é jogado de verdade: tocar, cesta, memória, montar palavra e traçar pelos traços de `TracosDasLetras`), presente com 3 toques, item entra na casa, arrastar a cama, cama recusada no jardim, fase de cestas, relatório das vozes. Resultados em `docs/emulador/`.
-6. **Revisor independente**: um subagente avalia as capturas com régua de app AAA e dá nota. Evolução: 6 → 7 → 7,5 → 8 → 8,5 → 8,5 → 9 → 9 → 8,5 (a régua subiu depois da casa por dentro; nota dada antes do polimento de 3 de novembro).
+6. **Revisor independente**: um subagente avalia as capturas com régua de app AAA e dá nota. Evolução: 6 → 7 → 7,5 → 8 → 8,5 → 8,5 → 9 → 9 → 8,5 → 9 (a régua subiu depois da casa por dentro; o 9 veio depois do polimento de 3 de novembro, com móveis arrastáveis dentro de casa, paisagem com tabuleiro e caminho limpo).
 
 Ler os logs do CI pelo MCP do GitHub (`actions_list`, `get_job_logs` com `failed_only`; erros de Kotlin aparecem como `e: file://`). Cada push cancela o build anterior (concurrency), inclusive o emulador: não fazer push enquanto o emulador roda. O passo de capturas usa `git pull --rebase -X theirs`; antes de cada push local, `git pull --no-rebase`.
 
-Lição do polimento: `Offset` é classe de valor e não pode ser parâmetro `vararg` (erro de compilação que só o CI pega).
+Lições do polimento: `Offset` é classe de valor e não pode ser parâmetro `vararg` (erro de compilação que só o CI pega). O lint do CI trata `BoxWithConstraints` sem usar `maxWidth` ou `maxHeight` como erro (`UnusedBoxWithConstraintsScope`): nesse caso usar `Box`.
 
 ## 5. O que já está pronto
 
@@ -58,6 +58,8 @@ Lição do polimento: `Offset` é classe de valor e não pode ser parâmetro `va
 
 **Caminho (trilha)**
 * 25 bolinhas por caminho com **marcos** (desafio com troféu), estrelas por fase, criança parada na fase da vez e rolagem até ela; versão própria para tablet.
+* Traçado em curvas que sai sempre de lado da bolinha: os pontinhos não passam mais por trás dos nomes das fases.
+* **Paisagem**: tabuleiro em fileiras (serpente) com três fases por linha, numa moldura larga.
 
 **Casa de fora**
 * 40 peças em ordem; estruturas "caem do céu", objetos podem ser arrastados; móveis só dentro, coisas de jardim só fora.
@@ -71,12 +73,14 @@ Lição do polimento: `Offset` é classe de valor e não pode ser parâmetro `va
 * **Geladeira** que abre, com abas de comidas (seleção acessível como aba) e comidas compradas na loja; **guarda roupa** com roupas compradas; **espelho** que abre o perfil para trocar a aparência e volta para onde estava.
 * **Objetos interativos**: torneira, TV, fogão, banheira, cama (dormir), descarga, lâmpadas que acendem e apagam.
 * Loja de **comidas e roupas** dentro da casa; listas que mostram que rolam.
+* **Arrastar móveis**: segurar (ou sair arrastando) leva o móvel ladrilho por ladrilho, com realce verde quando cabe e vermelho quando não cabe; as posições ficam salvas (`moveisDentro` no `EstadoJogo`, chave `moveis_dentro` no `Repositorio`) e a criança dá um passinho se o móvel cair onde ela está.
+* **Patinho** na banheira (quac quac, "duck") e **lixeira** com tampa, com sons próprios em `SonsDaCasa`.
 
 **Experiência**
 * Primeira tela com personagem grande, penteados, escolhas faladas; boas vindas no terreno; mãozinha guia onde tocar; botão 🪞 de espelho no início e na casa.
 * Presente abre com 3 toques e raios de luz; prêmio vai direto para a casa.
 * **Área dos pais** com as 100 fases **agrupadas por caminho** (recolher e abrir), precisão, "Praticando agora", tempo jogado, limite diário de 15/30/60 min, vozes, som e música, apagar progresso.
-* **Tablet**: retrato 30% maior; **paisagem** com início e casa em duas colunas e as outras telas numa coluna central com sombra suave sobre o céu.
+* **Tablet**: retrato 30% maior; **paisagem** com início e casa em duas colunas (a coluna da casa tem atalhos de espelho, pintar e entrar) e as outras telas numa coluna central com sombra suave sobre o céu.
 * Material da Play Store: `docs/play-store.md`, `docs/politica-de-privacidade.md`, `docs/publicar.md`.
 
 **Testes**
@@ -84,18 +88,21 @@ Lição do polimento: `Offset` é classe de valor e não pode ser parâmetro `va
 
 ## 6. O que resta (começar por aqui)
 
-1. **Revisor independente** de novo, sobre as capturas deste polimento (24 a 35, 40, 41, 50 a 57, emulador e12 a e16), para ver se a nota volta a 9 ou mais.
-2. **Casa por dentro**: a criança ainda não carrega objetos de um cômodo para outro (os móveis de dentro têm lugar fixo); avaliar arrastar móveis dentro de casa e mais objetos interativos por cômodo.
-3. **Paisagem**: a coluna da direita da casa fica com muito espaço vazio quando não há loja aberta; o caminho em paisagem mostra poucas fases por vez.
-4. **Caminho**: os pontinhos do caminho passam por trás dos nomes das fases em alguns trechos.
-5. **Voz**: confirmar a voz em português num celular real (no emulador escolheu `pt-br-x-pte-local`, qualidade 400).
-6. **Publicação** (seção 8).
+Feitos em 3 de novembro: arrastar móveis dentro de casa com posições salvas, patinho e lixeira; paisagem com tabuleiro no caminho e coluna de atalhos na casa; caminho sem pontinhos atrás dos nomes.
+
+1. **Voz**: confirmar a voz em português num celular real (no emulador escolheu `pt-br-x-pte-local`, qualidade 400).
+2. **Publicação** (seção 8).
+3. **Achados do revisor** (seção 7): patinho de borracha de verdade, quarto menos amontoado, faixa vazia acima da casa por dentro em retrato, plaquinha cortada sob o cabeçalho do caminho e coluna da casa em paisagem com vão no meio.
 
 3D "de verdade" (Filament ou SceneView) só faz sentido com modelos 3D de artista (loja de modelos glTF); a casa isométrica em código foi a escolha.
 
-## 7. Pendências apontadas pelo revisor (última nota 8,5/10)
+## 7. Pendências apontadas pelo revisor (última nota 9/10)
 
-* As do item 6 acima. As anteriores (jardim apertado, tablet só em retrato, testes de sobreposição e chapéu) foram resolvidas neste polimento.
+Nota 9 em 3 de novembro, sobre as capturas 04, 32 a 35, 40, 41, 51, 53 e o emulador (e03, e12, e16). O que segura o 10:
+
+* **Casa por dentro**: o patinho aparece como pato selvagem (emoji 🦆), não como patinho amarelo de borracha; no quarto a guitarra fica em cima da cama e do abajur; em retrato sobra uma faixa grande de céu vazio acima da casa (captura 32); não há dica visual de que os móveis podem ser arrastados.
+* **Caminho**: a plaquinha da fase de cima aparece cortada embaixo do cabeçalho (captura 40) e, em paisagem, o primeiro pontinho fica cortado na borda da moldura (captura 51).
+* **Casa em paisagem**: a coluna da direita ainda tem um vão entre o troféu e os atalhos (captura 53).
 
 ## 8. Publicação (fora do alcance da sessão)
 
