@@ -196,7 +196,8 @@ object VocabularioLogica {
 
     /**
      * Desenhos quadriculados simétricos (o lado direito é o espelho do esquerdo): "." é casinha branca e
-     * cada algarismo é uma cor da [paleta] (1 é a primeira). Larguras pares, para o espelho dividir no meio.
+     * cada algarismo é uma cor da [paleta] (1 é a primeira). Larguras pares, para o espelho dividir no meio, e no
+     * máximo [br.com.casinhadosaber.dominio.PintarPorCodigo.MAX_COLUNAS] colunas; os desenhos grandes (7 linhas) crescem para baixo.
      */
     data class Desenho(val nome: String, val linhas: List<String>, val paleta: List<Int>) {
         val colunas: Int get() = linhas.first().length
@@ -210,9 +211,9 @@ object VocabularioLogica {
         Desenho("a borboleta", listOf("1....1", "11..11", "123321", "11..11", "1....1"), listOf(4, 2, 5)),
         Desenho("o foguete", listOf(".11.", "1221", "1221", "1111", "3113", "3..3"), listOf(1, 2, 0)),
         Desenho("a coroa", listOf("1.11.1", "111111", "121121", "111111"), listOf(2, 0)),
-        Desenho("o coração grande", listOf(".11..11.", "11111111", "11211211", "11111111", ".111111.", "..1111..", "...11..."), listOf(0, 2)),
+        Desenho("o coração grande", listOf("11..11", "111111", "121121", "111111", "111111", ".1111.", "..11.."), listOf(0, 2)),
         Desenho("o robô", listOf(".1111.", "121121", "111111", ".3333.", ".3..3."), listOf(1, 2, 5)),
-        Desenho("a estrela", listOf("...11...", "..1111..", "11111111", ".111111.", "..1221..", ".11..11."), listOf(2, 5)),
+        Desenho("a estrela", listOf("..11..", "..11..", "111111", ".1111.", ".1221.", "11..11", "1....1"), listOf(2, 5)),
     )
 
     /** Símbolos que viram código de cor no pintar por símbolo. */

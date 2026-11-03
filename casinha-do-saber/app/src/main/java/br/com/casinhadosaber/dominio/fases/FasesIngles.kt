@@ -572,13 +572,13 @@ class FasesIngles(random: Random = Random.Default) : FasesDoCaminho(random) {
 
     // ------------------------------------------------------------------ pintar por código
 
-    /** Desenhos para pintar: cada letra é uma cor, o ponto fica branco. */
+    /** Desenhos para pintar: cada letra é uma cor, o ponto fica branco (no máximo [PintarPorCodigo.MAX_COLUNAS] colunas). */
     private val desenhosDePintar = listOf(
-        listOf("..aaa..", ".aaaaab", "acaaabb", ".aaaaab", "..aaa.."), // peixe
+        listOf(".aaa..", "aaaaab", "acaabb", "aaaaab", ".aaa.."), // peixe
         listOf("..a..", ".aaa.", "aaaaa", "bbcbb", "bbcbb"), // casa
         listOf(".a.a.", "aabaa", ".a.a.", "..c..", ".cc..", "..c.."), // flor
-        listOf("...a...", "..aa...", ".aaa...", "...b...", "ccccccc", ".ccccc."), // barco
-        listOf(".aa.aa.", "aaaaaaa", "aaaaaaa", ".aaaaa.", "..aaa..", "...a..."), // coração
+        listOf("..a...", ".aa...", "aaa...", "..b...", "cccccc", ".cccc."), // barco
+        listOf("aa..aa", "aaaaaa", "aaaaaa", ".aaaa.", "..aa.."), // coração
         listOf("..aa..", ".aaaa.", "aaaaaa", "..bb..", "..bb..", "..bb.."), // árvore
     )
 
@@ -617,7 +617,7 @@ class FasesIngles(random: Random = Random.Default) : FasesDoCaminho(random) {
 
     /** Pintar o leão da savana com as cores em inglês. */
     private fun pintarLeao(m: Int): Pergunta {
-        val desenho = listOf(".bbbbb.", "byyyyyb", "bkyyykb", "byyyyyb", "bbykybb", ".bbbbb.")
+        val desenho = listOf(".bbbb.", "byyyyb", "bkyykb", "byyyyb", "bbkkbb", ".bbbb.")
         val nomes = mapOf('b' to "brown", 'y' to "yellow", 'k' to "black")
         val usadas = nomes.values.map { n -> I.cores.first { it.en == n } }
         val extra = I.cores.filter { it.en !in nomes.values && it.en != "white" }.um()
@@ -625,7 +625,7 @@ class FasesIngles(random: Random = Random.Default) : FasesDoCaminho(random) {
         return Pergunta.deAtividade(
             instrucao = "Paint the lion",
             fala = listOf(en("Paint the lion! Brown, yellow and black.")),
-            atividade = PintarPorCodigo(7, casasDe(desenho) { nomes[it] }, legenda),
+            atividade = PintarPorCodigo(desenho[0].length, casasDe(desenho) { nomes[it] }, legenda),
             reforco = listOf(en("A big yellow lion! Roar!")),
         )
     }
@@ -746,7 +746,7 @@ class FasesIngles(random: Random = Random.Default) : FasesDoCaminho(random) {
         val m = 6
         val f = I.fazenda
         return listOf(
-            ModeloDeFase("Farm animals", "🐄") { ou({ ouvirETocar(m, f) }, { ouvirETocar(m, f) }, { memoriaEn(m, f, 3) }) },
+            ModeloDeFase("Farm animals", "🐄") { ou({ ouvirETocar(m, f) }, { ouvirETocar(m, f) }, { memoriaEn(m, f, 3) }, { ligarPalavras(m, f, 2) }) },
             ModeloDeFase("Farm fishing", "🎣") { ou({ pescarPalavra(m, f) }, { pescarPalavra(m, f) }, { ouvirETocar(m, f) }) },
             ModeloDeFase("Who says moo?", "🔊") { ou({ somDoBicho(m) }, { somDoBicho(m) }, { sigaSons(m, 2..2) }) },
             ModeloDeFase("Animal sounds", "🎵") { ou({ sigaSons(m, 2..3) }, { sigaSons(m, 2..3) }, { oQueEleDiz(m) }) },
