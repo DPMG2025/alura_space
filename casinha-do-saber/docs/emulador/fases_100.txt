@@ -1,4 +1,4 @@
-Números fase 100: escolha, Balanca, LigarPares, escolha, PintarPorCodigo
-Letras fase 100: LigarPares, LigarPares, Ditado, EstourarBaloes, Ditado
-Inglês fase 100: CartasViradas, CartasViradas, Trem, EstourarBaloes, escolha
-Lógica fase 100: escolha, escolha, CartasViradas, PintarPorCodigo, Domino
+Números fase 100: Balanca, escolha, LigarPares, PintarPorCodigo, escolha
+Letras fase 100: EstourarBaloes, LigarPares, EstourarBaloes, LigarPares, Ditado
+Inglês fase 100: Trem, Trem, CartasViradas, EstourarBaloes, escolha
+Lógica fase 100: Domino, Domino, LigarPares, PintarPorCodigo, escolha
