@@ -340,6 +340,11 @@ class Repositorio(private val context: Context) {
                 quadrosNaParede = Atelie.textoParaParede(prefs.getString(QUADROS_PAREDE, null), desenhos),
                 desafiosDosPaisFeitos = Pais.textoParaDias(prefs.getString(DESAFIOS_PAIS, null)),
                 sessoes = Pais.textoParaRegistros(prefs.getString(SESSOES, null)),
+                // Relembrar, Descobrir o nível e Livrinhos: chaves novas, saves antigos ficam com o padrão.
+                revisoes = br.com.casinhadosaber.dominio.Relembrar.deTexto(prefs.getString(REVISOES, null)),
+                liberadaAte = br.com.casinhadosaber.dominio.SerializacaoDoNivel.textoParaLiberada(prefs.getString(LIBERADA_ATE, null)),
+                nivelFeito = br.com.casinhadosaber.dominio.SerializacaoDoNivel.textoParaFeito(prefs.getString(NIVEL_FEITO, null)),
+                livrinhosLidos = br.com.casinhadosaber.dominio.Livrinhos.textoParaLidos(prefs.getString(LIVRINHOS, null)),
             )
         }
     }
@@ -395,6 +400,10 @@ class Repositorio(private val context: Context) {
         putString(QUADROS_PAREDE, Atelie.paredeParaTexto(e.quadrosNaParede))
         putString(DESAFIOS_PAIS, Pais.diasParaTexto(e.desafiosDosPaisFeitos))
         putString(SESSOES, Pais.registrosParaTexto(e.sessoes))
+        putString(REVISOES, br.com.casinhadosaber.dominio.Relembrar.paraTexto(e.revisoes))
+        putString(LIBERADA_ATE, br.com.casinhadosaber.dominio.SerializacaoDoNivel.liberadaParaTexto(e.liberadaAte))
+        putString(NIVEL_FEITO, br.com.casinhadosaber.dominio.SerializacaoDoNivel.feitoParaTexto(e.nivelFeito))
+        putString(LIVRINHOS, br.com.casinhadosaber.dominio.Livrinhos.lidosParaTexto(e.livrinhosLidos))
     }
 
     private companion object {
@@ -438,5 +447,9 @@ class Repositorio(private val context: Context) {
         const val QUADROS_PAREDE = "quadros_parede"
         const val DESAFIOS_PAIS = "desafios_pais"
         const val SESSOES = "sessoes"
+        const val REVISOES = "revisoes"
+        const val LIBERADA_ATE = "liberada_ate"
+        const val NIVEL_FEITO = "nivel_feito"
+        const val LIVRINHOS = "livrinhos_lidos"
     }
 }

@@ -62,6 +62,8 @@ import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Mundos
 import br.com.casinhadosaber.dominio.Trilha
+import br.com.casinhadosaber.dominio.faseDaVez
+import br.com.casinhadosaber.dominio.ofereceNivel
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
@@ -162,11 +164,19 @@ fun TelaTrilha(
     onTreinar: () -> Unit = {},
     /** Mapa grande com os 25 mundos do caminho (sem ele, o botão 🗺️ não aparece). */
     onMapa: (() -> Unit)? = null,
+    /** Quantas fases deste caminho estão para relembrar hoje (0 = o botão da Corujinha não aparece). */
+    relembrar: Int = 0,
+    onRelembrar: () -> Unit = {},
+    /** "Descobrir o nível": oferecido embaixo do caminho enquanto nenhuma fase foi vencida (null = não oferece). */
+    onDescobrirNivel: (() -> Unit)? = null,
+    /** Estante dos livrinhos (o caminho das Letras mostra o botão 📚 embaixo). */
+    onEstante: (() -> Unit)? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     val todas = remember(trilha) { GeradorDeFases().fases(trilha) }
-    val atual = todas.firstOrNull { estado.liberada(it) && estado.estrelasDa(it) == 0 }
+    // Depois do "Descobrir o nível", a fase da vez é a do começo do mundo aberto (as de antes ficam abertas).
+    val atual = estado.faseDaVez(todas)
     // Fase para mostrar ao abrir: a atual ou, com tudo vencido, a última vencida.
     val indiceEmFoco = atual?.numero ?: todas.indexOfLast { estado.estrelasDa(it) > 0 }.coerceAtLeast(0)
     // São 250 fases: o caminho mostra até o fim do mundo seguinte ao da vez (o resto aparece quando a
@@ -181,6 +191,9 @@ fun TelaTrilha(
 
     val mundoAtual = Mundos.daFase(indiceEmFoco)
     val podeTreinar = estado.vencidasNa(trilha) > 0
+    val ofereceNivel = onDescobrirNivel != null && !podeTreinar && estado.ofereceNivel(trilha)
+    // Barra de baixo: treino (ou "Já sei bastante!"), Relembrar e a estante; com ela, sobra espaço no fim do caminho.
+    val temBarra = podeTreinar || ofereceNivel || relembrar > 0 || onEstante != null
 
     LaunchedEffect(trilha) {
         narrador.falar(
@@ -276,7 +289,7 @@ fun TelaTrilha(
                     .verticalScroll(rolagem)
                     .padding(top = ESPACO_NO_TOPO),
             ) {
-                val alturaTotal = ALTURA_PASSO * disposicao.linhas(fases.size) + 40.dp + if (podeTreinar) ESPACO_DO_TREINO else 0.dp
+                val alturaTotal = ALTURA_PASSO * disposicao.linhas(fases.size) + 40.dp + if (temBarra) ESPACO_DO_TREINO else 0.dp
                 val corCaminho = Color.White.copy(alpha = 0.85f)
                 Canvas(Modifier.fillMaxWidth().height(alturaTotal)) {
                     // Cada mundo (10 fases) numa faixa de cor própria, para a criança ver que entrou num lugar novo.
@@ -413,7 +426,7 @@ fun TelaTrilha(
                     .height(40.dp)
                     .background(Brush.verticalGradient(listOf(cor, cor.copy(alpha = 0f)))),
             )
-            if (podeTreinar) {
+            if (temBarra) {
                 // Esmaecido embaixo: as bolinhas que passam por trás do botão somem suavemente.
                 Box(
                     Modifier
@@ -422,26 +435,37 @@ fun TelaTrilha(
                         .height(ESPACO_DO_TREINO + 16.dp)
                         .background(Brush.verticalGradient(listOf(Cores.Fundo.copy(alpha = 0f), Cores.Fundo.copy(alpha = 0.92f), Cores.Fundo))),
                 )
-                // Treino sem fim: botão grande, sempre à mão embaixo do caminho.
-                BotaoFofo(
-                    onClick = {
-                        sons.toque()
-                        onTreinar()
-                    },
-                    cor = Color.White,
-                    corBase = corEscura,
-                    descricao = "Treinar: perguntas sem fim das fases que você já venceu",
-                    modifier = Modifier
+                Row(
+                    Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(
-                        Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text("🏋️", style = MaterialTheme.typography.headlineMedium)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Treinar", style = MaterialTheme.typography.headlineSmall, color = corEscura, fontWeight = FontWeight.Bold)
+                    if (onEstante != null) BotaoEstante(onEstante, tamanho = 56.dp)
+                    if (relembrar > 0) BotaoRelembrar(relembrar, onRelembrar, comTexto = !podeTreinar && !ofereceNivel)
+                    if (podeTreinar) {
+                        // Treino sem fim: botão grande, sempre à mão embaixo do caminho.
+                        BotaoFofo(
+                            onClick = {
+                                sons.toque()
+                                onTreinar()
+                            },
+                            cor = Color.White,
+                            corBase = corEscura,
+                            descricao = "Treinar: perguntas sem fim das fases que você já venceu",
+                        ) {
+                            Row(
+                                Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text("🏋️", style = MaterialTheme.typography.headlineMedium)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Treinar", style = MaterialTheme.typography.headlineSmall, color = corEscura, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    } else if (ofereceNivel && onDescobrirNivel != null) {
+                        BotaoDescobrirNivel(trilha, onDescobrirNivel)
                     }
                 }
             }

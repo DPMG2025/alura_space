@@ -133,6 +133,11 @@ fun TelaJogo(
      * se ajustar). O ✖ termina o treino e entrega os resultados em [onConcluir].
      */
     treino: ((resultados: List<Boolean>) -> Pergunta)? = null,
+    /**
+     * Com [treino]: depois de cada acerto, se devolver true a partida termina e entrega os resultados em
+     * [onConcluir] (o "Descobrir o nível" para sozinho; o treino sem fim não passa nada).
+     */
+    fimDoTreino: ((resultados: List<Boolean>) -> Boolean)? = null,
     /** Mostra a abertura do mundo (Corujinha Professora) antes da primeira fase dele ([Historia.introducao]). */
     comHistoria: Boolean = false,
 ) {
@@ -207,7 +212,9 @@ fun TelaJogo(
         val caracteres = elogio.trecho.texto.length + pergunta.reforco.sumOf { it.texto.length }
         escopo.launch {
             delay((1200L + caracteres * 65L).coerceAtMost(5000L))
-            if (treino != null) {
+            if (treino != null && fimDoTreino?.invoke(resultados) == true) {
+                onConcluir(resultados)
+            } else if (treino != null) {
                 // Treino sem fim: a próxima pergunta já vem ajustada aos acertos e erros até aqui.
                 perguntas.add(treino(resultados))
                 indice++

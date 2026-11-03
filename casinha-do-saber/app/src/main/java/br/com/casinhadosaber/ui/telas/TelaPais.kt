@@ -62,6 +62,7 @@ import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Mundos
 import br.com.casinhadosaber.dominio.Trilha
+import br.com.casinhadosaber.dominio.desfazerNivel
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.FileiraDeEstrelas
@@ -90,6 +91,8 @@ fun TelaPais(
     familia: AcoesDaFamilia? = null,
     /** Cópia do progresso sem internet (guardar, enviar, recuperar). Null esconde o cartão. */
     copia: AcoesDaCopia? = null,
+    /** "Descobrir o nível" de um caminho, aberto pelo adulto (a criança responde). */
+    onDescobrirNivel: (Trilha) -> Unit = {},
 ) {
     var liberado by rememberSaveable { mutableStateOf(false) }
     // "Meu caderno" (palavras escritas com o dedo) abre por cima da área dos pais, depois do portão.
@@ -116,7 +119,7 @@ fun TelaPais(
         if (!liberado) {
             PortaoDeAdulto(onLiberar = { liberado = true })
         } else {
-            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite, hoje, onAtualizar, familia, copia, onAbrirCaderno = { verCaderno = true })
+            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite, hoje, onAtualizar, familia, copia, onAbrirCaderno = { verCaderno = true }, onDescobrirNivel = onDescobrirNivel)
         }
     }
 }
@@ -137,6 +140,7 @@ private fun Painel(
     familia: AcoesDaFamilia?,
     copia: AcoesDaCopia?,
     onAbrirCaderno: () -> Unit = {},
+    onDescobrirNivel: (Trilha) -> Unit = {},
 ) {
     var confirmar by remember { mutableStateOf(false) }
     val variasCriancas = (familia?.criancas?.size ?: 1) > 1
@@ -166,6 +170,13 @@ private fun Painel(
         Pais.relatorioDaSemana(estado.sessoes, hoje) { t, n -> gerador.fases(t).getOrNull(n)?.titulo ?: Pais.nomePadrao(t, n) }
     }
     CartaoRelatorioDaSemana(relatorio)
+
+    CartaoDoRitmo(
+        estado = estado,
+        hoje = hoje,
+        onDescobrir = onDescobrirNivel,
+        onDesfazer = { t -> onAtualizar { it.desfazerNivel(t) } },
+    )
 
     Cartao {
         Text("O que a criança está aprendendo", style = MaterialTheme.typography.titleLarge)

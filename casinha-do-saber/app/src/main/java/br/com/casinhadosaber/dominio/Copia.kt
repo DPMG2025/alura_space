@@ -78,6 +78,8 @@ object Copia {
             "colocados", "cores", "respondidas", "acertos", "tentativas", "comprados", "historico", "visitantes",
             "moveis_dentro", "mascote", "presentes_especiais", "eventos_recebidos", "desenhos", "quadros_parede",
             "desafios_pais", "sessoes",
+            // Relembrar, Descobrir o nível e Livrinhos (por criança, como o resto do progresso).
+            "revisoes", "liberada_ate", "nivel_feito", "livrinhos_lidos",
         ).forEach { put(it, 's') }
         listOf("pele", "cabelo", "roupa", "estilo_cabelo", "moedas", "moedas_hoje", "cor_telhado", "cor_porta", "papel", "clima", "timer")
             .forEach { put(it, 'i') }

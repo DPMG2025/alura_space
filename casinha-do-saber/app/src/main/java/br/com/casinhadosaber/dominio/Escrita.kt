@@ -51,7 +51,7 @@ object Escrita {
 data class Ponto(val x: Float, val y: Float)
 
 /** O que o leitor achou de uma letra escrita. */
-data class Leitura(
+data class LeituraDaLetra(
     /** Vale como a letra pedida? */
     val aceita: Boolean,
     /** A letra mais parecida com o que foi escrito (ou null quando não deu para ler nada). */
@@ -86,14 +86,14 @@ class LeitorDeLetras(modelos: Map<Char, List<List<List<Ponto>>>>) {
         return nuvens[c].orEmpty().minOfOrNull { casar(n, it) } ?: Float.MAX_VALUE
     }
 
-    fun ler(tracos: List<List<Ponto>>, esperada: Char): Leitura {
+    fun ler(tracos: List<List<Ponto>>, esperada: Char): LeituraDaLetra {
         val n = nuvem(tracos)
-        if (n.isEmpty()) return Leitura(false, null, Float.MAX_VALUE, Float.MAX_VALUE)
+        if (n.isEmpty()) return LeituraDaLetra(false, null, Float.MAX_VALUE, Float.MAX_VALUE)
         val distancias = nuvens.mapValues { (_, jeitos) -> jeitos.minOfOrNull { casar(n, it) } ?: Float.MAX_VALUE }
         val (melhor, dMelhor) = distancias.minBy { it.value }
         val dEsperada = distancias[esperada] ?: Float.MAX_VALUE
         val aceita = dEsperada <= LONGE_DEMAIS && (melhor == esperada || dEsperada <= dMelhor * FOLGA)
-        return Leitura(aceita, melhor, dEsperada, dMelhor)
+        return LeituraDaLetra(aceita, melhor, dEsperada, dMelhor)
     }
 
     companion object {
