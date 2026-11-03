@@ -26,16 +26,18 @@ As capturas são geradas automaticamente pelo CI a cada alteração (Robolectric
 
 ## Qualidade
 
-1. Testes de unidade: validação de placa, formatos, leitor da resposta de placa, estatísticas, projeção, datas e regras dos salvos.
-2. Testes de integração com servidor HTTP simulado (MockWebServer): busca manual completa, placa até o valor FIPE, histórico ignorando meses ausentes, uso do token e mensagens de erro (401, 429, sem conexão).
-3. Testes de captura de tela de todas as telas, em tema claro e escuro.
-4. Teste contra as APIs reais da FIPE no CI, com relatório em `docs/verificacao-api-real.txt`.
-5. Testes de ponta a ponta num emulador Android 14 no CI, com internet real: busca por marca, modelo e ano até o histórico, e busca pela placa (provedor de placas simulado no aparelho, valor FIPE real) até favoritar e conferir em Salvos. Capturas do aparelho e relatório em `docs/emulador/`.
-6. CI no GitHub Actions: roda tudo isso, publica as capturas e gera os APKs debug e release (com R8).
+1. **Testes de unidade** (JVM): placa, formatos de dinheiro e datas, leitor da resposta de placa, estatísticas, projeção, mescla do histórico local e regras dos salvos.
+2. **Testes de integração** com servidor HTTP simulado (MockWebServer): busca manual, placa até o valor FIPE, histórico com meses ausentes, limite passageiro (429), meses que exigem token (402), tempo limite, cancelamento, uso offline pelo cache em disco e mensagens de erro.
+3. **Testes de ViewModel e de dados** com Robolectric: versão escolhida mantida, cancelamento ao limpar, estado salvo após o sistema encerrar o app, Tabela FIPE carregada sob demanda e integridade dos salvos (JSON corrompido preservado, registros antigos lidos).
+4. **Capturas de tela** de todas as telas, em tema claro e escuro, com **regressão visual**: o CI compara com a versão anterior e bloqueia mudanças não aprovadas (aprovação com `[telas]` na mensagem do commit).
+5. **Teste contra as APIs reais da FIPE** no CI (`docs/verificacao-api-real.txt`).
+6. **Testes de ponta a ponta num emulador Android 14** com internet real, isolados entre si, e **teste do APK de release com R8** (`docs/emulador/`).
+7. **Revisões independentes** por agentes que não participaram do desenvolvimento, usadas para guiar cada ciclo de correções.
 
-| No emulador: placa | No emulador: modelos | No emulador: histórico real |
-|---|---|---|
-| ![Placa](docs/emulador/p02_resultado_placa.png) | ![Modelos](docs/emulador/e02_modelos_filtrados.png) | ![Histórico](docs/emulador/e05_historico.png) |
+### Arquitetura
+
+* `data/`: fontes de dados (`FipeRepositorio`, `HistoricoFipe`, `Resiliencia`), modelos, salvos com fila de gravação fora da thread principal e cópia de segurança, tokens cifrados com o Android Keystore.
+* `ui/`: telas em Compose sem estado, ViewModels com dependências injetadas por uma fábrica (`FipeApp.fabricaViewModels`), mensagens de erro (`MensagensErro`) e tema.
 
 ## De onde vêm os dados
 
