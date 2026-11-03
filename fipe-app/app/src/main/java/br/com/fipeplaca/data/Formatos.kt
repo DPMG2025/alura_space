@@ -32,6 +32,8 @@ object Dinheiro {
         if (texto.isNullOrBlank()) return null
         val limpo = texto.filter { it.isDigit() || it == ',' || it == '.' || it == '-' }
         if (limpo.none { it.isDigit() }) return null
+        // Formato com ponto decimal (ex.: 45320.5 vindo de um provedor): sem virgula e 1 ou 2 digitos apos o ultimo ponto
+        if (',' !in limpo && Regex("^-?\\d+\\.\\d{1,2}$").matches(limpo)) return limpo.toDoubleOrNull()
         val inteiro = limpo.substringBefore(',').replace(".", "")
         val centavos = limpo.substringAfter(',', "").filter { it.isDigit() }
         return (if (centavos.isEmpty()) inteiro else "$inteiro.$centavos").toDoubleOrNull()

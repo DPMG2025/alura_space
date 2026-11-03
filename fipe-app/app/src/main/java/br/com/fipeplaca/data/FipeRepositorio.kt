@@ -94,7 +94,7 @@ class FipeRepositorio(
 
     /** Descarta itens incompletos (o Gson ignora a nulidade do Kotlin e pode entregar null). */
     @Suppress("SENSELESS_COMPARISON")
-    private fun List<ItemFipe>.validos() = filter { it.codigo != null && it.nome != null }
+    private fun List<ItemFipe>.validos() = filter { it.codigo != null && it.nome != null }.distinctBy { it.codigo }
 
     suspend fun marcas(tipo: TipoVeiculo): List<ItemFipe> =
         cacheMarcas[tipo] ?: v1.marcas(tipo.caminhoV1).validos().sortedBy { Texto.chave(Texto.marca(it.nome)) }
@@ -379,11 +379,16 @@ class FipeRepositorio(
 
         fun mensagemErro(t: Throwable): String = when (t) {
             is PlacaParser.ErroProvedor -> t.message ?: "Erro na consulta."
-            is HttpException -> when (t.code()) {
-                429 -> "Limite diário de consultas da FIPE atingido. Informe um token da FIPE em Ajustes ou tente amanhã."
+            is HttpException -> {
+                // O token da FIPE so vale para a API v2: as mensagens dependem de qual servico respondeu
+                val v2 = t.response()?.raw()?.request?.url?.encodedPath?.contains("/api/v2/") == true
+                when (t.code()) {
+                429 -> if (v2) "Limite diário de consultas da FIPE atingido. Informe um token da FIPE em Ajustes ou tente amanhã."
+                       else "Limite de consultas da tabela FIPE atingido por agora. Tente novamente em alguns minutos."
                 404 -> "Não encontrado na tabela FIPE."
-                401, 403 -> "Token da FIPE inválido. Confira em Ajustes."
+                401, 403 -> if (v2) "Token da FIPE inválido. Confira em Ajustes." else "Acesso recusado pelo serviço. Tente novamente mais tarde."
                 else -> "Erro no servidor (HTTP ${t.code()})."
+                }
             }
             is java.net.UnknownServiceException -> "O endereço do serviço precisa usar https. Confira em Ajustes."
             is com.google.gson.JsonParseException -> "O serviço respondeu num formato inesperado. Confira o endereço em Ajustes."

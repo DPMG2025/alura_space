@@ -108,7 +108,9 @@ fun Cabecalho(
 @Composable
 fun PlacaMercosul(placa: String, modifier: Modifier = Modifier, altura: Dp = 56.dp) {
     val texto = Placa.formatar(placa).ifBlank { "ABC1D23" }
-    MolduraPlaca(modifier.clearAndSetSemantics { contentDescription = "Placa ${texto.toList().joinToString(" ")}" }, altura) {
+    // Placa no formato antigo (ABC-1234) usa a moldura cinza, sem a faixa Mercosul
+    val mercosul = '-' !in texto
+    MolduraPlaca(modifier.clearAndSetSemantics { contentDescription = "Placa ${texto.toList().joinToString(" ")}" }, altura, mercosul) {
         Text(
             texto,
             style = estiloPlaca(altura, maxWidth, texto.length, LocalDensity.current.fontScale),
@@ -137,7 +139,7 @@ fun CampoPlaca(valor: String, onValor: (String) -> Unit, onBuscar: () -> Unit, m
                 capitalization = KeyboardCapitalization.Characters,
                 autoCorrectEnabled = false,
                 // Teclado sem sugestoes nem texto "em composicao" (sublinhado) para a placa
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Password,
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Ascii,
                 imeAction = ImeAction.Search,
             ),
             keyboardActions = KeyboardActions(onSearch = { onBuscar() }),
@@ -184,7 +186,20 @@ private fun estiloFaixa(tamanho: Float): TextStyle {
 }
 
 @Composable
-private fun MolduraPlaca(modifier: Modifier, altura: Dp, conteudo: @Composable BoxWithConstraintsScope.() -> Unit) {
+private fun MolduraPlaca(modifier: Modifier, altura: Dp, mercosul: Boolean = true, conteudo: @Composable BoxWithConstraintsScope.() -> Unit) {
+    if (!mercosul) {
+        Box(
+            modifier.clip(RoundedCornerShape(altura * 0.14f)).background(Color(0xFFC9CDD3))
+                .border(if (altura < 44.dp) 1.5.dp else 2.dp, Color(0xFF3A3F47), RoundedCornerShape(altura * 0.14f)),
+        ) {
+            BoxWithConstraints(
+                Modifier.fillMaxWidth().height(altura).padding(horizontal = altura * 0.12f),
+                contentAlignment = Alignment.Center,
+                content = conteudo,
+            )
+        }
+        return
+    }
     val faixa = altura * 0.26f
     val compacta = altura < 44.dp
     Column(

@@ -119,6 +119,16 @@ class RepositorioSalvos(context: Context) {
     /** Desfaz uma exclusao: devolve o item ao topo, respeitando o limite de recentes. */
     fun restaurar(item: ConsultaSalva) = alterar { l -> OrganizarSalvos.inserir(l, item, LIMITE_RECENTES) }
 
+    /** Desfaz varias exclusoes de uma vez, devolvendo cada item a posicao em que estava. */
+    fun restaurarNasPosicoes(itens: List<Pair<Int, ConsultaSalva>>) = alterar { l ->
+        val nova = l.filterNot { atual -> itens.any { it.second.id == atual.id } }.toMutableList()
+        itens.sortedBy { it.first }.forEach { (i, item) -> nova.add(i.coerceIn(0, nova.size), item) }
+        nova
+    }
+
+    /** Posicao atual de um item (para desfazer a exclusao no mesmo lugar). */
+    fun posicao(id: String): Int = _itens.value.indexOfFirst { it.id == id }
+
     fun pontosLocais(id: String): List<PontoHistorico> = _itens.value.firstOrNull { it.id == id }?.historicoLocal.orEmpty()
 
     /** Versao escolhida, depois de terminar as gravacoes pendentes (chamar fora da thread principal). */

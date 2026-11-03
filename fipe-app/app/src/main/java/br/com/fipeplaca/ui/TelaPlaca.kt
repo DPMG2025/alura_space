@@ -40,6 +40,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -84,6 +85,8 @@ data class AcoesPlaca(
     val buscarManual: (TipoVeiculo, String?) -> Unit = { _, _ -> },
     val abrirTabela: () -> Unit = {},
     val recarregarHistorico: () -> Unit = {},
+    val consultarNoProvedor: () -> Unit = {},
+    val atualizarValor: () -> Unit = {},
 )
 
 @Composable
@@ -98,7 +101,9 @@ fun TelaPlaca(
     placaConfigurada: Boolean = true,
 ) {
     val foco = LocalFocusManager.current
-    val buscar = { foco.clearFocus(); acoes.consultar() }
+    // Com o resultado da mesma placa na tela, o botao atualiza o valor pela FIPE (sem gastar credito do provedor)
+    val mesmaPlacaNaTela = estado.veiculo != null && estado.veiculo.placa == estado.placa
+    val buscar = { foco.clearFocus(); if (mesmaPlacaNaTela) acoes.atualizarValor() else acoes.consultar() }
 
     val rolagem = rememberScrollState()
     val resultadoVisivel = remember { BringIntoViewRequester() }
@@ -141,9 +146,9 @@ fun TelaPlaca(
                         Spacer(Modifier.width(10.dp))
                         Text("Consultando…")
                     } else {
-                        Icon(Icons.Filled.Search, null)
+                        Icon(if (mesmaPlacaNaTela) Icons.Filled.Refresh else Icons.Filled.Search, null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Consultar valor")
+                        Text(if (mesmaPlacaNaTela) "Atualizar valor" else "Consultar valor")
                     }
                 }
                 if (estado.placa.isNotEmpty() || estado.veiculo != null) {
@@ -274,10 +279,19 @@ private fun ResultadoPlaca(v: VeiculoPlaca, estado: PlacaUi, historico: Historic
                     Text(listOfNotNull(v.marca?.let(Texto::marca), v.modelo?.let(Texto::modelo)).joinToString(" "), style = MaterialTheme.typography.titleMedium, maxLines = 2)
                     when {
                         estado.avisoAtualizacao != null -> Text(estado.avisoAtualizacao,
-                            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
-                        estado.doSalvo -> Text("Atualizando o valor…", style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
+                        estado.doSalvo -> Text("Atualizando o valor…", style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.secondary)
                     }
+                }
+            }
+            if (estado.abertoSemCusto) {
+                Text(
+                    "Esta placa já estava nos salvos: aberta sem gastar crédito do serviço de placas.",
+                    style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                TextButton(onClick = acoes.consultarNoProvedor, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp)) {
+                    Text("Consultar o serviço de placas mesmo assim")
                 }
             }
             TextButton(onClick = acoes.limpar, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp)) {

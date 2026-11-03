@@ -85,12 +85,17 @@ fun AppRaiz() {
 
     val placaVm: PlacaViewModel = viewModel()
     val manualVm: ManualViewModel = viewModel()
+    // Na raiz, so o necessario para o "voltar"; cada aba coleta o proprio estado (o progresso do
+    // historico recompoe so a aba aberta, nao o app inteiro)
     val placa by placaVm.estado.collectAsStateWithLifecycle()
-    val histPlaca by placaVm.historico.estado.collectAsStateWithLifecycle()
     val manual by manualVm.estado.collectAsStateWithLifecycle()
-    val histManual by manualVm.historico.estado.collectAsStateWithLifecycle()
-    val salvos by placaVm.itensSalvos.collectAsStateWithLifecycle()
     val tema by app.tema.collectAsStateWithLifecycle()
+    // Exclusoes aguardando o "Desfazer" (um unico aviso acumula todas)
+    val excluidos = remember { androidx.compose.runtime.mutableStateListOf<Pair<Int, ConsultaSalva>>() }
+    var geracaoExclusao by remember { mutableIntStateOf(0) }
+
+    // Marcas da Tabela so sao buscadas quando a aba abre
+    androidx.compose.runtime.LaunchedEffect(aba) { if (aba == 1) manualVm.garantirCarregado() }
 
     fun aviso(texto: String) = escopo.launch {
         // So substitui avisos simples: um aviso com "Desfazer" pendente nao e descartado
@@ -151,36 +156,44 @@ fun AppRaiz() {
           estadosDasAbas.SaveableStateProvider(atual) {
             when (atual) {
                 0 -> {
+                    val histPlaca by placaVm.historico.estado.collectAsStateWithLifecycle()
+                    val salvos by placaVm.itensSalvos.collectAsStateWithLifecycle()
                     val id = placa.veiculo?.let { ConsultaSalva.idPlaca(it.placa) }
                     val fav = id != null && salvos.any { it.id == id && it.favorito }
-                    TelaPlaca(
-                        estado = placa, historico = histPlaca, recentes = salvos, favorito = fav,
-                        semTokenFipe = app.prefs.tokenFipe.isBlank(),
-                        placaConfigurada = app.repositorio.temTokenPlaca(),
-                        acoes = AcoesPlaca(
+                    // Acoes lembradas: as lambdas leem o estado atual do ViewModel (nao recriam a cada quadro)
+                    val acoesPlaca = remember(id, fav) {
+                        AcoesPlaca(
                             alterarPlaca = placaVm::alterarPlaca,
-                            consultar = placaVm::consultar,
+                            consultar = { placaVm.consultar() },
+                            consultarNoProvedor = { placaVm.consultar(forcarProvedor = true) },
+                            atualizarValor = placaVm::atualizarValor,
                             limpar = placaVm::limpar,
                             abrirSalvo = placaVm::abrirSalvo,
                             selecionarVersao = placaVm::selecionarVersao,
                             favoritar = { placaVm.alternarFavorito(); if (id != null) favoritou(id, fav) },
-                            compartilhar = { r -> compartilhar(r, placa.veiculo, histPlaca.pontos) },
+                            compartilhar = { r -> compartilhar(r, placaVm.estado.value.veiculo, placaVm.historico.estado.value.pontos) },
                             copiarCodigo = ::copiar,
                             mudarPeriodo = placaVm.historico::mudarPeriodo,
                             abrirConfiguracoes = { aba = 3 },
                             buscarManual = { tipo, marca -> manualVm.preencherPorPlaca(tipo, marca); aba = 1 },
                             abrirTabela = { aba = 1 },
                             recarregarHistorico = placaVm::recarregarHistorico,
-                        ),
+                        )
+                    }
+                    TelaPlaca(
+                        estado = placa, historico = histPlaca, recentes = salvos, favorito = fav,
+                        semTokenFipe = app.prefs.tokenFipe.isBlank(),
+                        placaConfigurada = app.repositorio.temTokenPlaca(),
+                        acoes = acoesPlaca,
                     )
                 }
                 1 -> {
+                    val histManual by manualVm.historico.estado.collectAsStateWithLifecycle()
+                    val salvos by placaVm.itensSalvos.collectAsStateWithLifecycle()
                     val id = manual.resultado?.let { ConsultaSalva.idManual(it) }
                     val fav = id != null && salvos.any { it.id == id && it.favorito }
-                    TelaManual(
-                        estado = manual, historico = histManual, favorito = fav,
-                        semTokenFipe = app.prefs.tokenFipe.isBlank(),
-                        acoes = AcoesManual(
+                    val acoesManual = remember(id, fav) {
+                        AcoesManual(
                             selecionarTipo = { manualVm.selecionarTipo(it) },
                             alterarFiltro = manualVm::alterarFiltro,
                             selecionarMarca = manualVm::selecionarMarca,
@@ -191,15 +204,22 @@ fun AppRaiz() {
                             tentarNovamente = manualVm::tentarNovamente,
                             novaConsulta = manualVm::novaConsulta,
                             favoritar = { manualVm.alternarFavorito(); if (id != null) favoritou(id, fav) },
-                            compartilhar = { r -> compartilhar(r, null, histManual.pontos) },
+                            compartilhar = { r -> compartilhar(r, null, manualVm.historico.estado.value.pontos) },
                             copiarCodigo = ::copiar,
                             mudarPeriodo = manualVm.historico::mudarPeriodo,
                             recarregarHistorico = { manualVm.historico.recarregar() },
                             abrirConfiguracoes = { aba = 3 },
-                        ),
+                        )
+                    }
+                    TelaManual(
+                        estado = manual, historico = histManual, favorito = fav,
+                        semTokenFipe = app.prefs.tokenFipe.isBlank(),
+                        acoes = acoesManual,
                     )
                 }
-                2 -> TelaSalvos(
+                2 -> {
+                    val salvos by placaVm.itensSalvos.collectAsStateWithLifecycle()
+                    TelaSalvos(
                     itens = salvos,
                     acoes = AcoesSalvos(
                         abrir = { c ->
@@ -208,19 +228,31 @@ fun AppRaiz() {
                         alternarFavorito = { app.salvos.alternarFavorito(it) },
                         remover = { id ->
                             val item = salvos.firstOrNull { it.id == id }
+                            if (item != null) excluidos += app.salvos.posicao(id) to item
                             app.salvos.remover(id)
-                            // Sem dispensar o aviso anterior: cada exclusao mantem o seu "Desfazer" (os avisos entram em fila)
+                            // Um unico aviso acumula as exclusoes; "Desfazer" devolve todas as posicoes originais
+                            val minha = ++geracaoExclusao
                             escopo.launch {
-                                val r = snackbar.showSnackbar("Consulta excluída", actionLabel = "Desfazer", duration = SnackbarDuration.Short)
-                                if (r == SnackbarResult.ActionPerformed && item != null) app.salvos.restaurar(item)
+                                snackbar.currentSnackbarData?.dismiss()
+                                val n = excluidos.size
+                                val r = snackbar.showSnackbar(
+                                    if (n <= 1) "Consulta excluída" else "$n consultas excluídas",
+                                    actionLabel = "Desfazer", duration = SnackbarDuration.Short,
+                                )
+                                if (r == SnackbarResult.ActionPerformed) {
+                                    app.salvos.restaurarNasPosicoes(excluidos.toList())
+                                    excluidos.clear()
+                                } else if (minha == geracaoExclusao) excluidos.clear()
                             }
                         },
                         limparRecentes = { confirmarLimpeza = true },
                     ),
                 )
+                }
                 else -> androidx.compose.runtime.key(ajustesSalvos) { TelaConfiguracoes(
                     inicial = Configuracoes(app.prefs.tokenPlaca, app.prefs.urlPlaca, app.prefs.tokenFipe),
                     versao = BuildConfig.VERSION_NAME,
+                    tokenIlegivel = app.prefs.tokenIlegivel,
                     tema = tema,
                     onTema = app::definirTema,
                     onSalvar = { cfg ->

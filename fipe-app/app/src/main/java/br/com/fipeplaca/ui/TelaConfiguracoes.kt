@@ -51,11 +51,13 @@ fun TelaConfiguracoes(
     modifier: Modifier = Modifier,
     tema: String = "sistema",
     onTema: (String) -> Unit = {},
+    tokenIlegivel: Boolean = false,
 ) {
     // rememberSaveable: o que foi digitado e ainda nao salvo sobrevive ao girar a tela
-    var tokenPlaca by rememberSaveable { mutableStateOf(inicial.tokenPlaca) }
+    // Tokens fora do estado salvo da tela (o Bundle nao e cifrado); a URL pode ser preservada
+    var tokenPlaca by remember { mutableStateOf(inicial.tokenPlaca) }
     var urlPlaca by rememberSaveable { mutableStateOf(inicial.urlPlaca) }
-    var tokenFipe by rememberSaveable { mutableStateOf(inicial.tokenFipe) }
+    var tokenFipe by remember { mutableStateOf(inicial.tokenFipe) }
     val erroUrl = br.com.fipeplaca.data.FipeRepositorio.validarUrlPlaca(urlPlaca)
     val links = LocalUriHandler.current
     fun abrir(url: String) = runCatching { links.openUri(url) } // sem navegador instalado, nao fecha o app
@@ -67,6 +69,26 @@ fun TelaConfiguracoes(
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Cabecalho(titulo = "Ajustes", subtitulo = "Conexões com os serviços de dados")
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            if (tokenIlegivel) {
+                CartaoErro("Um token salvo não pôde ser lido (por exemplo, depois de restaurar o app em outro aparelho). Informe-o de novo abaixo.")
+            }
+            Secao(titulo = "Aparência") {
+                val opcoes = listOf("sistema" to "Sistema", "claro" to "Claro", "escuro" to "Escuro")
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    opcoes.forEachIndexed { i, (valor, rotulo) ->
+                        SegmentedButton(
+                            selected = tema == valor,
+                            onClick = { onTema(valor) },
+                            shape = SegmentedButtonDefaults.itemShape(i, opcoes.size),
+                            colors = SegmentedButtonDefaults.colors(
+                                activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            ),
+                        ) { Text(rotulo) }
+                    }
+                }
+            }
+
             Secao(titulo = "Consulta pela placa") {
                 // Status pelo que esta salvo, com a mesma regra usada na consulta
                 val placaAtiva = inicial.tokenPlaca.isNotBlank() || !inicial.urlPlaca.contains("{token}")
@@ -134,23 +156,6 @@ fun TelaConfiguracoes(
                 shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
             ) { Text("Salvar alterações") }
-
-            Secao(titulo = "Aparência") {
-                val opcoes = listOf("sistema" to "Sistema", "claro" to "Claro", "escuro" to "Escuro")
-                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                    opcoes.forEachIndexed { i, (valor, rotulo) ->
-                        SegmentedButton(
-                            selected = tema == valor,
-                            onClick = { onTema(valor) },
-                            shape = SegmentedButtonDefaults.itemShape(i, opcoes.size),
-                            colors = SegmentedButtonDefaults.colors(
-                                activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            ),
-                        ) { Text(rotulo) }
-                    }
-                }
-            }
 
             Secao(titulo = "Sobre") {
                 Text(

@@ -85,7 +85,7 @@ private val Escuro = darkColorScheme(
     onSurfaceVariant = Color(0xFFA7B0C2),
     surfaceContainer = Color(0xFF19212E),
     surfaceContainerHigh = Color(0xFF212A39),
-    outline = Color(0xFF4A5468),
+    outline = Color(0xFF6B7590), // contraste >= 3:1 sobre a superficie escura
     outlineVariant = Color(0xFF2A3445),
     error = Color(0xFFFF8A80),
     errorContainer = Color(0xFF5F1412),

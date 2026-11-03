@@ -52,7 +52,24 @@ class FluxosNoAparelhoTest {
     private val saida = TestStorage()
     private var servidor: MockWebServer? = null
 
-    @After fun parar() { servidor?.shutdown() }
+    private var tokenOriginal = ""
+    private var urlOriginal = ""
+
+    /** Cada teste comeca sem salvos e devolve as preferencias como estavam (independe da ordem). */
+    @org.junit.Before fun isolar() {
+        app.salvos.limparTudo()
+        app.salvos.aguardar()
+        tokenOriginal = app.prefs.tokenPlaca
+        urlOriginal = app.prefs.urlPlaca
+    }
+
+    @After fun parar() {
+        servidor?.shutdown()
+        app.prefs.tokenPlaca = tokenOriginal
+        app.prefs.urlPlaca = urlOriginal
+        app.salvos.limparTudo()
+        app.salvos.aguardar()
+    }
 
     private fun relatorio(texto: String) {
         android.util.Log.i("FluxosNoAparelho", texto)

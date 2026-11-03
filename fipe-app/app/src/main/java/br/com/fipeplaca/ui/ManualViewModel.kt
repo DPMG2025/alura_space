@@ -72,8 +72,15 @@ class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.Sa
         val ano = item("ano")
         when {
             marca != null && modelo != null && ano != null -> {
-                _estado.value = ManualUi(tipo = tipo, etapa = Etapa.RESULTADO, marca = marca, modelo = modelo, ano = ano)
-                carregarValor(registrar = false)
+                // Se a consulta esta nos salvos, reabre de la (funciona sem internet) e atualiza em seguida
+                val salvo = salvos.itens.value.firstOrNull { c ->
+                    c.marca?.codigo == marca.codigo && c.modelo?.codigo == modelo.codigo && c.ano?.codigo == ano.codigo && c.resultado != null
+                }
+                if (salvo != null) abrirSalvo(salvo)
+                else {
+                    _estado.value = ManualUi(tipo = tipo, etapa = Etapa.RESULTADO, marca = marca, modelo = modelo, ano = ano)
+                    carregarValor(registrar = false)
+                }
             }
             marca != null && modelo != null -> {
                 _estado.value = ManualUi(tipo = tipo, etapa = Etapa.ANOS, marca = marca, modelo = modelo)
@@ -83,11 +90,14 @@ class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.Sa
                 _estado.value = ManualUi(tipo = tipo, etapa = Etapa.MODELOS, marca = marca)
                 carregarModelos()
             }
-            else -> {
-                _estado.value = ManualUi(tipo = tipo)
-                carregarMarcas()
-            }
+            else -> _estado.value = ManualUi(tipo = tipo) // marcas carregadas so quando a aba abrir
         }
+    }
+
+    /** Chamado ao abrir a aba Tabela: carrega as marcas sob demanda (nada de rede no inicio do app). */
+    fun garantirCarregado() {
+        val e = _estado.value
+        if (e.etapa == Etapa.MARCAS && e.marcas.isEmpty() && !e.carregando && e.erro == null) carregarMarcas()
     }
 
     private fun executar(bloco: suspend () -> Unit) {

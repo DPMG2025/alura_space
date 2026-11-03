@@ -39,6 +39,7 @@ jobs:
         continue-on-error: true
         env:
           ROBORAZZI_MODO: verify
+          MENSAGEM: ${{ github.event.head_commit.message }}
         run: |
           mkdir -p app/build/outputs/roborazzi
           cp docs/capturas/*.png app/build/outputs/roborazzi/ 2>/dev/null || true
@@ -52,6 +53,13 @@ jobs:
           for nome in re.findall(r'<testcase name="([^"]+)"[^>]*>\s*<failure', s):
               print("* " + nome)
           PY
+            # Mudanca visual so passa com aprovacao explicita: "[telas]" na mensagem do commit
+            if echo "$MENSAGEM" | grep -q "\[telas\]"; then
+              echo "Aprovado no commit com [telas]: as novas capturas viram a referencia." >> regressao-visual.txt
+            else
+              echo "NAO APROVADO: inclua [telas] na mensagem do commit para aceitar a mudanca." >> regressao-visual.txt
+              touch regressao-nao-aprovada
+            fi
           fi
           rm -rf app/build/outputs/roborazzi
 
@@ -102,6 +110,10 @@ jobs:
         with:
           name: relatorio-testes
           path: fipe-app/app/build/reports/tests/
+
+      - name: Bloquear mudanca visual nao aprovada
+        if: always()
+        run: test ! -f regressao-nao-aprovada
 
       - name: Gerar APK
         run: ./gradlew assembleDebug assembleRelease --no-daemon

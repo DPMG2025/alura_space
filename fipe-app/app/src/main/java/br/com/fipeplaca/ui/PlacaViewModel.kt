@@ -27,6 +27,8 @@ data class PlacaUi(
     val doSalvo: Boolean = false,
     /** Motivo quando nao foi possivel conferir o valor atual de um salvo (mostra o guardado). */
     val avisoAtualizacao: String? = null,
+    /** true quando a placa ja estava nos salvos e foi aberta sem consultar o provedor pago. */
+    val abertoSemCusto: Boolean = false,
 )
 
 class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.SavedStateHandle) : AndroidViewModel(app) {
@@ -69,8 +71,19 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
         _estado.update { it.copy(placa = Placa.normalizar(texto), erro = null, semToken = false) }
     }
 
-    fun consultar() {
+    /**
+     * Consulta a placa. Se ela ja estiver nos salvos, abre de la e atualiza o valor pela FIPE
+     * (sem gastar credito do provedor); [forcarProvedor] consulta o provedor mesmo assim.
+     */
+    fun consultar(forcarProvedor: Boolean = false) {
         val placa = _estado.value.placa
+        if (!forcarProvedor && Placa.valida(placa)) {
+            salvos.buscar(ConsultaSalva.idPlaca(placa))?.takeIf { it.veiculo != null }?.let { c ->
+                abrirSalvo(c)
+                _estado.update { it.copy(abertoSemCusto = true) }
+                return
+            }
+        }
         if (!Placa.valida(placa)) {
             _estado.update { it.copy(erro = "Placa inválida. Use o formato ABC1234 ou ABC1D23 (Mercosul).") }
             return
@@ -158,6 +171,13 @@ class PlacaViewModel(app: Application, private val salvo: androidx.lifecycle.Sav
         _estado.update { it.copy(selecionado = indice) }
         salvos.definirVersao(ConsultaSalva.idPlaca(v.placa), indice)
         historico.carregar(alvo)
+    }
+
+    /** Atualiza o valor FIPE do veiculo exibido pelo codigo FIPE (sem consultar o provedor pago). */
+    fun atualizarValor() {
+        val v = _estado.value.veiculo ?: return
+        val id = ConsultaSalva.idPlaca(v.placa)
+        abrirSalvo(salvos.buscar(id) ?: ConsultaSalva(id, System.currentTimeMillis(), veiculo = v, versao = _estado.value.selecionado))
     }
 
     /** "Tentar novamente" do historico: busca de novo ignorando o cache. */

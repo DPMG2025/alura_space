@@ -227,6 +227,7 @@ fun CartaoHistorico(
                         },
                     )
                     if (estado.exigemToken == 0) androidx.compose.material3.OutlinedButton(onClick = onTentar) { Text("Tentar novamente") }
+                    else androidx.compose.material3.OutlinedButton(onClick = onAbrirAjustes) { Text("Abrir Ajustes") }
                     }
                 } else Column {
                     if (estado.offline) {
@@ -312,7 +313,8 @@ private fun ConteudoHistorico(pontos: List<PontoHistorico>) {
             val anterior = pontos.getOrNull(i - 1)
             val v = anterior?.let { if (it.valor > 0) (p.valor - it.valor) / it.valor * 100 else null }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            // Cada linha e lida de uma vez pelo leitor de tela (mes, valor e variacao)
+            Row(Modifier.fillMaxWidth().padding(vertical = 10.dp).semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.CenterVertically) {
                 Text(Meses.capitalizar(p.mesReferencia), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                 Text(Dinheiro.formatar(p.valor), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 Text(
