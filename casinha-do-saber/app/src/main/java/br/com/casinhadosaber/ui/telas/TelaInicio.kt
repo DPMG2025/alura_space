@@ -52,6 +52,9 @@ import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 
+/** Conta as chegadas ao início (só enquanto o app está aberto) para variar a saudação sem sorteio. */
+private var chegadasNoInicio = 0
+
 @Composable
 fun TelaInicio(
     estado: EstadoJogo,
@@ -71,7 +74,7 @@ fun TelaInicio(
     val noBau = estado.itensNoBau.size
 
     LaunchedEffect(Unit) {
-        val oi = if (nome.isBlank()) "Oi!" else "Oi, $nome!"
+        val oi = br.com.casinhadosaber.dominio.FrasesComNome.chegada(nome, chegadasNoInicio++)
         narrador.falar(
             when {
                 noBau > 0 -> "$oi Tem presente no baú! Toque na casinha para montar."

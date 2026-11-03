@@ -148,7 +148,7 @@ fun TelaPremio(
 
     LaunchedEffect(Unit) {
         sons.acerto()
-        val parabens = mensagem ?: if (nome.isBlank()) "Parabéns! Você terminou a fase!" else "Parabéns, $nome! Você terminou a fase!"
+        val parabens = mensagem ?: br.com.casinhadosaber.dominio.FrasesComNome.vitoria(nome, estrelas)
         narrador.falar(if (temPresente) "$parabens Toque no presente três vezes para abrir!" else parabens)
         for (i in 1..estrelas) {
             delay(380)

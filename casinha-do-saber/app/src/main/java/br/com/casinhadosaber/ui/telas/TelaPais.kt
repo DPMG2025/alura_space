@@ -52,6 +52,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import br.com.casinhadosaber.ui.LocalNarrador
+import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.dominio.Pais
+import br.com.casinhadosaber.dominio.alternarTema
+import br.com.casinhadosaber.dominio.comAniversario
+import br.com.casinhadosaber.dominio.concluirDesafioDosPais
+import br.com.casinhadosaber.dominio.desafioDosPaisFeito
 import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Mundos
@@ -76,6 +82,10 @@ fun TelaPais(
     onVoltar: () -> Unit,
     limiteMinutos: Int = 0,
     onAlternarLimite: () -> Unit = {},
+    /** Dia época de hoje (`Repositorio.hoje()`), para o desafio do dia e o resumo da semana. */
+    hoje: Long = 0L,
+    /** Muda o estado guardado (`Repositorio.atualizar`): desafio feito, aniversário e temas. */
+    onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit = {},
 ) {
     var liberado by rememberSaveable { mutableStateOf(false) }
     Column(
@@ -95,7 +105,7 @@ fun TelaPais(
         if (!liberado) {
             PortaoDeAdulto(onLiberar = { liberado = true })
         } else {
-            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite)
+            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite, hoje, onAtualizar)
         }
     }
 }
@@ -111,6 +121,8 @@ private fun Painel(
     onApagarTudo: () -> Unit,
     limiteMinutos: Int,
     onAlternarLimite: () -> Unit,
+    hoje: Long,
+    onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit,
 ) {
     var confirmar by remember { mutableStateOf(false) }
     val gerador = remember { GeradorDeFases() }
@@ -122,6 +134,21 @@ private fun Painel(
     Cartao {
         Text("🔒 Sem internet • Sem anúncios • Sem coleta de dados", style = MaterialTheme.typography.titleMedium, color = Cores.Certo)
     }
+
+    val sons = LocalSons.current
+    CartaoDesafioDosPais(
+        desafio = Pais.desafioDoDia(hoje),
+        feito = estado.desafioDosPaisFeito(hoje),
+        onFizemos = {
+            onAtualizar { it.concluirDesafioDosPais(hoje).first }
+            sons.moeda()
+        },
+    )
+
+    val relatorio = remember(estado.sessoes, hoje) {
+        Pais.relatorioDaSemana(estado.sessoes, hoje) { t, n -> gerador.fases(t).getOrNull(n)?.titulo ?: Pais.nomePadrao(t, n) }
+    }
+    CartaoRelatorioDaSemana(relatorio)
 
     Cartao {
         Text("O que a criança está aprendendo", style = MaterialTheme.typography.titleLarge)
@@ -198,6 +225,17 @@ private fun Painel(
             )
         }
     }
+
+    CartaoAniversario(
+        atual = estado.perfil?.aniversario,
+        onSalvar = { a -> onAtualizar { it.comAniversario(a) } },
+        habilitado = estado.perfil != null,
+    )
+    CartaoTemasFavoritos(
+        escolhidos = estado.perfil?.temasFavoritos.orEmpty(),
+        onAlternar = { t -> onAtualizar { it.alternarTema(t) } },
+        habilitado = estado.perfil != null,
+    )
 
     Cartao {
         Text("Configurações", style = MaterialTheme.typography.titleLarge)
