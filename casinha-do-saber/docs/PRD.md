@@ -21,79 +21,81 @@ App Android educativo para crianças a partir de 4 anos. A criança escolhe ser 
 * Repositório: `DPMG2025/alura_space`, branch **`claude/educational-kids-android-app-7bdyy3`**, pasta `casinha-do-saber/`.
 * Kotlin + Jetpack Compose, minSdk 24, targetSdk 35, AGP 8.7.3, Kotlin 2.0.21, Compose BOM 2024.12.01, Gradle 8.14.3.
 * Pacote `br.com.casinhadosaber`:
-  * `dominio/` (Kotlin puro, testável): `Modelos.kt` (Pergunta, Opcao, Visual, Cena, Atividade, Trilha, Fase), `GeradorDeFases.kt` (todas as fases), `Vocabulario.kt`, `ItensDaCasa.kt` (40 peças, Lugar, Comodo), `EstadoJogo.kt` (progresso, moedas, loja, missão, histórico, serialização), `Loja.kt` (produtos).
+  * `dominio/` (Kotlin puro, testável): `Modelos.kt` (Pergunta, Opcao, Visual, Cena, Atividade, Trilha, Fase), `GeradorDeFases.kt` (todas as fases), `Vocabulario.kt`, `ItensDaCasa.kt` (40 peças, Lugar, Comodo, caixas de sobreposição), `EstadoJogo.kt` (progresso, moedas, loja, missão, histórico, brinde, serialização), `Loja.kt` (produtos, comidas e roupas), `CasaPorDentro.kt` (planta da casa por dentro: dois andares, móveis, escada, `Acao`, caminhada).
   * `dados/Repositorio.kt` (SharedPreferences, limite de tempo diário, som e música).
-  * `audio/` : `Narrador.kt` (melhor voz offline por idioma, pausas, inglês mais lento, estado `falando`), `Sons.kt` (efeitos sintetizados, pré calculados, tocados em paralelo), `Musica.kt` (música de caixinha gerada).
-  * `ui/componentes/` : `CenaDaCasa.kt` (desenho da casa, arrastar, dia e noite, clima, visitantes, jardim extra), `Crianca.kt` (personagem: gênero, pele, cabelo, 3 penteados, roupa, chapéu, expressões, respiração, boca falando), `Comuns.kt` (BotaoFofo, MaoGuia, estrelas, pulsando), `Confete.kt`, `PortaoDeAdulto.kt`.
-  * `ui/telas/` : Perfil, BoasVindas, Inicio, Trilha (caminho), Jogo, Premio, Quase, Casa, Pais, Dormir.
-  * `MainActivity.kt` : navegação (sealed `Tela`), limite de tempo, tablet (escala 1,3 e largura máxima 640dp).
+  * `audio/` : `Narrador.kt` (melhor voz offline por idioma, pausas, inglês mais lento, estado `falando`), `Sons.kt` e `SonsDaCasa.kt` (efeitos sintetizados), `Musica.kt` (música de caixinha gerada).
+  * `ui/Moldura.kt` : escala de tablet, toque mínimo de 64dp, largura máxima e paisagem em duas colunas.
+  * `ui/componentes/` : `CenaDaCasa.kt` (casa de fora, arrastar, dia e noite, clima, visitantes, balão de recusa, jardim de baixo), `Isometrico.kt` (projeção da casa por dentro), `Crianca.kt` (personagem), `Comuns.kt` (BotaoFofo, MaoGuia, estrelas), `Confete.kt`, `PortaoDeAdulto.kt`.
+  * `ui/telas/` : Perfil (também espelho), BoasVindas, Inicio, Trilha, Jogo, Premio, Quase, Casa, CasaPorDentro, Pais, Dormir.
+  * `ui/telas/atividades/` : Cesta, Memória, MontarPalavra, Traçar, `TracosDasLetras.kt` (ordem e sentido dos traços de cada letra) e `Comum.kt` (mãozinha que ensina o gesto).
+  * `MainActivity.kt` : navegação (sealed `Tela`), limite de tempo, rotação livre só em tablet.
 
 ## 4. Como verificamos (o ciclo que funciona)
 
 O ambiente da sessão **não acessa o Google Maven**, então o APK é compilado no **GitHub Actions** (`.github/workflows/casinha-do-saber.yml`):
 
-1. Testes de unidade do domínio (também rodam localmente, num projeto Gradle JVM em `scratchpad/jvmtest` que aponta para `dominio/`).
-2. **Capturas de tela** com Robolectric + Roborazzi (`CapturasTest.kt`), commitadas pelo CI em `docs/capturas/`. Inclui teste de pixels que falha se chuva ou neve aparecerem dentro da casa.
+1. Testes de unidade do domínio (também rodam localmente, num projeto Gradle JVM em `scratchpad/jvmtest` que aponta para `dominio/`, incluindo `CasaPorDentroTest.kt`).
+2. **Capturas de tela** com Robolectric + Roborazzi (`CapturasTest.kt`), commitadas pelo CI em `docs/capturas/`. Testes de pixels: chuva e neve só fora da casa, objetos da casa completa sem se amontoar, chapéu encostado na cabeça de cada criança (captura 56), cama recusada com balão (55) e tablet deitado (50 a 54 e 57).
 3. Lint, APK debug e release, pacote `.aab`.
 4. **Versão de teste para celular**: o CI publica `CasinhaDoSaber.apk` na Release `casinha-teste`:
    https://github.com/DPMG2025/alura_space/releases/download/casinha-teste/CasinhaDoSaber.apk
-5. **Emulador Android real** (`JogoNoEmuladorTest.kt`): perfil, boas vindas, fase inteira com um erro, presente com 3 toques, item entra na casa, arrastar a cama, cama recusada no jardim, relatório das vozes. Resultados em `docs/emulador/`.
-6. **Revisor independente**: um subagente avalia as capturas com régua de app AAA e dá nota. Evolução: 6 → 7 → 7,5 → 8 → 8,5 → 8,5 → 9 → 9.
+5. **Emulador Android real** (`JogoNoEmuladorTest.kt`): perfil, boas vindas, fase inteira com um erro (cada tipo de atividade é jogado de verdade: tocar, cesta, memória, montar palavra e traçar pelos traços de `TracosDasLetras`), presente com 3 toques, item entra na casa, arrastar a cama, cama recusada no jardim, fase de cestas, relatório das vozes. Resultados em `docs/emulador/`.
+6. **Revisor independente**: um subagente avalia as capturas com régua de app AAA e dá nota. Evolução: 6 → 7 → 7,5 → 8 → 8,5 → 8,5 → 9 → 9 → 8,5 (a régua subiu depois da casa por dentro; nota dada antes do polimento de 3 de novembro).
 
-Ler os logs do CI pelo MCP do GitHub (`actions_list`, `get_job_logs`). Cada push cancela o build anterior (concurrency); o passo de capturas usa `git pull --rebase -X theirs`.
+Ler os logs do CI pelo MCP do GitHub (`actions_list`, `get_job_logs` com `failed_only`; erros de Kotlin aparecem como `e: file://`). Cada push cancela o build anterior (concurrency), inclusive o emulador: não fazer push enquanto o emulador roda. O passo de capturas usa `git pull --rebase -X theirs`; antes de cada push local, `git pull --no-rebase`.
+
+Lição do polimento: `Offset` é classe de valor e não pode ser parâmetro `vararg` (erro de compilação que só o CI pega).
 
 ## 5. O que já está pronto
 
 **Aprendizado**
-* 4 caminhos com **25 fases cada (100 fases)** no domínio, 5 perguntas por fase, perguntas sorteadas.
-* **4 opções em todas as perguntas de escolha**.
+* 4 caminhos com **25 fases cada (100 fases)**, 5 perguntas por fase, perguntas sorteadas, **4 opções em todas as perguntas de escolha**.
 * Fase só é vencida com **4 de 5 acertos de primeira** (3 estrelas com 5, 2 com 4). Abaixo disso, tela "Quase!" com o presente trancado.
 * Depois de 2 derrotas seguidas na mesma fase, rodada facilitada com um exemplo resolvido junto, que não conta.
 * Uma pergunta de revisão de fase anterior em cada partida; **Missão do dia** (3 perguntas das fases mais fracas, +6 moedas, uma vez por dia).
-* Conteúdo: contar até 20, cesta, mais ou menos, maior e menor, formas, somar e tirar até 10, historinhas, antes e depois, de 2 em 2; vogais, consoantes, maiúscula e minúscula, primeira letra, começa igual, leitura simples e difícil, sílabas, quantos pedacinhos, montar palavra, completar, rimas; inglês de cores, animais, números, frutas, corpo, formas, roupas, casa, comida, brinquedos, tempo, família, veículos, ações; lógica de igual, diferente, tamanho, filas AB, ABC, AAB e ABB, sombras, combina, grupos, cesta de classificar, memória, números em fila.
+* **Atividades de mexer, com o gesto ensinado** por uma mãozinha que faz o movimento: **Cesta** (contar e tocar no certinho, ou classificar só as do grupo; contador dentro da cesta), **Memória** (espiadinha e pares falados), **Montar palavra** (sílabas arrastadas para os encaixes, com sílabas extras), **Traçar** (ponto verde de início, setas numeradas e traços na ordem escolar, para todas as letras). Todas usam o mesmo fluxo de resposta (acerto de primeira, confete, som); o acerto fica verde no progresso.
+* Conteúdo: contar até 20, cesta, mais ou menos, maior e menor, formas, somar e tirar até 10, historinhas, antes e depois, de 2 em 2; vogais, consoantes, maiúscula e minúscula, primeira letra, começa igual, leitura simples e difícil, sílabas, quantos pedacinhos, montar palavra, completar, rimas, traçar; inglês de cores, animais, números, frutas, corpo, formas, roupas, casa, comida, brinquedos, tempo, família, veículos, ações; lógica de igual, diferente, tamanho, filas AB, ABC, AAB e ABB, sombras, combina, grupos, cesta de classificar, memória, números em fila.
 
-**Casa**
-* 40 peças em ordem (terreno, paredes, telhado, porta, cama...); estruturas "caem do céu", objetos podem ser arrastados.
-* Regras: móveis só dentro de casa, coisas de jardim só fora (o objeto volta e o narrador explica); móveis pousam no piso do cômodo; elogio quando vai para o cômodo certo; quadros desviam das janelas.
-* Dia e noite, chuva e neve (só do lado de fora), animações (bichos respiram, pato boia, borboleta voa), brilhinhos ao tocar, visitantes passeando, jardim extra decorado em telas altas.
-* Pintar paredes por cômodo; loja com **moedinhas** (1 por acerto de primeira, peso maior em fase difícil, até 30 por dia): telhados, portas, papéis de parede, chapéus, visitantes, chuva e neve; **experimentar antes de comprar**; o que foi comprado continua seu.
-* **Depois das 40 peças, cada fase nova dá um presente da loja de graça + 5 moedas** (domínio pronto: `ResultadoPartida.brinde`).
+**Caminho (trilha)**
+* 25 bolinhas por caminho com **marcos** (desafio com troféu), estrelas por fase, criança parada na fase da vez e rolagem até ela; versão própria para tablet.
+
+**Casa de fora**
+* 40 peças em ordem; estruturas "caem do céu", objetos podem ser arrastados; móveis só dentro, coisas de jardim só fora.
+* **Cama recusada**: volta tremendo, aparece um balão "não pode" e o cômodo certo brilha.
+* Dia e noite, chuva e neve (só fora), animações, visitantes, **jardim de baixo** nas telas altas, onde os objetos do jardim agora podem ficar (antes era só decoração).
+* Abas 🎁 (presentes) e 🛒 (loja) com toque de 64dp; pintar paredes; loja com moedinhas, experimentar antes de comprar.
+* **Brinde no prêmio**: depois das 40 peças, cada fase nova dá um presente da loja de graça + 5 moedas, mostrado na tela de prêmio (presente recomposto, abre com 3 toques).
+
+**Casa por dentro (isométrica 2,5D)**
+* Porta da casa leva para dentro: **dois andares** com as mesmas cores e cômodos da casa de fora, **escada** que sobe e desce (setinha que balança), a criança anda até onde se toca.
+* **Geladeira** que abre, com abas de comidas (seleção acessível como aba) e comidas compradas na loja; **guarda roupa** com roupas compradas; **espelho** que abre o perfil para trocar a aparência e volta para onde estava.
+* **Objetos interativos**: torneira, TV, fogão, banheira, cama (dormir), descarga, lâmpadas que acendem e apagam.
+* Loja de **comidas e roupas** dentro da casa; listas que mostram que rolam.
 
 **Experiência**
-* Primeira tela com personagem grande, penteados, escolhas faladas; boas vindas no terreno; mãozinha guia (MaoGuia) onde tocar.
+* Primeira tela com personagem grande, penteados, escolhas faladas; boas vindas no terreno; mãozinha guia onde tocar; botão 🪞 de espelho no início e na casa.
 * Presente abre com 3 toques e raios de luz; prêmio vai direto para a casa.
-* Área dos pais: precisão por caminho e por fase (últimas 10), "Praticando agora" com atividade fora da tela, tempo jogado, limite diário de 15/30/60 min ("a casinha vai dormir", persistente), instalar vozes melhores, som e música, apagar progresso.
-* Material da Play Store: `docs/play-store.md`, `docs/politica-de-privacidade.md`, `docs/publicar.md` (chave de upload via segredos do GitHub).
+* **Área dos pais** com as 100 fases **agrupadas por caminho** (recolher e abrir), precisão, "Praticando agora", tempo jogado, limite diário de 15/30/60 min, vozes, som e música, apagar progresso.
+* **Tablet**: retrato 30% maior; **paisagem** com início e casa em duas colunas e as outras telas numa coluna central com sombra suave sobre o céu.
+* Material da Play Store: `docs/play-store.md`, `docs/politica-de-privacidade.md`, `docs/publicar.md`.
 
-## 6. Em andamento (começar por aqui)
+**Testes**
+* Sobreposição dos objetos da casa completa, chapéu na cabeça (menina e menino, todos os chapéus), chuva só fora (teste corrigido), cama recusada, capturas em paisagem, planta da casa por dentro (`CasaPorDentroTest.kt`), emulador jogando todos os tipos de atividade.
 
-**Feedback do dono do produto nesta sessão:**
+## 6. O que resta (começar por aqui)
 
-1. **4 opções em tudo.** Feito no domínio.
-2. **Mais tipos de atividade**, não só ouvir e tocar. O domínio já gera, em `Pergunta.atividade`:
-   * `Atividade.Cesta` (arrastar N figuras para a cesta e tocar no certinho; ou classificar, quando `errados` não é vazio: só as do grupo entram);
-   * `Atividade.Memoria` (pares; `falas` diz a palavra ao virar a carta, por exemplo em inglês);
-   * `Atividade.MontarPalavra` (arrastar sílabas na ordem; há sílabas extras);
-   * `Atividade.Tracar` (passar o dedo sobre a letra pontilhada);
-   * `Visual.Sombra` (opções desenhadas como silhueta; já renderizado em `TelaJogo`).
+1. **Revisor independente** de novo, sobre as capturas deste polimento (24 a 35, 40, 41, 50 a 57, emulador e12 a e16), para ver se a nota volta a 9 ou mais.
+2. **Casa por dentro**: a criança ainda não carrega objetos de um cômodo para outro (os móveis de dentro têm lugar fixo); avaliar arrastar móveis dentro de casa e mais objetos interativos por cômodo.
+3. **Paisagem**: a coluna da direita da casa fica com muito espaço vazio quando não há loja aberta; o caminho em paisagem mostra poucas fases por vez.
+4. **Caminho**: os pontinhos do caminho passam por trás dos nomes das fases em alguns trechos.
+5. **Voz**: confirmar a voz em português num celular real (no emulador escolheu `pt-br-x-pte-local`, qualidade 400).
+6. **Publicação** (seção 8).
 
-   **Falta a interface de Cesta, Memória, Montar palavra e Traçar em `TelaJogo.kt`.** Hoje essas perguntas aparecem com uma única opção "✔" (`Pergunta.deAtividade`), o que é um placeholder e **não pode ir para a criança assim**. Cada atividade deve chamar o mesmo fluxo de resposta (acertou de primeira ou não, avança, confete, som).
-3. **100 fases** (25 por caminho): domínio pronto. Revisar no app: o caminho (`TelaTrilha`) agora tem 25 bolinhas; a tela de prêmio precisa mostrar o **brinde** (`resultado.brinde`) quando não há peça da casa; a área dos pais lista 100 fases (avaliar agrupar por caminho com recolher).
-4. **Trocar a aparência da criança a qualquer momento**: adicionar botão 🪞 (espelho ou guarda-roupa) na tela da casa e no início, que abre `TelaPerfil` e volta para onde estava.
-5. **Casa em 3D onde a criança anda**, com mais espaço para comprar roupas, encher a geladeira e mobiliar. Decisão proposta (aguardando confirmação do dono): **casa em perspectiva isométrica (2,5D)** desenhada em código, estilo Toca Boca ou The Sims, com:
-   * a criança andando (tocar no chão e ela vai até lá), entrando nos cômodos;
-   * geladeira que abre e recebe comidas compradas;
-   * guarda-roupa para trocar de roupa (roupas viram itens da loja);
-   * mais móveis e objetos interativos.
+3D "de verdade" (Filament ou SceneView) só faz sentido com modelos 3D de artista (loja de modelos glTF); a casa isométrica em código foi a escolha.
 
-   3D "de verdade" (Filament ou SceneView) exige modelos 3D de artista; sem eles fica pior que o desenho atual. Se o dono quiser 3D real, é preciso conseguir modelos prontos (loja de modelos glTF).
+## 7. Pendências apontadas pelo revisor (última nota 8,5/10)
 
-## 7. Pendências apontadas pelo revisor (nota atual 9/10)
-
-* Objetos do jardim ainda apertados na faixa de cima (as coordenadas dos objetos só vão de 0 a 1 na cena; o jardim extra das telas altas é decorativo).
-* Tablet: hoje só retrato, centralizado e 30% maior; avaliar paisagem.
-* Testes de regressão visual além da chuva (sobreposição de objetos, chapéus).
-* Confirmar a voz em português num celular real (no emulador escolheu `pt-br-x-pte-local`, qualidade 400).
+* As do item 6 acima. As anteriores (jardim apertado, tablet só em retrato, testes de sobreposição e chapéu) foram resolvidas neste polimento.
 
 ## 8. Publicação (fora do alcance da sessão)
 

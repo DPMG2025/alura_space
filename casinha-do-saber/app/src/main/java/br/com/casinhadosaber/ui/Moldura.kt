@@ -1,6 +1,7 @@
 package br.com.casinhadosaber.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.widthIn
@@ -10,6 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -86,9 +89,13 @@ fun EscalaDeTablet(conteudo: @Composable () -> Unit) {
 fun MolduraDoApp(larga: Boolean = false, conteudo: @Composable () -> Unit) {
     val paisagem = emPaisagem()
     EscalaDeTablet {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             val maxima: Dp = if (larga && paisagem) LARGURA_DE_PAISAGEM else LARGURA_DE_CELULAR
-            Box(Modifier.widthIn(max = maxima).fillMaxHeight()) { conteudo() }
+            // Quando sobra céu dos lados (tablet deitado), a coluna ganha uma sombra suave: parece uma
+            // página de livro em cima do céu, e não um recorte com a borda dura.
+            val sobraLado = maxWidth > maxima + 8.dp
+            val coluna = Modifier.widthIn(max = maxima).fillMaxHeight()
+            Box(if (sobraLado) coluna.shadow(14.dp, RectangleShape, clip = false) else coluna) { conteudo() }
         }
     }
 }
