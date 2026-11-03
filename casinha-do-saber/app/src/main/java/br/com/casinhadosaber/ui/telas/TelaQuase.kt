@@ -34,6 +34,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Fase
 import br.com.casinhadosaber.dominio.Perfil
@@ -98,9 +106,28 @@ fun TelaQuase(
             }
         }
         Spacer(Modifier.height(20.dp))
-        Box(Modifier.size(190.dp).background(Color.White.copy(alpha = 0.85f), CircleShape), contentAlignment = Alignment.Center) {
-            Text("🎁", fontSize = 96.sp, lineHeight = 108.sp, modifier = Modifier.graphicsLayer { rotationZ = giro })
-            Text("🔒", fontSize = 36.sp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp))
+        // O presente é desenhado (e não um emoji ampliado, que fica borrado): nítido em qualquer tela.
+        // Um holofote suave desce de cima e ilumina o presente.
+        Box(
+            Modifier
+                .size(190.dp)
+                .drawBehind {
+                    val c = center
+                    val feixe = Path().apply {
+                        moveTo(c.x - 26.dp.toPx(), c.y - 420.dp.toPx())
+                        lineTo(c.x + 26.dp.toPx(), c.y - 420.dp.toPx())
+                        lineTo(c.x + size.width * 0.5f, c.y)
+                        lineTo(c.x - size.width * 0.5f, c.y)
+                        close()
+                    }
+                    drawPath(feixe, Brush.verticalGradient(listOf(Color.White.copy(alpha = 0f), Color.White.copy(alpha = 0.32f)), startY = c.y - 420.dp.toPx(), endY = c.y))
+                    drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.7f), Color.White.copy(alpha = 0f)), c, size.width * 0.75f), size.width * 0.75f, c)
+                }
+                .background(Color.White.copy(alpha = 0.88f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            PresenteFechado(Modifier.size(120.dp).graphicsLayer { rotationZ = giro })
+            Text("🔒", fontSize = 32.sp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp))
         }
         Spacer(Modifier.height(12.dp))
         perfil?.let { Crianca(it, Modifier.height(130.dp), humor = Humor.TORCENDO) }
@@ -119,5 +146,56 @@ fun TelaQuase(
                 MaoGuia(Modifier.align(Alignment.BottomEnd).offset(x = 30.dp, y = 34.dp), espera = 2500)
             }
         }
+    }
+}
+
+/** Caixa de presente desenhada em Canvas: tampa, fita vermelha, laço com contorno e brilho. */
+@Composable
+private fun PresenteFechado(modifier: Modifier) {
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        val contorno = Color(0xFF8A3B12)
+        val traco = w * 0.025f
+        val caixa = Color(0xFFFFB238)
+        val caixaSombra = Color(0xFFF08A1C)
+        val fita = Color(0xFFE53950)
+        // sombra no chão
+        drawOval(Color(0x29000000), Offset(w * 0.14f, h * 0.9f), Size(w * 0.72f, h * 0.08f))
+        // corpo da caixa (com o lado direito mais escuro)
+        val corpoTopo = h * 0.45f
+        val corpo = androidx.compose.ui.geometry.Rect(w * 0.17f, corpoTopo, w * 0.83f, h * 0.93f)
+        drawRoundRect(caixa, corpo.topLeft, corpo.size, CornerRadius(w * 0.04f))
+        drawRect(caixaSombra, Offset(w * 0.6f, corpoTopo), Size(w * 0.23f, corpo.height - w * 0.04f))
+        drawRoundRect(contorno, corpo.topLeft, corpo.size, CornerRadius(w * 0.04f), style = Stroke(traco))
+        // tampa, um pouco mais larga
+        val tampa = androidx.compose.ui.geometry.Rect(w * 0.11f, h * 0.33f, w * 0.89f, h * 0.48f)
+        drawRoundRect(caixa, tampa.topLeft, tampa.size, CornerRadius(w * 0.04f))
+        drawRect(caixaSombra, Offset(w * 0.6f, tampa.top + traco), Size(w * 0.29f - traco, tampa.height - traco * 2))
+        drawRect(Color(0x55FFFFFF), Offset(w * 0.14f, tampa.top + traco), Size(w * 0.4f, tampa.height * 0.28f))
+        drawRoundRect(contorno, tampa.topLeft, tampa.size, CornerRadius(w * 0.04f), style = Stroke(traco))
+        // fita vertical e na tampa
+        drawRect(fita, Offset(w * 0.44f, tampa.top), Size(w * 0.12f, corpo.bottom - tampa.top))
+        drawLine(contorno, Offset(w * 0.44f, tampa.top), Offset(w * 0.44f, corpo.bottom), traco * 0.8f)
+        drawLine(contorno, Offset(w * 0.56f, tampa.top), Offset(w * 0.56f, corpo.bottom), traco * 0.8f)
+        drawLine(Color(0x66FFFFFF), Offset(w * 0.47f, tampa.top + traco), Offset(w * 0.47f, corpo.bottom - traco), traco * 0.8f)
+        // laço: duas alças e as pontinhas
+        val no = Offset(w * 0.5f, h * 0.31f)
+        for (lado in listOf(-1f, 1f)) {
+            val alca = Path().apply {
+                moveTo(no.x, no.y)
+                cubicTo(no.x + lado * w * 0.12f, no.y - h * 0.26f, no.x + lado * w * 0.36f, no.y - h * 0.16f, no.x + lado * w * 0.24f, no.y + h * 0.01f)
+                cubicTo(no.x + lado * w * 0.18f, no.y + h * 0.04f, no.x + lado * w * 0.08f, no.y + h * 0.02f, no.x, no.y)
+                close()
+            }
+            drawPath(alca, fita)
+            drawPath(alca, contorno, style = Stroke(traco, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+            drawLine(Color(0x66FFFFFF), Offset(no.x + lado * w * 0.1f, no.y - h * 0.1f), Offset(no.x + lado * w * 0.18f, no.y - h * 0.11f), traco, StrokeCap.Round)
+        }
+        drawCircle(fita, w * 0.065f, no)
+        drawCircle(contorno, w * 0.065f, no, style = Stroke(traco))
+        // brilhinhos
+        drawCircle(Color.White, w * 0.022f, Offset(w * 0.25f, h * 0.55f))
+        drawCircle(Color(0xAAFFFFFF), w * 0.014f, Offset(w * 0.3f, h * 0.62f))
     }
 }
