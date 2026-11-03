@@ -54,6 +54,22 @@ Lições das fases altas no emulador: (1) animação que conta o tempo quadro a 
 
 Lições das capturas (Robolectric): a tela só é desenhada na hora da captura, então o que é calculado em `drawWithCache` não existe antes dela (a geometria da casa por dentro agora também é montada em `onSizeChanged`). Esperas de animação que precisam aparecer nas capturas contam o tempo pelos quadros (`esperarQuadros`, com `withFrameNanos`), não com `delay`. Não fazer push enquanto o emulador roda, nem quando o laço de espera termina por tempo esgotado: conferir o estado antes.
 
+### Visual: sistema de design
+
+Peças comuns para todas as telas terem a mesma cara de jogo caprichado. Telas novas e retoques usam estas peças em vez de inventar cores, raios e sombras.
+
+* **Fonte** (`tema/Tema.kt`): os 15 estilos do Material 3 em Fredoka. Antes 6 estilos (`displaySmall`, `headlineSmall`, `titleSmall`, `bodySmall`, `labelMedium`, `labelSmall`) caíam na Roboto. Todo `TextStyle(...)` montado à mão precisa de `fontFamily = Fredoka` (ou partir de `MaterialTheme.typography`).
+* **Raios** (`Raios.Pequeno` 8, `Medio` 16, `Grande` 24, `Enorme` 32 dp) e as formas prontas `Formas.Pequena`, `Media`, `Grande`, `Enorme`. Chips usam o pequeno, ladrilhos o médio, botões e painéis de cena o grande, cartões e janelas o enorme.
+* **Cores do sistema** em `Cores`: `Contorno` (ameixa a 25%, contorno de 2 dp de tudo que se toca; sobre qualquer cor vira um tom mais escuro dela), `Sombra` (ameixa a 20%, nunca preto), `Brilho` (branco a 35%), `Creme` (corpo das janelas) e `Veu` (violeta atrás das janelas; também é o `scrim` do tema).
+* **Degradês** em `Degrades`: `BrilhoDoTopo`, `SombraDoPe`, `Ceu`, `Premio`, `Cartao`, `fundo(cor)` (viva em cima, clareando para o creme, sem cinza) e `botao(cor)`.
+* **Botões** (`componentes/Comuns.kt`): `BotaoFofo` ganhou faixa de brilho no terço de cima, contorno de 2 dp, sombra suave embaixo da base e, ao apertar, amassa (1,04 × 0,94) e volta com mola. Desabilitado fica numa versão clarinha da própria cor (não passar cinza: basta `habilitado = false`). Quando quem chama dá um tamanho mínimo (`fillMaxWidth`, `size`, `weight`), a face ocupa esse tamanho todo. Parâmetros novos, todos opcionais: `brilho`, `contorno`, `sombra`. A base padrão vem de `baseDe(cor)`: um tom mais escuro, e lilás claro para botões brancos. `BotaoRedondo` aceita `corBase` e `habilitado`.
+* **Ladrilho**: `Modifier.cartaoFofo(cor, raio, labio, profundidade, contorno, sombra)` desenha corpo branco com leve degradê, lábio colorido embaixo, contorno e sombra (respostas, peças, painéis). `Modifier.brilhoDoTopo()` põe a faixa de brilho em qualquer forma (usar depois do `clip` e do `background`).
+* **Balão de fala**: `BalaoDeFala(texto, modifier, cauda)` com ponta para quem fala (`LadoDaCauda.Esquerda`, o padrão, `Direita`, `Baixo` ou `Nenhum`), degradê branco para lilás e sombra. O desenho sozinho é `Modifier.balaoDeFala(cauda)`.
+* **Fundo** (`componentes/Fundos.kt`): `FundoDecorado(cor, modifier, enfeite) { ... }` ou `Modifier.fundoDecorado(cor, enfeite)`: degradê de duas cores, brilho largo no alto e bolhas grandes (`EnfeiteDoFundo.Bolhas`) ou estrelinhas (`Estrelas`) bem suaves que derivam devagar. `MolduraDoApp(corDeFundo = ...)` pinta a tela inteira com ele, inclusive as sobras dos lados no tablet.
+* **Festa** (`componentes/Confete.kt`): `Confete` agora mistura papéis, estrelas e bolinhas. `ExplosaoDeEstrelas(disparo, centroX, centroY)` é o estouro de acerto e de prêmio (clarão, anel de luz e faíscas em 0,8 s). `RaiosDeLuz(cor, quantidade, girando)` são os raios que giram atrás do prêmio, do mascote que cresceu ou do diploma. `CoresDaFesta` é a paleta deles.
+* **Janelas** (`componentes/Modal.kt`): `JanelaModal(titulo, onFechar, corDaFita) { ... }` junta `VeuDoModal` (violeta, mais claro no meio, segura os toques) e `CartaoModal` (corpo creme com borda branca, contorno e sombra, fita colorida com o título e ✖ no canto). A fita sozinha é `FitaDoTitulo`.
+* **Regras de animação**: animação sem fim só com `rememberInfiniteTransition` (ou `withInfiniteAnimationFrameNanos`), lida dentro do desenho para não recompor a cada quadro; efeitos de uma vez com `Animatable` e `tween`. Nada de laço com `withFrameNanos` para sempre.
+
 ## 5. O que já está pronto
 
 **Aprendizado**
