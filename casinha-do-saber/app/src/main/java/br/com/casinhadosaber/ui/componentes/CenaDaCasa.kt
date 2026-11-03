@@ -965,13 +965,22 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
     }
 
     // Chuva ou neve compradas na loja, só do lado de fora (nunca dentro dos cômodos).
-    val casa = Path().apply {
+    // Paredes e telhado são recortados um de cada vez: num caminho só, o retângulo e o triângulo
+    // giram em sentidos opostos e a faixa onde se sobrepõem (a base do telhado) ficaria de fora do
+    // recorte, deixando pingos passarem ali.
+    val paredes = Path().apply {
         if (e.temEstrutura(Estrutura.PAREDES)) addRect(Rect(X(Planta.ESQ), Y(Planta.TOPO), X(Planta.DIR), Y(Planta.BASE)))
+    }
+    val telhadoDoClima = Path().apply {
         if (e.temEstrutura(Estrutura.TELHADO)) {
             moveTo(X(0.04f), Y(0.315f)); lineTo(X(0.5f), Y(0.075f)); lineTo(X(0.96f), Y(0.315f)); close()
         }
     }
-    if (e.clima != 0) clipPath(casa, clipOp = androidx.compose.ui.graphics.ClipOp.Difference) { desenharClima(e.clima, t, W, H) }
+    if (e.clima != 0) {
+        clipPath(paredes, clipOp = androidx.compose.ui.graphics.ClipOp.Difference) {
+            clipPath(telhadoDoClima, clipOp = androidx.compose.ui.graphics.ClipOp.Difference) { desenharClima(e.clima, t, W, H) }
+        }
+    }
     // Com neve, o telhado ganha uma camadinha branca.
     if (e.clima == 2 && e.temEstrutura(Estrutura.TELHADO)) {
         val neve = Path().apply {

@@ -15,6 +15,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
@@ -35,7 +40,10 @@ import br.com.casinhadosaber.dominio.Posicao
 import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.tema.TemaCasinha
+import br.com.casinhadosaber.dominio.Acao
+import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.ui.telas.TelaCasa
+import br.com.casinhadosaber.ui.telas.TelaCasaPorDentro
 import br.com.casinhadosaber.ui.telas.TelaInicio
 import br.com.casinhadosaber.ui.telas.TelaJogo
 import br.com.casinhadosaber.ui.telas.TelaPais
@@ -424,5 +432,97 @@ class CapturasTest {
         regra.onNodeWithTag("atividade_pronto").performClick()
         regra.mainClock.advanceTimeBy(6000)
         org.junit.Assert.assertEquals("a cesta com 4 deveria concluir como acerto de primeira", listOf(true), resultado)
+    }
+
+    // ------------------------------------------------------------------ telas novas
+
+    /** As [n] primeiras fases de [trilha] vencidas (para ver a trilha de 25 fases quase no fim). */
+    private fun trilhaVencida(trilha: Trilha, n: Int): EstadoJogo {
+        var e = estado(40, 40)
+        for (f in gerador.fases(trilha).take(n)) e = e.registrarVitoria(f, 1 + f.numero % 3).first
+        return e
+    }
+
+    /** Casa completa, com comidas na geladeira e roupas no guarda-roupa. */
+    private fun casaCheia(): EstadoJogo {
+        val compras = Loja.produtos.filter { it.categoria == br.com.casinhadosaber.dominio.Categoria.COMIDA }.take(6).map { it.id } +
+            Loja.produtos.filter { it.categoria == br.com.casinhadosaber.dominio.Categoria.ROUPA }.take(3).map { it.id }
+        return estado(40, 40).copy(moedas = 23, comprados = compras.toSet())
+    }
+
+    @Test fun casaPorDentro() = capturar("32_casa_por_dentro") {
+        TelaCasaPorDentro(estado(40, 40), {}, {})
+    }
+
+    @Test fun casaPorDentroGeladeira() = capturar("33_casa_por_dentro_geladeira") {
+        TelaCasaPorDentro(casaCheia(), {}, {}, abrirInicial = Acao.GELADEIRA)
+    }
+
+    @Test fun casaPorDentroGuardaRoupa() = capturar("34_casa_por_dentro_guarda_roupa") {
+        val e = casaCheia().let { it.copy(perfil = it.perfil?.copy(traje = "listras")) }
+        TelaCasaPorDentro(e, {}, {}, abrirInicial = Acao.GUARDA_ROUPA)
+    }
+
+    @Test fun casaPorDentroLoja() = capturar("35_casa_por_dentro_loja") {
+        TelaCasaPorDentro(casaCheia(), {}, {}, lojaInicial = true)
+    }
+
+    @Test fun espelho() = capturar("36_espelho") {
+        val e = casaCheia()
+        TelaPerfil(menina.copy(chapeu = "👑", traje = "listras"), espelho = true, roupas = Loja.noGuardaRoupa(e), onVoltar = {}) {}
+    }
+
+    @Test fun casaComEspelhoEPorta() = capturar("37_casa_espelho_e_porta") {
+        TelaCasa(estado(40, 40), {}, {}, {}, onEspelho = {}, onEntrar = {})
+    }
+
+    private fun abrirPresente() {
+        repeat(3) {
+            regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
+            regra.mainClock.advanceTimeBy(400)
+        }
+    }
+
+    @Test fun premioBrindeChapeu() = capturar("38_premio_brinde_chapeu", acao = ::abrirPresente) {
+        TelaPremio(gerador.fases(Trilha.LOGICA)[20], 3, null, menina, 12, true, {}, {}, {}, brinde = Loja.porId.getValue("chapeu👑"))
+    }
+
+    @Test fun premioBrindeTelhado() = capturar("39_premio_brinde_telhado", acao = ::abrirPresente) {
+        TelaPremio(gerador.fases(Trilha.MATEMATICA)[21], 2, null, menino, 9, false, {}, {}, {}, brinde = Loja.porId.getValue("telhado2"))
+    }
+
+    @Config(qualifiers = "w360dp-h640dp-xhdpi")
+    @Test fun trilhaQuaseNoFim() = capturar("40_trilha_22_fases") {
+        TelaTrilha(Trilha.PORTUGUES, trilhaVencida(Trilha.PORTUGUES, 22), {}, {})
+    }
+
+    @Config(qualifiers = "w800dp-h1280dp-mdpi")
+    @Test fun trilhaTablet() = capturar("41_trilha_tablet") {
+        TelaTrilha(Trilha.INGLES, trilhaVencida(Trilha.INGLES, 22), {}, {})
+    }
+
+    /** Área dos pais já liberada (respondendo a continha do portão), com histórico de várias fases. */
+    @Test fun paisComHistorico() {
+        var e = EstadoJogo(perfil = menina)
+        val resultados = listOf(
+            listOf(true, true, true, true, true), listOf(true, false, true, true, true),
+            listOf(false, true, false, true, true), listOf(true, true, true, true, false),
+        )
+        for (t in Trilha.entries) for (i in 0 until 6) {
+            val r = resultados[(i + t.ordinal) % resultados.size]
+            e = e.registrarPartida(gerador.fases(t)[i], r.count { it }, r.size, resultados = r).estado
+        }
+        e = e.copy(segundosJogados = 47 * 60)
+        capturar("42_pais_com_historico", acao = {
+            val conta = regra.onNode(hasText("Quanto é", substring = true)).fetchSemanticsNode()
+                .config.getOrNull(SemanticsProperties.Text)?.joinToString { it.text }.orEmpty()
+            val (a, b) = Regex("""(\d+) × (\d+)""").find(conta)!!.destructured
+            for (d in (a.toInt() * b.toInt()).toString()) {
+                regra.onAllNodes(hasContentDescription(d.toString())).onFirst().performClick()
+            }
+            regra.onAllNodes(hasContentDescription("OK")).onFirst().performClick()
+        }) {
+            TelaPais(e, true, {}, true, {}, {}, {}, {})
+        }
     }
 }
