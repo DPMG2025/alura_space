@@ -434,10 +434,9 @@ class LojaPlayTest {
     private val turquesa = 0xFF17A398 to 0xFF6FDACB
 
     private fun abrirPresente() {
-        repeat(3) {
-            regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
-            regra.mainClock.advanceTimeBy(400)
-        }
+        // Um toque só abre o presente.
+        regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
+        regra.mainClock.advanceTimeBy(400)
     }
 
     // ------------------------------------------------------------------ celular (1080 x 1920)

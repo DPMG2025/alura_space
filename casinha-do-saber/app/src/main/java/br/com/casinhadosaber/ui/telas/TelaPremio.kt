@@ -192,7 +192,7 @@ fun TelaPremio(
         val parabens = if (mensagem != null) br.com.casinhadosaber.dominio.ParteDaFala(pt(mensagem))
         else br.com.casinhadosaber.dominio.VozesDaFamilia.vitoria(nome, estrelas)
         narrador.falarPartes(
-            if (temPresente) listOf(parabens, br.com.casinhadosaber.dominio.ParteDaFala(pt("Toque no presente três vezes para abrir!"))) else listOf(parabens),
+            if (temPresente) listOf(parabens, br.com.casinhadosaber.dominio.ParteDaFala(pt("Toque no presente para abrir!"))) else listOf(parabens),
         )
         for (i in 1..estrelas) {
             delay(380)
@@ -540,17 +540,9 @@ private fun Presente(
 
     fun tocar() {
         if (aberto) return
+        // Um toque só abre o presente.
         toques++
-        if (toques >= 3) {
-            onAbrir()
-            return
-        }
-        onToque()
-        escopo.launch {
-            val forca = 8f * toques
-            for (x in listOf(forca, -forca, forca * 0.6f, -forca * 0.6f, 0f)) giro.animateTo(x, tween(60))
-        }
-        escopo.launch { escala.animateTo(1f + 0.12f * toques, spring(dampingRatio = 0.4f)) }
+        onAbrir()
     }
 
     Box(
@@ -601,18 +593,6 @@ private fun Presente(
                             scaleY = escala.value
                         },
                 )
-                Spacer(Modifier.height(6.dp))
-                // Três bolinhas: cada toque acende uma (sem depender de leitura).
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    repeat(3) { k ->
-                        Box(
-                            Modifier
-                                .size(18.dp)
-                                .background(if (k < toques) Cores.Estrela else Color.White, CircleShape)
-                                .border(3.dp, Color(0xFFE0A800), CircleShape),
-                        )
-                    }
-                }
             }
         }
     }

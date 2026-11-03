@@ -527,10 +527,9 @@ class CapturasTest {
     }
 
     private fun abrirPresente() {
-        repeat(3) {
-            regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
-            regra.mainClock.advanceTimeBy(400)
-        }
+        // Um toque só abre o presente.
+        regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
+        regra.mainClock.advanceTimeBy(400)
     }
 
     @Test fun premioBrindeChapeu() = capturar("38_premio_brinde_chapeu", acao = ::abrirPresente) {

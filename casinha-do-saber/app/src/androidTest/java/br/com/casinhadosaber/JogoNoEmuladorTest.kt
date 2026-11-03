@@ -623,11 +623,9 @@ class JogoNoEmuladorTest {
         // Prêmio: abrir o presente e levar para a casa
         esperar("Presente. Toque para abrir.", 15_000)
         capturar("e07_presente")
-        // O presente abre com três toques
-        repeat(3) {
-            regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
-            avancar(400)
-        }
+        // O presente abre com um toque só
+        regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
+        avancar(400)
         esperar("Colocar na casa")
         avancar(1_000)
         capturar("e08_premio_aberto")
