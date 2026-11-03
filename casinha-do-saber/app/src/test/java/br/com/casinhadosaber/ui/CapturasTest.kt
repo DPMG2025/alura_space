@@ -11,18 +11,29 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.platform.testTag
 import br.com.casinhadosaber.audio.Narrador
 import br.com.casinhadosaber.audio.Sons
+import br.com.casinhadosaber.dominio.Atividade
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.Genero
 import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Perfil
+import br.com.casinhadosaber.dominio.Pergunta
 import br.com.casinhadosaber.dominio.Posicao
 import br.com.casinhadosaber.dominio.Trilha
+import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.tema.TemaCasinha
 import br.com.casinhadosaber.ui.telas.TelaCasa
 import br.com.casinhadosaber.ui.telas.TelaInicio
@@ -66,7 +77,8 @@ class CapturasTest {
         return e
     }
 
-    private fun capturar(nome: String, conteudo: @Composable () -> Unit) {
+    /** Mostra [conteudo] com narrador e sons desligados e o relógio parado (avança só quando o teste manda). */
+    private fun montar(conteudo: @Composable () -> Unit) {
         val narrador = Narrador(RuntimeEnvironment.getApplication()).apply { ativo = false }
         val sons = Sons().apply { ativo = false }
         regra.mainClock.autoAdvance = false
@@ -77,8 +89,50 @@ class CapturasTest {
                 }
             }
         }
-        regra.mainClock.advanceTimeBy(2500)
+    }
+
+    /**
+     * Captura a tela depois de [tempo] ms. Se houver [acao] (tocar, arrastar), ela roda depois
+     * desse tempo e a captura sai 1,2 s mais tarde, com as animações assentadas.
+     */
+    private fun capturar(nome: String, tempo: Long = 2500, acao: (() -> Unit)? = null, conteudo: @Composable () -> Unit) {
+        montar(conteudo)
+        regra.mainClock.advanceTimeBy(tempo)
+        if (acao != null) {
+            acao()
+            regra.mainClock.advanceTimeBy(1200)
+        }
         regra.onRoot().captureRoboImage("build/outputs/roborazzi/$nome.png")
+    }
+
+    /** Pergunta de mexer, do jeito que o gerador de fases monta. */
+    private fun deMexer(instrucao: String, atividade: Atividade) =
+        Pergunta.deAtividade(instrucao, listOf(pt(instrucao)), atividade, listOf(pt("Muito bem!")))
+
+    private val cestaContar = deMexer("Coloque 4 na cesta", Atividade.Cesta(List(7) { "🍎" }, 4))
+    private val cestaClassificar = deMexer(
+        "Só animais na cesta",
+        Atividade.Cesta(listOf("🐶", "🐱", "🐮"), 3, listOf("🍎", "⚽", "👕")),
+    )
+    private val memoria = deMexer(
+        "Ache os pares",
+        Atividade.Memoria(listOf("🐶" to "🐶", "🍎" to "🍎", "⚽" to "⚽", "🚗" to "🚗")),
+    )
+    private val montarPalavra = deMexer("Monte: OVO", Atividade.MontarPalavra("🥚", "OVO", listOf("O", "VO"), listOf("PA", "LU")))
+    private val tracar = deMexer("Trace a letra A", Atividade.Tracar("A"))
+
+    /**
+     * Arrasta a figura [indice] da cesta (contar) para dentro da cesta. O alvo fica um pouco à
+     * esquerda do botão "certinho", que fica colado ao lado direito da cesta, na altura do meio dela.
+     */
+    private fun arrastarParaACesta(indice: Int) {
+        val pronto = regra.onNodeWithTag("atividade_pronto").fetchSemanticsNode().boundsInRoot
+        val figura = regra.onAllNodesWithTag("figura_certa")[indice]
+        val origem = figura.fetchSemanticsNode().boundsInRoot
+        val recuo = with(regra.density) { 40.dp.toPx() }
+        val alvo = Offset(pronto.left - recuo, pronto.center.y) - origem.topLeft
+        figura.performTouchInput { swipe(center, alvo, durationMillis = 400) }
+        regra.mainClock.advanceTimeBy(1000)
     }
 
     @Test fun perfil() = capturar("01_perfil") { TelaPerfil(null) {} }
@@ -298,5 +352,77 @@ class CapturasTest {
     @Config(qualifiers = "w360dp-h640dp-xhdpi")
     @Test fun jogoCelularPequeno() = capturar("17_jogo_celular_pequeno") {
         TelaJogo(gerador.fases(Trilha.INGLES)[7], menino, {}, { })
+    }
+
+    // ------------------------------------------------------------------ atividades de mexer
+
+    @Test fun atividadeCestaContar() = capturar("24_atividade_cesta_contar") {
+        TelaJogo(gerador.fases(Trilha.MATEMATICA)[2], menina, {}, {}, perguntasProntas = listOf(cestaContar))
+    }
+
+    @Test fun atividadeCestaClassificar() = capturar("25_atividade_cesta_classificar") {
+        TelaJogo(gerador.fases(Trilha.LOGICA)[7], menino, {}, {}, perguntasProntas = listOf(cestaClassificar))
+    }
+
+    /** Depois da espiadinha (2,6 s com 8 cartas) as cartas viram; um par já achado aparece verde. */
+    @Test fun atividadeMemoria() = capturar(
+        "26_atividade_memoria",
+        tempo = 3500,
+        acao = {
+            val par = regra.onAllNodesWithTag("carta_0")
+            par[0].performClick()
+            regra.mainClock.advanceTimeBy(200)
+            par[1].performClick()
+        },
+    ) {
+        TelaJogo(gerador.fases(Trilha.LOGICA)[14], menina, {}, {}, perguntasProntas = listOf(memoria))
+    }
+
+    @Test fun atividadeMontarPalavra() = capturar("27_atividade_montar_palavra") {
+        TelaJogo(gerador.fases(Trilha.PORTUGUES)[13], menino, {}, {}, perguntasProntas = listOf(montarPalavra))
+    }
+
+    @Test fun atividadeTracar() = capturar("28_atividade_tracar") {
+        TelaJogo(gerador.fases(Trilha.PORTUGUES)[1], menina, {}, {}, perguntasProntas = listOf(tracar))
+    }
+
+    @Config(qualifiers = "w360dp-h640dp-xhdpi")
+    @Test fun atividadeCestaCelularPequeno() = capturar("29_atividade_cesta_celular_pequeno") {
+        TelaJogo(gerador.fases(Trilha.MATEMATICA)[2], menino, {}, {}, perguntasProntas = listOf(cestaContar))
+    }
+
+    /**
+     * Rodada facilitada: a primeira pergunta é um exemplo resolvido junto, sorteado da própria fase.
+     * A fase "Cesta das coisas" (lógica, 8ª) só tem cesta de classificar, então o exemplo é sempre
+     * uma cesta, com as figuras do grupo brilhando e a mãozinha mostrando o gesto.
+     */
+    @Test fun atividadeFacilitada() = capturar("30_atividade_facilitada_ajuda") {
+        TelaJogo(gerador.fases(Trilha.LOGICA)[7], menina, {}, {}, facilitada = true, perguntasProntas = listOf(cestaClassificar))
+    }
+
+    /**
+     * Regressão da lógica da cesta: arrastar figuras com o dedo faz a contagem subir, e com a
+     * quantidade pedida o "certinho" conclui a pergunta como acerto de primeira.
+     */
+    @Test fun cestaContaAoArrastar() {
+        var resultado: List<Boolean>? = null
+        montar {
+            TelaJogo(gerador.fases(Trilha.MATEMATICA)[2], menina, {}, { resultado = it }, perguntasProntas = listOf(cestaContar))
+        }
+        regra.mainClock.advanceTimeBy(1500)
+        regra.onNodeWithText("0").assertExists()
+        regra.onNodeWithTag("atividade_pronto").assertIsNotEnabled()
+
+        arrastarParaACesta(0)
+        regra.onNodeWithText("1").assertExists()
+        regra.onNodeWithTag("atividade_pronto").assertIsEnabled()
+
+        for (i in 1 until 4) arrastarParaACesta(i)
+        regra.onNodeWithText("4").assertExists()
+        regra.onRoot().captureRoboImage("build/outputs/roborazzi/31_teste_cesta_arrastar.png")
+
+        regra.onNodeWithTag("atividade_pronto").performClick()
+        regra.mainClock.advanceTimeBy(6000)
+        org.junit.Assert.assertEquals("a cesta com 4 deveria concluir como acerto de primeira", listOf(true), resultado)
     }
 }

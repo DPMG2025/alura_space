@@ -16,6 +16,8 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -74,6 +76,148 @@ class JogoNoEmuladorTest {
     private fun esperar(descricao: String, timeout: Long = 10_000) =
         regra.waitUntilAtLeastOneExists(hasContentDescription(descricao, substring = true), timeout)
 
+    // ------------------------------------------------------------------ responder qualquer pergunta
+
+    private fun dp(v: Float) = with(regra.density) { v.dp.toPx() }
+
+    private fun existe(tag: String) = regra.onAllNodes(hasTestTag(tag)).fetchSemanticsNodes().isNotEmpty()
+
+    /** Marcas que aparecem em cada tipo de pergunta: tocar, cesta, memória, montar a palavra e traçar. */
+    private val qualquerPergunta = hasTestTag("opcao_certa") or hasTestTag("figura_certa") or
+        hasTestTag("carta_0") or hasTestTag("silaba_certa") or hasTestTag("area_tracar")
+
+    /** Texto do balão com a instrução da pergunta (o balão começa com 🔊). */
+    private fun textoDaInstrucao(): String =
+        regra.onAllNodes(hasText("🔊", substring = true)).fetchSemanticsNodes()
+            .flatMap { it.config.getOrElse(SemanticsProperties.Text) { emptyList() } }
+            .joinToString(" ") { it.text }
+
+    /**
+     * Responde a pergunta da vez sem errar, seja de tocar ou de mexer (as fases sorteiam os dois tipos).
+     * Devolve o tipo da pergunta, para conferir depois.
+     */
+    private fun responderSemErrar(): String {
+        regra.waitUntilAtLeastOneExists(qualquerPergunta, 10_000)
+        return when {
+            existe("opcao_certa") -> {
+                regra.onAllNodes(hasTestTag("opcao_certa")).onFirst().performClick()
+                "escolha"
+            }
+            existe("figura_certa") -> { fazerCesta(); "cesta" }
+            existe("carta_0") -> { fazerMemoria(); "memoria" }
+            existe("silaba_certa") -> { fazerMontarPalavra(); "montar" }
+            else -> { fazerTracar(); "tracar" }
+        }
+    }
+
+    /**
+     * Arrasta a figura [i] para dentro da cesta. A cesta fica embaixo; tenta alguns pontos (soltar
+     * fora da cesta não conta como erro, a figura só volta) até a figura ficar lá dentro.
+     */
+    private fun soltarNaCesta(i: Int): Boolean {
+        val raiz = regra.onRoot().fetchSemanticsNode().boundsInRoot
+        val pronto = regra.onAllNodes(hasTestTag("atividade_pronto")).fetchSemanticsNodes().firstOrNull()?.boundsInRoot
+        val alvos = buildList {
+            // Contar: o botão "certinho" fica colado à direita da cesta, na altura do meio dela.
+            if (pronto != null) add(Offset(pronto.left - dp(40f), pronto.center.y))
+            for (d in listOf(100f, 140f, 70f, 180f)) add(Offset(raiz.center.x, raiz.bottom - dp(d)))
+        }
+        for (alvo in alvos) {
+            val figura = regra.onAllNodes(hasTestTag("figura_certa"))[i]
+            val antes = figura.fetchSemanticsNode().boundsInRoot
+            figura.performTouchInput { swipe(center, alvo - antes.topLeft, durationMillis = 500) }
+            avancar(900)
+            val depois = regra.onAllNodes(hasTestTag("figura_certa"))[i].fetchSemanticsNode().boundsInRoot
+            if (depois.center.y > antes.center.y + dp(40f)) return true
+        }
+        return false
+    }
+
+    /** Cesta de contar ("Coloque N na cesta" e tocar no certinho) ou de classificar (todas as do grupo). */
+    private fun fazerCesta() {
+        avancar(500)
+        val alvo = Regex("""Coloque (\d+) na cesta""").find(textoDaInstrucao())?.groupValues?.get(1)?.toInt()
+        val total = regra.onAllNodes(hasTestTag("figura_certa")).fetchSemanticsNodes().size
+        val quantas = alvo ?: total
+        var postas = 0
+        for (i in 0 until total) {
+            if (postas == quantas) break
+            if (soltarNaCesta(i)) postas++
+        }
+        assertEquals("não consegui pôr as figuras na cesta", quantas, postas)
+        if (alvo != null) regra.onAllNodes(hasTestTag("atividade_pronto")).onFirst().performClick()
+    }
+
+    /** Memória: espera a espiadinha e vira cada par (as duas cartas de um par têm a marca carta_N). */
+    private fun fazerMemoria() {
+        avancar(3_000)
+        var par = 0
+        while (regra.onAllNodes(hasTestTag("carta_$par")).fetchSemanticsNodes().size == 2) {
+            val cartas = regra.onAllNodes(hasTestTag("carta_$par"))
+            cartas[0].performClick()
+            avancar(300)
+            cartas[1].performClick()
+            avancar(600)
+            par++
+        }
+        assertTrue("nenhum par de cartas encontrado", par > 0)
+    }
+
+    /** Ordem das sílabas ([textos]) que forma a [palavra]; null se não houver. */
+    private fun ordemDasSilabas(textos: List<String>, palavra: String, usados: List<Int> = emptyList()): List<Int>? {
+        val feito = usados.joinToString("") { textos[it] }
+        if (feito == palavra) return usados
+        if (!palavra.startsWith(feito)) return null
+        for (i in textos.indices) {
+            if (i !in usados) ordemDasSilabas(textos, palavra, usados + i)?.let { return it }
+        }
+        return null
+    }
+
+    /**
+     * Montar a palavra: a instrução diz a palavra ("Monte: OVO") e cada sílaba diz o seu som.
+     * Os encaixes ficam logo abaixo da figura; soltar em qualquer ponto deles põe a sílaba no próximo.
+     */
+    private fun fazerMontarPalavra() {
+        avancar(500)
+        val palavra = Regex("""Monte: (\S+)""").find(textoDaInstrucao())?.groupValues?.get(1)?.lowercase()
+            ?: throw AssertionError("instrução de montar sem a palavra: ${textoDaInstrucao()}")
+        val textos = regra.onAllNodes(hasTestTag("silaba_certa")).fetchSemanticsNodes()
+            .map { it.config.getOrElse(SemanticsProperties.ContentDescription) { emptyList() }.joinToString("") }
+        val ordem = ordemDasSilabas(textos, palavra)
+            ?: throw AssertionError("as sílabas $textos não formam $palavra")
+        val figura = regra.onAllNodes(hasContentDescription(palavra)).onFirst().fetchSemanticsNode().boundsInRoot
+        for (i in ordem) {
+            val silaba = regra.onAllNodes(hasTestTag("silaba_certa"))[i]
+            val antes = silaba.fetchSemanticsNode().boundsInRoot
+            val alvo = Offset(figura.center.x, figura.bottom + dp(8f) + antes.height / 2f)
+            silaba.performTouchInput { swipe(center, alvo - antes.topLeft, durationMillis = 500) }
+            avancar(900)
+        }
+    }
+
+    /** Traçar: um só traço em zigue-zague cobrindo o quadro todo acende os pontinhos da letra. */
+    private fun fazerTracar() {
+        avancar(500)
+        regra.onAllNodes(hasTestTag("area_tracar")).onFirst().performTouchInput {
+            fun ponto(x: Float, y: Float) = Offset(width * x, height * y)
+            down(ponto(0.05f, 0.05f))
+            var y = 0.05f
+            var paraDireita = true
+            while (y <= 0.951f) {
+                for (k in 1..18) {
+                    val x = if (paraDireita) 0.05f + 0.05f * k else 0.95f - 0.05f * k
+                    moveTo(ponto(x, y))
+                }
+                y += 0.1f
+                if (y <= 0.951f) moveTo(ponto(if (paraDireita) 0.95f else 0.05f, y))
+                paraDireita = !paraDireita
+            }
+            up()
+        }
+        avancar(900)
+    }
+
     @Test
     fun jogarUmaFaseEColocarOPremioNaCasa() {
         cenario = ActivityScenario.launch(MainActivity::class.java)
@@ -107,8 +251,7 @@ class JogoNoEmuladorTest {
         avancar(800)
         capturar("e05_erro")
         repeat(5) { i ->
-            regra.waitUntilAtLeastOneExists(hasTestTag("opcao_certa"), 10_000)
-            regra.onAllNodes(hasTestTag("opcao_certa")).onFirst().performClick()
+            responderSemErrar()
             if (i == 0) {
                 avancar(400)
                 capturar("e06_acerto")
@@ -137,6 +280,48 @@ class JogoNoEmuladorTest {
         assertTrue("fase vencida não foi salva", prefs.getString("estrelas", "").orEmpty().startsWith("MATEMATICA:0="))
         // Errou uma vez: duas estrelas
         assertEquals("MATEMATICA:0=2", prefs.getString("estrelas", ""))
+    }
+
+    /**
+     * "Cesta das coisas" (8ª fase da lógica) sorteia só cesta de classificar; a pergunta do meio é
+     * revisão de uma fase anterior (tocar ou memória). Joga a fase inteira sem errar, com o dedo.
+     */
+    @Test
+    fun jogarFaseComAtividadesDeMexer() {
+        prefs.edit()
+            .putString("genero", "MENINA").putString("nome", "Ana")
+            .putString("estrelas", (0 until 7).joinToString(";") { "LOGICA:$it=3" })
+            .putString("colocados", "terreno,0.5,0.5;paredes,0.5,0.5;telhado,0.5,0.5;porta,0.5,0.5;cama,0.27,0.528;janelas,0.5,0.5")
+            .commit()
+        cenario = ActivityScenario.launch(MainActivity::class.java)
+
+        esperar("Caminho Lógica")
+        regra.onAllNodes(hasContentDescription("Caminho Lógica", substring = true)).onFirst().performClick()
+        esperar("Fase 8, Cesta das coisas")
+        regra.onAllNodes(hasContentDescription("Fase 8, Cesta das coisas", substring = true)).onFirst().performClick()
+
+        regra.waitUntilAtLeastOneExists(hasTestTag("figura_certa"), 10_000)
+        avancar(1_000)
+        capturar("e14_cesta_classificar")
+        val tipos = mutableListOf<String>()
+        repeat(5) { i ->
+            tipos += responderSemErrar()
+            if (i == 0) {
+                avancar(300)
+                capturar("e15_cesta_completa")
+            }
+            avancar(6_500)
+        }
+        assertTrue("a fase deveria sortear cestas: $tipos", tipos.count { it == "cesta" } >= 4)
+
+        esperar("Presente. Toque para abrir.", 15_000)
+        capturar("e16_premio_das_atividades")
+        regra.waitUntil(5_000) { prefs.getString("estrelas", "").orEmpty().contains("LOGICA:7=") }
+        // Tudo certo de primeira: três estrelas
+        assertTrue(
+            "a fase de mexer deveria valer 3 estrelas: ${prefs.getString("estrelas", "")}",
+            prefs.getString("estrelas", "").orEmpty().split(";").contains("LOGICA:7=3"),
+        )
     }
 
     @Test
