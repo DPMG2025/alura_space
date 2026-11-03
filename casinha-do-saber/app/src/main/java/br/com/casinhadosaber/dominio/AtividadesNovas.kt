@@ -186,11 +186,21 @@ data class PintarPorCodigo(val colunas: Int, val casas: List<CasaDePintar>, val 
     val linhas: Int get() = casas.size / colunas
 
     init {
-        require(colunas in 3..8 && casas.size % colunas == 0 && casas.size / colunas in 3..8) { "Desenho de 3 a 8 casinhas por lado" }
+        require(colunas in 3..MAX_COLUNAS && casas.size % colunas == 0 && casas.size / colunas in 3..8) {
+            "Desenho de 3 a $MAX_COLUNAS casinhas de largura e 3 a 8 de altura"
+        }
         require(legenda.size in 2..5 && legenda.map { it.codigo }.toSet().size == legenda.size) { "Legenda de 2 a 5 cores distintas" }
         val codigos = legenda.map { it.codigo }.toSet()
         require(casas.all { it.codigo == null || it.codigo in codigos }) { "Casinha com código fora da legenda" }
         require(casas.any { it.codigo != null }) { "Nada para pintar" }
+    }
+
+    companion object {
+        /**
+         * Largura máxima do desenho: num celular de 360 dp cada casinha fica com pelo menos 48 dp
+         * ((360 − 2 × 16 de margem − 20 de folga) / 6 ≈ 51 dp). Desenhos maiores crescem para baixo.
+         */
+        const val MAX_COLUNAS = 6
     }
 }
 

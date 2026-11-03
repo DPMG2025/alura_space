@@ -1514,9 +1514,12 @@ class FasesLogica(random: Random = Random.Default) : FasesDoCaminho(random) {
         )
     }
 
+    /** Os desenhos de pintar; os [grandes] (7 linhas, mais casinhas) ficam para as fases difíceis e os chefões. */
+    private fun desenhosParaPintar(grandes: Boolean) = VL.desenhos.filter { grandes || it.linhas.size <= 6 }
+
     /** Pintar o espelho: o lado esquerdo tem os números das cores; o direito é pintado igual ao espelho. */
-    private fun pintarEspelho(maxColunas: Int): Pergunta {
-        val d = VL.desenhos.filter { it.colunas <= maxColunas }.um()
+    private fun pintarEspelho(grandes: Boolean): Pergunta {
+        val d = desenhosParaPintar(grandes).um()
         val metade = d.colunas / 2
         val casas = d.linhas.flatMap { linha ->
             linha.mapIndexed { c, ch ->
@@ -1536,8 +1539,8 @@ class FasesLogica(random: Random = Random.Default) : FasesDoCaminho(random) {
     }
 
     /** Pintar por símbolo: cada símbolo (bolinha, triângulo, quadrado) é uma cor. */
-    private fun pintarSimbolo(maxColunas: Int, distrator: Boolean): Pergunta {
-        val d = VL.desenhos.filter { it.colunas <= maxColunas }.um()
+    private fun pintarSimbolo(grandes: Boolean, distrator: Boolean): Pergunta {
+        val d = desenhosParaPintar(grandes).um()
         val casas = d.linhas.flatMap { linha ->
             linha.map { ch -> if (ch == '.') CasaDePintar("", null) else VL.simbolos[ch - '1'].let { CasaDePintar(it, it) } }
         }
@@ -1603,16 +1606,16 @@ class FasesLogica(random: Random = Random.Default) : FasesDoCaminho(random) {
             f("Chefão do gelo", "🐻", { quebra(m, 2, 3) }, { ligarSombras(m, 4, true) }, { matriz(m) }, { quadroQueFalta(m, 3) }),
         )
         10 -> listOf( // Circo: simetria e espelho
-            f("O espelho", "🪞", { espelhoGrade(m, 2) }, { setaGira(false) }, { pintarEspelho(6) }),
-            f("Pintar o espelho", "🎨", { pintarEspelho(6) }, { pintarEspelho(6) }, { espelhoGrade(m, 2) }),
+            f("O espelho", "🪞", { espelhoGrade(m, 2) }, { setaGira(false) }, { pintarEspelho(grandes = false) }),
+            f("Pintar o espelho", "🎨", { pintarEspelho(grandes = false) }, { pintarEspelho(grandes = false) }, { espelhoGrade(m, 2) }),
             f("Setas no espelho", "↔️", { setaGira(false) }, { espelhoGrade(m, 3) }, { domino(m, 2, 0, tipo = 0) }),
             f("Dominó das sombras", "🎲", { domino(m, 2, 1, tipo = 0) }, { domino(m, 3, 1, tipo = 0) }, { setaGira(false) }),
-            f("Marco do circo", "🚩", { espelhoGrade(m, 3) }, { pintarEspelho(6) }, { domino(m, 3, 1) }, { setaGira(false) }),
+            f("Marco do circo", "🚩", { espelhoGrade(m, 3) }, { pintarEspelho(grandes = false) }, { domino(m, 3, 1) }, { setaGira(false) }),
             f("Cartas do circo", "🃏", { cartas(m, 4) }, { cartas(m, 4) }, { espelhoGrade(m, 3) }),
             f("Dominó do circo", "🎪", { domino(m, 3, 1) }, { domino(m, 3, 1) }, { cartas(m, 5) }, { setaGira(true) }),
-            f("Circo e gelo", "🧊", { pintarEspelho(6) }, { quebra(m, 2, 3) }, { ligarSombras(m, 4, true) }, { quadroQueFalta(m, 3) }),
-            f("Circo difícil", "🧠", { espelhoGrade(m, 4) }, { pintarEspelho(8) }, { cartas(m, 6) }, { setaGira(true) }),
-            f("Chefão do circo", "🤡", { pintarEspelho(8) }, { domino(m, 4, 1) }, { espelhoGrade(m, 4) }, { setaGira(true) }),
+            f("Circo e gelo", "🧊", { pintarEspelho(grandes = false) }, { quebra(m, 2, 3) }, { ligarSombras(m, 4, true) }, { quadroQueFalta(m, 3) }),
+            f("Circo difícil", "🧠", { espelhoGrade(m, 4) }, { pintarEspelho(grandes = true) }, { cartas(m, 6) }, { setaGira(true) }),
+            f("Chefão do circo", "🤡", { pintarEspelho(grandes = true) }, { domino(m, 4, 1) }, { espelhoGrade(m, 4) }, { setaGira(true) }),
         )
         11 -> listOf( // Deserto: sudoku 4 por 4 com 2 casas a descobrir
             f("Sudoku do deserto", "🧩", { sudokuUnico(4, 1) }, { sudokuUnico(4, 1) }, { filaDuasRegras(true) }, { escondeTrocas(m, 3, 2) }),
@@ -1622,7 +1625,7 @@ class FasesLogica(random: Random = Random.Default) : FasesDoCaminho(random) {
             f("Marco do deserto", "🚩", { sudokuUnico(4, 2) }, { escondeTrocas(m, 3, 3) }, { siga(m, 4, 4) }, { cestaVenn() }),
             f("Cesta do deserto", "🧺", { cestaVenn() }, { cestaVenn() }, { siga(m, 4, 4) }, { vennEscolha(0) }),
             f("Esconde ligeiro", "🦂", { escondeTrocas(m, 4, 3) }, { escondeTrocas(m, 4, 3) }, { cestaVenn() }, { sudokuUnico(4, 2) }),
-            f("Deserto e circo", "🎪", { sudokuUnico(4, 2) }, { domino(m, 3, 1) }, { pintarEspelho(6) }, { espelhoGrade(m, 3) }),
+            f("Deserto e circo", "🎪", { sudokuUnico(4, 2) }, { domino(m, 3, 1) }, { pintarEspelho(grandes = false) }, { espelhoGrade(m, 3) }),
             f("Deserto difícil", "🧠", { sudokuUnico(4, 4) }, { escondeTrocas(m, 4, 3) }, { siga(m, 4, 4) }),
             f("Chefão do deserto", "🐪", { sudokuUnico(4, 3) }, { escondeTrocas(m, 4, 3) }, { siga(m, 4, 4) }),
         )
@@ -1667,12 +1670,12 @@ class FasesLogica(random: Random = Random.Default) : FasesDoCaminho(random) {
             f("Caça ao tesouro", "💰", { caca(m, false) }, { caca(m, false) }, { coordenadas(m, 3, false) }),
             f("Onde está?", "📍", { coordenadas(m, 3, true) }, { coordenadas(m, 4, false) }, { robo(4, 4, 4..5, pedras = 2) }),
             f("Robô pirata", "🏴‍☠️", { robo(4, 4, 4..6, pedras = 3) }, { robo(4, 4, 4..6, pedras = 3) }, { coordenadas(m, 4, false) }),
-            f("Marco da ilha", "🚩", { coordenadas(m, 4, random.nextBoolean()) }, { caca(m, false) }, { robo(4, 4, 4..6, pedras = 2) }, { pintarSimbolo(6, false) }),
-            f("Pintar o mapa", "🎨", { pintarSimbolo(6, false) }, { pintarSimbolo(6, false) }, { coordenadas(m, 4, true) }),
+            f("Marco da ilha", "🚩", { coordenadas(m, 4, random.nextBoolean()) }, { caca(m, false) }, { robo(4, 4, 4..6, pedras = 2) }, { pintarSimbolo(grandes = false, distrator = false) }),
+            f("Pintar o mapa", "🎨", { pintarSimbolo(grandes = false, distrator = false) }, { pintarSimbolo(grandes = false, distrator = false) }, { coordenadas(m, 4, true) }),
             f("Caça esperta", "🦜", { caca(m, true) }, { caca(m, true) }, { robo(4, 4, 4..6, pedras = 3) }, { coordenadas(m, 3, true) }),
             f("Ilha e dinos", "🦕", { coordenadas(m, 4, false) }, { tremTamanho(m, 5, 0) }, { siga(m, 4, 4) }, { transitividade(true) }),
-            f("Ilha difícil", "🧠", { coordenadas(m, 4, true) }, { robo(5, 5, 5..6, pedras = 5) }, { pintarSimbolo(8, true) }),
-            f("Chefão da ilha", "⚓", { caca(m, true) }, { robo(5, 5, 5..6, pedras = 4) }, { pintarSimbolo(8, true) }, { coordenadas(m, 4, true) }),
+            f("Ilha difícil", "🧠", { coordenadas(m, 4, true) }, { robo(5, 5, 5..6, pedras = 5) }, { pintarSimbolo(grandes = true, distrator = true) }),
+            f("Chefão da ilha", "⚓", { caca(m, true) }, { robo(5, 5, 5..6, pedras = 4) }, { pintarSimbolo(grandes = true, distrator = true) }, { coordenadas(m, 4, true) }),
         )
         16 -> listOf( // Fábrica de Doces: balança lógica com trocas
             f("Pesa igual", "⚖️", { balancaTrocas(1) }, { transitividade(false) }, { balanca(m, false) }),
@@ -1682,7 +1685,7 @@ class FasesLogica(random: Random = Random.Default) : FasesDoCaminho(random) {
             f("Marco dos doces", "🚩", { balancaTrocas(1) }, { balanca(m, true) }, { domino(m, 3, 1) }, { transitividade(true) }),
             f("Cesta de doces", "🧺", { cestaVenn() }, { cestaVenn() }, { balancaTrocas(2) }),
             f("Balança difícil", "🍫", { balanca(m, true) }, { balanca(m, true) }, { domino(m, 4, 2) }, { vennEscolha(1) }),
-            f("Doces e ilha", "🏝️", { balancaTrocas(2) }, { coordenadas(m, 4, true) }, { cartas(m, 5) }, { pintarSimbolo(6, true) }),
+            f("Doces e ilha", "🏝️", { balancaTrocas(2) }, { coordenadas(m, 4, true) }, { cartas(m, 5) }, { pintarSimbolo(grandes = false, distrator = true) }),
             f("Doces difícil", "🧠", { balancaTrocas(2) }, { domino(m, 5, 1) }, { cestaVenn() }),
             f("Chefão dos doces", "🎂", { balanca(m, true) }, { domino(m, 5, 2) }, { balancaTrocas(2) }, { transitividade(true) }),
         )
@@ -1711,16 +1714,16 @@ class FasesLogica(random: Random = Random.Default) : FasesDoCaminho(random) {
             f("Chefão do vulcão", "🐉", { robo(5, 5, 6..6, pedras = 4, repetir = true) }, { quebra(m, 3, 3) }, { tremHistoria(4, true) }),
         )
         19 -> listOf( // Reino das Nuvens: padrões de crescimento e matriz 3 por 3
-            f("Matriz das nuvens", "☁️", { matriz(m, quantidade = false) }, { filaCrescente(m, false) }, { pintarSimbolo(6, false) }),
-            f("Pintar o céu", "🎨", { pintarSimbolo(6, false) }, { pintarSimbolo(6, true) }, { matriz(m) }),
+            f("Matriz das nuvens", "☁️", { matriz(m, quantidade = false) }, { filaCrescente(m, false) }, { pintarSimbolo(grandes = false, distrator = false) }),
+            f("Pintar o céu", "🎨", { pintarSimbolo(grandes = false, distrator = false) }, { pintarSimbolo(grandes = false, distrator = true) }, { matriz(m) }),
             f("Fila que cresce", "📈", { filaCrescente(m, true) }, { matriz(m, quantidade = true) }, { tremCrescente(m, 4) }),
             f("Trem que cresce", "🚂", { tremCrescente(m, 4) }, { tremCrescente(m, 5) }, { filaCrescente(m, true) }),
-            f("Marco das nuvens", "🚩", { matriz(m) }, { pintarSimbolo(6, true) }, { tremCrescente(m, 5) }, { filaCrescente(m, true) }),
+            f("Marco das nuvens", "🚩", { matriz(m) }, { pintarSimbolo(grandes = false, distrator = true) }, { tremCrescente(m, 5) }, { filaCrescente(m, true) }),
             f("Ligue as cores", "🔗", { ligarCores(4) }, { ligarCores(5) }, { matriz(m) }),
-            f("Pintar padrões", "🖌️", { pintarSimbolo(8, true) }, { ligarCores(5) }, { filaDuasRegras(true) }),
+            f("Pintar padrões", "🖌️", { pintarSimbolo(grandes = true, distrator = true) }, { ligarCores(5) }, { filaDuasRegras(true) }),
             f("Nuvens e vulcão", "🌋", { matriz(m) }, { robo(5, 5, 5..6, pedras = 3, repetir = true) }, { quebra(m, 3, 3) }),
-            f("Nuvens difícil", "🧠", { matriz(m) }, { pintarSimbolo(8, true) }, { tremCrescente(m, 6) }, { filaDuasRegras(true) }),
-            f("Chefão das nuvens", "🌈", { matriz(m) }, { pintarSimbolo(8, true) }, { tremCrescente(m, 6) }, { filaCrescente(m, true) }),
+            f("Nuvens difícil", "🧠", { matriz(m) }, { pintarSimbolo(grandes = true, distrator = true) }, { tremCrescente(m, 6) }, { filaDuasRegras(true) }),
+            f("Chefão das nuvens", "🌈", { matriz(m) }, { pintarSimbolo(grandes = true, distrator = true) }, { tremCrescente(m, 6) }, { filaCrescente(m, true) }),
         )
         20 -> listOf( // Caverna de Cristal: quebra cabeça de 9 a 12 peças, encaixar formas
             f("Encaixe a forma", "🔷", { sombra() }, { matriz(m) }, { quebra(m, 3, 3, fixas = 3) }),
@@ -1730,7 +1733,7 @@ class FasesLogica(random: Random = Random.Default) : FasesDoCaminho(random) {
             f("Marco da caverna", "🚩", { quebra(m, 3, 3) }, { caca(m, true) }, { domino(m, 4, 1) }, { sombra() }),
             f("Quebra cabeça de 12", "🧩", { quebra(m, 3, 4, fixas = 2) }, { quebra(m, 3, 4, fixas = 1) }, { domino(m, 4, 2) }),
             f("Caça difícil", "🦇", { caca(m, true) }, { caca(m, true) }, { quebra(m, 3, 3) }, { matriz(m) }),
-            f("Caverna e nuvens", "☁️", { quebra(m, 3, 4) }, { robo(5, 5, 5..6, pedras = 3, repetir = true) }, { matriz(m) }, { pintarSimbolo(8, true) }),
+            f("Caverna e nuvens", "☁️", { quebra(m, 3, 4) }, { robo(5, 5, 5..6, pedras = 3, repetir = true) }, { matriz(m) }, { pintarSimbolo(grandes = true, distrator = true) }),
             f("Caverna difícil", "🧠", { quebra(m, 3, 4) }, { domino(m, 5, 2) }, { caca(m, true) }, { sombra() }),
             f("Chefão da caverna", "🔮", { quebra(m, 3, 4) }, { domino(m, 5, 2) }, { caca(m, true) }),
         )
@@ -1754,7 +1757,7 @@ class FasesLogica(random: Random = Random.Default) : FasesDoCaminho(random) {
             f("Marco dos robôs", "🚩", { menorCaminho(5, 6) }, { robo(5, 5, 6..8, pedras = 6) }, { siga(m, 4, 6) }, { tremTamanho(m, 6, 0) }),
             f("Robô esperto", "⚙️", { robo(5, 5, 7..8, pedras = 6, repetir = true) }, { robo(5, 5, 7..8, pedras = 6, repetir = true) }, { siga(m, 4, 6) }),
             f("Siga de seis", "📡", { siga(m, 4, 6) }, { siga(m, 4, 6) }, { tremCrescente(m, 6) }, { menorCaminho(5, 6) }),
-            f("Robôs e parque", "🎡", { robo(5, 5, 6..8, pedras = 5) }, { quemEQuem(3) }, { pintarSimbolo(8, true) }, { tresCriterios() }),
+            f("Robôs e parque", "🎡", { robo(5, 5, 6..8, pedras = 5) }, { quemEQuem(3) }, { pintarSimbolo(grandes = true, distrator = true) }, { tresCriterios() }),
             f("Robôs difícil", "🧠", { robo(5, 5, 8..8, pedras = 6, folga = 0) }, { menorCaminho(5, 7) }, { siga(m, 4, 6) }),
             f("Chefão dos robôs", "🦾", { robo(5, 5, 7..8, pedras = 6) }, { siga(m, 4, 6) }, { tremTamanho(m, 6, 0) }, { menorCaminho(5, 7) }),
         )
@@ -1771,16 +1774,16 @@ class FasesLogica(random: Random = Random.Default) : FasesDoCaminho(random) {
             f("Chefão da savana", "🐘", { cestaVenn() }, { caca(m, true) }, { ligarLugar(4) }, { vennEscolha() }),
         )
         24 -> listOf( // Vale das Cores: sudoku com várias casas e matriz de cor e forma
-            f("Sudoku colorido", "🌈", { sudokuUnico(4, 4) }, { matriz(m, quantidade = false) }, { pintarSimbolo(8, true) }),
-            f("Pintar as cores", "🎨", { pintarSimbolo(8, true) }, { pintarSimbolo(8, true) }, { sudokuUnico(4, 4) }),
+            f("Sudoku colorido", "🌈", { sudokuUnico(4, 4) }, { matriz(m, quantidade = false) }, { pintarSimbolo(grandes = true, distrator = true) }),
+            f("Pintar as cores", "🎨", { pintarSimbolo(grandes = true, distrator = true) }, { pintarSimbolo(grandes = true, distrator = true) }, { sudokuUnico(4, 4) }),
             f("Sudoku de seis", "🧩", { sudokuUnico(6, 2) }, { sudokuUnico(6, 3) }, { matriz(m) }, { cartas(m, 6, tipo = 3) }),
             f("Quebra cabeça de 16", "🖼️", { quebra(m, 4, 4, fixas = 4) }, { quebra(m, 4, 4, numeros = true) }, { sudokuUnico(4, 5) }),
-            f("Marco das cores", "🚩", { sudokuUnico(4, 5) }, { pintarSimbolo(8, true) }, { quebra(m, 4, 4, fixas = 3) }, { matriz(m) }),
+            f("Marco das cores", "🚩", { sudokuUnico(4, 5) }, { pintarSimbolo(grandes = true, distrator = true) }, { quebra(m, 4, 4, fixas = 3) }, { matriz(m) }),
             f("Cartas coloridas", "🃏", { cartas(m, 6, tipo = 3) }, { tremArcoIris(6) }, { matriz(m) }),
-            f("Pintar a matriz", "🖍️", { pintarEspelho(8) }, { cartas(m, 6, tipo = 3) }, { sudokuUnico(6, 3) }),
+            f("Pintar a matriz", "🖍️", { pintarEspelho(grandes = true) }, { cartas(m, 6, tipo = 3) }, { sudokuUnico(6, 3) }),
             f("Cores e savana", "🦁", { sudokuUnico(4, 5) }, { vennEscolha() }, { cestaVenn() }, { robo(5, 5, 6..8, pedras = 5) }),
-            f("Cores difícil", "🧠", { sudokuUnico(6, 5) }, { quebra(m, 4, 4, fixas = 2) }, { pintarSimbolo(8, true) }),
-            f("Chefão das cores", "🎨", { sudokuUnico(6, 4) }, { pintarEspelho(8) }, { quebra(m, 4, 4, fixas = 2) }, { sudokuUnico(4, 6) }),
+            f("Cores difícil", "🧠", { sudokuUnico(6, 5) }, { quebra(m, 4, 4, fixas = 2) }, { pintarSimbolo(grandes = true, distrator = true) }),
+            f("Chefão das cores", "🎨", { sudokuUnico(6, 4) }, { pintarEspelho(grandes = true) }, { quebra(m, 4, 4, fixas = 2) }, { sudokuUnico(4, 6) }),
         )
         25 -> listOf( // Castelo das Estrelas: revisão de tudo
             f("Estrelas e padrões", "🌟", { filaDuasRegras(true) }, { matriz(m) }, { filaCrescente(m, true) }, { tremCrescente(m, 6) }),
@@ -1802,7 +1805,7 @@ class FasesLogica(random: Random = Random.Default) : FasesDoCaminho(random) {
         var vez = 0
         val faixas: List<List<() -> Pergunta>> = listOf(
             listOf({ ate50[49].criar() }, { ate50[47].criar() }),
-            listOf({ quebra(m, 2, 3) }, { pintarEspelho(6) }, { domino(m, 3, 1) }, { siga(m, 3, 3) }, { ligarSombras(m, 4, true) }),
+            listOf({ quebra(m, 2, 3) }, { pintarEspelho(grandes = false) }, { domino(m, 3, 1) }, { siga(m, 3, 3) }, { ligarSombras(m, 4, true) }),
             listOf({ sudokuUnico(4, 3) }, { robo(4, 4, 4..6, pedras = 3) }, { coordenadas(m, 4, true) }, { tremTamanho(m, 5, 0) }, { escondePistas(m, 5) }),
             listOf({ balancaTrocas(2) }, { siga(m, 4, 5) }, { matriz(m) }, { quebra(m, 3, 3) }, { cartas(m, 8) }),
             listOf({ quemEQuem(3) }, { vennEscolha() }, { robo(5, 5, 6..8, pedras = 5, repetir = true) }, { sudokuUnico(6, 4) }, { quebra(m, 4, 4) }),

@@ -241,12 +241,12 @@ class CapturasNovas3Test {
     /** Coração vermelho (código 2, às vezes escrito 1+1) com brilho rosa (3), num céu azul (1). */
     private val coracao = run {
         val mapa = listOf(
-            "1221221",
-            "2322222",
-            "2222222",
-            "1222221",
-            "1122211",
-            "1112111",
+            "221122",
+            "232222",
+            "222222",
+            "122221",
+            "112211",
+            "111111",
         )
         val casas = mapa.flatMapIndexed { l, linha ->
             linha.mapIndexed { k, ch ->
@@ -256,7 +256,7 @@ class CapturasNovas3Test {
             }
         }
         PintarPorCodigo(
-            7,
+            6,
             casas,
             listOf(
                 CorDaLegenda("1", 0xFF9AD7FF),
