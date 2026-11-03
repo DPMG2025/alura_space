@@ -5,6 +5,13 @@ import br.com.casinhadosaber.dominio.Vocabulario.falaDaLetra
 import br.com.casinhadosaber.dominio.Vocabulario.porExtenso
 import kotlin.random.Random
 
+/**
+ * Ordena calculando a chave uma vez só por elemento. O sortedBy chama a chave a cada comparação,
+ * e uma chave com sorteio deixa a ordenação inconsistente (o TimSort pode lançar exceção com listas grandes).
+ */
+internal inline fun <T> Iterable<T>.ordenarUmaVez(chave: (T) -> Number): List<T> =
+    map { it to chave(it).toDouble() }.sortedBy { it.second }.map { it.first }
+
 /** Uma fase de um caminho: nome, emoji e como sortear uma pergunta nova dela. */
 class ModeloDeFase(val titulo: String, val emoji: String, val criar: () -> Pergunta)
 
@@ -54,7 +61,7 @@ abstract class FasesDoCaminho(protected val random: Random) {
 
     /** Números diferentes do correto, próximos dele, dentro de [min]..[max]. */
     protected fun numerosErrados(correto: Int, min: Int, max: Int, qtd: Int): List<Int> {
-        val perto = (min..max).filter { it != correto }.sortedBy { kotlin.math.abs(it - correto) + random.nextDouble() }
+        val perto = (min..max).filter { it != correto }.ordenarUmaVez { kotlin.math.abs(it - correto) + random.nextDouble() }
         return perto.take(qtd).shuffled(random)
     }
 
@@ -117,7 +124,7 @@ abstract class FasesDoCaminho(protected val random: Random) {
     /** Três números errados tirados de [candidatos], os mais perto do certo primeiro. */
     protected fun erradosDe(certo: Int, candidatos: Iterable<Int>): List<Int> =
         candidatos.filter { it != certo }.distinct()
-            .sortedBy { kotlin.math.abs(it - certo) + random.nextDouble() * 1.5 }
+            .ordenarUmaVez { kotlin.math.abs(it - certo) + random.nextDouble() * 1.5 }
             .take(3)
 
     protected fun opcaoTexto(texto: String, fala: String = "") =

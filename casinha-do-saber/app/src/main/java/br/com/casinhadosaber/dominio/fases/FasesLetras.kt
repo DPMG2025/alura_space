@@ -446,7 +446,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
         val f = V.frases.um()
         val segunda = { fr: VocabularioDosMundos.Frase -> fr.texto.split(" ").getOrNull(1)?.firstOrNull() }
         val outras = V.frases.filter { it.emoji != f.emoji }
-            .sortedBy { if (dificil && segunda(it) == segunda(f)) 0.0 else 1.0 + random.nextDouble() }
+            .ordenarUmaVez { if (dificil && segunda(it) == segunda(f)) 0.0 else 1.0 + random.nextDouble() }
             .distinctBy { it.emoji }
             .take(3)
         return montar(
@@ -472,7 +472,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
                     fala = listOf(pt(fila.dropLast(1).joinToString(", ") { falaDaLetra(it) } + ". Que letra vem depois?")),
                     cena = Cena.Sequencia(fila.dropLast(1) + "?"),
                     certa = opcaoLetra(resposta),
-                    erradas = abc.filter { it != resposta && it !in fila }.sortedBy { kotlin.math.abs(abc.indexOf(it) - abc.indexOf(resposta)) + random.nextDouble() * 3 }.take(3).map(::opcaoLetra),
+                    erradas = abc.filter { it != resposta && it !in fila }.ordenarUmaVez { kotlin.math.abs(abc.indexOf(it) - abc.indexOf(resposta)) + random.nextDouble() * 3 }.take(3).map(::opcaoLetra),
                     reforco = listOf(pt(fila.joinToString(", ") { falaDaLetra(it) } + "!")),
                 )
             }
@@ -484,7 +484,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
                     fala = listOf(pt("Que letra vem antes do ${falaDaLetra(abc[i])}?")),
                     cena = Cena.Sequencia(listOf("?", abc[i])),
                     certa = opcaoLetra(resposta),
-                    erradas = abc.filter { it != resposta && it != abc[i] }.sortedBy { kotlin.math.abs(abc.indexOf(it) - i) + random.nextDouble() * 3 }.take(3).map(::opcaoLetra),
+                    erradas = abc.filter { it != resposta && it != abc[i] }.ordenarUmaVez { kotlin.math.abs(abc.indexOf(it) - i) + random.nextDouble() * 3 }.take(3).map(::opcaoLetra),
                     reforco = listOf(pt("${falaDaLetra(resposta)}, ${falaDaLetra(abc[i])}!")),
                 )
             }
@@ -811,7 +811,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
             fala = listOf(pt("Bata palmas comigo: ${pedacos(p)}. Quantos pedacinhos tem ${fpal(p)}?")),
             cena = Cena.Palavra(p.emoji + " " + p.texto),
             certa = opcaoNumero(n),
-            erradas = (1..6).filter { it != n }.sortedBy { kotlin.math.abs(it - n) + random.nextDouble() * 2 }.take(3).map(::opcaoNumero),
+            erradas = (1..6).filter { it != n }.ordenarUmaVez { kotlin.math.abs(it - n) + random.nextDouble() * 2 }.take(3).map(::opcaoNumero),
             reforco = listOf(pt("${pedacos(p)}. ${porExtenso(n)} pedacinhos!")),
         )
     }

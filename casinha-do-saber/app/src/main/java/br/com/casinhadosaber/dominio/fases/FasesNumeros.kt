@@ -1039,7 +1039,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
         val cena = Cena.Sequencia(fila.map { it.emoji })
         return if (random.nextBoolean()) {
             val outros = (0 until n).filter { it != pos }
-                .sortedBy { if (parecidas) kotlin.math.abs(it - pos) + random.nextDouble() else random.nextDouble() }
+                .ordenarUmaVez { if (parecidas) kotlin.math.abs(it - pos) + random.nextDouble() else random.nextDouble() }
                 .take(3).map { fila[it] }
             tocar(
                 "Quem é o ${VN.ordinalEscrito(pos + 1)} da fila?",
@@ -1574,7 +1574,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
 
     private fun reconhecerDinheiro(): Pergunta {
         val certo = dinheirosDaCidade.um()
-        val outros = dinheirosDaCidade.filter { it != certo }.sortedBy { kotlin.math.abs(it - certo) + random.nextInt(300) }.take(3)
+        val outros = dinheirosDaCidade.filter { it != certo }.ordenarUmaVez { kotlin.math.abs(it - certo) + random.nextInt(300) }.take(3)
         val tipo = if (certo >= 200) "a nota" else "a moeda"
         return tocar(
             "Toque em ${VN.dinheiroEscrito(certo)}", "Toque n${tipo.substring(0, 1)} ${tipo.substringAfter(' ')} de ${VN.dinheiroFalado(certo)}.",
@@ -1804,7 +1804,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
         val i = lista.indices.random(random)
         val depois = random.nextBoolean()
         val certo = lista[(i + if (depois) 1 else lista.size - 1) % lista.size]
-        val outros = lista.filter { it != certo && it != lista[i] }.sortedBy { kotlin.math.abs(lista.indexOf(it) - i) + random.nextDouble() * 2 }.take(2) + lista[i]
+        val outros = lista.filter { it != certo && it != lista[i] }.ordenarUmaVez { kotlin.math.abs(lista.indexOf(it) - i) + random.nextDouble() * 2 }.take(2) + lista[i]
         val nome = if (meses) "mês" else "dia"
         return tocar(
             "Que $nome vem ${if (depois) "depois" else "antes"} de ${lista[i]}?", "Que $nome vem ${if (depois) "depois" else "antes"} de ${lista[i]}?",
@@ -2617,7 +2617,7 @@ class FasesNumeros(random: Random = Random.Default) : FasesDoCaminho(random) {
         val resp = fila.last()
         return if (random.nextInt(3) == 0) {
             val certa = regraFalada(regra)
-            val outras = (if (centenas) listOf(50, 100, -50, 25, 20, 10, -100) else listOf(2, 3, 4, 5, -2, -3, 1, -1)).filter { it != regra }.sortedBy { kotlin.math.abs(it - regra) + random.nextDouble() }.take(3)
+            val outras = (if (centenas) listOf(50, 100, -50, 25, 20, 10, -100) else listOf(2, 3, 4, 5, -2, -3, 1, -1)).filter { it != regra }.ordenarUmaVez { kotlin.math.abs(it - regra) + random.nextDouble() }.take(3)
             tocar(
                 "Qual é a regra?", "Olhe os números: " + fila.joinToString(", ") { ext(it) } + ". Qual é a regra do padrão?",
                 Cena.Sequencia(fila.map { "$it" }), opT(certa), outras.map { opT(regraFalada(it)) }, "A regra é $certa!",
