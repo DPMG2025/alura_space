@@ -160,6 +160,8 @@ class JogoNoEmuladorTest {
             avancar(900)
             val depois = regra.onAllNodes(hasTestTag("figura_certa"))[i].fetchSemanticsNode().boundsInRoot
             if (depois.center.y > antes.center.y + dp(40f)) return true
+            // Figura que já estava baixinha (cesta com muitas) pode não descer 40 dp: vale estar dentro da cesta.
+            if (cesta != null && cesta.inflate(dp(12f)).contains(depois.center) && !cesta.contains(antes.center)) return true
         }
         return false
     }
@@ -171,10 +173,17 @@ class JogoNoEmuladorTest {
         val total = regra.onAllNodes(hasTestTag("figura_certa")).fetchSemanticsNodes().size
         val quantas = alvo ?: total
         var postas = 0
+        val faltaram = mutableListOf<Int>()
         for (i in 0 until total) {
+            if (postas == quantas) break
+            if (soltarNaCesta(i)) postas++ else faltaram += i
+        }
+        // Segunda volta para as que não entraram (a cesta cheia muda de lugar o que já está dentro).
+        for (i in faltaram) {
             if (postas == quantas) break
             if (soltarNaCesta(i)) postas++
         }
+        if (postas != quantas) capturar("e29_cesta_falhou")
         assertEquals("não consegui pôr as figuras na cesta", quantas, postas)
         if (alvo != null) regra.onAllNodes(hasTestTag("atividade_pronto")).onFirst().performClick()
     }
