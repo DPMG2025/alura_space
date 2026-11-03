@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,6 +60,9 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.telas.atividades.ContornoDoJogo
+import br.com.casinhadosaber.ui.telas.atividades.festejo
+import br.com.casinhadosaber.ui.telas.atividades.ladrilho
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import br.com.casinhadosaber.ui.telas.atividades.GestoDeArrastar
@@ -439,27 +443,28 @@ internal fun AtividadeMontarFrase(
                     .graphicsLayer {
                         scaleX = escala
                         scaleY = escala
-                        rotationZ = c.peca.tremida.value
+                        translationX = c.peca.tremida.value * density
                     }
                     .brilhoN4(destacar, 16.dp)
+                    .festejo(naLinha)
                     .shadow(if (c.peca.arrastando) 10.dp else if (naLinha) 1.dp else 3.dp, RoundedCornerShape(16.dp))
-                    .background(
-                        when {
-                            naLinha -> Color(0xFFDFF7E7)
-                            destacar -> Color(0xFFFFF3C4)
-                            else -> Color.White
-                        },
-                        RoundedCornerShape(16.dp),
-                    )
-                    .border(
-                        3.dp,
-                        when {
+                    .ladrilho(
+                        cor = when {
                             naLinha -> Cores.Certo
                             destacar -> Cores.Estrela
                             else -> cor
                         },
-                        RoundedCornerShape(16.dp),
-                    ),
+                        raio = 16.dp,
+                        fundo = when {
+                            naLinha -> Color(0xFFDFF7E7)
+                            destacar -> Color(0xFFFFF3C4)
+                            else -> Color.White
+                        },
+                        labio = 5.dp,
+                        contorno = ContornoDoJogo,
+                        larguraContorno = 2.dp,
+                    )
+                    .padding(bottom = 4.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

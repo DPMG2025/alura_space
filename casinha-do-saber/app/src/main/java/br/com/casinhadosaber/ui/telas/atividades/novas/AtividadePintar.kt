@@ -29,12 +29,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -244,20 +246,31 @@ internal fun AtividadePintar(
                     val v = if (terminou) 0f else vaoCasa
                     val dentro = Size(size.width - v, size.height - v)
                     val topo = Offset(v / 2f, v / 2f)
-                    // casinha branca com borda clarinha
-                    drawRect(Color.White, topo, dentro)
-                    if (!terminou) drawRect(Color(0xFFD9D2E6), topo, dentro, style = Stroke(px(1.2f)))
+                    // Casinha branca de cantos redondinhos, com uma sombrinha por dentro (parece um azulejo
+                    // fundo); pronto o desenho, as casinhas viram quadrados e o desenho aparece inteiro.
+                    val canto = if (terminou) 0f else dentro.minDimension * 0.16f
+                    val forma = Path().apply { addRoundRect(RoundRect(topo.x, topo.y, topo.x + dentro.width, topo.y + dentro.height, CornerRadius(canto))) }
+                    if (terminou) {
+                        drawRect(Color.White, topo, dentro)
+                    } else {
+                        drawPath(forma, Color(0xFFE6E0F0))
+                        clipPath(forma) {
+                            drawRoundRect(Color.White, topo + Offset(px(1.5f), px(3f)), Size(dentro.width - px(1.5f), dentro.height - px(1.5f)), CornerRadius(canto))
+                        }
+                        drawPath(forma, Color(0xFFD2CAE3), style = Stroke(px(1.2f)))
+                    }
                     if (c.pintada && corCerta != null) {
                         // A tinta cresce do meio.
-                        clipRect(topo.x, topo.y, topo.x + dentro.width, topo.y + dentro.height) {
+                        clipPath(forma) {
                             drawCircle(corCerta, size.maxDimension * 0.75f * c.crescer.value, center)
+                            if (!terminou) drawRoundRect(Color.Black.copy(alpha = 0.1f), topo, Size(dentro.width, px(3f)))
                         }
                         if (!terminou) {
                             // Um brilhinho de tinta fresca.
                             drawRoundRect(Color.White.copy(alpha = 0.22f), topo + Offset(dentro.width * 0.12f, dentro.height * 0.12f), Size(dentro.width * 0.3f, dentro.height * 0.12f), CornerRadius(dentro.height * 0.06f))
                         }
                     }
-                    if (destacar) drawRect(Cores.Estrela, topo, dentro, style = Stroke(px(4f)))
+                    if (destacar) drawPath(forma, Cores.Estrela, style = Stroke(px(4f)))
                     // tinta errada escorrendo
                     val e = c.escorrer.value
                     if (e < 1f) desenharEscorrido(c.corErrada, e, topo, dentro)

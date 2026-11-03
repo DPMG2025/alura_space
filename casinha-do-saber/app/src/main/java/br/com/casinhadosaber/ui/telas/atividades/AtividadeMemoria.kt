@@ -1,8 +1,6 @@
 package br.com.casinhadosaber.ui.telas.atividades
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -234,13 +232,6 @@ private fun CartaDaMemoria(
     onToque: () -> Unit,
 ) {
     val giro by animateFloatAsState(if (virada) 1f else 0f, tween(320), label = "giro")
-    val pulo = remember { Animatable(1f) }
-    LaunchedEffect(achada) {
-        if (achada) {
-            pulo.animateTo(1.12f, tween(120))
-            pulo.animateTo(1f, spring(dampingRatio = 0.35f))
-        }
-    }
     val mostrandoFrente = giro > 0.5f
     val forma = RoundedCornerShape(18.dp)
     Box(
@@ -257,9 +248,10 @@ private fun CartaDaMemoria(
             .then(if (brilhar) Modifier.pulsando() else Modifier)
             .graphicsLayer {
                 // Vira "achatando" a carta: some de lado e volta mostrando a outra face.
-                scaleX = abs(cos(giro * PI.toFloat())).coerceAtLeast(0.02f) * pulo.value
-                scaleY = pulo.value
+                scaleX = abs(cos(giro * PI.toFloat())).coerceAtLeast(0.02f)
             }
+            // Par achado: achata, estica e solta estrelinhas.
+            .festejo(achada)
             .shadow(4.dp, forma)
             .background(
                 when {

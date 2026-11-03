@@ -3,14 +3,13 @@ package br.com.casinhadosaber.ui.telas.atividades.novas
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -51,6 +50,9 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.telas.atividades.ContornoDoJogo
+import br.com.casinhadosaber.ui.telas.atividades.festejo
+import br.com.casinhadosaber.ui.telas.atividades.ladrilho
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import br.com.casinhadosaber.ui.telas.atividades.GestoDeArrastar
@@ -223,30 +225,31 @@ internal fun AtividadeLigarPares(
                         .testTag(if (daEsquerda) "ligar_esquerda_$i" else "ligar_direita_$i")
                         .semantics { contentDescription = descricaoN2(o.visual, o.fala) }
                         .graphicsLayer {
-                            rotationZ = tremida.value
+                            translationX = tremida.value * density
                             val e = if (puxando) 1.08f else 1f
                             scaleX = e
                             scaleY = e
                         }
                         .then(if (brilha) Modifier.pulsando() else Modifier)
+                        .festejo(ligado)
                         .shadow(if (puxando) 8.dp else 3.dp, RoundedCornerShape(22.dp))
-                        .background(
-                            when {
-                                ligado -> Color(0xFFDFF7E7)
-                                brilha -> BrilhoN2
-                                else -> Color.White
-                            },
-                            RoundedCornerShape(22.dp),
-                        )
-                        .border(
-                            if (ligado || brilha) 4.dp else 3.dp,
-                            when {
+                        .ladrilho(
+                            cor = when {
                                 ligado -> corLinha ?: Cores.Certo
                                 brilha -> Cores.Estrela
                                 else -> cor.copy(alpha = 0.55f)
                             },
-                            RoundedCornerShape(22.dp),
-                        ),
+                            raio = 22.dp,
+                            fundo = when {
+                                ligado -> Color(0xFFDFF7E7)
+                                brilha -> BrilhoN2
+                                else -> Color.White
+                            },
+                            labio = 5.dp,
+                            contorno = ContornoDoJogo,
+                            larguraContorno = 2.dp,
+                        )
+                        .padding(bottom = 4.dp),
                 ) {
                     VisualN2(o.visual, ladoDp)
                 }

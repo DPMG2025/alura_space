@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -71,6 +72,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.clarear
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.telas.atividades.festejo
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import br.com.casinhadosaber.ui.telas.atividades.GestoDeArrastar
@@ -358,8 +360,10 @@ internal fun AtividadeQuebraCabeca(
                     .graphicsLayer {
                         scaleX = escala
                         scaleY = escala
-                        rotationZ = giro + p.peca.tremida.value
+                        rotationZ = giro
+                        translationX = p.peca.tremida.value * density
                     }
+                    .festejo(p.encaixada)
                     .then(if (destacar) Modifier.pulsando() else Modifier),
             ) {
                 DesenhoDaPecaN2(
@@ -445,7 +449,9 @@ private fun FiguraDoQuebraN2(figura: String, largura: Dp, altura: Dp, cor: Color
             drawOval(Color(0xFF6CC266), Offset(size.width * 0.35f, size.height * 0.86f), Size(size.width * 0.9f, size.height * 0.4f))
         }
         val figuras = figurasDe(figura)
-        val t = min(altura.value * 0.74f, largura.value * 0.74f / max(1, figuras.size))
+        // Emoji no tamanho final, sem passar de ~150 sp: acima disso os emojis de bitmap dos Androids mais
+        // antigos são esticados e ficam borrados.
+        val t = min(min(altura.value * 0.7f, largura.value * 0.7f / max(1, figuras.size)), 150f)
         Text(figura, fontSize = t.sp, lineHeight = (t * 1.12f).sp, maxLines = 1, softWrap = false)
     }
 }
@@ -466,14 +472,23 @@ private fun DesenhoDaPecaN2(
 ) {
     val r = id / q.colunas
     val c = id % q.colunas
-    val forma = remember(id, s, q.linhas, q.colunas) {
-        GenericShape { _, _ -> addPath(caminhoDaPecaN2(r, c, q.linhas, q.colunas, s, folga)) }
-    }
+    val caminho = remember(id, s, q.linhas, q.colunas) { caminhoDaPecaN2(r, c, q.linhas, q.colunas, s, folga) }
+    val forma = remember(caminho) { GenericShape { _, _ -> addPath(caminho) } }
     val densidade = LocalDensity.current
     Box(
         Modifier
             .size(caixa)
-            .then(if (elevacao > 0.dp) Modifier.shadow(elevacao, forma) else Modifier)
+            // Sombra desenhada com o próprio contorno (a sombra do sistema, num contorno com dentes e
+            // buracos, deixava triangulinhos soltos nos cantos dos dentes).
+            .then(
+                if (elevacao > 0.dp) {
+                    Modifier.drawBehind {
+                        val e = elevacao.toPx()
+                        translate(e * 0.15f, e * 0.45f) { drawPath(caminho, Color(0x30000000)) }
+                        translate(0f, e * 0.2f) { drawPath(caminho, Color(0x22000000)) }
+                    }
+                } else Modifier,
+            )
             .clip(forma)
             .background(Color.White),
     ) {
