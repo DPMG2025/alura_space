@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -40,6 +42,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -260,11 +263,12 @@ fun CantinhoDoMascote(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Text(if (livre) a.emoji else "🔒", fontSize = 30.sp)
-                                Text(
+                                // O nome encolhe até caber no cartão ("Cachecol"), sempre com folga dos dois lados.
+                                RotuloQueCabe(
                                     if (livre) a.nome.substringBefore(' ') else "${a.fasesMinimas}",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    maxLines = 1,
-                                    color = if (livre) Cores.Texto else Cores.TextoSuave,
+                                    MaterialTheme.typography.labelLarge,
+                                    if (livre) Cores.Texto else Cores.TextoSuave,
+                                    Modifier.padding(horizontal = 6.dp),
                                 )
                             }
                         }
@@ -360,4 +364,23 @@ fun FestaDoMascote(mascote: Mascote, fasesAntes: Int, fasesDepois: Int, onFechar
         }
         Confete(confete)
     }
+}
+
+/** Texto de uma linha que diminui a letra (até 60%) quando não cabe na largura, em vez de ser cortado. */
+@Composable
+private fun RotuloQueCabe(texto: String, estilo: TextStyle, cor: Color, modifier: Modifier = Modifier) {
+    var escala by remember(texto, estilo) { mutableFloatStateOf(1f) }
+    var pronto by remember(texto, estilo) { mutableStateOf(false) }
+    Text(
+        texto,
+        style = estilo.copy(fontSize = estilo.fontSize * escala),
+        color = cor,
+        maxLines = 1,
+        softWrap = false,
+        textAlign = TextAlign.Center,
+        modifier = modifier.drawWithContent { if (pronto) drawContent() },
+        onTextLayout = { r ->
+            if (r.didOverflowWidth && escala > 0.6f) escala *= 0.9f else pronto = true
+        },
+    )
 }

@@ -44,6 +44,16 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import br.com.casinhadosaber.ui.TOQUE_MINIMO
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -95,7 +105,6 @@ import br.com.casinhadosaber.dominio.nomearMascote
 import br.com.casinhadosaber.dominio.presentesGanhos
 import br.com.casinhadosaber.dominio.receberPresenteDoEvento
 import br.com.casinhadosaber.dominio.vestirMascote
-import br.com.casinhadosaber.ui.componentes.DecoracaoDoEvento
 import br.com.casinhadosaber.ui.componentes.MascoteAnimado
 import br.com.casinhadosaber.ui.componentes.PrateleiraDePresentes
 import androidx.compose.ui.platform.testTag
@@ -554,6 +563,7 @@ fun TelaCasa(
                             narrador.falar(frases.random())
                         },
                         onMoverCrianca = { pos: Posicao -> onAtualizar { it.copy(posicaoCrianca = pos) } },
+                        evento = evento?.tipo,
                     )
                 }
                 if (areasProntas.isEmpty()) {
@@ -572,6 +582,7 @@ fun TelaCasa(
                                 noite = noite,
                                 construindo = areaNova == area.id,
                                 destaqueId = destaque,
+                                evento = evento?.tipo,
                                 onTocarItem = { item -> tocarNoItem(item) },
                                 onMoverItem = { item, pos -> onAtualizar { it.colocar(item, pos) } },
                                 onGuardarItem = { item ->
@@ -583,8 +594,7 @@ fun TelaCasa(
                         }
                     }
                 }
-                // Enfeites do evento do dia, por cima da cena (sem pegar os toques).
-                evento?.let { DecoracaoDoEvento(it.tipo, Modifier.clip(RoundedCornerShape(24.dp))) }
+                // Os enfeites do evento do dia ficam dentro da cena, no fundo (atrás das coisas e dos botões).
                 // Presentes dos eventos ficam para sempre numa prateleira no alto.
                 if (areaNaTela == null) PrateleiraDePresentes(estado.presentesGanhos, Modifier.align(Alignment.TopCenter).padding(top = 14.dp))
                 // O mascote mora na casa: tocar abre o cantinho dele (enfeites e quanto falta para crescer).
@@ -592,15 +602,20 @@ fun TelaCasa(
                     Box(
                         Modifier
                             .align(Alignment.BottomStart)
-                            .padding(start = 2.dp, bottom = 2.dp)
-                            .size(84.dp)
+                            .padding(start = 6.dp, bottom = 6.dp)
+                            .size(80.dp)
+                            .shadow(4.dp, CircleShape)
+                            .background(Color.White, CircleShape)
+                            .border(3.dp, Color(0xFFFFE08A), CircleShape)
+                            .clip(CircleShape)
                             .testTag("mascote_na_casa")
                             .clickable {
                                 sons.piu(1)
                                 noCantinho = true
                             },
+                        contentAlignment = Alignment.BottomCenter,
                     ) {
-                        MascoteAnimado(especie, Crescimento.estagio(estado.fasesVencidas), Modifier.size(84.dp), estado.mascote.acessorioEmUso, estado.mascote.nomeParaMostrar)
+                        MascoteAnimado(especie, Crescimento.estagio(estado.fasesVencidas), Modifier.size(74.dp), estado.mascote.acessorioEmUso, estado.mascote.nomeParaMostrar)
                     }
                 }
                 presenteDoEvento?.let { p ->
@@ -737,6 +752,7 @@ private fun Bau(
     Column(
         modifier
             .background(Brush.verticalGradient(listOf(Cores.MadeiraClara, Cores.Madeira)), forma)
+            .veiosDeMadeira(forma)
             .border(4.dp, Color(0xFF8E5A34), forma)
             .padding(top = 8.dp, bottom = 14.dp),
     ) {
@@ -806,8 +822,10 @@ private fun Bau(
                     Box(
                         Modifier
                             .size(80.dp)
+                            .shadow(3.dp, RoundedCornerShape(20.dp))
                             .clip(RoundedCornerShape(20.dp))
-                            .background(Color(0x33FFFFFF))
+                            .background(Brush.verticalGradient(listOf(Color(0xFFFFF4DC), Color(0xFFF1DDBB))))
+                            .border(3.dp, Color(0xFFC8955E), RoundedCornerShape(20.dp))
                             .semantics { contentDescription = "Próximo presente: ${proximo.nome}. Jogue para ganhar." }
                             .clickable {
                                 sons.toque()
@@ -818,8 +836,29 @@ private fun Bau(
                             },
                         contentAlignment = Alignment.Center,
                     ) {
-                        IconeDoItem(proximo, 56.dp, Modifier.graphicsLayer { alpha = 0.35f })
-                        Text("🔒", fontSize = 24.sp, modifier = Modifier.align(Alignment.BottomEnd))
+                        // Silhueta: o desenho do presente pintado de uma cor só (dá para adivinhar o que é).
+                        IconeDoItem(
+                            proximo,
+                            54.dp,
+                            Modifier
+                                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                                .drawWithContent {
+                                    drawContent()
+                                    drawRect(Color(0xFF8A6342), blendMode = BlendMode.SrcIn)
+                                },
+                        )
+                        Box(
+                            Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(3.dp)
+                                .size(30.dp)
+                                .shadow(2.dp, CircleShape)
+                                .background(Color.White, CircleShape)
+                                .border(2.dp, Cores.Estrela, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("🔒", fontSize = 15.sp)
+                        }
                     }
                 } else {
                     // Casa completa: o troféu é um botão que comemora (sozinho ele não dizia nada).
@@ -1060,8 +1099,8 @@ private fun Aba(texto: String, descricao: String, selecionada: Boolean, onClick:
         modifier = Modifier
             .heightIn(min = TOQUE_MINIMO)
             .clip(RoundedCornerShape(50))
-            .background(if (selecionada) Cores.Estrela else Color.White.copy(alpha = 0.4f))
-            .border(if (selecionada) 3.dp else 0.dp, if (selecionada) Color(0xFFE0A800) else Color.Transparent, RoundedCornerShape(50))
+            .background(if (selecionada) Cores.Estrela else Color(0xFFFFF6E3))
+            .border(if (selecionada) 3.dp else 2.dp, if (selecionada) Color(0xFFE0A800) else Color(0xFFD9B184), RoundedCornerShape(50))
             .semantics { contentDescription = descricao }
             .clickable(onClick = onClick)
             .wrapContentHeight(Alignment.CenterVertically)
@@ -1164,6 +1203,47 @@ private fun LugaresDaCasa(estado: EstadoJogo, areas: List<AreaDaCasa>, paginaAtu
                         .padding(horizontal = 14.dp, vertical = 4.dp),
                 )
             }
+        }
+    }
+}
+
+/**
+ * Veios de madeira e chanfro por dentro do painel do baú: linhas onduladas bem suaves, um brilho no alto e uma
+ * sombra embaixo. Montado uma vez por tamanho (drawWithCache), recortado na [forma] do painel.
+ */
+private fun Modifier.veiosDeMadeira(forma: androidx.compose.ui.graphics.Shape): Modifier = drawWithCache {
+    val contorno = Path().apply { addOutline(forma.createOutline(size, layoutDirection, this@drawWithCache)) }
+    val passo = 14.dp.toPx()
+    val veios = Path()
+    var y = passo * 0.6f
+    var k = 0
+    while (y < size.height) {
+        val amplitude = passo * (0.18f + 0.1f * (k % 3))
+        val onda = size.width / (2.5f + (k % 4))
+        veios.moveTo(0f, y)
+        var x = 0f
+        while (x < size.width) {
+            veios.quadraticTo(x + onda / 2f, y + if ((x / onda).toInt() % 2 == 0) amplitude else -amplitude, x + onda, y)
+            x += onda
+        }
+        y += passo * (0.8f + 0.25f * ((k * 7) % 3))
+        k++
+    }
+    // Nós da madeira, em lugares fixos.
+    val nos = listOf(0.18f to 0.55f, 0.72f to 0.3f, 0.5f to 0.85f).map { (u, v) -> Offset(size.width * u, size.height * v) }
+    val traco = androidx.compose.ui.graphics.drawscope.Stroke(1.2.dp.toPx())
+    val chanfro = 3.dp.toPx()
+    val brilho = Brush.verticalGradient(listOf(Color(0x40FFFFFF), Color.Transparent), startY = 0f, endY = chanfro * 4f)
+    val sombra = Brush.verticalGradient(listOf(Color.Transparent, Color(0x30000000)), startY = size.height - chanfro * 5f, endY = size.height)
+    onDrawBehind {
+        clipPath(contorno) {
+            drawPath(veios, Color(0x1A5A3414), style = traco)
+            for (n in nos) {
+                drawOval(Color(0x1A5A3414), Offset(n.x - passo * 0.7f, n.y - passo * 0.25f), Size(passo * 1.4f, passo * 0.5f), style = traco)
+                drawOval(Color(0x145A3414), Offset(n.x - passo * 0.35f, n.y - passo * 0.12f), Size(passo * 0.7f, passo * 0.24f))
+            }
+            drawRect(brilho, size = Size(size.width, chanfro * 4f))
+            drawRect(sombra, topLeft = Offset(0f, size.height - chanfro * 5f), size = Size(size.width, chanfro * 5f))
         }
     }
 }
