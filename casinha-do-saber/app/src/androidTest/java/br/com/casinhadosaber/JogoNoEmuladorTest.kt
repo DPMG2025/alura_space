@@ -172,9 +172,9 @@ class JogoNoEmuladorTest {
     }
 
     /** Cesta de contar ("Coloque N na cesta" e tocar no certinho) ou de classificar (todas as do grupo). */
-    private fun fazerCesta() {
+    private fun fazerCesta(alvoDado: Int? = null) {
         avancar(500)
-        val alvo = Regex("""Coloque (\d+) na cesta""").find(textoDaInstrucao())?.groupValues?.get(1)?.toInt()
+        val alvo = alvoDado ?: Regex("""Coloque (\d+) na cesta""").find(textoDaInstrucao())?.groupValues?.get(1)?.toInt()
         val total = regra.onAllNodes(hasTestTag("figura_certa")).fetchSemanticsNodes().size
         val quantas = alvo ?: total
         var postas = 0
@@ -419,6 +419,12 @@ class JogoNoEmuladorTest {
                 tocarNo("robo_play", 1_000)
             }
             is MontarFrase -> for (k in a.palavras.indices) arrastarAte("frase_certa_$k", "frase_lugar_$k")
+            // Cesta de contar com conta ("Reparta 8 entre 4"): quantas pôr vem da atividade, não do texto.
+            is Atividade.Cesta -> {
+                regra.waitUntilAtLeastOneExists(hasTestTag("figura_certa"), 10_000)
+                fazerCesta(if (a.classificar) null else a.alvo)
+                return "cesta"
+            }
             // O que traçar vem da atividade ("Trace o algarismo das dezenas de 62" não diz o algarismo).
             is Atividade.Tracar -> {
                 regra.waitUntilAtLeastOneExists(hasTestTag("area_tracar"), 10_000)
