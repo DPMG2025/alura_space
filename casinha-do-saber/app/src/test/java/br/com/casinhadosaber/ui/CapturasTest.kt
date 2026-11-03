@@ -6,8 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
@@ -233,7 +231,10 @@ class CapturasTest {
             }
         }
         regra.mainClock.advanceTimeBy(700)
-        val img = regra.onRoot().captureToImage().asAndroidBitmap()
+        // Mesma captura das outras telas (Roborazzi); depois lê os pixels do arquivo.
+        val arquivo = "build/outputs/roborazzi/23_teste_chuva_fora_de_casa.png"
+        regra.onRoot().captureRoboImage(arquivo)
+        val img = android.graphics.BitmapFactory.decodeFile(java.io.File(arquivo).absolutePath)
         val w = img.width / 3
         val h = img.height
         // Paredes da casa: x de 10% a 90%, y de 30% a 78% (com margem para o contorno).
