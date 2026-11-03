@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import br.com.casinhadosaber.audio.Narrador
@@ -144,6 +147,45 @@ class CapturasTest {
 
     @Test fun jogoFacilitado() = capturar("17b_jogo_facilitado") {
         TelaJogo(gerador.fases(Trilha.MATEMATICA)[3], menina, {}, { }, facilitada = true)
+    }
+
+    @Test fun loja() = capturar("18_loja") {
+        val e = estado(30, 30).copy(moedas = 14, comprados = setOf("telhado1", "visitante🐰"), corTelhado = 1, visitantes = setOf("🐰"))
+        TelaCasa(e, {}, {}, {}, lojaInicial = true)
+    }
+
+    @Test fun chapeus() = capturar("19_chapeus") {
+        androidx.compose.foundation.layout.Column(Modifier.fillMaxSize().padding(top = 60.dp)) {
+            for (linha in listOf(listOf("👑", "🧢"), listOf("🎩", "🌸"))) {
+                androidx.compose.foundation.layout.Row {
+                    for ((i, chapeu) in linha.withIndex()) {
+                        br.com.casinhadosaber.ui.componentes.Crianca(
+                            (if (i == 0) menina else menino).copy(chapeu = chapeu),
+                            Modifier.height(220.dp).padding(24.dp),
+                        )
+                        br.com.casinhadosaber.ui.componentes.Crianca(
+                            (if (i == 0) menino else menina).copy(chapeu = chapeu),
+                            Modifier.height(220.dp).padding(24.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    @Test fun chuva() = capturar("20_chuva") {
+        TelaCasa(estado(40, 40).copy(clima = 1), {}, {}, {})
+    }
+
+    @Test fun neve() = capturar("20b_neve") {
+        TelaCasa(estado(40, 40).copy(clima = 2), {}, {}, {}, noiteInicial = true)
+    }
+
+    @Test fun enfeites() = capturar("21_papel_de_parede_e_visitantes") {
+        TelaCasa(
+            estado(40, 40).copy(papelDeParede = 2, corPorta = 1, corTelhado = 2, visitantes = setOf("🦔", "🦊", "🐢")),
+            {}, {}, {},
+        )
     }
 
     @Test fun pais() = capturar("15_area_dos_pais") {

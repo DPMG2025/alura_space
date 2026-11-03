@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -37,7 +38,7 @@ import kotlin.math.sin
 /** Proporção largura/altura do desenho da criança. */
 const val PROPORCAO_CRIANCA = 0.62f
 
-enum class Humor { FELIZ, PENSANDO, SURPRESO }
+enum class Humor { FELIZ, PENSANDO, SURPRESO, TORCENDO }
 
 /**
  * Desenho da criança (menino ou menina), feito com formas simples para ficar leve
@@ -49,6 +50,8 @@ fun Crianca(
     modifier: Modifier = Modifier,
     acenando: Boolean = false,
     humor: Humor = Humor.FELIZ,
+    /** Mexe a boca, como se estivesse falando (junto com o narrador). */
+    falando: Boolean = false,
 ) {
     val transicao = rememberInfiniteTransition(label = "crianca")
     val balanco by transicao.animateFloat(
@@ -63,14 +66,39 @@ fun Crianca(
         animationSpec = infiniteRepeatable(tween(3800, easing = LinearEasing)),
         label = "piscar",
     )
+    val respiro by transicao.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.025f,
+        animationSpec = infiniteRepeatable(tween(1400), RepeatMode.Reverse),
+        label = "respiro",
+    )
+    val boca by transicao.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(160), RepeatMode.Reverse),
+        label = "boca",
+    )
     val descricao = if (perfil.genero == Genero.MENINA) "Menina" else "Menino"
     BoxWithConstraints(
         modifier
             .aspectRatio(PROPORCAO_CRIANCA)
             .semantics { contentDescription = perfil.nome.ifBlank { descricao } },
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            desenharCrianca(perfil, if (acenando) balanco else null, olhosFechados = piscar > 0.96f, humor = humor)
+        Canvas(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    // Respiração: o corpo sobe e desce bem de leve, a partir dos pés.
+                    scaleY = respiro
+                    transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
+                },
+        ) {
+            desenharCrianca(
+                perfil,
+                if (acenando) balanco else null,
+                olhosFechados = piscar > 0.96f,
+                humor = if (falando && boca > 0.5f) Humor.SURPRESO else humor,
+            )
         }
         // Chapéu comprado na loja, em cima da cabeça.
         if (perfil.chapeu.isNotEmpty()) {
@@ -115,9 +143,16 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
 
     // braços (o direito pode acenar)
     val ombroE = p(0.2f, 0.5f)
-    val maoE = p(0.06f, 0.7f)
+    val torcendo = humor == Humor.TORCENDO
+    val pensando = humor == Humor.PENSANDO
+    // Torcendo: os dois punhos para cima. Pensando: a mão no queixo.
+    val maoE = if (torcendo) p(0.0f, 0.3f) else p(0.06f, 0.7f)
     val ombroD = p(0.8f, 0.5f)
-    val maoD = if (aceno != null) {
+    val maoD = if (torcendo) {
+        p(1.0f, 0.3f)
+    } else if (pensando) {
+        p(0.62f, 0.42f)
+    } else if (aceno != null) {
         val ang = (-60f + aceno * 18f) * PI.toFloat() / 180f
         val comp = h * 0.24f
         Offset(ombroD.x + cos(ang) * comp, ombroD.y + sin(ang) * comp)
@@ -196,7 +231,7 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
     val boca = Color(0xFF7A3B2E)
     val bocaCentro = Offset(centro.x, centro.y + r * 0.38f)
     when (humor) {
-        Humor.FELIZ -> drawArc(
+        Humor.FELIZ, Humor.TORCENDO -> drawArc(
             boca, startAngle = 27f, sweepAngle = 126f, useCenter = false,
             topLeft = Offset(bocaCentro.x - r * 0.22f, bocaCentro.y - r * 0.22f), size = Size(r * 0.44f, r * 0.44f),
             style = Stroke(width = r * 0.08f, cap = StrokeCap.Round),

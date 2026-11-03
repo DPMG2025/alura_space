@@ -2,6 +2,10 @@ package br.com.casinhadosaber.audio
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import android.speech.tts.Voice
 import br.com.casinhadosaber.dominio.Idioma
 import br.com.casinhadosaber.dominio.Trecho
@@ -25,6 +29,15 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
     private var inglesDisponivel = true
     var ativo = true
 
+    /** Está falando agora? (a criança personagem mexe a boca junto) */
+    var falando by mutableStateOf(false)
+        private set
+    @Volatile private var ultimaFala = ""
+
+    /** Descrição das vozes escolhidas (para o relatório do teste no emulador). */
+    fun descricaoDasVozes(): String =
+        "pt: ${vozPt?.name} (qualidade ${vozPt?.quality}); en: ${vozEn?.name} (qualidade ${vozEn?.quality})"
+
     /** Há voz em português e em inglês de boa qualidade? (a área dos pais sugere instalar se não houver) */
     var vozesBoas = true
         private set
@@ -37,6 +50,13 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
         vozPt = melhorVoz(portugues)
         vozEn = melhorVoz(Locale.US)
         vozesBoas = (vozPt?.quality ?: 0) >= Voice.QUALITY_HIGH && (vozEn?.quality ?: 0) >= Voice.QUALITY_HIGH
+        tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(utteranceId: String?) { falando = true }
+            override fun onDone(utteranceId: String?) { if (utteranceId == ultimaFala) falando = false }
+            @Deprecated("Deprecated in Java")
+            override fun onError(utteranceId: String?) { falando = false }
+            override fun onStop(utteranceId: String?, interrupted: Boolean) { falando = false }
+        })
         pendente?.let { falar(it) }
         pendente = null
     }
@@ -65,7 +85,9 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
             for (frase in frases) {
                 if (!primeiro) tts.playSilentUtterance(if (ingles) 300L else 220L, TextToSpeech.QUEUE_ADD, null)
                 configurar(ingles)
-                tts.speak(frase, if (primeiro) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, null, "fala-${System.nanoTime()}")
+                val id = "fala-${System.nanoTime()}"
+                ultimaFala = id
+                tts.speak(frase, if (primeiro) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, null, id)
                 primeiro = false
             }
         }

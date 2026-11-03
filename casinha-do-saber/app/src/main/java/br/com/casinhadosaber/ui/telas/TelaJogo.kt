@@ -198,7 +198,7 @@ fun TelaJogo(
                     .padding(top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                perfil?.let { CriancaQuePula(it, pulo, acertou, humor) }
+                if (pergunta.cena != Cena.Nenhuma) perfil?.let { CriancaQuePula(it, pulo, acertou, humor, falando = narrador.falando) }
                 Spacer(Modifier.width(8.dp))
                 BalaoDeFala(
                     "🔊 " + pergunta.instrucao,
@@ -236,9 +236,15 @@ fun TelaJogo(
                                 .weight(1f)
                                 .fillMaxWidth()
                                 .padding(top = 12.dp),
-                            contentAlignment = Alignment.BottomCenter,
                         ) {
-                            opcoes(minOf(maxHeight * 0.85f, 320.dp))
+                            val alturaRespostas = minOf(maxHeight * 0.6f, 420.dp)
+                            Column(Modifier.fillMaxSize()) {
+                                // Espaço de cima: a criança "conta" a pergunta, grandona, mexendo a boca.
+                                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                    perfil?.let { CriancaQuePula(it, pulo, acertou, humor, falando = narrador.falando, altura = 150.dp) }
+                                }
+                                opcoes(alturaRespostas)
+                            }
                         }
                     } else {
                         Box(
@@ -260,7 +266,14 @@ fun TelaJogo(
 }
 
 @Composable
-private fun CriancaQuePula(perfil: Perfil, pulo: Int, acertou: Boolean, humor: Humor) {
+private fun CriancaQuePula(
+    perfil: Perfil,
+    pulo: Int,
+    acertou: Boolean,
+    humor: Humor,
+    falando: Boolean = false,
+    altura: androidx.compose.ui.unit.Dp = 96.dp,
+) {
     val salto = remember { Animatable(0f) }
     LaunchedEffect(pulo) {
         if (pulo > 0) {
@@ -271,10 +284,11 @@ private fun CriancaQuePula(perfil: Perfil, pulo: Int, acertou: Boolean, humor: H
     Crianca(
         perfil,
         Modifier
-            .height(96.dp)
+            .height(altura)
             .graphicsLayer { translationY = salto.value * density },
         acenando = acertou,
         humor = humor,
+        falando = falando && !acertou,
     )
 }
 
@@ -560,8 +574,8 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui
             if (figuras.size > 1 || comoGrupo) {
                 // Todas as quantidades na mesma grade de 2 colunas, com o mesmo tamanho de casinha:
                 // "mais" sempre parece maior, sem a altura enganar.
-                BoxWithConstraints(contentAlignment = Alignment.Center) {
-                    val celula = minOf(maxWidth / 2.3f, altura / 3.6f, 72.dp)
+                BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                    val celula = minOf(maxWidth / 2.4f, altura / 3.4f, 72.dp)
                     Column(horizontalAlignment = Alignment.Start) {
                         for (linha in figuras.chunked(2)) {
                             Row {

@@ -133,10 +133,14 @@ class EstadoJogoTest {
     fun `moedinhas vem de acertos de primeira com limite por dia`() {
         val fase = g.fases(Trilha.MATEMATICA)[0]
         var e = EstadoJogo()
-        repeat(7) { e = e.registrarPartida(fase, 5, 5, dia = 100).estado }
+        // Fase nova vale o dobro: 5 acertos = 10 moedas.
+        e = e.registrarPartida(fase, 5, 5, dia = 100, resultados = List(5) { true }).estado
+        assertEquals(10, e.moedas)
+        repeat(10) { e = e.registrarPartida(fase, 5, 5, dia = 100, resultados = List(5) { true }).estado }
         assertEquals(EstadoJogo.MOEDAS_POR_DIA, e.moedas)
+        // Fase já dominada (100% de primeira) vale metade no dia seguinte: 4 acertos = 2 moedas.
         e = e.registrarPartida(fase, 4, 5, dia = 101).estado
-        assertEquals(EstadoJogo.MOEDAS_POR_DIA + 4, e.moedas)
+        assertEquals(EstadoJogo.MOEDAS_POR_DIA + 2, e.moedas)
     }
 
     @Test

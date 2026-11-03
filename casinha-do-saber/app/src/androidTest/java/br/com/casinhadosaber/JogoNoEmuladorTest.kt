@@ -189,6 +189,13 @@ class JogoNoEmuladorTest {
             }
         }
         tts.shutdown()
+        // Qual voz o narrador do app escolheu (a de melhor qualidade instalada).
+        lateinit var narrador: br.com.casinhadosaber.audio.Narrador
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { narrador = br.com.casinhadosaber.audio.Narrador(contexto) }
+        Thread.sleep(4_000)
+        relatorio.appendLine("Narrador do app: ${narrador.descricaoDasVozes()}")
+        relatorio.appendLine("Vozes de boa qualidade: ${narrador.vozesBoas}")
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { narrador.desligar() }
         armazenamento.openOutputFile("vozes.txt").use { it.write(relatorio.toString().toByteArray()) }
         // Não falha o teste: o relatório só registra o que o aparelho tem.
     }

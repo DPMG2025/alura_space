@@ -103,7 +103,7 @@ fun TelaQuase(
             Text("🔒", fontSize = 36.sp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp))
         }
         Spacer(Modifier.height(12.dp))
-        perfil?.let { Crianca(it, Modifier.height(130.dp), acenando = true, humor = Humor.FELIZ) }
+        perfil?.let { Crianca(it, Modifier.height(130.dp), humor = Humor.TORCENDO) }
         Spacer(Modifier.height(20.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             BotaoRedondo("🗺️", "Voltar para o caminho", onVoltar, tamanho = 60.dp)

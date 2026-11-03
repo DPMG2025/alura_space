@@ -98,8 +98,16 @@ data class EstadoJogo(
     fun registrarPartida(fase: Fase, acertos: Int, total: Int, dia: Long = 0, resultados: List<Boolean> = emptyList()): ResultadoPartida {
         // Moedinhas: uma por acerto de primeira, até MOEDAS_POR_DIA por dia (incentiva voltar, sem maratona).
         val hojeJa = if (diaDasMoedas == dia) moedasHoje else 0
-        val ganhas = acertos.coerceAtMost((MOEDAS_POR_DIA - hojeJa).coerceAtLeast(0))
         val k0 = chave(fase.trilha, fase.numero)
+        // Praticar o que ainda é difícil (ou a fase mais nova) vale o dobro; repetir o que já domina vale metade.
+        val precisaoAntes = precisaoDaFase(k0)
+        val maisNova = estrelas[k0] == null
+        val porAcerto = when {
+            maisNova || (precisaoAntes != null && precisaoAntes < 70) -> 2.0
+            precisaoAntes != null && precisaoAntes >= 90 && (historico[k0]?.length ?: 0) >= 5 -> 0.5
+            else -> 1.0
+        }
+        val ganhas = (acertos * porAcerto).toInt().coerceAtMost((MOEDAS_POR_DIA - hojeJa).coerceAtLeast(0))
         val novoHistorico = ((historico[k0] ?: "") + resultados.joinToString("") { if (it) "1" else "0" }).takeLast(10)
         val comEstatistica = copy(
             respondidas = respondidas + (fase.trilha to (respondidas[fase.trilha] ?: 0) + total),

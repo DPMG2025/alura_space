@@ -238,22 +238,35 @@ private fun BolinhaDaFase(
                         Text(fase.emoji, style = MaterialTheme.typography.headlineLarge)
                         Text("${fase.numero + 1}", style = MaterialTheme.typography.titleMedium, color = corEscura)
                     }
+                    if (estrelas > 0) {
+                        // Fase vencida: um "certinho" na cor do caminho.
+                        Box(
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .size(26.dp)
+                                .background(cor, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) { Text("✔", color = Color.White, style = MaterialTheme.typography.titleMedium) }
+                    }
                 } else {
-                    Text("🔒", style = MaterialTheme.typography.headlineLarge)
+                    // Fechada: mostra o desenho da fase apagadinho e um cadeado pequeno.
+                    Text(fase.emoji, style = MaterialTheme.typography.headlineLarge, modifier = Modifier.graphicsLayer { alpha = 0.3f })
+                    Text("🔒", style = MaterialTheme.typography.titleLarge, modifier = Modifier.align(Alignment.BottomEnd))
                 }
             }
         }
-        if (estrelas > 0) {
-            FileiraDeEstrelas(estrelas, tamanho = 20.dp)
-        } else {
-            Text(
-                fase.titulo,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                color = if (liberada) Cores.Texto else Cores.TextoSuave,
-                modifier = Modifier.requiredWidth(140.dp),
-            )
-        }
+        // Nome da fase numa plaquinha (não se mistura com o caminho pontilhado), e as estrelas embaixo.
+        Text(
+            fase.titulo,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            color = if (liberada) Cores.Texto else Cores.TextoSuave,
+            modifier = Modifier
+                .padding(top = 2.dp)
+                .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(50))
+                .padding(horizontal = 10.dp, vertical = 2.dp),
+        )
+        if (estrelas > 0) FileiraDeEstrelas(estrelas, tamanho = 18.dp)
     }
 }

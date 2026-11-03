@@ -112,6 +112,8 @@ fun CenaDaCasa(
     destaqueId: String? = null,
     puloDaCrianca: Int = 0,
     noite: Boolean = false,
+    /** Uso interno: quem chama já desenhou o céu (modo de preencher a altura). */
+    semCeu: Boolean = false,
     /** Ocupa toda a altura dada: a casa fica embaixo e o céu continua para cima (sem faixas vazias). */
     preencherAltura: Boolean = false,
     onTocarItem: (ItemCasa) -> Unit = {},
@@ -146,14 +148,15 @@ fun CenaDaCasa(
             val ceuExtra = sobra * 0.35f
             val corteDoChao = alturaCena * 0.22f + sobra * 0.65f
             Canvas(Modifier.fillMaxSize()) {
-                val ceu = if (noite) listOf(Color(0xFF0F1838), Color(0xFF16204A)) else listOf(Color(0xFF5DB6F5), Color(0xFF7EC8FF))
-                val ceuInteiro = ceu + if (noite) Color(0xFF3B4C8C) else Color(0xFFCDEBFF)
+                val ceuInteiro = if (noite) listOf(Color(0xFF16204A), Color(0xFF3B4C8C)) else listOf(Color(0xFF7EC8FF), Color(0xFFCDEBFF))
                 drawRect(Brush.verticalGradient(ceuInteiro, endY = size.height - corteDoChao.toPx()))
                 // Grama: dos lados da casa e o jardim que continua para baixo, com tufinhos e flores.
                 val chao = if (noite) listOf(Color(0xFF3F7A45), Color(0xFF2F5E35)) else listOf(Color(0xFF7CC56B), Color(0xFF4F9B44))
                 val topoChao = size.height - corteDoChao.toPx()
                 drawRect(Brush.verticalGradient(chao, startY = topoChao, endY = size.height), Offset(0f, topoChao), Size(size.width, corteDoChao.toPx()))
                 val baseCena = ceuExtra.toPx() + alturaCena.toPx()
+                val altoJardim = size.height - baseCena
+                if (altoJardim > 40f) jardimDeBaixo(baseCena, altoJardim, noite, estado.temEstrutura(Estrutura.CAMINHO), estado.temEstrutura(Estrutura.TERRENO))
                 for (i in 0 until 24) {
                     val x = ((i * 0.137f + 0.03f) % 1f) * size.width
                     val y = baseCena + ((i * 0.29f) % 1f) * (size.height - baseCena)
@@ -168,7 +171,7 @@ fun CenaDaCasa(
                 }
             }
             CenaDaCasa(
-                estado, Modifier.padding(top = ceuExtra).height(alturaCena), interativa, pintando, novaEstrutura, destaqueId, puloDaCrianca, noite, false,
+                estado, Modifier.padding(top = ceuExtra).height(alturaCena), interativa, pintando, novaEstrutura, destaqueId, puloDaCrianca, noite, true, false,
                 onTocarItem, onMoverItem, onGuardarItem, onRecusarItem, onPintar, onTocarCrianca, onMoverCrianca,
             )
         }
@@ -197,7 +200,7 @@ fun CenaDaCasa(
                     },
                 ),
         ) {
-            desenharCasa(estado, t, novaEstrutura, construcao.value, noite)
+            desenharCasa(estado, t, novaEstrutura, construcao.value, noite, semCeu)
         }
 
         if (!estado.temEstrutura(Estrutura.TERRENO)) {
@@ -605,7 +608,7 @@ private val CorMoldura = Color(0xFFE8C9A0)
 private val CorVidro = Color(0xFFA9E1FF)
 private val CorLuz = Color(0xFFFFE08A)
 
-private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, progresso: Float, noite: Boolean) {
+private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, progresso: Float, noite: Boolean, semCeu: Boolean = false) {
     val W = size.width
     val H = size.height
     fun X(v: Float) = v * W
@@ -623,7 +626,7 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
 
     // céu
     val ceu = if (noite) listOf(Color(0xFF16204A), Color(0xFF3B4C8C)) else listOf(Color(0xFF7EC8FF), Color(0xFFCDEBFF))
-    drawRect(Brush.verticalGradient(ceu, endY = Y(0.8f)))
+    if (!semCeu) drawRect(Brush.verticalGradient(ceu, endY = Y(0.8f)))
     if (noite) {
         for (i in 0 until 28) {
             val x = ((i * 0.137f + 0.05f) % 1f)
@@ -635,8 +638,9 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
     // Nuvens e passarinhos de enfeite, sempre passeando (a cena nunca fica parada).
     if (!noite) {
         for (k in 0 until 2) {
-            val x = ((t * 0.5f + k * 0.55f) % 1.3f) - 0.15f
-            nuvemDeFundo(X(x), Y(0.05f + k * 0.07f), X(0.09f))
+            // Passeiam só pela metade direita do céu (o sol e o arco-íris ficam à esquerda).
+            val x = 0.38f + ((t * 0.3f + k * 0.5f) % 1f) * 0.62f
+            nuvemDeFundo(X(x), Y(0.04f + k * 0.06f), X(0.06f))
         }
         for (k in 0 until 3) {
             val bx = X(((t + k * 0.31f) % 1f) * 1.1f - 0.05f)
@@ -826,11 +830,56 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
     }
 }
 
+/** Nuvem feita de um único caminho (as bolhas se juntam sem marcas de sobreposição). */
 private fun DrawScope.nuvemDeFundo(x: Float, y: Float, r: Float) {
-    val c = Color.White.copy(alpha = 0.75f)
-    drawCircle(c, r * 0.6f, Offset(x, y))
-    drawCircle(c, r * 0.8f, Offset(x + r * 0.7f, y - r * 0.2f))
-    drawCircle(c, r * 0.6f, Offset(x + r * 1.4f, y))
+    val nuvem = Path().apply {
+        addOval(Rect(Offset(x, y), r * 0.6f))
+        addOval(Rect(Offset(x + r * 0.7f, y - r * 0.2f), r * 0.8f))
+        addOval(Rect(Offset(x + r * 1.4f, y), r * 0.6f))
+        addRoundRect(RoundRect(Rect(x, y - r * 0.1f, x + r * 1.4f, y + r * 0.6f), CornerRadius(r * 0.3f)))
+    }
+    drawPath(nuvem, Color.White.copy(alpha = 0.8f))
+}
+
+/** O pedaço de jardim que aparece em telas altas: canteiro, arbustos, cogumelos e o caminho continuando. */
+private fun DrawScope.jardimDeBaixo(topo: Float, alto: Float, noite: Boolean, temCaminho: Boolean, temGrama: Boolean) {
+    if (!temGrama) return
+    val w = size.width
+    val folha = if (noite) Color(0xFF2E5F34) else Color(0xFF4FA046)
+    // arbustos nos cantos
+    for ((cx, r) in listOf(0.06f to 0.07f, 0.94f to 0.08f)) {
+        val c = Offset(w * cx, topo + alto * 0.45f)
+        drawCircle(folha, w * r, c)
+        drawCircle(folha, w * r * 0.8f, c + Offset(w * r * 0.8f * (if (cx < 0.5f) 1f else -1f), w * r * 0.2f))
+    }
+    // canteiro com flores
+    val canteiro = Rect(Offset(w * 0.55f, topo + alto * 0.3f), Size(w * 0.3f, alto * 0.4f))
+    drawRoundRect(if (noite) Color(0xFF5A4232) else Color(0xFF8D5A3B), canteiro.topLeft, canteiro.size, CornerRadius(12f))
+    for (i in 0 until 6) {
+        val fx = canteiro.left + canteiro.width * (0.12f + i * 0.15f)
+        val fy = canteiro.top + canteiro.height * 0.45f
+        drawLine(folha, Offset(fx, fy), Offset(fx, fy + canteiro.height * 0.3f), 4f)
+        val corFlor = listOf(Color(0xFFFF6FAE), Color(0xFFFFD166), Color(0xFFB57BFF))[i % 3]
+        drawCircle(if (noite) escurecer(corFlor, 0.6f) else corFlor, canteiro.width * 0.045f, Offset(fx, fy))
+    }
+    // caminho de pedrinhas continuando até a borda
+    if (temCaminho) {
+        var y = topo + alto * 0.1f
+        var k = 0
+        while (y < topo + alto) {
+            val x = w * (0.30f + if (k % 2 == 0) 0.01f else -0.01f)
+            drawOval(Color(0xFFD8D2C6), Offset(x - w * 0.045f, y), Size(w * 0.09f, w * 0.04f))
+            y += w * 0.07f; k++
+        }
+    }
+    // cogumelos
+    for (cx in listOf(0.16f, 0.45f)) {
+        val base = Offset(w * cx, topo + alto * 0.75f)
+        drawRect(Color(0xFFF4E9D8), Offset(base.x - 5f, base.y - 16f), Size(10f, 16f))
+        drawArc(Color(0xFFEF476F), 180f, 180f, true, Offset(base.x - 18f, base.y - 30f), Size(36f, 28f))
+        drawCircle(Color.White, 3.5f, Offset(base.x - 6f, base.y - 22f))
+        drawCircle(Color.White, 3f, Offset(base.x + 7f, base.y - 20f))
+    }
 }
 
 /** Desenhos do papel de parede (comprados na loja): listras, bolinhas ou estrelinhas. */

@@ -84,6 +84,8 @@ fun TelaCasa(
     onVoltar: () -> Unit,
     onJogar: () -> Unit,
     noiteInicial: Boolean = false,
+    /** Abre direto na aba da loja (usado nas capturas de tela). */
+    lojaInicial: Boolean = false,
     /** Item recém ganho: entra na casa sozinho, logo que a tela abre. */
     colocarAoAbrir: String? = null,
 ) {
@@ -285,6 +287,7 @@ fun TelaCasa(
             Bau(
                 itens = bau,
                 estado = estado,
+                lojaInicial = lojaInicial,
                 onEscolher = ::colocarDoBau,
                 onJogar = onJogar,
                 onComprar = { produto ->
@@ -292,7 +295,10 @@ fun TelaCasa(
                     val novo = estado.usar(produto)
                     if (novo == null) {
                         sons.erro()
-                        narrador.falar("Faltam moedinhas! Cada acerto de primeira vale uma moedinha.")
+                        val faltam = Loja.preco(produto, estado) - estado.moedas
+                        narrador.falar(
+                            if (faltam == 1) "Falta só uma moedinha! Jogue mais um pouquinho." else "Faltam $faltam moedinhas! Cada acerto de primeira vale moedinha.",
+                        )
                     } else {
                         onAtualizar { it.usar(produto) ?: it }
                         if (!jaTinha) {
@@ -323,11 +329,12 @@ private fun preposicao(c: Comodo) = when (c) {
 private fun Bau(
     itens: List<ItemCasa>,
     estado: EstadoJogo,
+    lojaInicial: Boolean = false,
     onEscolher: (ItemCasa) -> Unit,
     onJogar: () -> Unit,
     onComprar: (Produto) -> Unit,
 ) {
-    var naLoja by remember { mutableStateOf(false) }
+    var naLoja by remember { mutableStateOf(lojaInicial) }
     Column(
         Modifier
             .fillMaxWidth()
