@@ -27,6 +27,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import br.com.casinhadosaber.ui.componentes.escurecer
+import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.tema.Raios
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.cos
@@ -37,21 +40,21 @@ import kotlin.math.sin
  * e contorno, ladrilho branco com "lábio" colorido, festejo do acerto (pulinho que achata e estica e
  * estrelinhas) e o balanço de lado do erro.
  *
- * Valores locais deste pacote. Quando os tokens comuns (Raios, Contorno) existirem em ui/tema, basta
- * trocar as constantes abaixo por eles.
+ * As constantes abaixo são apelidos dos tokens comuns de ui/tema (Raios, Cores), para as telas de
+ * atividade seguirem o mesmo desenho do resto do app.
  */
 
 /** Raio dos painéis das cenas (pescaria, caça, esconde, balões...). */
-internal val RAIO_PAINEL = 24.dp
+internal val RAIO_PAINEL = Raios.Grande
 
 /** Raio dos ladrilhos (respostas, sílabas, palavras, peças). */
-internal val RAIO_LADRILHO = 16.dp
+internal val RAIO_LADRILHO = Raios.Medio
 
 /** Contorno suave (ameixa escura, 25%), o mesmo dos painéis e ladrilhos. */
-internal val ContornoDoJogo = Color(0x403D2C5E)
+internal val ContornoDoJogo = Cores.Contorno
 
 /** Branco do brilho de cima. */
-internal val BrilhoDoJogo = Color(0x59FFFFFF)
+internal val BrilhoDoJogo = Cores.Brilho
 
 private val FormaDoPainel = RoundedCornerShape(RAIO_PAINEL)
 
@@ -95,7 +98,7 @@ internal fun Modifier.ladrilho(
 }
 
 /** Cor um pouco mais escura (para lábios e sombras). */
-internal fun maisEscura(c: Color, f: Float = 0.78f) = Color(c.red * f, c.green * f, c.blue * f, c.alpha)
+internal fun maisEscura(c: Color, f: Float = 0.78f) = escurecer(c, f)
 
 // ------------------------------------------------------------------------------------- festejo do acerto
 

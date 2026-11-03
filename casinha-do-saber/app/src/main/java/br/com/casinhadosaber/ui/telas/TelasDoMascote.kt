@@ -151,7 +151,7 @@ fun EscolhaDoMascote(onEscolher: (EspecieMascote, String) -> Unit) {
                         onEscolher(e, nome)
                     },
                     habilitado = escolhida != null,
-                    cor = if (escolhida != null) Cores.Certo else Color(0xFFBDBDBD),
+                    cor = Cores.Certo,
                     descricao = "Pronto",
                     modifier = Modifier
                         .fillMaxWidth()
