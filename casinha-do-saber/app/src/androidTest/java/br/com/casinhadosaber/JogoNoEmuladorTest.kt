@@ -84,6 +84,8 @@ class JogoNoEmuladorTest {
     @Before
     fun limpar() {
         prefs.edit().clear().commit()
+        // Lista de crianças, som, música e limite do aparelho: uma criança só (a 1, no arquivo acima), sem "Quem vai jogar?".
+        contexto.getSharedPreferences("casinha_aparelho", Context.MODE_PRIVATE).edit().clear().commit()
         PartidaNaTela.limpar()
     }
 

@@ -9,9 +9,9 @@ O Casinha do Saber é um app educativo para crianças de 4 a 6 anos. Ele foi fei
 3. **Sem anúncios e sem compras.** As moedinhas do jogo são ganhas nas fases e não têm valor em dinheiro.
 4. **Sem ID de publicidade.** O app não usa o ID de publicidade do Android.
 5. **Sem microfone, sem câmera, sem localização.** O app não usa o microfone nem a câmera, não grava áudio e não acessa a localização do aparelho.
-6. **Dados guardados só no aparelho.** O nome opcional do personagem, a aparência escolhida, as estrelas, as moedinhas, o tempo jogado e a arrumação da casa ficam salvos apenas no próprio celular ou tablet. Se o backup do Android estiver ligado na conta do responsável, esses dados podem fazer parte do backup do aparelho, sob controle do Google e do próprio responsável.
+6. **Dados guardados só no aparelho.** O nome opcional do personagem, a aparência escolhida, as estrelas, as moedinhas, o tempo jogado e a arrumação da casa ficam salvos apenas no próprio celular ou tablet. Se o backup do Android estiver ligado na conta do responsável, esses dados podem fazer parte do backup do aparelho, sob controle do Google e do próprio responsável. Na Área dos pais, o responsável pode guardar uma cópia do progresso num arquivo e escolher onde ela fica (por exemplo, Google Drive, WhatsApp ou a pasta de downloads). Esse arquivo fica com a família: o app não envia a cópia para lugar nenhum por conta própria, e ela só sai do aparelho quando o responsável escolhe.
 7. **Voz.** A narração usa o motor de "Texto para fala" instalado no aparelho, que funciona sem internet. O app só fala; ele não escuta nem grava.
-8. **Apagar os dados.** Na Área dos pais existe o botão "Apagar todo o progresso". Desinstalar o app também apaga tudo.
+8. **Apagar os dados.** Na Área dos pais existe o botão "Apagar todo o progresso" (com várias crianças no aparelho, cada uma pode ser apagada separadamente). Desinstalar o app também apaga tudo.
 9. **Crianças.** Como nenhum dado é coletado, nenhuma informação de criança é recebida, guardada ou compartilhada pelo desenvolvedor. O app segue a política de Famílias do Google Play.
 10. **Mudanças.** Se esta política mudar, a nova versão será publicada neste mesmo endereço, com a data atualizada.
 

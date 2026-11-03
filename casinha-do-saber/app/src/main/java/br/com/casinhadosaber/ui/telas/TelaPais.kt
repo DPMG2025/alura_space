@@ -86,6 +86,10 @@ fun TelaPais(
     hoje: Long = 0L,
     /** Muda o estado guardado (`Repositorio.atualizar`): desafio feito, aniversário e temas. */
     onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit = {},
+    /** Várias crianças no aparelho (adicionar, trocar, renomear, apagar). Null esconde o cartão. */
+    familia: AcoesDaFamilia? = null,
+    /** Cópia do progresso sem internet (guardar, enviar, recuperar). Null esconde o cartão. */
+    copia: AcoesDaCopia? = null,
 ) {
     var liberado by rememberSaveable { mutableStateOf(false) }
     Column(
@@ -105,7 +109,7 @@ fun TelaPais(
         if (!liberado) {
             PortaoDeAdulto(onLiberar = { liberado = true })
         } else {
-            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite, hoje, onAtualizar)
+            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite, hoje, onAtualizar, familia, copia)
         }
     }
 }
@@ -123,8 +127,11 @@ private fun Painel(
     onAlternarLimite: () -> Unit,
     hoje: Long,
     onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit,
+    familia: AcoesDaFamilia?,
+    copia: AcoesDaCopia?,
 ) {
     var confirmar by remember { mutableStateOf(false) }
+    val variasCriancas = (familia?.criancas?.size ?: 1) > 1
     val gerador = remember { GeradorDeFases() }
     // Caminhos abertos na lista de fases (nomes separados por vírgula, para sobreviver a girar a tela).
     // Começa com o caminho da fase que está sendo praticada, se houver.
@@ -134,6 +141,8 @@ private fun Painel(
     Cartao {
         Text("🔒 Sem internet • Sem anúncios • Sem coleta de dados", style = MaterialTheme.typography.titleMedium, color = Cores.Certo)
     }
+
+    familia?.let { CartaoDasCriancas(it) }
 
     val sons = LocalSons.current
     CartaoDesafioDosPais(
@@ -239,6 +248,11 @@ private fun Painel(
         habilitado = estado.perfil != null,
     )
 
+    copia?.let {
+        CartaoCopiaDoProgresso(it)
+        DialogosDaCopia(it)
+    }
+
     Cartao {
         Text("Configurações", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))
@@ -286,7 +300,7 @@ private fun Painel(
         }
         Spacer(Modifier.height(12.dp))
         BotaoFofo(onClick = { confirmar = true }, cor = Cores.Errado) {
-            Text("Apagar todo o progresso", color = Color.White, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
+            Text(if (variasCriancas) "Apagar o progresso desta criança" else "Apagar todo o progresso", color = Color.White, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
         }
     }
 
@@ -317,8 +331,8 @@ private fun Painel(
     if (confirmar) {
         AlertDialog(
             onDismissRequest = { confirmar = false },
-            title = { Text("Apagar tudo?") },
-            text = { Text("A casa, as estrelas e o personagem serão apagados. Isso não pode ser desfeito.") },
+            title = { Text(if (variasCriancas) "Apagar o progresso desta criança?" else "Apagar tudo?") },
+            text = { Text("A casa, as estrelas e o personagem" + (if (variasCriancas) " da criança que está jogando" else "") + " serão apagados. Isso não pode ser desfeito.") },
             confirmButton = { TextButton(onClick = { confirmar = false; onApagarTudo() }) { Text("Apagar", color = Cores.Errado) } },
             dismissButton = { TextButton(onClick = { confirmar = false }) { Text("Cancelar") } },
         )
