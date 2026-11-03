@@ -198,7 +198,7 @@ data class PintarPorCodigo(val colunas: Int, val casas: List<CasaDePintar>, val 
     companion object {
         /**
          * Largura máxima do desenho: num celular de 360 dp cada casinha fica com pelo menos 48 dp
-         * ((360 − 2 × 16 de margem − 20 de folga) / 6 ≈ 51 dp). Desenhos maiores crescem para baixo.
+         * ((360 − 2 × 16 de margem − 20 de folga) / 6, cerca de 51 dp). Desenhos maiores crescem para baixo.
          */
         const val MAX_COLUNAS = 6
     }
