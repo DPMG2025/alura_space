@@ -1,2 +1,2 @@
 APK release (R8) abriu e carregou dados sem falhas
-RESULTADO: FALHOU
+RESULTADO: TODOS OS TESTES PASSARAM
