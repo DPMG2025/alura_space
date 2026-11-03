@@ -16,7 +16,9 @@ import kotlin.random.Random
 /** As 1000 fases (250 por caminho, 25 mundos de 10) e a base para os tipos novos de desafio. */
 class MilFasesTest {
 
-    private val tiposConhecidos = setOf("Cesta", "Memoria", "MontarPalavra", "Tracar")
+    private val tiposConhecidos = setOf("Cesta", "Memoria", "MontarPalavra", "Tracar") +
+        // Tipos novos sorteados pelo caminho Lógica (validados em FasesLogicaTest).
+        setOf("Pescaria", "LigarPares", "QuebraCabeca", "Trem", "Balanca", "CacaNaCena", "SigaASequencia", "PintarPorCodigo", "Domino", "EscondeEsconde", "CartasViradas", "ProgramarRobo")
 
     private fun caminhos(r: Random): List<FasesDoCaminho> = listOf(FasesNumeros(r), FasesLetras(r), FasesIngles(r), FasesLogica(r))
 

@@ -250,6 +250,9 @@ class CinquentaFasesTest {
                 return
             }
             Atividade.Escolha -> Unit
+            // Tipos novos sorteados pelo caminho Lógica (validados em FasesLogicaTest).
+            is Pescaria, is LigarPares, is QuebraCabeca, is Trem, is Balanca, is CacaNaCena, is SigaASequencia,
+            is PintarPorCodigo, is Domino, is EscondeEsconde, is CartasViradas, is ProgramarRobo -> return
             else -> org.junit.Assert.fail("$fase: tipo novo sorteado antes da tela ficar pronta: $a")
         }
         assertEquals("$fase: deve ter 4 opções (${p.instrucao})", 4, p.opcoes.size)
