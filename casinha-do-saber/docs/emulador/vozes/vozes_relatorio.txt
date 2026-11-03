@@ -1,8 +1,8 @@
 Vozes do narrador gravadas no emulador (Android API 34)
-Vozes escolhidas: pt: null (qualidade null); en: null (qualidade null)
+Vozes escolhidas: pt: pt-br-x-pte-local (qualidade 400); en: en-us-x-tpf-local (qualidade 400)
 Vozes de boa qualidade (400 ou mais): true
 Arquivo | idioma | duração total | com som | blocos | texto
-som_m.wav | pt-BR | 2.11 s | 1.98 s | 1 | mmmmm
+som_m.wav | pt-BR | 2.24 s | 1.82 s | 1 | mmmmm
 som_m_reforco.wav | pt-BR | 3.54 s | 3.27 s | 4 | mmmmm... macaco!
 som_s.wav | pt-BR | 2.38 s | 1.98 s | 1 | sssss
 som_s_reforco.wav | pt-BR | 3.51 s | 3.24 s | 3 | sssss... sapo!
