@@ -467,7 +467,8 @@ class CapturasTest {
             marcas += "${passo * 5}:$mao"
         }
         regra.mainClock.advanceTimeBy(4000)
-        regra.onRoot().captureRoboImage("build/outputs/roborazzi/zz_diag_${marcas.joinToString("_")}_B$atualizou.png")
+        val d = br.com.casinhadosaber.ui.telas.diagnosticoDaDica.replace(Regex("[^A-Za-z0-9=.,-]"), "_")
+        regra.onRoot().captureRoboImage("build/outputs/roborazzi/zz_diag_B${atualizou}_$d.png")
     }
 
     @Test fun casaPorDentroGeladeira() = capturar("33_casa_por_dentro_geladeira") {
