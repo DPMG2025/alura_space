@@ -16,6 +16,11 @@ data class Perfil(
     val estiloCabelo: Int = 0,
     /** Roupa especial do guarda-roupa ([Loja.trajes]), ou vazio para a roupa de sempre. */
     val traje: String = "",
+    /**
+     * Acessórios do guarda-roupa ([Loja.acessorios]): no máximo um por parte do corpo (id do acessório).
+     * Vazio por padrão: saves antigos não têm este campo.
+     */
+    val acessorios: Map<ParteDoCorpo, String> = emptyMap(),
 ) {
     val corDaRoupa: Long
         get() = Aparencia.roupas.getOrNull(roupa) ?: if (genero == Genero.MENINA) Aparencia.roupas[1] else Aparencia.roupas[0]
@@ -107,8 +112,36 @@ data class EstadoJogo(
             // Comida comprada vai para a geladeira e continua lá (não é gasta).
             Categoria.COMIDA -> base
             Categoria.ROUPA -> base.copy(perfil = base.perfil?.copy(traje = if (base.perfil.traje == v && p.id in comprados) "" else v))
+            // Acessório: vai para a sua parte do corpo (troca o que estava lá); tocar de novo no que já é seu tira.
+            Categoria.ACESSORIO -> {
+                val parte = Loja.acessorioPorId[v]?.parte ?: return base
+                val atuais = base.perfil?.acessorios.orEmpty()
+                base.copy(perfil = base.perfil?.copy(acessorios = if (atuais[parte] == v && p.id in comprados) atuais - parte else atuais + (parte to v)))
+            }
         }
     }
+
+    /**
+     * Veste um acessório que já é seu na [parte] do corpo (troca o que estava lá). Vazio tira o dessa parte.
+     * Devolve o mesmo estado se o acessório não é seu ou não é dessa parte.
+     */
+    fun vestirAcessorio(parte: ParteDoCorpo, id: String): EstadoJogo {
+        val p = perfil ?: return this
+        if (id.isEmpty()) return copy(perfil = p.copy(acessorios = p.acessorios - parte))
+        val a = Loja.acessorioPorId[id] ?: return this
+        if (a.parte != parte || "acessorio$id" !in comprados) return this
+        return copy(perfil = p.copy(acessorios = p.acessorios + (parte to id)))
+    }
+
+    /** Veste o que já é seu (roupa, chapéu ou acessório). O que ainda não foi comprado não muda nada. */
+    fun vestirProduto(p: Produto): EstadoJogo {
+        val perfil = perfil ?: return this
+        if (p.id !in comprados || p.categoria !in setOf(Categoria.ROUPA, Categoria.CHAPEU, Categoria.ACESSORIO)) return this
+        return copy(perfil = perfil.vestindo(p))
+    }
+
+    /** Tira o que está na [gaveta] (a roupa volta a ser a de sempre). Continua sendo seu. */
+    fun tirar(gaveta: Gaveta): EstadoJogo = perfil?.let { copy(perfil = it.tirando(gaveta)) } ?: this
 
     /**
      * Veste uma roupa do guarda-roupa (só o que já foi comprado). Vazio volta para a roupa de sempre.
@@ -303,6 +336,17 @@ object Serializacao {
         val (k, v) = parte.split("=").takeIf { it.size == 2 } ?: return@mapNotNull null
         if (v.any { it != '0' && it != '1' }) return@mapNotNull null
         k to v
+    }.toMap()
+
+    /** Acessórios vestidos, como "ROSTO=oculos;MAO=balao". */
+    fun acessoriosParaTexto(m: Map<ParteDoCorpo, String>): String = m.entries.joinToString(";") { "${it.key.name}=${it.value}" }
+
+    /** Saves antigos (sem o campo) ou texto estragado viram "sem acessórios"; ids desconhecidos ou da parte errada somem. */
+    fun textoParaAcessorios(s: String?): Map<ParteDoCorpo, String> = s.orEmpty().split(";").mapNotNull { parte ->
+        val (k, v) = parte.split("=").takeIf { it.size == 2 } ?: return@mapNotNull null
+        val p = ParteDoCorpo.entries.firstOrNull { it.name == k } ?: return@mapNotNull null
+        if (Loja.acessorioPorId[v]?.parte != p) return@mapNotNull null
+        p to v
     }.toMap()
 
     fun coresParaTexto(m: Map<Comodo, Int>): String = m.entries.joinToString(";") { "${it.key.name}=${it.value}" }

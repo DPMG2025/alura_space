@@ -82,6 +82,9 @@ import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Perfil
 import br.com.casinhadosaber.dominio.en
 import br.com.casinhadosaber.dominio.pt
+import br.com.casinhadosaber.dominio.tirando
+import br.com.casinhadosaber.dominio.usa
+import br.com.casinhadosaber.dominio.vestindo
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
@@ -248,7 +251,7 @@ fun TelaPremio(
                         aberto = aberto,
                         onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
                         onAbrir = ::abrir,
-                    ) { m -> DesenhoDoBrinde(brindeDaLoja, 130.dp, m) }
+                    ) { m -> DesenhoDoBrinde(brindeDaLoja, 130.dp, m, perfil) }
                     if (aberto) {
                         Text(brindeDaLoja.nome, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(6.dp))
@@ -276,11 +279,12 @@ fun TelaPremio(
             // Embaixo: a criança comemorando no morrinho e, depois de abrir, os botões.
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 perfil?.let {
-                    // O chapéu ganho aparece na cabeça da criança só depois de abrir (surpresa).
+                    // O chapéu, a roupa ou o acessório ganho aparece na criança só depois de abrir (surpresa).
+                    val gaveta = brindeDaLoja?.let { b -> Loja.gavetaDe(b) }
                     val vestido = when {
-                        brindeDaLoja == null || brindeDaLoja.categoria != Categoria.CHAPEU -> it
-                        aberto -> it.copy(chapeu = brindeDaLoja.valor)
-                        it.chapeu == brindeDaLoja.valor -> it.copy(chapeu = "")
+                        brindeDaLoja == null || gaveta == null -> it
+                        aberto -> it.vestindo(brindeDaLoja)
+                        it.usa(brindeDaLoja) -> it.tirando(gaveta)
                         else -> it
                     }
                     val altura = when {
@@ -331,7 +335,7 @@ private fun falaDoBrinde(p: Produto): String {
     val feminino = primeira.endsWith("a") || primeira in setOf("Parede", "Flor", "Neve")
     val artigo = if (feminino) "uma" else "um"
     val oQue = when (p.categoria) {
-        Categoria.CLIMA -> "Você ganhou um presente da lojinha: ${p.nome.lowercase()}!"
+        Categoria.CLIMA, Categoria.ACESSORIO -> "Você ganhou um presente da lojinha: ${p.nome.lowercase()}!"
         else -> "Você ganhou um presente da lojinha: $artigo ${p.nome.lowercase()}!"
     }
     val onde = when (p.categoria) {
@@ -341,13 +345,14 @@ private fun falaDoBrinde(p: Produto): String {
         Categoria.CLIMA -> if (p.valor == "2") "Agora pode nevar na sua casa!" else "Agora pode chover na sua casa!"
         Categoria.COMIDA -> "Está na geladeira da sua casa!"
         Categoria.ROUPA -> "Está no guarda-roupa, e você já está vestindo!"
+        Categoria.ACESSORIO -> "Está no guarda-roupa, e você já está usando!"
     }
     return "$oQue $onde E mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas!"
 }
 
 /** Desenho grande do brinde: telhado e porta na cor ganha, amostra do papel de parede, ou o emoji. */
 @Composable
-private fun DesenhoDoBrinde(p: Produto, lado: Dp, modifier: Modifier = Modifier) {
+private fun DesenhoDoBrinde(p: Produto, lado: Dp, modifier: Modifier = Modifier, perfil: Perfil? = null) {
     val indice = p.valor.toIntOrNull() ?: 0
     Box(modifier.size(lado), contentAlignment = Alignment.Center) {
         when (p.categoria) {
@@ -388,6 +393,24 @@ private fun DesenhoDoBrinde(p: Produto, lado: Dp, modifier: Modifier = Modifier)
                     }
                 }
                 drawRoundRect(Color(0xFFE6B98F), cornerRadius = CornerRadius(w * 0.1f), style = Stroke(w * 0.04f))
+            }
+            // Roupa e acessório: a própria criança vestida, com o ícone do presente no cantinho.
+            Categoria.ROUPA, Categoria.ACESSORIO -> if (perfil != null) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Crianca(perfil.vestindo(p), Modifier.height(lado * 0.92f))
+                    Text(
+                        p.icone,
+                        style = MaterialTheme.typography.displayLarge.copy(fontSize = (lado.value * 0.26f).sp, lineHeight = (lado.value * 0.3f).sp),
+                        maxLines = 1,
+                        modifier = Modifier.align(Alignment.BottomEnd),
+                    )
+                }
+            } else {
+                Text(
+                    p.icone,
+                    style = MaterialTheme.typography.displayLarge.copy(fontSize = (lado.value * 0.62f).sp, lineHeight = (lado.value * 0.72f).sp),
+                    maxLines = 1,
+                )
             }
             else -> Text(
                 p.icone,

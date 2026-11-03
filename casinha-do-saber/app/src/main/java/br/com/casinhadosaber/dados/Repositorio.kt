@@ -94,6 +94,8 @@ class Repositorio(context: Context) {
                 chapeu = prefs.getString(CHAPEU, "").orEmpty(),
                 estiloCabelo = prefs.getInt(ESTILO, 0),
                 traje = prefs.getString(TRAJE, "").orEmpty(),
+                // Saves antigos não têm a chave: vira "sem acessórios".
+                acessorios = Serializacao.textoParaAcessorios(prefs.getString(ACESSORIOS, null)),
             )
         } else {
             null
@@ -134,6 +136,7 @@ class Repositorio(context: Context) {
             putString(CHAPEU, it.chapeu)
             putInt(ESTILO, it.estiloCabelo)
             putString(TRAJE, it.traje)
+            putString(ACESSORIOS, Serializacao.acessoriosParaTexto(it.acessorios))
         }
         putString(ESTRELAS, Serializacao.estrelasParaTexto(e.estrelas))
         putString(COLOCADOS, Serializacao.posicoesParaTexto(e.colocados))
@@ -191,6 +194,7 @@ class Repositorio(context: Context) {
         const val CHAPEU = "chapeu"
         const val ESTILO = "estilo_cabelo"
         const val TRAJE = "traje"
+        const val ACESSORIOS = "acessorios"
         const val COR_TELHADO = "cor_telhado"
         const val VISITANTES = "visitantes"
         const val MUSICA = "musica"

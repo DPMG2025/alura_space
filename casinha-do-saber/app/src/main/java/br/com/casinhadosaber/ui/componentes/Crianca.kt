@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.semantics
 import br.com.casinhadosaber.dominio.Aparencia
 import br.com.casinhadosaber.dominio.Genero
 import br.com.casinhadosaber.dominio.Loja
+import br.com.casinhadosaber.dominio.ParteDoCorpo
 import br.com.casinhadosaber.dominio.Perfil
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -131,6 +132,31 @@ fun Crianca(
     }
 }
 
+/** Cor principal da roupa especial (ou a da roupa de sempre). Também pinta os cabides do guarda-roupa. */
+fun corDaRoupaDoTraje(traje: String?, perfil: Perfil): Color = when (traje) {
+    "pijama" -> Color(0xFF3B4C8C)
+    "abelha" -> Color(0xFFFFC93C)
+    "astronauta" -> Color(0xFFF2F4F8)
+    "futebol", "chuva" -> Color(0xFFFFD23F)
+    "bailarina" -> Color(0xFFFFB3D1)
+    "medico", "chef", "pirata" -> Color(0xFFF7F9FC)
+    "realeza" -> Color(0xFF7B3FC4)
+    "dinossauro" -> Color(0xFF5CC46B)
+    // Listras, herói, fada, vestido e macacão usam a cor escolhida no espelho.
+    else -> Color(perfil.corDaRoupa)
+}
+
+/**
+ * Formato do corpo com a roupa especial: true = vestido ou casaco comprido (trapézio), false = blusa e calça.
+ * Sem traje (ou nos trajes antigos), segue o padrão de sempre: vestido na menina, blusa e calça no menino.
+ * Qualquer criança pode vestir qualquer roupa.
+ */
+private fun corpoComprido(traje: String?, menina: Boolean): Boolean = when (traje) {
+    "vestido", "bailarina", "chuva", "medico", "realeza" -> true
+    "macacao", "futebol", "dinossauro", "pirata", "chef" -> false
+    else -> menina
+}
+
 fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Boolean, humor: Humor) {
     val w = size.width
     val h = size.height
@@ -141,47 +167,122 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
     val menina = perfil.genero == Genero.MENINA
     // Roupa especial do guarda-roupa (comprada na loja), desenhada por cima da roupa de sempre.
     val traje = Loja.trajeDe(perfil)?.id
-    val roupa = when (traje) {
-        "pijama" -> Color(0xFF3B4C8C)
-        "abelha" -> Color(0xFFFFC93C)
-        "astronauta" -> Color(0xFFF2F4F8)
-        else -> Color(perfil.corDaRoupa)
+    // Acessórios: um por parte do corpo (ids desconhecidos são ignorados).
+    val rosto = Loja.acessorioDe(perfil, ParteDoCorpo.ROSTO)?.id
+    val pescoco = Loja.acessorioDe(perfil, ParteDoCorpo.PESCOCO)?.id
+    val costas = Loja.acessorioDe(perfil, ParteDoCorpo.COSTAS)?.id
+    val naMao = Loja.acessorioDe(perfil, ParteDoCorpo.MAO)?.id
+    val nosPes = Loja.acessorioDe(perfil, ParteDoCorpo.PES)?.id
+    val noCabelo = Loja.acessorioDe(perfil, ParteDoCorpo.CABELO)?.id
+    val semChapeu = perfil.chapeu.isEmpty()
+
+    val roupa = corDaRoupaDoTraje(traje, perfil)
+    var calca = if (menina) pele else Color(0xFF2E4A7D)
+    var meia: Color? = if (menina) Color.White else null
+    var bermuda: Color? = null
+    var sapato = Color(0xFF5A3E36)
+    when (traje) {
+        "pijama" -> calca = Color(0xFF3B4C8C)
+        "astronauta" -> { calca = Color(0xFFDCE1EA); sapato = Color(0xFF9AA3B5) }
+        "abelha" -> if (!menina) calca = Color(0xFF2B2B2B)
+        "vestido" -> { calca = pele; meia = Color.White }
+        "bailarina" -> { calca = Color(0xFFFFD6E6); meia = null; sapato = Color(0xFFFF8FB8) }
+        "chuva" -> sapato = Color(0xFFF2B705)
+        "medico" -> { calca = Color(0xFF6FB7C9); meia = null }
+        "realeza" -> { calca = Color(0xFFF5F0FF); meia = null; sapato = Color(0xFFE0A800) }
+        "macacao" -> { calca = Color(0xFF3E6FB0); meia = null }
+        "futebol" -> { calca = pele; meia = Color.White; bermuda = Color(0xFF2B59C3); sapato = Color(0xFF1E1E1E) }
+        "dinossauro" -> { calca = Color(0xFF5CC46B); meia = null; sapato = Color(0xFF3E9A4C) }
+        "pirata" -> { calca = Color(0xFF3A2A20); meia = null; sapato = Color(0xFF1E1E1E) }
+        "chef" -> { calca = Color(0xFF3A3A3A); meia = null; sapato = Color(0xFF1E1E1E) }
     }
-    val calca = when (traje) {
-        "pijama" -> Color(0xFF3B4C8C)
-        "astronauta" -> Color(0xFFDCE1EA)
-        "abelha" -> if (menina) pele else Color(0xFF2B2B2B)
-        else -> if (menina) pele else Color(0xFF2E4A7D)
-    }
-    val sapato = if (traje == "astronauta") Color(0xFF9AA3B5) else Color(0xFF5A3E36)
+    val comprido = corpoComprido(traje, menina)
 
     // sombra no chão
     drawOval(Color(0x26000000), topLeft = Offset(w * 0.08f, h * 0.975f), size = Size(w * 0.84f, h * 0.05f))
 
-    // Atrás do corpo: capa de herói ou asinhas de fada.
+    // Atrás do corpo: capa de herói, asinhas de fada, rabo de dinossauro e o acessório das costas.
     if (traje == "heroi") {
-        val capa = Path().apply {
-            moveTo(w * 0.24f, h * 0.47f); lineTo(w * 0.76f, h * 0.47f)
-            lineTo(w * 0.96f, h * 0.9f); quadraticTo(w * 0.5f, h * 0.96f, w * 0.04f, h * 0.9f); close()
-        }
-        drawPath(capa, Color(0xFFE63946))
-        drawPath(capa, Color(0xFFB0222F), style = Stroke(w * 0.02f))
+        desenharCapa(Color(0xFFE63946), Color(0xFFB0222F), estrelas = false)
     } else if (traje == "fada") {
         for (lado in listOf(-1f, 1f)) {
             val base = p(0.5f + lado * 0.2f, 0.52f)
             drawOval(Color(0xB3D9C2FF), Offset(base.x + (if (lado < 0) -w * 0.36f else 0f), base.y - h * 0.16f), Size(w * 0.36f, h * 0.17f))
             drawOval(Color(0xB3FFC2E8), Offset(base.x + (if (lado < 0) -w * 0.26f else 0f), base.y - h * 0.01f), Size(w * 0.26f, h * 0.12f))
         }
+    } else if (traje == "dinossauro") {
+        val rabo = Path().apply {
+            moveTo(w * 0.6f, h * 0.6f)
+            quadraticTo(w * 0.92f, h * 0.66f, w * 0.99f, h * 0.9f)
+            quadraticTo(w * 0.8f, h * 0.8f, w * 0.6f, h * 0.76f)
+            close()
+        }
+        drawPath(rabo, Color(0xFF4FB25E))
+        for ((u, v) in listOf(0.74f to 0.635f, 0.85f to 0.7f, 0.93f to 0.79f)) {
+            val c = p(u, v)
+            drawPath(
+                Path().apply { moveTo(c.x - w * 0.05f, c.y); lineTo(c.x + w * 0.04f, c.y - h * 0.05f); lineTo(c.x + w * 0.04f, c.y + h * 0.01f); close() },
+                Color(0xFFFF9F1C),
+            )
+        }
+    }
+    when (costas) {
+        "capa" -> desenharCapa(Color(0xFF7B4DFF), Color(0xFF5631C9), estrelas = true)
+        "asas" -> for (lado in listOf(-1f, 1f)) {
+            // Asas de borboleta: duas de cima maiores, duas de baixo menores, com bolinhas.
+            val cima = Offset(if (lado < 0) w * 0.0f else w * 0.66f, h * 0.36f)
+            val baixo = Offset(if (lado < 0) w * 0.06f else w * 0.68f, h * 0.53f)
+            drawOval(Color(0xF2FF9F1C), cima, Size(w * 0.34f, h * 0.2f))
+            drawOval(Color(0xFFB5651D), cima, Size(w * 0.34f, h * 0.2f), style = Stroke(w * 0.02f))
+            drawOval(Color(0xF2FFD23F), baixo, Size(w * 0.26f, h * 0.15f))
+            drawOval(Color(0xFFB5651D), baixo, Size(w * 0.26f, h * 0.15f), style = Stroke(w * 0.02f))
+            drawCircle(Color.White, w * 0.035f, Offset(cima.x + w * (if (lado < 0) 0.1f else 0.24f), cima.y + h * 0.08f))
+            drawCircle(Color(0xFF4D96FF), w * 0.025f, Offset(baixo.x + w * 0.13f, baixo.y + h * 0.075f))
+        }
+        "mochila" -> {
+            // A mochila aparece dos dois lados do corpo; as alças são desenhadas na frente, depois do corpo.
+            drawRoundRect(Color(0xFFFF7A3D), p(0.13f, 0.47f), Size(w * 0.74f, h * 0.25f), CornerRadius(w * 0.08f))
+            drawRoundRect(Color(0xFFD95A22), p(0.13f, 0.47f), Size(w * 0.74f, h * 0.25f), CornerRadius(w * 0.08f), style = Stroke(w * 0.02f))
+        }
     }
 
     // pernas
     for (u in listOf(0.37f, 0.63f)) {
         drawLine(calca, p(u, 0.72f), p(u, 0.93f), strokeWidth = w * 0.17f, cap = StrokeCap.Round)
-        if (menina) drawLine(Color.White, p(u, 0.86f), p(u, 0.93f), strokeWidth = w * 0.17f, cap = StrokeCap.Round)
+        meia?.let { drawLine(it, p(u, if (traje == "futebol") 0.84f else 0.86f), p(u, 0.93f), strokeWidth = w * 0.17f, cap = StrokeCap.Round) }
+        bermuda?.let { drawLine(it, p(u, 0.72f), p(u, 0.79f), strokeWidth = w * 0.19f, cap = StrokeCap.Butt) }
     }
+    // pés: sapato de sempre ou o acessório dos pés
     for (u in listOf(0.33f, 0.67f)) {
         val c = p(u, 0.96f)
-        drawOval(sapato, topLeft = Offset(c.x - w * 0.13f, c.y - h * 0.035f), size = Size(w * 0.26f, h * 0.07f))
+        when (nosPes) {
+            "tenis" -> {
+                drawOval(Color(0xFFFF4F8B), Offset(c.x - w * 0.13f, c.y - h * 0.04f), Size(w * 0.26f, h * 0.07f))
+                drawRoundRect(Color.White, Offset(c.x - w * 0.14f, c.y + h * 0.008f), Size(w * 0.28f, h * 0.025f), CornerRadius(w * 0.03f))
+                drawLine(Color(0xFF4D96FF), Offset(c.x - w * 0.1f, c.y - h * 0.005f), Offset(c.x + w * 0.1f, c.y - h * 0.005f), strokeWidth = w * 0.025f, cap = StrokeCap.Round)
+                drawCircle(Color(0xFFFFD166), w * 0.022f, Offset(c.x - w * 0.03f, c.y - h * 0.025f))
+                drawCircle(Color(0xFFFFD166), w * 0.022f, Offset(c.x + w * 0.03f, c.y - h * 0.025f))
+            }
+            "botas" -> {
+                drawRoundRect(Color(0xFF8D5A3B), Offset(c.x - w * 0.1f, h * 0.83f), Size(w * 0.2f, h * 0.15f), CornerRadius(w * 0.05f))
+                drawOval(Color(0xFF8D5A3B), Offset(c.x - w * 0.14f, c.y - h * 0.03f), Size(w * 0.28f, h * 0.065f))
+                drawRoundRect(Color(0xFF6B3E22), Offset(c.x - w * 0.115f, h * 0.83f), Size(w * 0.23f, h * 0.03f), CornerRadius(w * 0.03f))
+                drawRect(Color(0xFF4A2A14), Offset(c.x - w * 0.14f, c.y + h * 0.018f), Size(w * 0.28f, h * 0.014f))
+            }
+            "pantufas" -> {
+                // Pantufas de coelhinho: fofas, com orelhinhas, olhinhos e narizinho.
+                for (lado in listOf(-1f, 1f)) {
+                    drawOval(Color(0xFFFFFFFF), Offset(c.x + lado * w * 0.05f - w * 0.035f, c.y - h * 0.085f), Size(w * 0.07f, h * 0.07f))
+                    drawOval(Color(0xFFFFB3C7), Offset(c.x + lado * w * 0.05f - w * 0.018f, c.y - h * 0.075f), Size(w * 0.036f, h * 0.05f))
+                }
+                drawOval(Color(0xFFFFF4F8), Offset(c.x - w * 0.15f, c.y - h * 0.045f), Size(w * 0.3f, h * 0.085f))
+                drawOval(Color(0xFFFFC9D9), Offset(c.x - w * 0.15f, c.y - h * 0.045f), Size(w * 0.3f, h * 0.085f), style = Stroke(w * 0.015f))
+                drawCircle(Color(0xFF2B2B2B), w * 0.016f, Offset(c.x - w * 0.045f, c.y - h * 0.012f))
+                drawCircle(Color(0xFF2B2B2B), w * 0.016f, Offset(c.x + w * 0.045f, c.y - h * 0.012f))
+                drawCircle(Color(0xFFFF6FAE), w * 0.02f, Offset(c.x, c.y + h * 0.005f))
+            }
+            else -> drawOval(sapato, topLeft = Offset(c.x - w * 0.13f, c.y - h * 0.035f), size = Size(w * 0.26f, h * 0.07f))
+        }
     }
 
     // braços (o direito pode acenar)
@@ -209,7 +310,7 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
 
     // corpo
     val corpo: Path
-    if (menina) {
+    if (comprido) {
         corpo = Path().apply {
             moveTo(w * 0.26f, h * 0.46f); lineTo(w * 0.74f, h * 0.46f)
             lineTo(w * 0.9f, h * 0.8f); lineTo(w * 0.1f, h * 0.8f); close()
@@ -219,10 +320,22 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
     } else {
         corpo = Path().apply { addRoundRect(RoundRect(w * 0.2f, h * 0.45f, w * 0.8f, h * 0.75f, CornerRadius(w * 0.14f))) }
         drawPath(corpo, roupa)
-        drawRect(calca, topLeft = p(0.2f, 0.7f), size = Size(w * 0.6f, h * 0.06f))
+        drawRect(bermuda ?: calca, topLeft = p(0.2f, 0.7f), size = Size(w * 0.6f, h * 0.06f))
         if (traje == null) drawPath(caminhoEstrela(p(0.5f, 0.58f), w * 0.1f), Color(0xFFFFD166))
     }
-    if (traje != null) desenharTrajeNoCorpo(traje, corpo)
+    if (traje != null) desenharTrajeNoCorpo(traje, corpo, if (comprido) h * 0.8f else h * 0.75f)
+    if (traje == "bailarina") {
+        // Saia de tule por cima do corpo: duas fileiras de babados.
+        for (i in 0 until 7) drawCircle(Color(0xCCFFC7DD), w * 0.1f, p(0.13f + i * 0.124f, 0.76f))
+        for (i in 0 until 6) drawCircle(Color(0xE6FFE0EC), w * 0.09f, p(0.19f + i * 0.124f, 0.7f))
+        drawRect(Color(0xFFFF8FB8), p(0.22f, 0.64f), Size(w * 0.56f, h * 0.025f))
+    }
+    // Na frente do corpo: alças da mochila e o fecho da capa.
+    if (costas == "mochila") {
+        for (lado in listOf(-1f, 1f)) {
+            drawLine(Color(0xFFD95A22), p(0.5f + lado * 0.16f, 0.465f), p(0.5f + lado * 0.2f, 0.66f), strokeWidth = w * 0.06f, cap = StrokeCap.Round)
+        }
+    }
 
     // cabeça
     val centro = p(0.5f, 0.27f)
@@ -247,6 +360,24 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
             ang += 22f
         }
     }
+    // Capuz da capa de chuva e da fantasia de dinossauro (só sem chapéu), atrás da cabeça.
+    val capuz = when (traje) {
+        "chuva" -> Color(0xFFFFD23F)
+        "dinossauro" -> Color(0xFF5CC46B)
+        else -> null
+    }
+    if (capuz != null && semChapeu) {
+        if (traje == "dinossauro") {
+            for (graus in listOf(-160f, -125f, -90f, -55f, -20f)) {
+                val a = graus * PI.toFloat() / 180f
+                val base1 = Offset(centro.x + cos(a - 0.2f) * r * 1.1f, centro.y + sin(a - 0.2f) * r * 1.1f)
+                val base2 = Offset(centro.x + cos(a + 0.2f) * r * 1.1f, centro.y + sin(a + 0.2f) * r * 1.1f)
+                val ponta = Offset(centro.x + cos(a) * r * 1.45f, centro.y + sin(a) * r * 1.45f)
+                drawPath(Path().apply { moveTo(base1.x, base1.y); lineTo(ponta.x, ponta.y); lineTo(base2.x, base2.y); close() }, Color(0xFFFF9F1C))
+            }
+        }
+        drawCircle(capuz, r * 1.14f, centro)
+    }
     for (lado in listOf(-1f, 1f)) drawCircle(pele, r * 0.2f, Offset(centro.x + lado * r * 0.98f, centro.y + r * 0.1f))
     drawCircle(pele, r, centro)
 
@@ -261,12 +392,8 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
         close()
     }
     drawPath(franja, cabelo)
-    if (menina && perfil.chapeu.isEmpty() && estilo != 2) {
-        val laco = Color(0xFFFF4F8B)
-        val n = Offset(centro.x + r * 0.45f, centro.y - r * 0.85f)
-        drawPath(Path().apply { moveTo(n.x, n.y); lineTo(n.x - r * 0.3f, n.y - r * 0.23f); lineTo(n.x - r * 0.25f, n.y + r * 0.23f); close() }, laco)
-        drawPath(Path().apply { moveTo(n.x, n.y); lineTo(n.x + r * 0.33f, n.y - r * 0.15f); lineTo(n.x + r * 0.23f, n.y + r * 0.25f); close() }, laco)
-        drawCircle(laco, r * 0.1f, n)
+    if (menina && semChapeu && estilo != 2 && noCabelo == null) {
+        desenharLaco(Offset(centro.x + r * 0.45f, centro.y - r * 0.85f), r, Color(0xFFFF4F8B))
     } else if (!menina && estilo == 2) {
         // Espetadinho: pontinhas em cima da cabeça.
         for (k in -2..2) {
@@ -288,9 +415,57 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
         }
         drawPath(topete, cabelo)
     }
+    // Na cabeça, por cima do cabelo: lenço de pirata e chapéu de chef (só sem chapéu da loja).
+    if (semChapeu && traje == "pirata") {
+        val lenco = Path().apply {
+            arcTo(androidx.compose.ui.geometry.Rect(centro, r * 1.07f), 195f, 150f, forceMoveTo = true)
+            close()
+        }
+        drawPath(lenco, Color(0xFFE63946))
+        for (k in -1..1) drawCircle(Color.White, r * 0.07f, Offset(centro.x + k * r * 0.4f, centro.y - r * 0.7f + kotlin.math.abs(k) * r * 0.12f))
+        val no = Offset(centro.x + r * 1.0f, centro.y - r * 0.32f)
+        drawPath(Path().apply { moveTo(no.x, no.y); lineTo(no.x + r * 0.35f, no.y + r * 0.1f); lineTo(no.x + r * 0.15f, no.y + r * 0.35f); close() }, Color(0xFFE63946))
+    }
+    if (semChapeu && traje == "chef") {
+        for (dx in listOf(-0.4f, 0.4f, 0f)) drawCircle(Color.White, r * 0.34f, Offset(centro.x + dx * r, centro.y - r * (if (dx == 0f) 1.3f else 1.15f)))
+        drawRoundRect(Color.White, Offset(centro.x - r * 0.62f, centro.y - r * 1.08f), Size(r * 1.24f, r * 0.34f), CornerRadius(r * 0.08f))
+        drawRoundRect(Color(0xFFDCE1EA), Offset(centro.x - r * 0.62f, centro.y - r * 1.08f), Size(r * 1.24f, r * 0.34f), CornerRadius(r * 0.08f), style = Stroke(r * 0.04f))
+    }
+    // Acessório do cabelo.
+    when (noCabelo) {
+        "laco" -> desenharLaco(Offset(centro.x + r * 0.42f, centro.y - r * 0.92f), r * 1.7f, Color(0xFFE63946))
+        "tiara" -> {
+            drawArc(
+                Color(0xFFFFD166), startAngle = 200f, sweepAngle = 140f, useCenter = false,
+                topLeft = Offset(centro.x - r * 0.98f, centro.y - r * 0.98f), size = Size(r * 1.96f, r * 1.96f),
+                style = Stroke(r * 0.12f, cap = StrokeCap.Round),
+            )
+            val topo = Offset(centro.x, centro.y - r * 0.98f)
+            drawPath(Path().apply { moveTo(topo.x - r * 0.18f, topo.y + r * 0.02f); lineTo(topo.x, topo.y - r * 0.3f); lineTo(topo.x + r * 0.18f, topo.y + r * 0.02f); close() }, Color(0xFFFFD166))
+            drawCircle(Color(0xFFFF4F8B), r * 0.09f, Offset(topo.x, topo.y - r * 0.08f))
+            for (lado in listOf(-1f, 1f)) {
+                val a = (270f + lado * 38f) * PI.toFloat() / 180f
+                drawCircle(Color(0xFF8FD3FF), r * 0.07f, Offset(centro.x + cos(a) * r * 0.98f, centro.y + sin(a) * r * 0.98f))
+            }
+        }
+        "presilha" -> {
+            val c = Offset(centro.x - r * 0.52f, centro.y - r * 0.72f)
+            drawPath(caminhoEstrela(c, r * 0.24f), Color(0xFFFFD23F))
+            drawPath(caminhoEstrela(c, r * 0.24f), Color(0xFFE0A800), style = Stroke(r * 0.04f))
+        }
+    }
 
     // rosto
     val olho = Color(0xFF2B2B2B)
+    if (rosto == "mascara") {
+        // Máscara de herói: faixa nos olhos com furinhos (os olhos aparecem por cima).
+        val y = centro.y + r * 0.12f
+        drawRoundRect(Color(0xFF3557D6), Offset(centro.x - r * 0.72f, y - r * 0.24f), Size(r * 1.44f, r * 0.44f), CornerRadius(r * 0.22f))
+        for (lado in listOf(-1f, 1f)) {
+            drawLine(Color(0xFF3557D6), Offset(centro.x + lado * r * 0.7f, y - r * 0.05f), Offset(centro.x + lado * r * 1.05f, y - r * 0.2f), strokeWidth = r * 0.12f, cap = StrokeCap.Round)
+            drawOval(Color.White, Offset(centro.x + lado * r * 0.36f - r * 0.17f, y - r * 0.18f), Size(r * 0.34f, r * 0.34f))
+        }
+    }
     for (lado in listOf(-1f, 1f)) {
         val c = Offset(centro.x + lado * r * 0.36f, centro.y + r * 0.12f)
         if (olhosFechados) {
@@ -304,6 +479,33 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
             topLeft = Offset(centro.x + lado * r * 0.62f - r * 0.14f, centro.y + r * 0.33f),
             size = Size(r * 0.28f, r * 0.18f),
         )
+    }
+    // Tapa-olho do pirata (só quando não há nada no rosto).
+    if (traje == "pirata" && rosto == null) {
+        val c = Offset(centro.x - r * 0.36f, centro.y + r * 0.12f)
+        drawLine(Color(0xFF1E1E1E), Offset(centro.x - r * 0.95f, centro.y - r * 0.3f), Offset(centro.x + r * 0.9f, centro.y - r * 0.05f), strokeWidth = r * 0.05f)
+        drawOval(Color(0xFF1E1E1E), Offset(c.x - r * 0.17f, c.y - r * 0.17f), Size(r * 0.34f, r * 0.32f))
+    }
+    when (rosto) {
+        "oculos" -> {
+            val aro = Color(0xFFE63946)
+            for (lado in listOf(-1f, 1f)) {
+                val c = Offset(centro.x + lado * r * 0.36f, centro.y + r * 0.12f)
+                drawCircle(Color(0x33FFFFFF), r * 0.22f, c)
+                drawCircle(aro, r * 0.22f, c, style = Stroke(r * 0.07f))
+                drawLine(aro, Offset(centro.x + lado * r * 0.58f, c.y - r * 0.04f), Offset(centro.x + lado * r * 0.96f, c.y - r * 0.12f), strokeWidth = r * 0.06f, cap = StrokeCap.Round)
+            }
+            drawLine(aro, Offset(centro.x - r * 0.14f, centro.y + r * 0.08f), Offset(centro.x + r * 0.14f, centro.y + r * 0.08f), strokeWidth = r * 0.06f)
+        }
+        "oculosdesol" -> {
+            for (lado in listOf(-1f, 1f)) {
+                val c = Offset(centro.x + lado * r * 0.36f, centro.y + r * 0.12f)
+                drawRoundRect(Color(0xFF222831), Offset(c.x - r * 0.25f, c.y - r * 0.17f), Size(r * 0.5f, r * 0.34f), CornerRadius(r * 0.14f))
+                drawLine(Color(0x99FFFFFF), Offset(c.x - r * 0.14f, c.y - r * 0.08f), Offset(c.x - r * 0.02f, c.y - r * 0.08f), strokeWidth = r * 0.05f, cap = StrokeCap.Round)
+                drawLine(Color(0xFF222831), Offset(centro.x + lado * r * 0.6f, c.y - r * 0.06f), Offset(centro.x + lado * r * 0.96f, c.y - r * 0.12f), strokeWidth = r * 0.06f, cap = StrokeCap.Round)
+            }
+            drawLine(Color(0xFF222831), Offset(centro.x - r * 0.12f, centro.y + r * 0.06f), Offset(centro.x + r * 0.12f, centro.y + r * 0.06f), strokeWidth = r * 0.07f)
+        }
     }
     // Na cabeça: anteninhas de abelha ou o capacete de vidro do astronauta.
     if (traje == "abelha") {
@@ -327,6 +529,35 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
             strokeWidth = r * 0.08f, cap = StrokeCap.Round,
         )
     }
+
+    // Acessório do pescoço (embaixo do queixo) e o fecho da capa.
+    when (pescoco) {
+        "colar" -> {
+            val cores = listOf(Color(0xFFFF4F8B), Color(0xFFFFD166), Color(0xFF4D96FF))
+            for (i in 0..8) {
+                val t = -1f + i * 0.25f
+                drawCircle(cores[i % cores.size], w * 0.032f, Offset(w * (0.5f + t * 0.17f), h * (0.478f + (1f - t * t) * 0.04f)))
+            }
+        }
+        "cachecol" -> {
+            val cor = Color(0xFF3DBE6B)
+            drawRoundRect(cor, p(0.29f, 0.468f), Size(w * 0.42f, h * 0.045f), CornerRadius(w * 0.05f))
+            drawRoundRect(cor, p(0.55f, 0.49f), Size(w * 0.1f, h * 0.15f), CornerRadius(w * 0.03f))
+            for (k in 0..2) drawRect(Color(0xCCFFFFFF), Offset(w * (0.36f + k * 0.11f), h * 0.468f), Size(w * 0.035f, h * 0.045f))
+            drawRect(Color(0xCCFFFFFF), p(0.55f, 0.56f), Size(w * 0.1f, h * 0.02f))
+            for (k in 0..3) drawLine(cor, p(0.565f + k * 0.024f, 0.638f), p(0.565f + k * 0.024f, 0.665f), strokeWidth = w * 0.014f)
+        }
+        "gravata" -> {
+            val c = p(0.5f, 0.505f)
+            val cor = Color(0xFFE63946)
+            for (lado in listOf(-1f, 1f)) {
+                drawPath(Path().apply { moveTo(c.x, c.y); lineTo(c.x + lado * w * 0.12f, c.y - h * 0.032f); lineTo(c.x + lado * w * 0.12f, c.y + h * 0.032f); close() }, cor)
+            }
+            drawCircle(Color(0xFFB0222F), w * 0.035f, c)
+        }
+    }
+    if (costas == "capa") drawCircle(Color(0xFFFFD166), w * 0.04f, p(0.5f, 0.485f))
+
     if (traje == "astronauta") {
         drawCircle(Color(0x338FD3FF), r * 1.32f, centro)
         drawCircle(Color(0xFFDCE1EA), r * 1.32f, centro, style = Stroke(r * 0.12f))
@@ -336,14 +567,74 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
             style = Stroke(r * 0.1f, cap = StrokeCap.Round),
         )
     }
+
+    // Acessório da mão (na mão esquerda: a direita é a que dá tchau), por cima de tudo.
+    when (naMao) {
+        "varinha" -> {
+            val ponta = Offset(maoE.x + w * 0.02f, maoE.y - h * 0.16f)
+            drawLine(Color(0xFF5A3E36), Offset(maoE.x, maoE.y + h * 0.01f), ponta, strokeWidth = w * 0.035f, cap = StrokeCap.Round)
+            drawPath(caminhoEstrela(ponta, w * 0.09f), Color(0xFFFFD23F))
+            drawPath(caminhoEstrela(ponta, w * 0.09f), Color(0xFFE0A800), style = Stroke(w * 0.012f))
+            drawCircle(Color(0xFFFFF3B0), w * 0.018f, Offset(ponta.x + w * 0.1f, ponta.y - h * 0.03f))
+            drawCircle(Color(0xFFFFF3B0), w * 0.013f, Offset(ponta.x - w * 0.08f, ponta.y - h * 0.05f))
+        }
+        "balao" -> {
+            val centroBalao = Offset(maxOf(maoE.x + w * 0.05f, w * 0.12f), minOf(maoE.y - h * 0.4f, h * 0.15f))
+            val baixo = Offset(centroBalao.x, centroBalao.y + w * 0.16f)
+            drawPath(
+                Path().apply { moveTo(maoE.x, maoE.y); quadraticTo(maoE.x + w * 0.06f, (maoE.y + baixo.y) / 2f, baixo.x, baixo.y) },
+                Color(0xFF8A8A8A), style = Stroke(w * 0.012f),
+            )
+            drawOval(Color(0xFFFF4F6D), Offset(centroBalao.x - w * 0.12f, centroBalao.y - w * 0.16f), Size(w * 0.24f, w * 0.32f))
+            drawPath(Path().apply { moveTo(baixo.x, baixo.y - w * 0.01f); lineTo(baixo.x - w * 0.03f, baixo.y + w * 0.035f); lineTo(baixo.x + w * 0.03f, baixo.y + w * 0.035f); close() }, Color(0xFFD93654))
+            drawOval(Color(0x80FFFFFF), Offset(centroBalao.x - w * 0.07f, centroBalao.y - w * 0.11f), Size(w * 0.06f, w * 0.1f))
+        }
+        "ursinho" -> {
+            val corpoUrso = Offset(maoE.x + w * 0.08f, maoE.y - h * 0.01f)
+            val marrom = Color(0xFFB07A4F)
+            val cabeca = Offset(corpoUrso.x, corpoUrso.y - w * 0.15f)
+            drawCircle(marrom, w * 0.1f, corpoUrso)
+            drawCircle(Color(0xFFE6C29A), w * 0.055f, corpoUrso)
+            for (lado in listOf(-1f, 1f)) drawCircle(marrom, w * 0.035f, Offset(cabeca.x + lado * w * 0.06f, cabeca.y - w * 0.06f))
+            drawCircle(marrom, w * 0.075f, cabeca)
+            drawCircle(Color(0xFFE6C29A), w * 0.032f, Offset(cabeca.x, cabeca.y + w * 0.02f))
+            drawCircle(Color(0xFF2B2B2B), w * 0.012f, Offset(cabeca.x, cabeca.y + w * 0.012f))
+            for (lado in listOf(-1f, 1f)) drawCircle(Color(0xFF2B2B2B), w * 0.011f, Offset(cabeca.x + lado * w * 0.028f, cabeca.y - w * 0.015f))
+            // a mãozinha da criança segurando o ursinho
+            drawCircle(pele, w * 0.07f, maoE)
+        }
+    }
 }
 
-/** Estampas e detalhes da roupa especial, recortados no formato do corpo. */
-private fun DrawScope.desenharTrajeNoCorpo(traje: String, corpo: Path) {
+/** Capa presa nos ombros, atrás do corpo (traje de herói ou a capa mágica das costas). */
+private fun DrawScope.desenharCapa(cor: Color, contorno: Color, estrelas: Boolean) {
+    val w = size.width
+    val h = size.height
+    val capa = Path().apply {
+        moveTo(w * 0.24f, h * 0.47f); lineTo(w * 0.76f, h * 0.47f)
+        lineTo(w * 0.96f, h * 0.9f); quadraticTo(w * 0.5f, h * 0.96f, w * 0.04f, h * 0.9f); close()
+    }
+    drawPath(capa, cor)
+    drawPath(capa, contorno, style = Stroke(w * 0.02f))
+    if (estrelas) {
+        for ((u, v) in listOf(0.12f to 0.84f, 0.88f to 0.84f, 0.16f to 0.66f, 0.84f to 0.66f)) {
+            drawPath(caminhoEstrela(Offset(w * u, h * v), w * 0.045f), Color(0xFFFFD166))
+        }
+    }
+}
+
+/** Laço de fita no cabelo, com o nó em [n]. [r] é o raio da cabeça (ou maior, para um laço maior). */
+private fun DrawScope.desenharLaco(n: Offset, r: Float, cor: Color) {
+    drawPath(Path().apply { moveTo(n.x, n.y); lineTo(n.x - r * 0.3f, n.y - r * 0.23f); lineTo(n.x - r * 0.25f, n.y + r * 0.23f); close() }, cor)
+    drawPath(Path().apply { moveTo(n.x, n.y); lineTo(n.x + r * 0.33f, n.y - r * 0.15f); lineTo(n.x + r * 0.23f, n.y + r * 0.25f); close() }, cor)
+    drawCircle(cor, r * 0.1f, n)
+}
+
+/** Estampas e detalhes da roupa especial, recortados no formato do corpo (que termina em [base]). */
+private fun DrawScope.desenharTrajeNoCorpo(traje: String, corpo: Path, base: Float) {
     val w = size.width
     val h = size.height
     val topo = h * 0.45f
-    val base = h * 0.8f
     clipPath(corpo) {
         when (traje) {
             "listras" -> {
@@ -385,6 +676,89 @@ private fun DrawScope.desenharTrajeNoCorpo(traje: String, corpo: Path) {
                 drawRoundRect(Color(0xFF4D96FF), Offset(w * 0.56f, h * 0.51f), Size(w * 0.14f, h * 0.07f), CornerRadius(w * 0.02f))
                 drawCircle(Color(0xFFEF476F), w * 0.025f, Offset(w * 0.38f, h * 0.53f))
                 drawCircle(Color(0xFF3DBE6B), w * 0.025f, Offset(w * 0.38f, h * 0.59f))
+            }
+            "vestido" -> {
+                // Florzinhas brancas e uma faixa na cintura.
+                drawRect(Color(0x33000000), Offset(0f, h * 0.58f), Size(w, h * 0.025f))
+                for ((u, v) in listOf(0.38f to 0.52f, 0.62f to 0.54f, 0.3f to 0.68f, 0.5f to 0.72f, 0.7f to 0.68f, 0.42f to 0.77f, 0.6f to 0.77f)) {
+                    val c = Offset(w * u, h * v)
+                    for (k in 0 until 5) {
+                        val a = k * 2f * PI.toFloat() / 5f
+                        drawCircle(Color(0xE6FFFFFF), w * 0.022f, Offset(c.x + cos(a) * w * 0.028f, c.y + sin(a) * w * 0.028f))
+                    }
+                    drawCircle(Color(0xFFFFD166), w * 0.018f, c)
+                }
+            }
+            "macacao" -> {
+                val jeans = Color(0xFF3E6FB0)
+                drawRoundRect(jeans, Offset(w * 0.32f, h * 0.53f), Size(w * 0.36f, h * 0.3f), CornerRadius(w * 0.04f))
+                drawRect(jeans, Offset(0f, h * 0.66f), Size(w, h * 0.2f))
+                for (lado in listOf(-1f, 1f)) {
+                    drawLine(jeans, Offset(w * (0.5f + lado * 0.2f), h * 0.44f), Offset(w * (0.5f + lado * 0.15f), h * 0.55f), strokeWidth = w * 0.06f)
+                    drawCircle(Color(0xFFFFD166), w * 0.025f, Offset(w * (0.5f + lado * 0.14f), h * 0.555f))
+                }
+                drawRoundRect(Color(0xFF2F5A94), Offset(w * 0.42f, h * 0.58f), Size(w * 0.16f, h * 0.06f), CornerRadius(w * 0.02f), style = Stroke(w * 0.015f))
+            }
+            "futebol" -> {
+                val verde = Color(0xFF2A9452)
+                drawPath(Path().apply { moveTo(w * 0.38f, topo); lineTo(w * 0.5f, h * 0.52f); lineTo(w * 0.62f, topo); close() }, verde)
+                drawRect(verde, Offset(w * 0.18f, topo), Size(w * 0.06f, base - topo))
+                drawRect(verde, Offset(w * 0.76f, topo), Size(w * 0.06f, base - topo))
+                // Bolinha de futebol no peito.
+                val bola = Offset(w * 0.62f, h * 0.58f)
+                drawCircle(Color.White, w * 0.065f, bola)
+                drawCircle(Color(0xFF1E1E1E), w * 0.065f, bola, style = Stroke(w * 0.01f))
+                drawPath(caminhoEstrela(bola, w * 0.03f), Color(0xFF1E1E1E))
+            }
+            "bailarina" -> for (i in 0 until 5) {
+                drawPath(caminhoEstrela(Offset(w * (0.36f + (i * 0.17f) % 0.3f), h * (0.5f + i * 0.03f)), w * 0.03f, 4), Color(0xE6FFFFFF))
+            }
+            "chuva" -> {
+                drawLine(Color(0x33000000), Offset(w * 0.5f, topo), Offset(w * 0.5f, base), strokeWidth = w * 0.015f)
+                for (k in 0..2) drawRoundRect(Color(0xFF8D5A3B), Offset(w * 0.45f, h * (0.52f + k * 0.08f)), Size(w * 0.1f, h * 0.018f), CornerRadius(w * 0.01f))
+                drawRoundRect(Color(0x26000000), Offset(w * 0.24f, h * 0.68f), Size(w * 0.14f, h * 0.05f), CornerRadius(w * 0.02f))
+                drawRoundRect(Color(0x26000000), Offset(w * 0.62f, h * 0.68f), Size(w * 0.14f, h * 0.05f), CornerRadius(w * 0.02f))
+            }
+            "medico" -> {
+                val cinza = Color(0xFFB8C2CF)
+                drawLine(cinza, Offset(w * 0.4f, topo), Offset(w * 0.5f, h * 0.58f), strokeWidth = w * 0.02f)
+                drawLine(cinza, Offset(w * 0.6f, topo), Offset(w * 0.5f, h * 0.58f), strokeWidth = w * 0.02f)
+                drawLine(cinza, Offset(w * 0.5f, h * 0.58f), Offset(w * 0.5f, base), strokeWidth = w * 0.015f)
+                drawRoundRect(cinza, Offset(w * 0.58f, h * 0.6f), Size(w * 0.13f, h * 0.06f), CornerRadius(w * 0.015f), style = Stroke(w * 0.012f))
+                drawRect(Color(0xFFE63946), Offset(w * 0.635f, h * 0.608f), Size(w * 0.02f, h * 0.04f))
+                drawRect(Color(0xFFE63946), Offset(w * 0.61f, h * 0.62f), Size(w * 0.07f, h * 0.013f))
+                // Estetoscópio: o tubo desce do pescoço até o círculo de metal.
+                val tubo = Path().apply { moveTo(w * 0.36f, topo); quadraticTo(w * 0.3f, h * 0.56f, w * 0.4f, h * 0.62f) }
+                drawPath(tubo, Color(0xFF4A5568), style = Stroke(w * 0.02f))
+                drawCircle(Color(0xFFB8C2CF), w * 0.035f, Offset(w * 0.4f, h * 0.635f))
+            }
+            "chef" -> {
+                drawPath(Path().apply { moveTo(w * 0.4f, topo); lineTo(w * 0.5f, h * 0.5f); lineTo(w * 0.6f, topo); close() }, Color(0xFFE63946))
+                for (col in listOf(0.42f, 0.58f)) for (k in 0..2) drawCircle(Color(0xFF5A6575), w * 0.018f, Offset(w * col, h * (0.54f + k * 0.06f)))
+            }
+            "pirata" -> {
+                var y = topo + h * 0.02f
+                while (y < base) {
+                    drawRect(Color(0xFFE63946), Offset(0f, y), Size(w, h * 0.03f))
+                    y += h * 0.065f
+                }
+                drawRect(Color(0xFF2B2B2B), Offset(0f, topo), Size(w * 0.33f, base - topo))
+                drawRect(Color(0xFF2B2B2B), Offset(w * 0.67f, topo), Size(w * 0.33f, base - topo))
+                drawRect(Color(0xFF6B3E22), Offset(0f, h * 0.66f), Size(w, h * 0.035f))
+                drawRect(Color(0xFFFFD166), Offset(w * 0.46f, h * 0.655f), Size(w * 0.08f, h * 0.045f))
+            }
+            "realeza" -> {
+                val ouro = Color(0xFFFFD166)
+                drawRect(ouro, Offset(0f, topo), Size(w, h * 0.035f))
+                drawLine(ouro, Offset(w * 0.5f, topo), Offset(w * 0.5f, base), strokeWidth = w * 0.03f)
+                for (k in 0..2) drawCircle(ouro, w * 0.024f, Offset(w * 0.5f, h * (0.53f + k * 0.07f)))
+                // Barra branca de pelúcia com pintinhas pretas.
+                drawRect(Color.White, Offset(0f, base - h * 0.05f), Size(w, h * 0.05f))
+                for (k in 0 until 6) drawCircle(Color(0xFF2B2B2B), w * 0.012f, Offset(w * (0.18f + k * 0.13f), base - h * 0.025f))
+            }
+            "dinossauro" -> {
+                drawOval(Color(0xFFB8E986), Offset(w * 0.32f, h * 0.5f), Size(w * 0.36f, h * 0.25f))
+                for (k in 0..3) drawLine(Color(0x334FB25E), Offset(w * 0.36f, h * (0.54f + k * 0.05f)), Offset(w * 0.64f, h * (0.54f + k * 0.05f)), strokeWidth = w * 0.012f)
             }
         }
     }

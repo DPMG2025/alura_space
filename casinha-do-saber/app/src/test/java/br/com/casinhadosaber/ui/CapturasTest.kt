@@ -474,6 +474,53 @@ class CapturasTest {
         TelaPerfil(menina.copy(chapeu = "👑", traje = "listras"), espelho = true, roupas = Loja.noGuardaRoupa(e), onVoltar = {}) {}
     }
 
+    /** Todas as roupas, cada uma numa criança diferente (os dois gêneros e todos os tons de pele). */
+    @Test fun roupasEmTodasAsCriancas() = capturar("58_roupas_em_todas_as_criancas") {
+        val todas = Loja.trajes.mapIndexed { i, t ->
+            Perfil("", if (i % 2 == 0) Genero.MENINA else Genero.MENINO, pele = i % 4, cabelo = (i / 2) % 4, estiloCabelo = i % 3, traje = t.id)
+        }
+        androidx.compose.foundation.layout.Column(Modifier.padding(4.dp)) {
+            for (linha in todas.chunked(4)) {
+                androidx.compose.foundation.layout.Row {
+                    for (p in linha) br.com.casinhadosaber.ui.componentes.Crianca(p, Modifier.height(150.dp).padding(6.dp))
+                }
+            }
+        }
+    }
+
+    /** Um acessório em cada parte do corpo ao mesmo tempo, mais chapéu e roupa, e cada acessório sozinho. */
+    @Test fun acessoriosNaCrianca() = capturar("59_acessorios_na_crianca") {
+        val partes = br.com.casinhadosaber.dominio.ParteDoCorpo.entries
+        val combinados = (0 until 3).map { k ->
+            val base = if (k % 2 == 0) menino else menina
+            base.copy(
+                acessorios = partes.associateWith { parte -> Loja.acessorios.filter { it.parte == parte }[k].id },
+                traje = listOf("macacao", "vestido", "")[k],
+                chapeu = listOf("", "", "🧢")[k],
+            )
+        }
+        val sozinhos = Loja.acessorios.mapIndexed { i, a ->
+            Perfil("", if (i % 2 == 0) Genero.MENINO else Genero.MENINA, pele = (i + 1) % 4, cabelo = i % 4, acessorios = mapOf(a.parte to a.id))
+        }
+        androidx.compose.foundation.layout.Column(Modifier.padding(4.dp)) {
+            androidx.compose.foundation.layout.Row {
+                for (p in combinados) br.com.casinhadosaber.ui.componentes.Crianca(p, Modifier.height(190.dp).padding(8.dp), acenando = true)
+            }
+            for (linha in sozinhos.chunked(5)) {
+                androidx.compose.foundation.layout.Row {
+                    for (p in linha) br.com.casinhadosaber.ui.componentes.Crianca(p, Modifier.height(112.dp).padding(4.dp))
+                }
+            }
+        }
+    }
+
+    /** Espelho com acessórios comprados: o provador com as gavetas. */
+    @Test fun espelhoComAcessorios() = capturar("60_espelho_acessorios") {
+        val comprados = setOf("acessoriooculos", "acessoriobalao", "acessoriotenis", "roupafutebol", "chapeu👑")
+        val p = menina.copy(traje = "futebol", acessorios = mapOf(br.com.casinhadosaber.dominio.ParteDoCorpo.ROSTO to "oculos", br.com.casinhadosaber.dominio.ParteDoCorpo.MAO to "balao"))
+        TelaPerfil(p, espelho = true, comprados = comprados, onVoltar = {}) {}
+    }
+
     @Test fun casaComEspelhoEPorta() = capturar("37_casa_espelho_e_porta") {
         TelaCasa(estado(40, 40), {}, {}, {}, onEspelho = {}, onEntrar = {})
     }
