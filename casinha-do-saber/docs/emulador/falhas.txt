@@ -1,9 +1,0 @@
-    <failure>java.lang.AssertionError: emojis sem glifo na fonte embutida: [≈]
-at org.junit.Assert.fail(Assert.java:89)
-at org.junit.Assert.assertTrue(Assert.java:42)
-at br.com.casinhadosaber.EmojisNaFonteEmbutidaTest.todosOsEmojisDoAppTemDesenhoNaFonteEmbutida(EmojisNaFonteEmbutidaTest.kt:126)
-</failure>
-  </testcase>
-  <testcase name="areaDosPaisDesafioDoDia" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="11.645" />
-  <testcase name="vozesEmPortuguesEIngles" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="4.367" />
-  <testcase name="abrirMapaEAlbum" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="7.948" />
