@@ -62,6 +62,7 @@ import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Mundos
 import br.com.casinhadosaber.dominio.Trilha
+import br.com.casinhadosaber.dominio.desfazerNivel
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.FileiraDeEstrelas
@@ -86,6 +87,8 @@ fun TelaPais(
     hoje: Long = 0L,
     /** Muda o estado guardado (`Repositorio.atualizar`): desafio feito, aniversário e temas. */
     onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit = {},
+    /** "Descobrir o nível" de um caminho, aberto pelo adulto (a criança responde). */
+    onDescobrirNivel: (Trilha) -> Unit = {},
 ) {
     var liberado by rememberSaveable { mutableStateOf(false) }
     Column(
@@ -105,7 +108,7 @@ fun TelaPais(
         if (!liberado) {
             PortaoDeAdulto(onLiberar = { liberado = true })
         } else {
-            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite, hoje, onAtualizar)
+            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite, hoje, onAtualizar, onDescobrirNivel)
         }
     }
 }
@@ -123,6 +126,7 @@ private fun Painel(
     onAlternarLimite: () -> Unit,
     hoje: Long,
     onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit,
+    onDescobrirNivel: (Trilha) -> Unit,
 ) {
     var confirmar by remember { mutableStateOf(false) }
     val gerador = remember { GeradorDeFases() }
@@ -149,6 +153,13 @@ private fun Painel(
         Pais.relatorioDaSemana(estado.sessoes, hoje) { t, n -> gerador.fases(t).getOrNull(n)?.titulo ?: Pais.nomePadrao(t, n) }
     }
     CartaoRelatorioDaSemana(relatorio)
+
+    CartaoDoRitmo(
+        estado = estado,
+        hoje = hoje,
+        onDescobrir = onDescobrirNivel,
+        onDesfazer = { t -> onAtualizar { it.desfazerNivel(t) } },
+    )
 
     Cartao {
         Text("O que a criança está aprendendo", style = MaterialTheme.typography.titleLarge)

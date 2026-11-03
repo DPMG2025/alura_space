@@ -67,6 +67,11 @@ fun TelaInicio(
     onMissao: () -> Unit = {},
     /** Espelho 🪞: abre o perfil para trocar a aparência e volta para o início. */
     onEspelho: () -> Unit = {},
+    /** Quantas fases estão para relembrar hoje: com alguma, a Corujinha aparece no canto da casa (nunca abre sozinha). */
+    relembrar: Int = 0,
+    onRelembrar: () -> Unit = {},
+    /** Estante dos livrinhos para ler sozinho (null = sem o botão 📚). */
+    onEstante: (() -> Unit)? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -79,6 +84,7 @@ fun TelaInicio(
             when {
                 noBau > 0 -> "$oi Tem presente no baú! Toque na casinha para montar."
                 missaoDisponivel -> "$oi Tem missão do dia! Toque no pergaminho para ganhar moedinhas."
+                relembrar > 0 -> "$oi A Corujinha quer relembrar umas coisinhas com você. É só tocar nela, se quiser."
                 estado.fasesVencidas == 0 -> "$oi Vamos construir a sua casinha? Escolha um caminho para jogar."
                 else -> "$oi Escolha um caminho para ganhar mais coisas para a sua casa!"
             },
@@ -140,15 +146,31 @@ fun TelaInicio(
                     .clickable { sons.toque(); onAbrirCasa() },
             ) {
                 CenaDaCasa(estado, Modifier.fillMaxSize(), preencherAltura = true)
-                if (estado.perfil != null) {
-                    BotaoRedondo(
-                        "🪞",
-                        "Espelho: trocar a aparência",
-                        { sons.toque(); onEspelho() },
+                Column(
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .padding(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    if (estado.perfil != null) {
+                        BotaoRedondo(
+                            "🪞",
+                            "Espelho: trocar a aparência",
+                            { sons.toque(); onEspelho() },
+                            tamanho = 52.dp,
+                        )
+                    }
+                    if (onEstante != null) BotaoEstante(onEstante)
+                }
+                if (relembrar > 0) {
+                    // Relembrar: a Corujinha no canto de cima (embaixo da missão, quando há missão).
+                    BotaoRelembrar(
+                        relembrar,
+                        onRelembrar,
                         Modifier
-                            .align(Alignment.TopStart)
-                            .padding(10.dp),
-                        tamanho = 52.dp,
+                            .align(Alignment.TopEnd)
+                            .padding(top = if (missaoDisponivel) 72.dp else 10.dp, end = 10.dp),
+                        comTexto = false,
                     )
                 }
                 if (missaoDisponivel) {
