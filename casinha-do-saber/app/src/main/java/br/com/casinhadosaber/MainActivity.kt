@@ -57,6 +57,15 @@ import br.com.casinhadosaber.ui.telas.TelaAtelie
 import br.com.casinhadosaber.ui.telas.TelaDiplomas
 import br.com.casinhadosaber.ui.telas.TelaMapa
 import br.com.casinhadosaber.ui.telas.TelaPiano
+import br.com.casinhadosaber.ui.telas.TelaQuemVaiJogar
+import br.com.casinhadosaber.ui.telas.AcoesDaCopia
+import br.com.casinhadosaber.ui.telas.AcoesDaFamilia
+import br.com.casinhadosaber.dados.ArquivoDaCopia
+import br.com.casinhadosaber.dominio.Copia
+import br.com.casinhadosaber.dominio.CopiaDoProgresso
+import br.com.casinhadosaber.dominio.ResultadoDaCopia
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 /** As telas do app. A navegação é simples e fica toda aqui. */
 sealed interface Tela {
@@ -88,6 +97,9 @@ sealed interface Tela {
     /** Missão do dia: revisão de fases difíceis, com prêmio em moedinhas. */
     data class Missao(val fase: Fase, val perguntas: List<br.com.casinhadosaber.dominio.Pergunta>) : Tela
     data object Pais : Tela
+
+    /** "Quem vai jogar?": ao abrir, quando o aparelho tem mais de uma criança. */
+    data object QuemVaiJogar : Tela
 
     /** Treino sem fim do caminho: perguntas das fases vencidas, mais das que a criança erra mais. */
     data class Treino(val trilha: Trilha) : Tela
@@ -159,7 +171,15 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun App(repo: Repositorio) {
         val estado = repo.estado
-        var tela by remember { mutableStateOf(if (estado.perfil == null) Tela.Perfil else Tela.Inicio) }
+        var tela by remember {
+            mutableStateOf(
+                when {
+                    repo.criancas.size > 1 -> Tela.QuemVaiJogar
+                    estado.perfil == null -> Tela.Perfil
+                    else -> Tela.Inicio
+                },
+            )
+        }
         val gerador = remember { GeradorDeFases() }
         /** Figurinhas e diplomas ganhos na vitória, mostrados quando a criança sai do prêmio. */
         var conquistas by remember { mutableStateOf(NovasConquistas()) }
@@ -198,9 +218,17 @@ class MainActivity : ComponentActivity() {
             tela = nova
         }
 
-        BackHandler(enabled = tela != Tela.Inicio && !(tela == Tela.Perfil && estado.perfil == null)) {
+        // Várias crianças e cópia do progresso (área dos pais).
+        val familiaECopia = familiaECopia(repo, irPara = ::irPara, aoTrocar = { conquistas = NovasConquistas() })
+
+        BackHandler(
+            enabled = tela != Tela.Inicio && tela != Tela.QuemVaiJogar &&
+                !(tela == Tela.Perfil && estado.perfil == null && repo.criancas.size <= 1),
+        ) {
             irPara(
                 when (val t = tela) {
+                    // Criança nova ainda sem personagem: volta para a escolha (ela fica lá com um 🌱).
+                    Tela.Perfil -> if (estado.perfil == null) Tela.QuemVaiJogar else Tela.Inicio
                     is Tela.Jogo -> Tela.Caminho(t.fase.trilha)
                     is Tela.Premio -> Tela.Caminho(t.fase.trilha)
                     is Tela.Quase -> Tela.Caminho(t.fase.trilha)
@@ -440,8 +468,16 @@ class MainActivity : ComponentActivity() {
                             repo.apagarTudo()
                             irPara(Tela.Perfil)
                         },
-                        onVoltar = { irPara(Tela.Inicio) },
+                        onVoltar = { irPara(if (repo.estado.perfil == null) Tela.Perfil else Tela.Inicio) },
+                        familia = familiaECopia.first,
+                        copia = familiaECopia.second,
                     )
+
+                    Tela.QuemVaiJogar -> TelaQuemVaiJogar(repo.criancas) { id ->
+                        repo.trocarCrianca(id)
+                        conquistas = NovasConquistas()
+                        irPara(if (repo.estado.perfil == null) Tela.Perfil else Tela.Inicio)
+                    }
                 }
                 }
             }
@@ -465,6 +501,65 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    /**
+     * Ações da área dos pais para as várias crianças e para a cópia do progresso (arquivo escolhido pelo
+     * adulto pelo seletor do Android; o app não usa internet). A cópia lida fica pendente até a confirmação.
+     */
+    @Composable
+    private fun familiaECopia(repo: Repositorio, irPara: (Tela) -> Unit, aoTrocar: () -> Unit): Pair<AcoesDaFamilia, AcoesDaCopia> {
+        var pendente by remember { mutableStateOf<CopiaDoProgresso?>(null) }
+        var aviso by remember { mutableStateOf<String?>(null) }
+        val guardar = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(Copia.TIPO_DO_ARQUIVO)) { uri ->
+            if (uri != null) {
+                val ok = ArquivoDaCopia.escrever(this, uri, Copia.paraTexto(repo.copiaDoProgresso()))
+                aviso = if (ok) {
+                    "Cópia guardada! Para recuperar, toque em \"Recuperar cópia\" e escolha esse arquivo."
+                } else {
+                    "Não deu para guardar a cópia nesse lugar. Tente outra pasta."
+                }
+            }
+        }
+        val recuperar = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                when (val r = Copia.deTexto(ArquivoDaCopia.ler(this, uri))) {
+                    is ResultadoDaCopia.Valida -> pendente = r.copia
+                    is ResultadoDaCopia.Invalida -> aviso = r.motivo
+                }
+            }
+        }
+        val familia = AcoesDaFamilia(
+            criancas = repo.criancas,
+            ativa = repo.ativa,
+            onAdicionar = { if (repo.novaCrianca() != null) { aoTrocar(); irPara(Tela.Perfil) } },
+            onJogarCom = { id ->
+                repo.trocarCrianca(id)
+                aoTrocar()
+                irPara(if (repo.estado.perfil == null) Tela.Perfil else Tela.Inicio)
+            },
+            onRenomear = repo::renomearCrianca,
+            onApagar = { id -> repo.apagarCrianca(id); aoTrocar() },
+        )
+        val copia = AcoesDaCopia(
+            onGuardar = { runCatching { guardar.launch(Copia.nomeDoArquivo(repo.hojeData())) } },
+            onEnviar = {
+                val ok = ArquivoDaCopia.enviar(this, Copia.paraTexto(repo.copiaDoProgresso()), Copia.nomeDoArquivo(repo.hojeData()))
+                if (!ok) aviso = "Não deu para abrir o envio agora. Use \"Guardar uma cópia\"."
+            },
+            onRecuperar = { runCatching { recuperar.launch(arrayOf("*/*")) } },
+            pendente = pendente,
+            onConfirmar = {
+                pendente?.let { repo.restaurar(it) }
+                pendente = null
+                aoTrocar()
+                aviso = "Pronto! O progresso da cópia voltou."
+            },
+            onCancelar = { pendente = null },
+            aviso = aviso,
+            onFecharAviso = { aviso = null },
+        )
+        return familia to copia
     }
 
     private fun irParaInicio(atual: Tela, mudar: (Tela) -> Unit) {

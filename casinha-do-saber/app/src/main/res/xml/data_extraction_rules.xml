@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Backup do Google (Android 12 ou superior) e troca de celular: todas as preferências entram, ou seja,
+     o arquivo do aparelho (lista de crianças, som, música, limite) e o arquivo de cada criança. -->
 <data-extraction-rules>
     <cloud-backup>
         <include domain="sharedpref" path="." />
