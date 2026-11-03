@@ -1,6 +1,6 @@
 # PRD: Casinha do Saber
 
-Documento de produto para continuar o desenvolvimento numa nova sessão. Atualizado em 3 de novembro de 2026 (1000 fases e 17 desafios novos prontos e jogados no emulador).
+Documento de produto para continuar o desenvolvimento numa nova sessão. Atualizado em 3 de novembro de 2026: 1000 fases e 17 desafios novos; sugestões 1 a 7 (seção 10); casa que cresce até a fase 1000 com 20 áreas e bichos que passeiam; várias crianças e cópia do progresso (seção 11); vozes da família e escrever com o dedo (seção 12); relembrar, nível e livrinhos (seção 13); e os gráficos novos (sistema de desenho com fundos, janelas e confete). Integração e CI: sugestões 1 a 7 verdes na run 41687792865, casa que cresce na 41706664681, várias crianças com build e emuladores antigos verdes na 41723521801; vozes, livrinhos e gráficos com build verde na 41732079667 (o emulador com Android 14 caiu no meio dessa run e está sendo repetido).
 
 ## 1. Visão
 
