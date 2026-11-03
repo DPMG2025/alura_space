@@ -1,9 +1,0 @@
-    <failure>java.lang.AssertionError: não consegui pôr as figuras na cesta expected:&lt;10&gt; but was:&lt;9&gt;
-at org.junit.Assert.fail(Assert.java:89)
-at org.junit.Assert.failNotEquals(Assert.java:835)
-at org.junit.Assert.assertEquals(Assert.java:120)
-at br.com.casinhadosaber.JogoNoEmuladorTest.fazerCesta(JogoNoEmuladorTest.kt:178)
-at br.com.casinhadosaber.JogoNoEmuladorTest.responderSemErrar(JogoNoEmuladorTest.kt:134)
-at br.com.casinhadosaber.JogoNoEmuladorTest.jogarDesafioNovo(JogoNoEmuladorTest.kt:408)
-at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFaseAlta(JogoNoEmuladorTest.kt:451)
-at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFasesAltasComOsOutrosDesafios(JogoNoEmuladorTest.kt:509)

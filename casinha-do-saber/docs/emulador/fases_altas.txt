@@ -1,3 +1,9 @@
-Números fase 54: escolha, Pescaria, escolha, escolha, Pescaria
-Números fase 132: Relogio, Relogio, escolha, Relogio, escolha
-Números fase 197: escolha, Mercadinho, escolha, escolha, Mercadinho
+Números fase 54: Pescaria, Pescaria, escolha, escolha, Pescaria
+Números fase 132: escolha, Relogio, escolha, escolha, escolha
+Números fase 197: escolha, Mercadinho, LigarPares, escolha, Mercadinho
+Números fase 222: CacaNaCena, CacaNaCena, escolha, CacaNaCena, CacaNaCena
+Lógica fase 54: QuebraCabeca, QuebraCabeca, cesta, QuebraCabeca, QuebraCabeca
+Lógica fase 114: Trem, Trem, escolha, ProgramarRobo, Trem
+Lógica fase 204: EscondeEsconde, escolha, CartasViradas, EscondeEsconde, escolha
+Lógica fase 213: SigaASequencia, SigaASequencia, Domino, SigaASequencia, SigaASequencia
+Inglês fase 127: escolha, escolha, escolha, MontarFrase, escolha
