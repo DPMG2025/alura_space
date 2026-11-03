@@ -1,0 +1,7 @@
+    <failure>java.lang.AssertionError: emojis sem glifo na fonte embutida: [■, ▬, ▲, ●, 🁡, 🁫]
+at org.junit.Assert.fail(Assert.java:89)
+at org.junit.Assert.assertTrue(Assert.java:42)
+at br.com.casinhadosaber.EmojisNaFonteEmbutidaTest.todosOsEmojisDoAppTemDesenhoNaFonteEmbutida(EmojisNaFonteEmbutidaTest.kt:126)
+</failure>
+  </testcase>
+</testsuite>
