@@ -137,16 +137,97 @@ object TracosDasLetras {
         'Z' to listOf(reta(p(0.25f, TOPO), p(0.75f, TOPO), p(0.25f, BASE), p(0.75f, BASE))),
     )
 
+    /** Linha de cima das letras pequenas (a altura do "x") e ponta das que descem (g, j, p, q, y). */
+    private const val XT = 0.45f
+    private const val DESCE = 0.96f
+    private const val BOJO = 0.625f
+
+    /** Bolinha das letras pequenas (o "o" do a, b, d, g, p, q). */
+    private fun bojo(cx: Float, de: Float, ate: Float) = arco(cx, BOJO, 0.2f, 0.175f, de, ate)
+
+    /** Pinguinho do i e do j: um traço bem curtinho. */
+    private fun pingo(x: Float) = reta(p(x, 0.27f), p(x, 0.32f))
+
+    /** Letras pequenas (minúsculas de forma), na ordem e no sentido em que se escreve na escola. */
+    private val minusculas: Map<Char, List<List<Offset>>> = mapOf(
+        'a' to listOf(bojo(0.47f, -20f, -380f), reta(p(0.67f, XT), p(0.67f, BASE))),
+        'b' to listOf(reta(p(0.3f, TOPO), p(0.3f, BASE)), bojo(0.5f, 180f, 540f)),
+        'c' to listOf(bojo(0.52f, -40f, -320f)),
+        'd' to listOf(bojo(0.47f, -20f, -380f), reta(p(0.67f, TOPO), p(0.67f, BASE))),
+        'e' to listOf(traco(reta(p(0.28f, BOJO), p(0.68f, BOJO)), arco(0.48f, BOJO, 0.2f, 0.175f, 0f, -310f))),
+        'f' to listOf(
+            traco(arco(0.6f, 0.27f, 0.12f, 0.12f, -20f, -180f), reta(p(0.48f, 0.27f), p(0.48f, BASE))),
+            reta(p(0.34f, XT), p(0.66f, XT)),
+        ),
+        'g' to listOf(bojo(0.47f, -20f, -380f), traco(reta(p(0.67f, XT), p(0.67f, 0.84f)), arco(0.47f, 0.84f, 0.2f, 0.12f, 0f, 150f))),
+        'h' to listOf(reta(p(0.3f, TOPO), p(0.3f, BASE)), traco(arco(0.48f, 0.6f, 0.18f, 0.15f, 180f, 360f), reta(p(0.66f, 0.6f), p(0.66f, BASE)))),
+        'i' to listOf(reta(p(0.5f, XT), p(0.5f, BASE)), pingo(0.5f)),
+        'j' to listOf(traco(reta(p(0.56f, XT), p(0.56f, 0.84f)), arco(0.42f, 0.84f, 0.14f, 0.11f, 0f, 160f)), pingo(0.56f)),
+        'k' to listOf(reta(p(0.32f, TOPO), p(0.32f, BASE)), reta(p(0.66f, XT), p(0.32f, 0.66f)), reta(p(0.44f, 0.6f), p(0.68f, BASE))),
+        'l' to listOf(reta(p(0.5f, TOPO), p(0.5f, BASE))),
+        'm' to listOf(
+            reta(p(0.2f, XT), p(0.2f, BASE)),
+            traco(arco(0.335f, 0.6f, 0.135f, 0.15f, 180f, 360f), reta(p(0.47f, 0.6f), p(0.47f, BASE))),
+            traco(arco(0.605f, 0.6f, 0.135f, 0.15f, 180f, 360f), reta(p(0.74f, 0.6f), p(0.74f, BASE))),
+        ),
+        'n' to listOf(reta(p(0.3f, XT), p(0.3f, BASE)), traco(arco(0.48f, 0.6f, 0.18f, 0.15f, 180f, 360f), reta(p(0.66f, 0.6f), p(0.66f, BASE)))),
+        'o' to listOf(bojo(0.5f, -90f, -450f)),
+        'p' to listOf(reta(p(0.3f, XT), p(0.3f, DESCE)), bojo(0.5f, 180f, 540f)),
+        'q' to listOf(bojo(0.47f, -20f, -380f), reta(p(0.67f, XT), p(0.67f, DESCE))),
+        'r' to listOf(reta(p(0.36f, XT), p(0.36f, BASE)), arco(0.52f, 0.6f, 0.16f, 0.14f, 180f, 300f)),
+        's' to listOf(traco(arco(0.5f, 0.5375f, 0.17f, 0.0875f, -20f, -270f), arco(0.5f, 0.7125f, 0.17f, 0.0875f, -90f, 160f))),
+        't' to listOf(reta(p(0.48f, 0.25f), p(0.48f, BASE)), reta(p(0.32f, XT), p(0.66f, XT))),
+        'u' to listOf(traco(reta(p(0.3f, XT), p(0.3f, 0.65f)), arco(0.48f, 0.65f, 0.18f, 0.15f, 180f, 0f)), reta(p(0.66f, XT), p(0.66f, BASE))),
+        'v' to listOf(reta(p(0.28f, XT), p(0.5f, BASE), p(0.72f, XT))),
+        'w' to listOf(reta(p(0.15f, XT), p(0.32f, BASE), p(0.5f, 0.55f), p(0.68f, BASE), p(0.85f, XT))),
+        'x' to listOf(reta(p(0.3f, XT), p(0.7f, BASE)), reta(p(0.7f, XT), p(0.3f, BASE))),
+        'y' to listOf(reta(p(0.3f, XT), p(0.5f, BASE)), reta(p(0.7f, XT), p(0.4f, DESCE))),
+        'z' to listOf(reta(p(0.3f, XT), p(0.7f, XT), p(0.3f, BASE), p(0.7f, BASE))),
+    )
+
+    /** Algarismos de 0 a 9. */
+    private val algarismos: Map<Char, List<List<Offset>>> = mapOf(
+        '0' to listOf(arco(0.5f, MEIO, 0.25f, 0.35f, -90f, -450f)),
+        '1' to listOf(reta(p(0.36f, 0.3f), p(0.55f, TOPO), p(0.55f, BASE))),
+        '2' to listOf(traco(arco(0.5f, 0.34f, 0.22f, 0.19f, -160f, 20f), reta(p(0.71f, 0.405f), p(0.28f, BASE), p(0.74f, BASE)))),
+        '3' to listOf(traco(arco(0.5f, 0.325f, 0.2f, 0.175f, -160f, 90f), arco(0.5f, 0.675f, 0.2f, 0.175f, -90f, 160f))),
+        '4' to listOf(reta(p(0.62f, TOPO), p(0.25f, 0.62f), p(0.78f, 0.62f)), reta(p(0.62f, TOPO), p(0.62f, BASE))),
+        '5' to listOf(
+            traco(reta(p(0.33f, TOPO), p(0.31f, 0.47f)), arco(0.48f, 0.64f, 0.22f, 0.19f, -130f, 150f)),
+            reta(p(0.33f, TOPO), p(0.72f, TOPO)),
+        ),
+        '6' to listOf(traco(arco(0.52f, MEIO, 0.24f, 0.35f, -70f, -180f), arco(0.5f, 0.66f, 0.22f, 0.19f, 180f, -180f))),
+        '7' to listOf(reta(p(0.27f, TOPO), p(0.73f, TOPO), p(0.4f, BASE))),
+        '8' to listOf(
+            traco(
+                arco(0.5f, 0.325f, 0.19f, 0.175f, -20f, -270f),
+                arco(0.5f, 0.675f, 0.22f, 0.175f, -90f, 270f),
+                arco(0.5f, 0.325f, 0.19f, 0.175f, 90f, -20f),
+            ),
+        ),
+        '9' to listOf(arco(0.5f, 0.35f, 0.22f, 0.2f, -20f, -380f), reta(p(0.72f, 0.35f), p(0.68f, BASE))),
+    )
+
     /** Letras que já têm os traços desenhados. */
     val conhecidas: Set<Char> get() = letras.keys
 
+    /** Letras pequenas e algarismos que já têm os traços desenhados. */
+    val minusculasConhecidas: Set<Char> get() = minusculas.keys
+    val algarismosConhecidos: Set<Char> get() = algarismos.keys
+
     /**
-     * Traços da [letra] (maiúscula ou minúscula, com ou sem acento comum). Se a letra não for
-     * conhecida, devolve um traço reto de cima para baixo: a criança ainda consegue terminar.
+     * Traços da [letra]: maiúscula, minúscula (letra pequena) ou algarismo, com ou sem acento comum.
+     * Se não for conhecida, devolve um traço reto de cima para baixo: a criança ainda consegue terminar.
      */
     fun tracosDe(letra: String): List<List<Offset>> {
-        val c = letra.trim().firstOrNull()?.uppercaseChar() ?: return listOf(reta(p(0.5f, TOPO), p(0.5f, BASE)))
-        val semAcento = when (c) {
+        val original = letra.trim().firstOrNull() ?: return listOf(reta(p(0.5f, TOPO), p(0.5f, BASE)))
+        algarismos[original]?.let { return it }
+        if (original.isLowerCase()) minusculas[semAcento(original.uppercaseChar()).lowercaseChar()]?.let { return it }
+        return letras[semAcento(original.uppercaseChar())] ?: listOf(reta(p(0.5f, TOPO), p(0.5f, BASE)))
+    }
+
+    private fun semAcento(c: Char): Char =
+        when (c) {
             'Á', 'À', 'Â', 'Ã' -> 'A'
             'É', 'Ê' -> 'E'
             'Í' -> 'I'
@@ -155,8 +236,6 @@ object TracosDasLetras {
             'Ç' -> 'C'
             else -> c
         }
-        return letras[semAcento] ?: listOf(reta(p(0.5f, TOPO), p(0.5f, BASE)))
-    }
 
     /** Altura da letra dividida pela largura (a letra de forma é um pouco mais alta que larga). */
     const val PROPORCAO = 1.2f

@@ -54,6 +54,7 @@ import androidx.compose.ui.semantics.stateDescription
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItensDaCasa
+import br.com.casinhadosaber.dominio.Mundos
 import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
@@ -258,6 +259,11 @@ private fun Painel(
                 "• Errar não tira nada: a criança ouve o nome do que tocou e tenta de novo. Depois de dois erros, a resposta certa brilha.\n" +
                 "• Para ganhar o presente da fase, é preciso acertar pelo menos ${EstadoJogo.MINIMO_PARA_VENCER} de 5 de primeira. Assim a casa cresce junto com o aprendizado.\n" +
                 "• Toda fase revisa uma pergunta de uma fase anterior.\n" +
+                "• Cada caminho tem ${GeradorDeFases.FASES_POR_TRILHA} fases em ${Mundos.todos.size} mundos, do básico (contar, vogais, cores) até o 1º ano: " +
+                "somar e tirar até 20, dezenas, horas e moedinhas; famílias silábicas, sílabas difíceis, leitura de frases e letra pequena; " +
+                "frases simples em inglês; labirintos e sudoku de figuras.\n" +
+                "• O botão Treinar, no caminho, faz perguntas sem fim das fases já vencidas, mais das que a criança erra mais, " +
+                "e fica mais difícil quando ela acerta em sequência. Dá moedinhas dentro do limite do dia.\n" +
                 "• Cada fase nova vencida dá uma peça para a casa. Montar a casa (tocar, arrastar, pintar) treina coordenação e dá vontade de continuar. " +
                 "Depois das ${ItensDaCasa.total} peças, cada fase nova dá um enfeite da lojinha e mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas.\n" +
                 "• Sessões curtas, de 10 a 15 minutos, funcionam melhor nessa idade. Jogue junto e comemore cada peça!\n" +
@@ -365,9 +371,19 @@ private fun CaminhoRecolhivel(
                     val e = estado.estrelasDa(f)
                     val p = estado.precisaoDaFase(EstadoJogo.chave(f.trilha, f.numero))
                     val destaque = f == praticando
-                    if (f.numero > 0 && f.numero % 5 == 0) {
-                        // Divisória a cada 5 fases, como os marcos do caminho da criança.
-                        Box(Modifier.fillMaxWidth().padding(vertical = 4.dp).height(1.dp).background(cor.copy(alpha = 0.3f)))
+                    if (Mundos.comecaMundo(f)) {
+                        // Um título por mundo (10 fases cada), como as faixas do caminho da criança.
+                        val mundo = Mundos.de(f)
+                        if (f.numero > 0) Box(Modifier.fillMaxWidth().padding(vertical = 4.dp).height(1.dp).background(cor.copy(alpha = 0.3f)))
+                        Text(
+                            "${mundo.emoji} ${mundo.titulo}",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = Color(trilha.corEscuraArgb),
+                            modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
+                        )
+                    } else if (f.numero % 5 == 0) {
+                        // Divisória fininha no meio do mundo, como os marcos do caminho.
+                        Box(Modifier.fillMaxWidth().padding(vertical = 4.dp).height(1.dp).background(cor.copy(alpha = 0.15f)))
                     }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

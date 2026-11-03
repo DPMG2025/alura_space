@@ -31,6 +31,7 @@ import br.com.casinhadosaber.dominio.ItemCasa
 import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.dominio.Produto
 import br.com.casinhadosaber.dominio.Trilha
+import br.com.casinhadosaber.dominio.registrarTreino
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.MolduraDoApp
@@ -55,7 +56,17 @@ sealed interface Tela {
     data object BoasVindas : Tela
     data class Caminho(val trilha: Trilha) : Tela
     data class Jogo(val fase: Fase) : Tela
-    data class Premio(val fase: Fase, val estrelas: Int, val item: ItemCasa?, val moedas: Int = 0, val brinde: Produto? = null) : Tela
+    data class Premio(
+        val fase: Fase,
+        val estrelas: Int,
+        val item: ItemCasa?,
+        val moedas: Int = 0,
+        val brinde: Produto? = null,
+        /** Fala no lugar de "Você terminou a fase!" (fim do treino). */
+        val mensagem: String? = null,
+        /** Fim do treino: sem botão de próxima fase. */
+        val doTreino: Boolean = false,
+    ) : Tela
     /** [colocar]: item que acabou de ser ganho e já vai direto para a casa. */
     data class Casa(val colocar: String? = null) : Tela
     /** A casa por dentro (isométrica), onde a criança anda pelos cômodos. */
@@ -66,6 +77,9 @@ sealed interface Tela {
     /** Missão do dia: revisão de fases difíceis, com prêmio em moedinhas. */
     data class Missao(val fase: Fase, val perguntas: List<br.com.casinhadosaber.dominio.Pergunta>) : Tela
     data object Pais : Tela
+
+    /** Treino sem fim do caminho: perguntas das fases vencidas, mais das que a criança erra mais. */
+    data class Treino(val trilha: Trilha) : Tela
 }
 
 class MainActivity : ComponentActivity() {
@@ -169,6 +183,7 @@ class MainActivity : ComponentActivity() {
                     is Tela.Premio -> Tela.Caminho(t.fase.trilha)
                     is Tela.Quase -> Tela.Caminho(t.fase.trilha)
                     is Tela.Missao -> Tela.Inicio
+                    is Tela.Treino -> Tela.Caminho(t.trilha)
                     is Tela.Espelho -> t.voltar
                     Tela.CasaPorDentro -> Tela.Casa()
                     else -> Tela.Inicio
@@ -221,7 +236,47 @@ class MainActivity : ComponentActivity() {
                         estado = estado,
                         onVoltar = { irPara(Tela.Inicio) },
                         onJogar = { irPara(Tela.Jogo(it)) },
+                        onTreinar = { irPara(Tela.Treino(atual.trilha)) },
                     )
+
+                    is Tela.Treino -> {
+                        val treino = remember(atual) { br.com.casinhadosaber.dominio.Treino(atual.trilha, repo.estado, gerador) }
+                        TelaJogo(
+                            fase = treino.fases.first(),
+                            perfil = estado.perfil,
+                            onSair = { irPara(Tela.Caminho(atual.trilha)) },
+                            treino = { resultados -> treino.proxima(resultados) },
+                            onConcluir = { resultados ->
+                                val r = repo.estado.registrarTreino(treino.feitas.zip(resultados), repo.hoje())
+                                repo.atualizar { r.estado }
+                                if (r.total == 0) {
+                                    irPara(Tela.Caminho(atual.trilha))
+                                } else {
+                                    val estrelas = when {
+                                        r.acertos * 10 >= r.total * 8 -> 3
+                                        r.acertos * 2 >= r.total -> 2
+                                        else -> 1
+                                    }
+                                    val vez = when (r.acertos) {
+                                        0 -> null
+                                        1 -> "uma vez"
+                                        else -> "${br.com.casinhadosaber.dominio.Vocabulario.porExtenso(r.acertos, feminino = true)} vezes"
+                                    }
+                                    irPara(
+                                        Tela.Premio(
+                                            treino.fases.first(), estrelas, null, r.moedas,
+                                            mensagem = if (vez == null) {
+                                                "Treino terminado! Errar também ensina. Vamos treinar de novo outra hora!"
+                                            } else {
+                                                "Treino terminado! Você acertou de primeira $vez. Treinar deixa a cabeça forte!"
+                                            },
+                                            doTreino = true,
+                                        ),
+                                    )
+                                }
+                            },
+                        )
+                    }
 
                     is Tela.Jogo -> TelaJogo(
                         fase = atual.fase,
@@ -270,11 +325,12 @@ class MainActivity : ComponentActivity() {
                             item = atual.item,
                             moedas = atual.moedas,
                             perfil = estado.perfil,
-                            temProxima = proxima != null,
+                            temProxima = proxima != null && !atual.doTreino,
                             onColocarNaCasa = { irPara(Tela.Casa(atual.item?.id)) },
                             onProxima = { proxima?.let { irPara(Tela.Jogo(it)) } },
                             onVoltar = { irPara(Tela.Caminho(atual.fase.trilha)) },
                             brinde = atual.brinde,
+                            mensagem = atual.mensagem,
                         )
                     }
 

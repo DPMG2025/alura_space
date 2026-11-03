@@ -41,6 +41,10 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -53,6 +57,7 @@ import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Fase
 import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItensDaCasa
+import br.com.casinhadosaber.dominio.Mundos
 import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
@@ -79,6 +84,8 @@ private val LARGURA_PLACA = 160.dp
 private val ALTURA_CRIANCA = 104.dp
 /** Espaço antes do primeiro degrau, dentro da rolagem. */
 private val ESPACO_NO_TOPO = 12.dp
+/** Espaço no fim da rolagem para o botão de treino não cobrir a última fase. */
+private val ESPACO_DO_TREINO = 96.dp
 
 /** A cada [FASES_POR_MARCO] fases, um marco (bandeirinha que vira troféu) ajuda a criança a se orientar. */
 private const val FASES_POR_MARCO = 5
@@ -148,6 +155,8 @@ fun TelaTrilha(
     estado: EstadoJogo,
     onVoltar: () -> Unit,
     onJogar: (Fase) -> Unit,
+    /** Treino sem fim do caminho (aparece depois da primeira fase vencida). */
+    onTreinar: () -> Unit = {},
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -160,8 +169,14 @@ fun TelaTrilha(
     val corEscura = Color(trilha.corEscuraArgb)
     val rolagem = rememberScrollState()
 
+    val mundoAtual = Mundos.daFase(indiceEmFoco)
+    val podeTreinar = estado.vencidasNa(trilha) > 0
+
     LaunchedEffect(trilha) {
-        narrador.falar(trilha.chamada + " Toque na bolinha que está brilhando.")
+        narrador.falar(
+            trilha.chamada + " Você está no mundo ${mundoAtual.numero}: ${mundoAtual.nome}. Toque na bolinha que está brilhando." +
+                if (podeTreinar) " Ou toque em treinar, para praticar o que já aprendeu." else "",
+        )
     }
 
     // No tablet (também quando a tela é usada sozinha, como nas capturas) tudo cresce na mesma proporção.
@@ -239,9 +254,22 @@ fun TelaTrilha(
                     .verticalScroll(rolagem)
                     .padding(top = ESPACO_NO_TOPO),
             ) {
-                val alturaTotal = ALTURA_PASSO * disposicao.linhas(fases.size) + 40.dp
+                val alturaTotal = ALTURA_PASSO * disposicao.linhas(fases.size) + 40.dp + if (podeTreinar) ESPACO_DO_TREINO else 0.dp
                 val corCaminho = Color.White.copy(alpha = 0.85f)
                 Canvas(Modifier.fillMaxWidth().height(alturaTotal)) {
+                    // Cada mundo (10 fases) numa faixa de cor própria, para a criança ver que entrou num lugar novo.
+                    for (m in Mundos.todos) {
+                        if (m.primeiraFase >= fases.size) break
+                        val topo = ALTURA_PASSO.toPx() * disposicao.linha(m.primeiraFase)
+                        val fim = ALTURA_PASSO.toPx() * (disposicao.linha(minOf(m.ultimaFase, fases.lastIndex)) + 1)
+                        val margem = 6.dp.toPx()
+                        drawRoundRect(
+                            Color(m.corArgb).copy(alpha = 0.45f),
+                            topLeft = Offset(margem, topo + margem / 2),
+                            size = Size(size.width - margem * 2, fim - topo - margem),
+                            cornerRadius = CornerRadius(28.dp.toPx()),
+                        )
+                    }
                     // Só o caminho pontilhado: os marcos (bandeirinha e troféu) já dividem o caminho em pedacinhos.
                     // O traçado nunca desce em diagonal por baixo da bolinha: as plaquinhas ficam embaixo delas,
                     // então ele sai sempre de lado, na altura do centro da bolinha, e só desce longe da plaquinha.
@@ -286,6 +314,34 @@ fun TelaTrilha(
                                 }
                             },
                         )
+                    }
+                    if (Mundos.comecaMundo(fase) && !disposicao.serpente) {
+                        // Plaquinha do mundo no alto do degrau, acima do caminho e do lado oposto ao da criança.
+                        val mundo = Mundos.de(fase)
+                        val direita = disposicao.x(fase.numero + 1) > cx
+                        val inicioX = if (direita) cx + TAMANHO_BOLINHA / 2 + 6.dp else 4.dp
+                        val larguraMax = if (direita) disposicao.largura - inicioX - 4.dp else cx - TAMANHO_BOLINHA / 2 - 10.dp
+                        Row(
+                            Modifier
+                                .offset(x = inicioX, y = ALTURA_PASSO * disposicao.linha(fase.numero) + 4.dp)
+                                .widthIn(max = larguraMax)
+                                .background(Color.White.copy(alpha = 0.92f), RoundedCornerShape(50))
+                                .border(2.dp, Color(mundo.corArgb), RoundedCornerShape(50))
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                                .semantics(mergeDescendants = true) { contentDescription = mundo.titulo },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(mundo.emoji, style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                "Mundo ${mundo.numero}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = corEscura,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                     if (eAtual) {
                         // A criança fica ao lado da fase atual, sempre do lado com mais espaço (nunca sai da tela).
@@ -335,6 +391,30 @@ fun TelaTrilha(
                     .height(40.dp)
                     .background(Brush.verticalGradient(listOf(cor, cor.copy(alpha = 0f)))),
             )
+            if (podeTreinar) {
+                // Treino sem fim: botão grande, sempre à mão embaixo do caminho.
+                BotaoFofo(
+                    onClick = {
+                        sons.toque()
+                        onTreinar()
+                    },
+                    cor = Color.White,
+                    corBase = corEscura,
+                    descricao = "Treinar: perguntas sem fim das fases que você já venceu",
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 12.dp),
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("🏋️", style = MaterialTheme.typography.headlineMedium)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Treinar", style = MaterialTheme.typography.headlineSmall, color = corEscura, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
         }
     }
     }

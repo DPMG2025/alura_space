@@ -30,13 +30,29 @@ object Vocabulario {
         Objeto("🧁", "bolinho", "bolinhos", false),
     )
 
+    /** Moedinha de um real (dinheiro simples). Fica fora da lista de contar para não aparecer nas fases antigas. */
+    val moedinha = Objeto("🪙", "moedinha", "moedinhas", true)
+
     private val ateVinte = listOf("onze", "doze", "treze", "catorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove", "vinte")
     private val unidadesM = listOf("zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez") + ateVinte
     private val unidadesF = listOf("zero", "uma", "duas", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez") + ateVinte
-    val numerosEn = listOf("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
+    val numerosEn = listOf(
+        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+        "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
+    )
+    private val dezenas = listOf("", "dez", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa")
 
-    fun porExtenso(n: Int, feminino: Boolean = false): String =
-        (if (feminino) unidadesF else unidadesM).getOrElse(n) { n.toString() }
+    /** Número por extenso, de 0 a 100 ("vinte e uma" no feminino). Fora disso, os algarismos. */
+    fun porExtenso(n: Int, feminino: Boolean = false): String {
+        val unidades = if (feminino) unidadesF else unidadesM
+        return when {
+            n < 0 -> n.toString()
+            n <= 20 -> unidades[n]
+            n < 100 -> dezenas[n / 10] + if (n % 10 == 0) "" else " e " + unidades[n % 10]
+            n == 100 -> "cem"
+            else -> n.toString()
+        }
+    }
 
     val vogais = listOf("A", "E", "I", "O", "U")
     val consoantes = listOf("B", "C", "D", "F", "G", "L", "M", "N", "P", "R", "S", "T", "V", "Z")
@@ -46,9 +62,13 @@ object Vocabulario {
         "A" to "á", "B" to "bê", "C" to "cê", "D" to "dê", "E" to "é", "F" to "éfe", "G" to "gê",
         "I" to "i", "J" to "jota", "L" to "éle", "M" to "ême", "N" to "êne", "O" to "ó", "P" to "pê",
         "R" to "érre", "S" to "ésse", "T" to "tê", "U" to "u", "V" to "vê", "Z" to "zê",
+        "H" to "agá", "K" to "cá", "Q" to "quê", "W" to "dáblio", "X" to "xis", "Y" to "ípsilon",
     )
 
-    fun falaDaLetra(letra: String) = nomeDaLetra[letra] ?: letra.lowercase()
+    /** O nome da letra (maiúscula ou minúscula); números e outros sinais são lidos como estão. */
+    fun falaDaLetra(letra: String) = nomeDaLetra[letra.uppercase()] ?: letra.lowercase()
+
+    val alfabeto = ('A'..'Z').map { it.toString() }
 
     val palavrasComVogal = listOf(
         Palavra("🐝", "ABELHA", listOf("A", "BE", "LHA")),

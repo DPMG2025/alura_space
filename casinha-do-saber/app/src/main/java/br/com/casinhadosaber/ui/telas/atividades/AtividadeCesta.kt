@@ -120,7 +120,7 @@ internal fun AtividadeCesta(
     }
     val feminino = remember(cesta) {
         val e = cesta.certos.firstOrNull().orEmpty().replace("\uFE0F", "")
-        Vocabulario.objetosParaContar.firstOrNull { it.emoji.replace("\uFE0F", "") == e }?.feminino ?: false
+        (Vocabulario.objetosParaContar + Vocabulario.moedinha).firstOrNull { it.emoji.replace("\uFE0F", "") == e }?.feminino ?: false
     }
     var erros by remember { mutableIntStateOf(0) }
     var terminou by remember { mutableStateOf(false) }
