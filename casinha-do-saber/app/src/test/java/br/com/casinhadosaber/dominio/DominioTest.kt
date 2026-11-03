@@ -67,6 +67,9 @@ class GeradorDeFasesTest {
                 assertTrue("$fase: letra sem traçado", a.letra.length == 1)
                 return
             }
+            // Tipos novos já sorteados pelo caminho Letras: as regras de cada um são conferidas no init da data class.
+            is Pescaria, is EstourarBaloes, is LigarPares, is QuebraCabeca, is Trem, is CacaNaCena, is SigaASequencia,
+            is Ditado, is Domino, is CartasViradas, is MontarFrase -> return
             Atividade.Escolha -> Unit
             else -> org.junit.Assert.fail("$fase: tipo novo sorteado antes da tela ficar pronta: $a")
         }
