@@ -88,6 +88,7 @@ import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.AtividadeInterativa
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 private val elogios = listOf("Muito bem!", "Isso aí!", "Acertou!", "Você é demais!", "Perfeito!", "Uau, que esperto!")
@@ -208,10 +209,22 @@ fun TelaJogo(
         // Com voz da família gravada (área dos pais), o elogio sai com a voz do pai ou da mãe.
         val elogio = if (indice % 2 == 0) br.com.casinhadosaber.dominio.VozesDaFamilia.elogio(perfil?.nome, indice / 2)
         else br.com.casinhadosaber.dominio.VozesDaFamilia.parte(elogios.random())
-        narrador.falarPartes(listOf(elogio) + pergunta.reforco.map { br.com.casinhadosaber.dominio.ParteDaFala(it) })
+        val partes = listOf(elogio) + pergunta.reforco.map { br.com.casinhadosaber.dominio.ParteDaFala(it) }
+        // Gravação da família no meio: ela pode durar até 8 s, mais que a estimativa pelo texto.
+        val gravadas = narrador.familia.paraTocar()
+        val comGravacao = partes.any { it.chave != null && it.chave in gravadas }
+        narrador.falarPartes(partes)
         val caracteres = elogio.trecho.texto.length + pergunta.reforco.sumOf { it.texto.length }
         escopo.launch {
-            delay((1200L + caracteres * 65L).coerceAtMost(5000L))
+            if (comGravacao) {
+                // Espera a fala com a gravação terminar (no máximo 9 s no total, para nunca travar a partida).
+                delay(1200L)
+                kotlinx.coroutines.withTimeoutOrNull(7_800L) {
+                    androidx.compose.runtime.snapshotFlow { narrador.falando }.first { !it }
+                }
+            } else {
+                delay((1200L + caracteres * 65L).coerceAtMost(5000L))
+            }
             if (treino != null && fimDoTreino?.invoke(resultados) == true) {
                 onConcluir(resultados)
             } else if (treino != null) {

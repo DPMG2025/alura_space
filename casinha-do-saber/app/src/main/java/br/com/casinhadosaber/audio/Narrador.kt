@@ -57,6 +57,12 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
     /** Cada fala nova (ou parar) troca a vez: os passos de uma fala antiga não continuam. */
     @Volatile private var vez = 0
 
+    /** Uma fala com gravação da família está em andamento (o onStop de um tts.stop() antigo não a encerra). */
+    @Volatile private var sequenciaDaFamilia = false
+
+    /** Fala com gravação que chegou num passo de voz antes do motor ficar pronto: continua no onInit. */
+    private var planoPendente: Triple<List<PassoDaFala>, Int, Int>? = null
+
     /** O motor de voz já respondeu e está pronto para falar? */
     val estaPronto: Boolean get() = pronto
 
@@ -86,14 +92,19 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
             override fun onError(utteranceId: String?) {
                 utteranceId?.let { gravacoes.remove(it) }?.let { it(false); return }
                 utteranceId?.let { fimDoPasso.remove(it) }?.let { fim -> principal.post { fim() }; return }
-                falando = false
+                if (!sequenciaDaFamilia) falando = false
             }
-            override fun onStop(utteranceId: String?, interrupted: Boolean) { falando = false }
+            // O tts.stop() de uma fala com gravação chega aqui depois, quando a gravação já está tocando.
+            override fun onStop(utteranceId: String?, interrupted: Boolean) { if (!sequenciaDaFamilia) falando = false }
         })
         // Só fica pronto depois de escolher as vozes: assim a primeira fala já sai com a voz boa.
         pronto = true
         pendente?.let { falar(it) }
         pendente = null
+        planoPendente?.let { (plano, i, minhaVez) ->
+            planoPendente = null
+            principal.post { seguir(plano, i, minhaVez) }
+        }
     }
 
     /** A voz offline de maior qualidade para o idioma (e o país, quando der). */
@@ -150,6 +161,7 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
         pendente = null
         if (pronto) tts.stop()
         val minhaVez = ++vez
+        sequenciaDaFamilia = true
         falando = true
         seguir(plano, 0, minhaVez)
     }
@@ -157,19 +169,27 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
     private fun seguir(plano: List<PassoDaFala>, i: Int, minhaVez: Int) {
         if (minhaVez != vez) return
         if (i >= plano.size) {
+            sequenciaDaFamilia = false
             falando = false
             return
         }
         val proximo = { seguir(plano, i + 1, minhaVez) }
+        falando = true
         when (val passo = plano[i]) {
             is PassoDaFala.Gravacao -> familia.tocar(passo.chave) { principal.post { proximo() } }
-            is PassoDaFala.Voz -> if (!pronto || !falarAgora(passo.trechos, proximo)) principal.post { proximo() }
+            is PassoDaFala.Voz -> when {
+                // Motor de voz ainda abrindo: guarda o resto da fala e continua no onInit (nada se perde).
+                !pronto -> planoPendente = Triple(plano, i, minhaVez)
+                !falarAgora(passo.trechos, proximo) -> principal.post { proximo() }
+            }
         }
     }
 
     /** Interrompe uma fala com gravação no meio (a gravação para e os passos seguintes não acontecem). */
     private fun pararFamilia() {
         vez++
+        sequenciaDaFamilia = false
+        planoPendente = null
         fimDoPasso.clear()
         familia.pararDeTocar()
     }

@@ -36,6 +36,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -204,6 +205,8 @@ fun CartaoVozesDaFamilia(nome: String?, abertoNoComeco: Boolean = false) {
                         gravada = f.chave in gravadas,
                         gravando = vozes.gravando?.let { it.first == ativo && it.second == f.chave } == true,
                         tocando = vozes.tocando == f.chave,
+                        // Gravando outra frase: "Ouvir" fica apagado (o som entraria no microfone).
+                        podeOuvir = vozes.gravando == null,
                         onGravar = { gravarOuParar(f.chave) },
                         onOuvir = {
                             narrador.parar()
@@ -231,6 +234,7 @@ private fun LinhaDaFrase(
     gravada: Boolean,
     gravando: Boolean,
     tocando: Boolean,
+    podeOuvir: Boolean,
     onGravar: () -> Unit,
     onOuvir: () -> Unit,
     onApagar: () -> Unit,
@@ -266,7 +270,13 @@ private fun LinhaDaFrase(
             tamanho = 52.dp,
         )
         if (gravada && !gravando) {
-            BotaoRedondo(if (tocando) "🔊" else "▶️", "Ouvir", onOuvir, modifier = Modifier.testTag("ouvir_${frase.chave}"), tamanho = 52.dp)
+            BotaoRedondo(
+                if (tocando) "🔊" else "▶️",
+                if (podeOuvir) "Ouvir" else "Ouvir (termine a gravação primeiro)",
+                { if (podeOuvir) onOuvir() },
+                modifier = Modifier.testTag("ouvir_${frase.chave}").alpha(if (podeOuvir) 1f else 0.35f),
+                tamanho = 52.dp,
+            )
             BotaoRedondo("🗑️", "Apagar a gravação", onApagar, modifier = Modifier.testTag("apagar_${frase.chave}"), tamanho = 52.dp)
         }
     }

@@ -559,12 +559,8 @@ class JogoNoEmuladorTest {
         }
         registrar("fases_escrever", "Letras", 82, tipos)
         assertTrue("a fase 82 de Letras deveria pedir para escrever: $tipos", "EscreverPalavra" in tipos)
+        // Só o contador de pedidos: o connectedAndroidTest instala com -g, então a permissão já vem liberada.
         assertEquals("jogar não pode pedir o microfone", 0, PedidoDoMicrofone.pedidos)
-        assertNotEquals(
-            "o microfone não pode ter sido liberado jogando",
-            android.content.pm.PackageManager.PERMISSION_GRANTED,
-            contexto.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO),
-        )
     }
 
     private companion object {

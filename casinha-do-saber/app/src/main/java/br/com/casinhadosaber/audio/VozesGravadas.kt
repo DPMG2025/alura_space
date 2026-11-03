@@ -70,11 +70,14 @@ class VozesGravadas(context: Context) {
         pararDeTocar()
         terminarGravacao(guardar = false)
         val destino = guarda.provisorio(c, chave)
+        // Fica fora do runCatching para ser liberado se prepare() ou start() falharem (gravador ainda é null).
+        var r: MediaRecorder? = null
         return runCatching {
             destino.parentFile?.mkdirs()
             destino.delete()
             @Suppress("DEPRECATION")
-            val r = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) MediaRecorder(app) else MediaRecorder()
+            r = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) MediaRecorder(app) else MediaRecorder()
+            val r = r!!
             r.setAudioSource(MediaRecorder.AudioSource.MIC)
             r.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             r.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
@@ -93,7 +96,7 @@ class VozesGravadas(context: Context) {
             gravando = c to chave
             true
         }.getOrElse {
-            gravador?.release()
+            runCatching { r?.release() }
             gravador = null
             guarda.descartar(c, chave)
             gravando = null
@@ -129,6 +132,11 @@ class VozesGravadas(context: Context) {
 
     /** Toca a gravação [chave] do conjunto [c] (o ativo, por padrão) e chama [aoTerminar] no fim (ou se falhar). */
     fun tocar(chave: String, c: ConjuntoDeVozes = guarda.ativo, aoTerminar: () -> Unit = {}) {
+        // Gravando: nada toca, para o som não entrar no microfone (os botões "Ouvir" também ficam apagados).
+        if (gravador != null) {
+            aoTerminar()
+            return
+        }
         pararDeTocar()
         val arquivo = guarda.arquivo(c, chave)
         if (!arquivo.isFile) {

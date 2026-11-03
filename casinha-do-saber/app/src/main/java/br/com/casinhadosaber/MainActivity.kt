@@ -185,6 +185,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        // App em segundo plano no meio de uma gravação da família: joga fora (a gravação antiga continua).
+        // Sem isso, o limite de 8 s guardaria silêncio por cima de uma gravação boa.
+        narrador.familia.terminarGravacao(guardar = false)
+    }
+
     override fun onResume() {
         super.onResume()
         inicioDaSessao = System.currentTimeMillis()
