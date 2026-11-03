@@ -82,10 +82,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
-import java.awt.RenderingHints
-import java.awt.image.BufferedImage
 import java.io.File
-import javax.imageio.ImageIO
 import kotlin.random.Random
 
 /**
@@ -155,45 +152,83 @@ class LojaPlayTest {
     /**
      * Captura a tela inteira e grava em docs/loja/[nome] com exatamente [largura] x [altura] pixels.
      * Sem [comAlfa], o PNG sai em RGB (24 bits, sem canal alfa), como a Play exige nas capturas e no destaque.
+     * O java.awt não existe nos testes Android, então o PNG é escrito aqui mesmo (cabeçalho, dados e CRC).
      */
     private fun gravar(nome: String, largura: Int, altura: Int, comAlfa: Boolean = false) {
         val bruto = File("build/outputs/loja_bruto/$nome")
         bruto.parentFile?.mkdirs()
         bruto.delete()
         regra.onRoot().captureRoboImage(bruto.path)
-        val lida = ImageIO.read(bruto) ?: throw AssertionError("captura $nome ilegível")
+        val lida = android.graphics.BitmapFactory.decodeFile(bruto.absolutePath) ?: throw AssertionError("captura $nome ilegível")
         // A tela já tem o tamanho certo; se o Robolectric arredondar algum pixel, a proporção continua a mesma.
         assertEquals("proporção de $nome", largura.toFloat() / altura, lida.width.toFloat() / lida.height, 0.01f)
-        val tipo = if (comAlfa) BufferedImage.TYPE_INT_ARGB else BufferedImage.TYPE_INT_RGB
-        val final = BufferedImage(largura, altura, tipo)
-        val g = final.createGraphics()
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
-        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
-        g.color = java.awt.Color(0xFF, 0xF8, 0xE7)
-        g.fillRect(0, 0, largura, altura)
-        g.drawImage(lida, 0, 0, largura, altura, null)
-        g.dispose()
+        val final = if (lida.width == largura && lida.height == altura) lida
+        else android.graphics.Bitmap.createScaledBitmap(lida, largura, altura, true)
+        val pixels = IntArray(largura * altura)
+        final.getPixels(pixels, 0, largura, 0, 0, largura, altura)
+        // Fundo opaco por baixo de qualquer pixel translúcido (cor de fundo do app).
+        val fundo = intArrayOf(0xFF, 0xF8, 0xE7)
         val destino = File("../docs/loja/$nome")
         destino.parentFile?.mkdirs()
-        assertTrue("não gravou $nome", ImageIO.write(final, "png", destino))
-
-        val conferida = ImageIO.read(destino)
-        assertEquals("largura de $nome", largura, conferida.width)
-        assertEquals("altura de $nome", altura, conferida.height)
-        assertEquals("canal alfa de $nome", comAlfa, conferida.colorModel.hasAlpha())
-        if (comAlfa) {
-            for (y in 0 until altura step 7) for (x in 0 until largura step 7) {
-                assertEquals("pixel transparente em $nome ($x, $y)", 0xFF, conferida.getRGB(x, y) ushr 24)
+        destino.writeBytes(png(largura, altura, comAlfa) { i ->
+            val p = pixels[i]
+            val a = p ushr 24
+            IntArray(3) { c ->
+                val v = (p shr (16 - 8 * c)) and 0xFF
+                (v * a + fundo[c] * (255 - a)) / 255
             }
-        }
+        })
+
+        // Conferências do arquivo gravado: tamanho, tipo de cor e conteúdo.
+        val cabecalho = destino.readBytes()
+        fun inteiro(pos: Int) = java.nio.ByteBuffer.wrap(cabecalho, pos, 4).int
+        assertEquals("largura de $nome", largura, inteiro(16))
+        assertEquals("altura de $nome", altura, inteiro(20))
+        assertEquals("tipo de cor de $nome (2 = RGB, 6 = RGBA)", if (comAlfa) 6 else 2, cabecalho[25].toInt())
+        val relida = android.graphics.BitmapFactory.decodeFile(destino.absolutePath) ?: throw AssertionError("$nome gravada ilegível")
+        assertEquals(largura, relida.width)
+        assertEquals(altura, relida.height)
         // Regras da Play: lado entre 320 e 3840 px e o lado maior no máximo o dobro do menor.
         assertTrue(minOf(largura, altura) >= 320 || nome.startsWith("icone"))
         assertTrue(maxOf(largura, altura) <= 3840)
         assertTrue(maxOf(largura, altura) <= 2 * minOf(largura, altura) + 24)
         // Uma imagem toda de uma cor só seria sinal de captura vazia.
         val cores = HashSet<Int>()
-        for (y in 0 until altura step 37) for (x in 0 until largura step 37) cores += conferida.getRGB(x, y)
+        for (y in 0 until altura step 37) for (x in 0 until largura step 37) cores += relida.getPixel(x, y)
         assertTrue("$nome parece vazia", cores.size > 20)
+    }
+
+    /** PNG simples, 8 bits por canal, sem filtro: RGB (cor 2) ou RGBA todo opaco (cor 6). */
+    private fun png(largura: Int, altura: Int, comAlfa: Boolean, rgb: (Int) -> IntArray): ByteArray {
+        val canais = if (comAlfa) 4 else 3
+        val linha = 1 + largura * canais
+        val cru = ByteArray(linha * altura)
+        for (y in 0 until altura) {
+            var k = y * linha
+            cru[k++] = 0
+            for (x in 0 until largura) {
+                val c = rgb(y * largura + x)
+                cru[k++] = c[0].toByte(); cru[k++] = c[1].toByte(); cru[k++] = c[2].toByte()
+                if (comAlfa) cru[k++] = 0xFF.toByte()
+            }
+        }
+        val saida = java.io.ByteArrayOutputStream()
+        fun bloco(tipo: String, dados: ByteArray) {
+            val d = java.io.DataOutputStream(saida)
+            d.writeInt(dados.size)
+            val corpo = tipo.toByteArray(Charsets.US_ASCII) + dados
+            d.write(corpo)
+            d.writeInt(java.util.zip.CRC32().apply { update(corpo) }.value.toInt())
+        }
+        saida.write(byteArrayOf(0x89.toByte(), 'P'.code.toByte(), 'N'.code.toByte(), 'G'.code.toByte(), 13, 10, 26, 10))
+        val ihdr = java.nio.ByteBuffer.allocate(13).putInt(largura).putInt(altura)
+            .put(8.toByte()).put((if (comAlfa) 6 else 2).toByte()).put(0.toByte()).put(0.toByte()).put(0.toByte()).array()
+        bloco("IHDR", ihdr)
+        val comprimido = java.io.ByteArrayOutputStream()
+        java.util.zip.DeflaterOutputStream(comprimido, java.util.zip.Deflater(9)).use { it.write(cru) }
+        bloco("IDAT", comprimido.toByteArray())
+        bloco("IEND", ByteArray(0))
+        return saida.toByteArray()
     }
 
     // ------------------------------------------------------------------ ícone e destaque
