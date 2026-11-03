@@ -113,8 +113,9 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
 
         if (g == null) {
             // Ainda não escolheu: os dois cartões grandes, com a mãozinha mostrando.
-            Text("Quem vai morar na casinha?", style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(72.dp))
+            Text("Quem vai morar na casinha?", style = MaterialTheme.typography.headlineMedium, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Spacer(Modifier.height(28.dp))
             Box {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     for (opcao in Genero.entries) {
@@ -127,7 +128,7 @@ fun TelaPerfil(atual: Perfil?, onPronto: (Perfil) -> Unit) {
                                 .padding(12.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Crianca(Perfil("", opcao, pele, cabelo, -1), Modifier.height(200.dp).pulsando(), acenando = true)
+                            Crianca(Perfil("", opcao, pele, cabelo, -1), Modifier.height(260.dp).pulsando(), acenando = true)
                             Text(rotulo, style = MaterialTheme.typography.titleLarge)
                         }
                     }
