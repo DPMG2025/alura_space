@@ -62,6 +62,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.casinhadosaber.dominio.Atividade
 import br.com.casinhadosaber.dominio.Cena
 import br.com.casinhadosaber.dominio.Fase
 import br.com.casinhadosaber.dominio.GeradorDeFases
@@ -80,6 +81,7 @@ import br.com.casinhadosaber.ui.componentes.Crianca
 import br.com.casinhadosaber.ui.componentes.Humor
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.telas.atividades.AtividadeInterativa
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -119,7 +121,10 @@ fun TelaJogo(
 
     LaunchedEffect(indice) {
         delay(350)
-        if (exemplo) {
+        if (exemplo && pergunta.atividade != Atividade.Escolha) {
+            // Atividade de mexer: a ajuda (brilho e mãozinha) aparece desde o começo.
+            narrador.falar(listOf(pt("Vamos fazer uma juntos?")) + pergunta.fala + listOf(pt("Siga a mãozinha e o que está brilhando.")))
+        } else if (exemplo) {
             narrador.falar(
                 listOf(pt("Vamos fazer uma juntos?")) + pergunta.fala + pergunta.reforco +
                     listOf(pt("A resposta é a que está brilhando. Toque nela!")),
@@ -129,29 +134,34 @@ fun TelaJogo(
         }
     }
 
+    /** Acertou (escolha ou atividade de mexer): som, confete, elogio e próxima pergunta. */
+    fun comemorar(dePrimeira: Boolean) {
+        acertou = true
+        if (!exemplo) resultados = resultados + dePrimeira
+        humor = Humor.FELIZ
+        pulo++
+        vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
+        confete++
+        sons.acerto()
+        val elogio = elogios.random()
+        narrador.falar(listOf(pt(elogio)) + pergunta.reforco)
+        val caracteres = elogio.length + pergunta.reforco.sumOf { it.texto.length }
+        escopo.launch {
+            delay((1200L + caracteres * 65L).coerceAtMost(5000L))
+            if (indice < perguntas.lastIndex) {
+                indice++
+                erradas = emptySet()
+                acertou = false
+            } else {
+                onConcluir(resultados)
+            }
+        }
+    }
+
     fun responder(i: Int) {
         if (acertou || i in erradas) return
         if (i == pergunta.indiceCorreto) {
-            acertou = true
-            if (!exemplo) resultados = resultados + erradas.isEmpty()
-            humor = Humor.FELIZ
-            pulo++
-            vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
-            confete++
-            sons.acerto()
-            val elogio = elogios.random()
-            narrador.falar(listOf(pt(elogio)) + pergunta.reforco)
-            val caracteres = elogio.length + pergunta.reforco.sumOf { it.texto.length }
-            escopo.launch {
-                delay((1200L + caracteres * 65L).coerceAtMost(5000L))
-                if (indice < perguntas.lastIndex) {
-                    indice++
-                    erradas = emptySet()
-                    acertou = false
-                } else {
-                    onConcluir(resultados)
-                }
-            }
+            comemorar(erradas.isEmpty())
         } else {
             erradas = erradas + i
             humor = Humor.PENSANDO
@@ -201,7 +211,10 @@ fun TelaJogo(
                     .padding(top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (pergunta.cena != Cena.Nenhuma) perfil?.let { CriancaQuePula(it, pulo, acertou, humor, falando = narrador.falando) }
+                val deMexer = pergunta.atividade != Atividade.Escolha
+                if (pergunta.cena != Cena.Nenhuma || deMexer) {
+                    perfil?.let { CriancaQuePula(it, pulo, acertou, humor, falando = narrador.falando, altura = if (deMexer) 76.dp else 96.dp) }
+                }
                 Spacer(Modifier.width(8.dp))
                 BalaoDeFala(
                     "🔊 " + pergunta.instrucao,
@@ -230,36 +243,53 @@ fun TelaJogo(
                         alturaGrande = alturaGrande,
                     )
                 }
-                // Mesmo esqueleto em todos os jogos: figura no meio, respostas sempre embaixo.
-                Column(Modifier.fillMaxSize()) {
-                    if (p.cena == Cena.Nenhuma) {
-                        // Sem figura: as respostas (que são a própria pergunta) ocupam toda a altura livre.
-                        BoxWithConstraints(
-                            Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(top = 12.dp),
-                        ) {
-                            val alturaRespostas = minOf(maxHeight * 0.6f, 420.dp)
-                            Column(Modifier.fillMaxSize()) {
-                                // Espaço de cima: a criança "conta" a pergunta, grandona, mexendo a boca.
-                                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                    perfil?.let { CriancaQuePula(it, pulo, acertou, humor, falando = narrador.falando, altura = 150.dp) }
+                if (p.atividade != Atividade.Escolha) {
+                    // Atividades de mexer (cesta, memória, montar a palavra, traçar): terminam no mesmo
+                    // fluxo das perguntas de tocar (acertou de primeira se fez sem errar).
+                    AtividadeInterativa(
+                        atividade = p.atividade,
+                        fala = p.fala,
+                        ativa = i == indice && !acertou,
+                        ajudaInicial = facilitada && i == 0,
+                        cor = cor,
+                        onErro = { if (i == indice) humor = Humor.PENSANDO },
+                        onConcluir = { semErro -> if (i == indice && !acertou) comemorar(semErro) },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 12.dp),
+                    )
+                } else {
+                    // Mesmo esqueleto em todos os jogos: figura no meio, respostas sempre embaixo.
+                    Column(Modifier.fillMaxSize()) {
+                        if (p.cena == Cena.Nenhuma) {
+                            // Sem figura: as respostas (que são a própria pergunta) ocupam toda a altura livre.
+                            BoxWithConstraints(
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                                    .padding(top = 12.dp),
+                            ) {
+                                val alturaRespostas = minOf(maxHeight * 0.6f, 420.dp)
+                                Column(Modifier.fillMaxSize()) {
+                                    // Espaço de cima: a criança "conta" a pergunta, grandona, mexendo a boca.
+                                    Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                        perfil?.let { CriancaQuePula(it, pulo, acertou, humor, falando = narrador.falando, altura = 150.dp) }
+                                    }
+                                    opcoes(alturaRespostas)
                                 }
-                                opcoes(alturaRespostas)
                             }
+                        } else {
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CenaDaPergunta(p.cena)
+                            }
+                            opcoes(null)
                         }
-                    } else {
-                        Box(
-                            Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(vertical = 12.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            CenaDaPergunta(p.cena)
-                        }
-                        opcoes(null)
                     }
                 }
             }
