@@ -1,4 +1,3 @@
 === Busca pela placa (provedor simulado, valor FIPE real) ===
 Pedido ao provedor: /consulta/RTA2C19/teste
 Valor exibido: Valor FIPE R$ 54.695,00
-OK
