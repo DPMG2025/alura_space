@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
@@ -209,9 +210,13 @@ fun TelaAlbum(
 @Composable
 private fun CartaoDeFigurinha(f: Figurinha, ganha: Boolean, corDoCaminho: Color, onClick: () -> Unit) {
     val borda = if (f.dourada) Cores.Estrela else corDoCaminho
+    // Figurinha colada fica um tiquinho torta (sempre igual para a mesma fase) e com sombra, como no papel.
+    val torta = if (ganha && !f.dourada) ((f.fase * 37) % 7 - 3) * 0.9f else 0f
     Box(
         Modifier
             .size(width = 72.dp, height = 88.dp)
+            .graphicsLayer { rotationZ = torta }
+            .shadow(if (ganha) 4.dp else 0.dp, RoundedCornerShape(12.dp))
             .background(
                 if (!ganha) Brush.verticalGradient(listOf(Color(0xFFEDE7DA), Color(0xFFE2DACB)))
                 else if (f.dourada) Brush.verticalGradient(listOf(Color(0xFFFFF3B0), Color(0xFFFFC93C)))

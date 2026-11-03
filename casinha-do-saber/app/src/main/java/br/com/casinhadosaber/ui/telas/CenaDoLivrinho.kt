@@ -1,6 +1,12 @@
 package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -31,15 +37,33 @@ import br.com.casinhadosaber.ui.componentes.caminhoEstrela
  */
 @Composable
 fun CenaDoLivrinho(cenario: CenarioDoLivrinho, figuras: List<String>, modifier: Modifier = Modifier) {
-    Box(modifier.clip(RoundedCornerShape(28.dp)).clearAndSetSemantics { }) {
+    Box(
+        modifier
+            .shadow(6.dp, RoundedCornerShape(28.dp))
+            .clip(RoundedCornerShape(28.dp))
+            .border(5.dp, Color.White, RoundedCornerShape(28.dp))
+            .clearAndSetSemantics { },
+    ) {
         Canvas(Modifier.fillMaxSize()) { desenharCenario(cenario) }
-        val tamanho = when (figuras.size) { 1 -> 96; 2 -> 80; 3 -> 66; else -> 54 }
+        // Emojis grandes ficam borrados (são imagenzinhas ampliadas): o maior fica em 84 sp.
+        val tamanho = when (figuras.size) { 1 -> 84; 2 -> 72; 3 -> 62; else -> 52 }
         Row(
-            Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(bottom = 18.dp, start = 12.dp, end = 12.dp),
+            Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(bottom = 14.dp, start = 12.dp, end = 12.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.Bottom,
         ) {
-            for (f in figuras) Text(f, fontSize = tamanho.sp, lineHeight = (tamanho * 1.1f).sp)
+            for (f in figuras) {
+                // Cada figura pisa no chão: uma sombrinha oval embaixo dela.
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(f, fontSize = tamanho.sp, lineHeight = (tamanho * 1.1f).sp)
+                    Box(
+                        Modifier
+                            .offset(y = (-8).dp)
+                            .size(width = (tamanho * 0.75f).dp, height = 9.dp)
+                            .background(Color(0x2E000000), RoundedCornerShape(50)),
+                    )
+                }
+            }
         }
     }
 }

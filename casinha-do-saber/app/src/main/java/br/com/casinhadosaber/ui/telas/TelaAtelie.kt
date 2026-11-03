@@ -39,6 +39,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -327,8 +329,13 @@ private fun QuadroDePintar(
     val fim by rememberUpdatedState(onFim)
     Box(
         modifier
-            .background(Color(0xFFC98B5B), RoundedCornerShape(10.dp))
-            .padding(8.dp)
+            // Moldura de madeira com sombra, um friso claro por dentro e o papel encaixado.
+            .shadow(10.dp, RoundedCornerShape(12.dp))
+            .background(Brush.linearGradient(listOf(Color(0xFFE0A774), Color(0xFFC98B5B), Color(0xFFA86F43))), RoundedCornerShape(12.dp))
+            .border(2.dp, Color(0xFF8A5A36), RoundedCornerShape(12.dp))
+            .padding(6.dp)
+            .border(2.dp, Color(0xFFF2CFA4), RoundedCornerShape(4.dp))
+            .padding(2.dp)
             .testTag("quadro_de_pintar")
             .semantics { contentDescription = "Quadro de pintar. Toque e arraste o dedo para pintar." },
     ) {
@@ -377,23 +384,53 @@ private fun QuadroDePintar(
         ) {
             val lado = Pintura.LADO
             val c = size.width / lado
-            drawRect(Color.White)
+            drawRect(Color(0xFFFFFDF8))
             for (l in 0 until lado) for (k in 0 until lado) {
                 val i = pintura.cor(l, k)
                 if (i != 0) drawRect(corDaPaleta(i), Offset(k * c, l * c), Size(c + 0.5f, c + 0.5f))
             }
-            val linha = Color(0x22000000)
+            desenharTexturaDePapel()
+            val linha = Color(0x1F000000)
             for (i in 0..lado) {
                 drawLine(linha, Offset(i * c, 0f), Offset(i * c, size.height), 1.5f)
                 drawLine(linha, Offset(0f, i * c), Offset(size.width, i * c), 1.5f)
             }
+            // Sombrinha da moldura caindo no papel (em cima e à esquerda).
+            drawRect(Brush.verticalGradient(listOf(Color(0x2E000000), Color.Transparent), endY = c * 0.5f), size = Size(size.width, c * 0.5f))
+            drawRect(Brush.horizontalGradient(listOf(Color(0x24000000), Color.Transparent), endX = c * 0.4f), size = Size(c * 0.4f, size.height))
             drawRect(Color(0x33000000), style = Stroke(2f))
         }
     }
 }
 
-/** Altura da fileira de desenhos guardados (miniatura de 76 dp mais os botões de 44 dp). */
-private val ALTURA_DA_GALERIA = 132.dp
+/** Lado da miniatura de cada desenho guardado (do tamanho da dupla de botões embaixo dela). */
+private val LADO_DA_MINIATURA = 92.dp
+
+/** Altura da fileira de desenhos guardados (miniatura de 92 dp mais os botões de 44 dp). */
+private val ALTURA_DA_GALERIA = 152.dp
+
+/** Grãozinhos e fibras do papel, sempre nos mesmos lugares (sem sorteio a cada quadro). */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.desenharTexturaDePapel() {
+    var semente = 7919L
+    fun proximo(): Float {
+        semente = (semente * 1103515245L + 12345L) and 0x7fffffffL
+        return (semente % 10000L) / 10000f
+    }
+    val r = size.minDimension * 0.004f
+    repeat(220) {
+        val x = proximo() * size.width
+        val y = proximo() * size.height
+        val escuro = proximo() < 0.6f
+        drawCircle(if (escuro) Color(0x0F5A3E36) else Color(0x33FFFFFF), r * (0.6f + proximo()), Offset(x, y))
+    }
+    repeat(40) {
+        val x = proximo() * size.width
+        val y = proximo() * size.height
+        val dx = (proximo() - 0.5f) * size.width * 0.05f
+        val dy = (proximo() - 0.5f) * size.width * 0.02f
+        drawLine(Color(0x0D5A3E36), Offset(x, y), Offset(x + dx, y + dy), r * 0.7f)
+    }
+}
 
 /** Os desenhos guardados: tocar abre; 🖼️ pendura na sala (ou tira); 🗑️ duas vezes apaga. */
 @Composable
@@ -437,14 +474,16 @@ private fun Galeria(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         Modifier
-                            .size(76.dp)
-                            .border(if (d.id == aberta) 4.dp else 2.dp, if (d.id == aberta) Cores.Roxo else Color(0xFFC98B5B), RoundedCornerShape(8.dp))
-                            .padding(5.dp)
+                            .size(LADO_DA_MINIATURA)
+                            .shadow(3.dp, RoundedCornerShape(8.dp))
+                            .background(Color.White, RoundedCornerShape(8.dp))
+                            .border(if (d.id == aberta) 4.dp else 3.dp, if (d.id == aberta) Cores.Roxo else Color(0xFFC98B5B), RoundedCornerShape(8.dp))
+                            .padding(7.dp)
                             .clickable { onAbrir(d) }
                             .semantics { contentDescription = "Desenho guardado" + if (naParede) ", pendurado na sala" else "" },
                     ) {
                         DesenhoDaPintura(d, Modifier.fillMaxSize())
-                        if (naParede) Text("🖼️", fontSize = 18.sp, modifier = Modifier.align(Alignment.TopEnd))
+                        if (naParede) Text("🖼️", fontSize = 18.sp, modifier = Modifier.align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp))
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 4.dp)) {
                         BotaoPequeno(

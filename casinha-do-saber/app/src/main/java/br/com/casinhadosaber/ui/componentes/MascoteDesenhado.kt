@@ -18,6 +18,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -256,14 +257,27 @@ fun DrawScope.desenharMascote(
                 drawPath(dentro, c.orelha)
             }
             EspecieMascote.DRAGAOZINHO -> for (lado in listOf(-1f, 1f)) {
+                // Chifres grossinhos e curvos para fora, com o mesmo contorno do corpo e dois anéis.
+                val baseFora = p(0.5f + lado * cabecaR * 0.66f, cabecaY - cabecaR * 0.72f)
+                val baseDentro = p(0.5f + lado * cabecaR * 0.28f, cabecaY - cabecaR * 0.9f)
+                val ponta = p(0.5f + lado * cabecaR * (0.86f + 0.15f * t), cabecaY - cabecaR * (1.5f + 0.25f * t))
+                val curvaFora = p(0.5f + lado * cabecaR * 0.84f, cabecaY - cabecaR * 1.02f)
+                val curvaDentro = p(0.5f + lado * cabecaR * 0.48f, cabecaY - cabecaR * 1.25f)
                 val chifre = Path().apply {
-                    moveTo(p(0.5f + lado * cabecaR * 0.55f, cabecaY - cabecaR * 0.7f).x, p(0.5f + lado * cabecaR * 0.55f, cabecaY - cabecaR * 0.7f).y)
-                    lineTo(p(0.5f + lado * cabecaR * (0.75f + 0.15f * t), cabecaY - cabecaR * (1.3f + 0.25f * t)).x, p(0.5f + lado * cabecaR * (0.75f + 0.15f * t), cabecaY - cabecaR * (1.3f + 0.25f * t)).y)
-                    lineTo(p(0.5f + lado * cabecaR * 0.25f, cabecaY - cabecaR * 0.88f).x, p(0.5f + lado * cabecaR * 0.25f, cabecaY - cabecaR * 0.88f).y)
+                    moveTo(baseFora.x, baseFora.y)
+                    quadraticTo(curvaFora.x, curvaFora.y, ponta.x, ponta.y)
+                    quadraticTo(curvaDentro.x, curvaDentro.y, baseDentro.x, baseDentro.y)
                     close()
                 }
                 drawPath(chifre, c.orelha)
-                drawPath(chifre, Color(0xFFD9C08A), style = Stroke(traco))
+                // Anéis do chifre e um brilho do lado de dentro.
+                for (f in listOf(0.3f, 0.55f)) {
+                    val a = Offset(baseFora.x + (ponta.x - baseFora.x) * f, baseFora.y + (ponta.y - baseFora.y) * f)
+                    val b = Offset(baseDentro.x + (ponta.x - baseDentro.x) * f, baseDentro.y + (ponta.y - baseDentro.y) * f)
+                    drawLine(Color(0xFFE2C682), a, b, traco * 0.9f, StrokeCap.Round)
+                }
+                drawLine(Color(0xB3FFFFFF), Offset(baseDentro.x + (ponta.x - baseDentro.x) * 0.15f + lado * s * 0.01f, baseDentro.y + (ponta.y - baseDentro.y) * 0.15f), Offset(baseDentro.x + (ponta.x - baseDentro.x) * 0.45f + lado * s * 0.01f, baseDentro.y + (ponta.y - baseDentro.y) * 0.45f), traco * 0.8f, StrokeCap.Round)
+                drawPath(chifre, c.contorno, style = Stroke(traco, join = StrokeJoin.Round))
             }
             else -> Unit
         }

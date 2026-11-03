@@ -172,16 +172,30 @@ fun TelaEstante(estado: EstadoJogo, onAbrir: (Livrinho) -> Unit, onVoltar: () ->
 @Composable
 private fun Prateleira(conteudo: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
     Column {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
+        // O fundo do nicho da estante (madeira clarinha) atrás dos livros.
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(listOf(Color(0xFFF0D2AC), Color(0xFFE6BF91))),
+                    RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp),
+                )
+                .padding(start = 8.dp, end = 8.dp, top = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) {
             conteudo()
         }
-        // A tábua de madeira da prateleira.
+        // A tábua de madeira da prateleira: frente com friso claro e sombra embaixo.
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(14.dp)
-                .background(Brush.verticalGradient(listOf(Cores.Madeira, MadeiraEscura)), RoundedCornerShape(6.dp)),
-        )
+                .height(16.dp)
+                .shadow(3.dp, RoundedCornerShape(6.dp))
+                .background(Brush.verticalGradient(listOf(Cores.MadeiraClara, Cores.Madeira, MadeiraEscura)), RoundedCornerShape(6.dp)),
+        ) {
+            Box(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 3.dp).height(2.dp).background(Color.White.copy(alpha = 0.35f), RoundedCornerShape(50)))
+        }
     }
 }
 
@@ -209,8 +223,18 @@ private fun CapaDoLivrinho(
         modifier = modifier.testTag("livrinho_${livro.id}").then(if (sugerido) Modifier.pulsando() else Modifier),
     ) {
         Box(Modifier.fillMaxWidth().height(150.dp)) {
-            // Lombada à esquerda, como um livro de verdade.
-            Box(Modifier.width(10.dp).height(150.dp).background(Color.Black.copy(alpha = 0.12f)))
+            // Lombada à esquerda, como um livro de verdade, com duas faixinhas douradas; brilho de capa dura.
+            Box(Modifier.width(10.dp).height(150.dp).background(Color.Black.copy(alpha = 0.12f))) {
+                for (y in listOf(16.dp, 124.dp)) {
+                    Box(Modifier.padding(top = y).fillMaxWidth().height(4.dp).background(Color(0xFFFFE08A).copy(alpha = if (aberto) 0.9f else 0.4f)))
+                }
+            }
+            Box(
+                Modifier
+                    .padding(start = 14.dp, top = 6.dp)
+                    .size(width = 6.dp, height = 60.dp)
+                    .background(Color.White.copy(alpha = 0.22f), RoundedCornerShape(50)),
+            )
             Column(
                 Modifier.fillMaxSize().padding(start = 14.dp, end = 6.dp, top = 8.dp, bottom = 6.dp).alpha(if (aberto) 1f else 0.55f),
                 horizontalAlignment = Alignment.CenterHorizontally,

@@ -1,6 +1,9 @@
 package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -95,7 +98,20 @@ fun TelaQuemVaiJogar(criancas: List<CriancaDaCasa>, onEscolher: (String) -> Unit
                             Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Box(Modifier.size(width = 130.dp, height = 170.dp), contentAlignment = Alignment.BottomCenter) {
+                            Box(
+                                Modifier
+                                    .size(width = 130.dp, height = 170.dp)
+                                    // Um brilho redondo atrás do personagem e o chãozinho onde ele pisa.
+                                    .drawBehind {
+                                        drawCircle(
+                                            Brush.radialGradient(listOf(Color.White.copy(alpha = 0.95f), Color.White.copy(alpha = 0f)), center, size.width * 0.62f),
+                                            size.width * 0.62f,
+                                            Offset(center.x, size.height * 0.48f),
+                                        )
+                                        drawOval(Color(0x1F3D2C5E), Offset(size.width * 0.12f, size.height * 0.92f), Size(size.width * 0.76f, size.height * 0.08f))
+                                    },
+                                contentAlignment = Alignment.BottomCenter,
+                            ) {
                                 val perfil = c.perfil
                                 if (perfil != null) {
                                     Crianca(perfil, Modifier.height(170.dp))
