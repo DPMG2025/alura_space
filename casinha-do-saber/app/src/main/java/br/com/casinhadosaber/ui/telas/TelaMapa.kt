@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -61,6 +60,13 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.tema.Raios
+import br.com.casinhadosaber.ui.componentes.EnfeiteDoFundo
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
+import br.com.casinhadosaber.ui.componentes.fundoDecorado
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.drawscope.translate
 
 /** Altura de cada mundo no mapa (ilha redonda, nome e a barrinha das 10 fases). */
 private val ALTURA_DO_MUNDO = 196.dp
@@ -122,7 +128,9 @@ fun TelaMapa(
                 (if (m != null) "Você está no mundo ${m.numero}: ${m.nome}. " else "Você completou todos os mundos! ") +
                 if (completos > 0) "Os mundos que brilham já estão completos." else "Complete um mundo para ele brilhar.",
         )
-        val alvo = with(densidade) { (ALTURA_DO_MUNDO * (mundoDaVez ?: 24) - 140.dp).roundToPx() }
+        // A rolagem para no começo de um mundo (o de antes do da vez, inteiro no alto): nenhuma ilha fica
+        // cortada embaixo do cabeçalho, e o mundo da vez aparece logo abaixo dele.
+        val alvo = with(densidade) { (ALTURA_DO_MUNDO * ((mundoDaVez ?: 24) - 1).coerceAtLeast(0)).roundToPx() }
         if (alvo > 0) rolagem.scrollTo(alvo)
     }
 
@@ -130,15 +138,15 @@ fun TelaMapa(
         Column(
             Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(cor, Color(0xFFBFE3A8))))
+                .fundoDecorado(cor, EnfeiteDoFundo.Estrelas)
                 .windowInsetsPadding(WindowInsets.safeDrawing),
         ) {
             Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 BotaoRedondo("⬅️", "Voltar para o caminho", onVoltar, tamanho = 52.dp)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("🗺️ Mapa: ${trilha.titulo}", style = MaterialTheme.typography.titleLarge, color = Color.White, maxLines = 1)
-                    Text("🏅 $completos de ${Mundos.todos.size} mundos completos", style = MaterialTheme.typography.titleSmall, color = Color.White, maxLines = 1)
+                    Text("🗺️ Mapa: ${trilha.titulo}", style = MaterialTheme.typography.titleLarge.copy(shadow = SOMBRA_DO_TEXTO), color = Color.White, maxLines = 1)
+                    Text("🏅 $completos de ${Mundos.todos.size} mundos completos", style = MaterialTheme.typography.titleSmall.copy(shadow = SOMBRA_DO_TEXTO), color = Color.White, maxLines = 1)
                 }
                 BotaoRedondo("📒", "Álbum de figurinhas", { sons.toque(); onAlbum(mundoDaVez ?: 0) }, tamanho = 52.dp)
             }
@@ -163,7 +171,8 @@ fun TelaMapa(
                                 cubicTo(a.x, (a.y + b.y) / 2, b.x, (a.y + b.y) / 2, b.x, b.y)
                             }
                             val feito = situacoes[i + 1].alcancado
-                            drawPath(caminho, Color(0x66FFFFFF), style = Stroke(16.dp.toPx(), cap = StrokeCap.Round))
+                            translate(top = 3.dp.toPx()) { drawPath(caminho, Cores.Sombra, style = Stroke(18.dp.toPx(), cap = StrokeCap.Round)) }
+                            drawPath(caminho, Color(0x8CFFFFFF), style = Stroke(16.dp.toPx(), cap = StrokeCap.Round))
                             drawPath(
                                 caminho,
                                 if (feito) Cores.Estrela else Color(0x99FFFFFF),
@@ -192,12 +201,25 @@ fun TelaMapa(
                         )
                     }
                 }
+                // Esmaecido no alto: as ilhas que passam por baixo do cabeçalho somem macio, sem corte duro.
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(36.dp)
+                        .background(Brush.verticalGradient(0f to cor.copy(alpha = 0.6f), 0.4f to cor.copy(alpha = 0.3f), 1f to cor.copy(alpha = 0f))),
+                )
             }
         }
     }
 }
 
+/** Sombra ameixa suave dos textos brancos do cabeçalho. */
+private val SOMBRA_DO_TEXTO = Shadow(Color(0x553D2C5E), Offset(0f, 3f), 6f)
+
 private val LARGURA_DA_ILHA: Dp = 168.dp
+
+/** Selo do cadeado dos mundos ainda fechados (lilás clarinho, diferente da coroa). */
+private val SELO_FECHADO = Color(0xFFE6E0F5)
 
 @Composable
 private fun IlhaDoMundo(s: SituacaoDoMundo, trilha: Trilha, modifier: Modifier, onClick: () -> Unit) {
@@ -230,6 +252,8 @@ private fun IlhaDoMundo(s: SituacaoDoMundo, trilha: Trilha, modifier: Modifier, 
                 Modifier
                     .size(TAMANHO_DA_ILHA)
                     .then(if (s.atual) Modifier.pulsando() else Modifier)
+                    // Sombra suave embaixo da ilha (descola do caminho).
+                    .drawBehind { drawCircle(Cores.Sombra, size.minDimension / 2, center.copy(y = center.y + 5.dp.toPx())) }
                     // Mundo ainda longe: a ilha fica clarinha (opaca, para a trilha não aparecer através dela).
                     .background(if (s.alcancado) Color(m.corArgb) else lerp(Color(m.corArgb), Color(0xFFF2F2F2), 0.6f), CircleShape)
                     .border(
@@ -245,22 +269,46 @@ private fun IlhaDoMundo(s: SituacaoDoMundo, trilha: Trilha, modifier: Modifier, 
             ) {
                 Text(m.emoji, fontSize = 46.sp, modifier = Modifier.alpha(if (s.alcancado) 1f else 0.5f))
             }
-            // Chefão do mundo (a 10ª fase): coroa dourada quando vencido
+            // Selo do canto: mundo ainda fechado mostra o cadeado (num selo lilás, sem coroa); aberto mostra o
+            // chefão (a 10ª fase), coroa apagadinha num selo branco tracejado até vencer e dourada depois.
+            val dourado = s.chefaoVencido
             Box(
                 Modifier
                     .align(Alignment.TopEnd)
                     .offset(x = (-6).dp, y = 6.dp)
                     .size(36.dp)
-                    .background(if (s.chefaoVencido) Cores.Estrela else Color.White, CircleShape)
-                    .border(2.dp, Color(0x33000000), CircleShape),
+                    .drawBehind { drawCircle(Cores.Sombra, size.minDimension / 2, center.copy(y = center.y + 2.dp.toPx())) }
+                    .background(
+                        when {
+                            !s.alcancado -> SELO_FECHADO
+                            dourado -> Cores.Estrela
+                            else -> Color.White
+                        },
+                        CircleShape,
+                    )
+                    .then(
+                        when {
+                            dourado -> Modifier.border(2.dp, Color.White, CircleShape)
+                            s.alcancado -> Modifier.drawBehind {
+                                val r = size.minDimension / 2 - 1.5.dp.toPx()
+                                drawCircle(
+                                    Cores.Estrela,
+                                    r,
+                                    style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx()))),
+                                )
+                            }
+                            else -> Modifier.border(2.dp, Cores.Contorno, CircleShape)
+                        },
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("👑", fontSize = 18.sp, modifier = Modifier.alpha(if (s.chefaoVencido) 1f else 0.45f))
+                when {
+                    !s.alcancado -> Text("🔒", fontSize = 17.sp)
+                    else -> Text("👑", fontSize = 18.sp, modifier = Modifier.alpha(if (dourado) 1f else 0.4f))
+                }
             }
             if (s.completo) {
                 Text("🏅", fontSize = 30.sp, modifier = Modifier.align(Alignment.BottomStart).offset(x = 6.dp, y = (-2).dp))
-            } else if (!s.alcancado) {
-                Text("🔒", fontSize = 24.sp, modifier = Modifier.align(Alignment.BottomStart).offset(x = 8.dp, y = (-4).dp))
             }
             if (s.atual) {
                 Text("📍", fontSize = 34.sp, modifier = Modifier.align(Alignment.TopStart).offset(x = 4.dp).pulsando())
@@ -273,7 +321,7 @@ private fun IlhaDoMundo(s: SituacaoDoMundo, trilha: Trilha, modifier: Modifier, 
             textAlign = TextAlign.Center,
             maxLines = 2,
             modifier = Modifier
-                .background(Color.White.copy(alpha = 0.85f), RoundedCornerShape(12.dp))
+                .cartaoFofo(raio = Raios.Medio)
                 .padding(horizontal = 10.dp, vertical = 2.dp),
         )
         // As 10 fases do mundo em bolinhas

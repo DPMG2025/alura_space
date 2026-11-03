@@ -41,6 +41,8 @@ import br.com.casinhadosaber.dominio.TemaFavorito
 import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.tema.Raios
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
 
 /*
  * Cartões novos da área dos pais (sugestões 1 e 7): desafio do dia para fazer junto, relatório da semana,
@@ -65,7 +67,7 @@ internal fun CartaoDosPais(modifier: Modifier = Modifier, conteudo: @Composable 
         modifier
             .fillMaxWidth()
             .padding(bottom = 16.dp)
-            .background(Color.White, RoundedCornerShape(20.dp))
+            .cartaoFofo(raio = Raios.Grande)
             .padding(16.dp),
     ) { conteudo() }
 }
@@ -261,7 +263,8 @@ fun CartaoAniversario(atual: Aniversario?, onSalvar: (Aniversario?) -> Unit, hab
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             BotaoFofo(
                 onClick = { onSalvar(Aniversario(dia, mes)) },
-                cor = if (mudou) Cores.Roxo else Lilas,
+                // Desabilitado, o próprio BotaoFofo deixa o roxo clarinho (sem trocar de cor aqui).
+                cor = Cores.Roxo,
                 habilitado = mudou,
                 modifier = Modifier.testTag("aniversario_salvar"),
             ) {
