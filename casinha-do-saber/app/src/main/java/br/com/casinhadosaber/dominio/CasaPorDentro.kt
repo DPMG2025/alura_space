@@ -160,9 +160,10 @@ object PlantaDaCasa {
     val moveis: List<Movel> = listOf(
         // Andar de baixo. Sala: escada, porta da rua, sofá com o gatinho, livros e TV.
         Movel("escada", "Escada", "stairs", Comodo.SALA, 0.08f, 0.08f, 0.95f, 2.6f, 2.7f, acao = Acao.ESCADA),
-        daPeca("sofa", Comodo.SALA, 1.25f, 0.1f, 3.0f, 0.98f, 0.88f),
-        daPeca("gato", Comodo.SALA, 1.85f, 0.35f, 2.35f, 0.85f, 0.45f, z = 0.5f, bloqueia = false),
-        daPeca("livros", Comodo.SALA, 3.1f, 0.12f, 3.55f, 0.57f, 0.5f),
+        daPeca("sofa", Comodo.SALA, 1.05f, 0.1f, 2.7f, 0.98f, 0.88f),
+        daPeca("gato", Comodo.SALA, 1.65f, 0.35f, 2.15f, 0.85f, 0.45f, z = 0.5f, bloqueia = false),
+        // Os livros ficam entre o sofá e a TV, recuados o bastante para a TV (mais funda) não tapar a pilha na tela.
+        daPeca("livros", Comodo.SALA, 2.8f, 0.12f, 3.22f, 0.54f, 0.5f),
         daPeca("tv", Comodo.SALA, 3.7f, 0.1f, 4.85f, 0.6f, 1.3f, acao = Acao.TV),
         Movel("tapete", "Tapete", "rug", Comodo.SALA, 1.5f, 1.45f, 3.9f, 3.45f, 0f, bloqueia = false, noChao = true),
         // Cozinha: a mesa com o bolo, o fogão e a geladeira (no canto, encostada na parede da cozinha).
@@ -183,14 +184,16 @@ object PlantaDaCasa {
         Movel("guardaroupa", "Guarda-roupa", "wardrobe", Comodo.QUARTO, 0.1f, 3.0f, 0.72f, 4.85f, 2.2f, frente = Frente.X, acao = Acao.GUARDA_ROUPA),
         // A plantinha enfeita o canto da frente do banheiro (como na casa de fora, perto do banheiro).
         daPeca("planta", Comodo.BANHEIRO, 7.3f, 4.3f, 7.85f, 4.85f, 0.7f),
-        // Banheiro: pia com o espelho em cima, vaso e banheira (embaixo da janela redonda).
-        Movel("pia", "Pia", "sink", Comodo.BANHEIRO, 4.3f, 0.1f, 5.25f, 0.75f, 0.9f, acao = Acao.TORNEIRA),
-        daPeca("espelho", Comodo.BANHEIRO, 4.4f, 0f, 5.15f, 0.04f, 0.8f, z = 1.3f, acao = Acao.ESPELHO, bloqueia = false, naParede = true),
-        Movel("vaso", "Vaso sanitário", "toilet", Comodo.BANHEIRO, 5.45f, 0.1f, 6.05f, 0.7f, 0.7f, acao = Acao.DESCARGA),
-        daPeca("banheira", Comodo.BANHEIRO, 6.25f, 0.1f, 7.9f, 1.35f, 0.6f, acao = Acao.BANHEIRA),
+        // Banheiro: banheira (embaixo da janela redonda), vaso e pia com o espelho em cima. A banheira, funda e
+        // baixinha, fica atrás de tudo (à esquerda); o vaso vem depois dela e a pia, rasa, no canto: na tela,
+        // nada tapa o vaso.
+        daPeca("banheira", Comodo.BANHEIRO, 4.15f, 0.1f, 5.8f, 1.35f, 0.6f, acao = Acao.BANHEIRA),
+        Movel("vaso", "Vaso sanitário", "toilet", Comodo.BANHEIRO, 5.92f, 0.1f, 6.47f, 0.7f, 0.7f, acao = Acao.DESCARGA),
+        Movel("pia", "Pia", "sink", Comodo.BANHEIRO, 6.98f, 0.1f, 7.9f, 0.7f, 0.9f, acao = Acao.TORNEIRA),
+        daPeca("espelho", Comodo.BANHEIRO, 7.07f, 0f, 7.81f, 0.04f, 0.8f, z = 1.3f, acao = Acao.ESPELHO, bloqueia = false, naParede = true),
         // O patinho de borracha boia na banheira (só aparece quando a banheira já chegou).
         Movel(
-            "patinho", "Patinho de borracha", "rubber duck", Comodo.BANHEIRO, 6.75f, 0.45f, 7.2f, 0.9f, 0.4f,
+            "patinho", "Patinho de borracha", "rubber duck", Comodo.BANHEIRO, 4.65f, 0.45f, 5.1f, 0.9f, 0.4f,
             z = 0.6f, acao = Acao.PATINHO, bloqueia = false,
         ),
     )

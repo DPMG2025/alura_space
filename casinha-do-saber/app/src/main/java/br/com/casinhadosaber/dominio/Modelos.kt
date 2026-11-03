@@ -22,7 +22,13 @@ sealed interface Visual {
 
     /** A silhueta escura de um emoji (jogo das sombras). */
     data class Sombra(val emoji: String) : Visual
+
+    /** Uma seta grossa desenhada no cartão (labirinto), apontando para [direcao]. */
+    data class Seta(val direcao: DirecaoDaSeta) : Visual
 }
+
+/** Para onde a seta aponta; [graus] é a rotação do desenho a partir da seta para a direita. */
+enum class DirecaoDaSeta(val graus: Float) { CIMA(-90f), BAIXO(90f), ESQUERDA(180f), DIREITA(0f) }
 
 data class Opcao(
     val visual: Visual,

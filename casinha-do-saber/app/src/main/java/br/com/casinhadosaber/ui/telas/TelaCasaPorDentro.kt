@@ -1467,11 +1467,13 @@ private fun montarAndar(
             )
         }
         if (andar == Andar.DE_CIMA) {
+            // em cima do lugar de sempre da banheira
+            val cx = PlantaDaCasa.porId.getValue("banheira").centroX
             daParede(
                 Comodo.BANHEIRO,
                 listOf(
-                    Forma(proj.circuloY(0.004f, 7.1f, 2.05f, 0.5f), moldura),
-                    Forma(proj.circuloY(0.005f, 7.1f, 2.05f, 0.4f), vidro, contorno = false),
+                    Forma(proj.circuloY(0.004f, cx, 2.05f, 0.5f), moldura),
+                    Forma(proj.circuloY(0.005f, cx, 2.05f, 0.4f), vidro, contorno = false),
                 ),
             )
         }

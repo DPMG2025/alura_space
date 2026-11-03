@@ -375,3 +375,90 @@ class CasaPorDentroTest {
         }
     }
 }
+
+class OcultacaoNaCasaTest {
+
+    private val tudo: EstadoJogo = EstadoJogo(estrelas = Trilha.entries.flatMap { t -> (0 until 10).map { "${t.name}:$it" to 3 } }.toMap())
+
+    // Mesma projeção de ui/componentes/Isometrico.kt, com ladrilho = 1.
+    private fun projetar(x: Float, y: Float, z: Float) = Pair((x - y) * 0.5, (x + y) * 0.25 - z * 0.56)
+
+    /** O contorno da caixa na tela: o fecho convexo dos 8 cantos (um hexágono). */
+    private fun silhueta(c: Caixa): List<Pair<Double, Double>> {
+        val p = ArrayList<Pair<Double, Double>>()
+        for (x in listOf(c.x0, c.x1)) for (y in listOf(c.y0, c.y1)) for (z in listOf(c.z0, c.z1)) p += projetar(x, y, z)
+        val s = p.distinct().sortedWith(compareBy({ it.first }, { it.second }))
+        fun giro(o: Pair<Double, Double>, a: Pair<Double, Double>, b: Pair<Double, Double>) =
+            (a.first - o.first) * (b.second - o.second) - (a.second - o.second) * (b.first - o.first)
+        val baixo = ArrayList<Pair<Double, Double>>()
+        for (q in s) { while (baixo.size >= 2 && giro(baixo[baixo.size - 2], baixo.last(), q) <= 0) baixo.removeAt(baixo.size - 1); baixo += q }
+        val cima = ArrayList<Pair<Double, Double>>()
+        for (q in s.reversed()) { while (cima.size >= 2 && giro(cima[cima.size - 2], cima.last(), q) <= 0) cima.removeAt(cima.size - 1); cima += q }
+        return baixo.dropLast(1) + cima.dropLast(1)
+    }
+
+    private fun area(p: List<Pair<Double, Double>>): Double {
+        var s = 0.0
+        for (i in p.indices) { val a = p[i]; val b = p[(i + 1) % p.size]; s += a.first * b.second - b.first * a.second }
+        return kotlin.math.abs(s) / 2
+    }
+
+    /** Recorta o polígono [alvo] pelo polígono convexo [faca] (Sutherland-Hodgman). */
+    private fun recortar(alvo: List<Pair<Double, Double>>, faca: List<Pair<Double, Double>>): List<Pair<Double, Double>> {
+        var saida = alvo
+        val sentido = if (faca.indices.sumOf { i -> val a = faca[i]; val b = faca[(i + 1) % faca.size]; a.first * b.second - b.first * a.second } > 0) 1.0 else -1.0
+        for (i in faca.indices) {
+            if (saida.isEmpty()) break
+            val a = faca[i]; val b = faca[(i + 1) % faca.size]
+            fun dentro(p: Pair<Double, Double>) = sentido * ((b.first - a.first) * (p.second - a.second) - (b.second - a.second) * (p.first - a.first)) >= 0
+            fun corte(p: Pair<Double, Double>, q: Pair<Double, Double>): Pair<Double, Double> {
+                val d1 = (b.first - a.first) * (p.second - a.second) - (b.second - a.second) * (p.first - a.first)
+                val d2 = (b.first - a.first) * (q.second - a.second) - (b.second - a.second) * (q.first - a.first)
+                val t = d1 / (d1 - d2)
+                return Pair(p.first + (q.first - p.first) * t, p.second + (q.second - p.second) * t)
+            }
+            val entrada = saida
+            val nova = ArrayList<Pair<Double, Double>>()
+            for (k in entrada.indices) {
+                val p = entrada[k]; val q = entrada[(k + 1) % entrada.size]
+                if (dentro(q)) { if (!dentro(p)) nova += corte(p, q); nova += q } else if (dentro(p)) nova += corte(p, q)
+            }
+            saida = nova
+        }
+        return saida
+    }
+
+    private val vizinhosNaCozinha = setOf("lixeira" to "fogao", "fogao" to "geladeira")
+
+    /**
+     * Na projeção isométrica, nenhum objeto fica escondido atrás de outro que é desenhado depois dele:
+     * mede quanto do contorno de cada caixa na tela fica coberto pelo contorno de quem está na frente.
+     */
+    @Test
+    fun `nenhum objeto fica escondido atras de outro`() {
+        for (a in Andar.entries) {
+            val m = PlantaDaCasa.moveisDe(tudo, a).filter { !it.naParede && !it.noChao }
+            val caixas = m.map { PlantaDaCasa.caixaDo(it) }
+            val ordem = PlantaDaCasa.ordenarParaDesenho(caixas)
+            val posicao = IntArray(caixas.size)
+            ordem.forEachIndexed { k, i -> posicao[i] = k }
+            for (i in m.indices) {
+                val atras = silhueta(caixas[i])
+                val total = area(atras)
+                var soma = 0.0
+                for (j in m.indices) {
+                    if (i == j || posicao[j] < posicao[i]) continue
+                    // Enfeite em cima do móvel (o gato no sofá) cobre o móvel de propósito.
+                    if (PlantaDaCasa.apoios[m[j].id] == m[i].id || PlantaDaCasa.apoios[m[i].id] == m[j].id) continue
+                    val coberto = area(recortar(atras, silhueta(caixas[j]))) / total
+                    // Na parede da cozinha, lixeira, fogão e geladeira ficam lado a lado: ali cada um
+                    // tapa só a beirada do vizinho. Em todo o resto, quase nada fica atrás de outro.
+                    val limite = if (m[i].id to m[j].id in vizinhosNaCozinha) 0.4 else 0.2
+                    assertTrue("${m[i].id} fica ${(coberto * 100).toInt()}% atrás de ${m[j].id}", coberto < limite)
+                    soma += coberto
+                }
+                assertTrue("${m[i].id} fica ${(soma * 100).toInt()}% escondido", soma < 0.5)
+            }
+        }
+    }
+}

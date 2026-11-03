@@ -85,6 +85,7 @@ class GeradorDeFasesTest {
                 is Visual.Emoji -> assertTrue(v.emoji.isNotBlank())
                 is Visual.Cor -> Unit
                 is Visual.Sombra -> assertTrue(v.emoji.isNotBlank())
+                is Visual.Seta -> assertTrue(o.fala.isNotEmpty())
             }
         }
     }

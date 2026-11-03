@@ -1836,8 +1836,9 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         )
     }
 
-    private enum class Direcao(val dl: Int, val dc: Int, val seta: String, val nome: String) {
-        CIMA(-1, 0, "⬆️", "para cima"), BAIXO(1, 0, "⬇️", "para baixo"), ESQUERDA(0, -1, "⬅️", "para a esquerda"), DIREITA(0, 1, "➡️", "para a direita"),
+    private enum class Direcao(val dl: Int, val dc: Int, val seta: DirecaoDaSeta, val nome: String) {
+        CIMA(-1, 0, DirecaoDaSeta.CIMA, "para cima"), BAIXO(1, 0, DirecaoDaSeta.BAIXO, "para baixo"),
+        ESQUERDA(0, -1, DirecaoDaSeta.ESQUERDA, "para a esquerda"), DIREITA(0, 1, DirecaoDaSeta.DIREITA, "para a direita"),
     }
 
     /**
@@ -1900,7 +1901,7 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         }
         val primeiro = tipo == 0
         val d = if (primeiro) direcaoEntre(caminho[0], caminho[1]) else direcaoEntre(caminho[caminho.size - 2], caminho.last())
-        val op = { x: Direcao -> opcaoFigura(x.seta, x.nome) }
+        val op = { x: Direcao -> Opcao(Visual.Seta(x.seta), listOf(pt(x.nome))) }
         return montar(
             instrucao = if (primeiro) "Para que lado você vai primeiro?" else "Qual é o último passo?",
             fala = listOf(

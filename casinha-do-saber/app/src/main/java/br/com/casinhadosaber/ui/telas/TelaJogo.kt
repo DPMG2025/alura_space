@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import br.com.casinhadosaber.ui.componentes.SetaDesenhada
 import br.com.casinhadosaber.ui.componentes.escurecer
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
@@ -708,6 +709,7 @@ private fun descreverOpcao(o: Opcao): String = when (val v = o.visual) {
     is Visual.Emoji -> o.fala.joinToString(" ") { it.texto }.ifBlank { v.emoji }
     is Visual.Cor -> o.fala.joinToString(" ") { it.texto }.ifBlank { "Cor" }
     is Visual.Sombra -> "Sombra"
+    is Visual.Seta -> o.fala.joinToString(" ") { it.texto }.ifBlank { "Seta" }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -761,6 +763,12 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui
                     drawContent()
                     drawRect(Color(0xFF3D2C5E), blendMode = androidx.compose.ui.graphics.BlendMode.SrcIn)
                 },
+        )
+        is Visual.Seta -> SetaDesenhada(
+            v.direcao,
+            Modifier.size(minOf(altura * 0.62f, 84.dp)),
+            cor = if (certa) Color.White else Color(0xFFFF9F43),
+            corSombra = if (certa) Color(0xFF2A9452) else Color(0xFFD9772B),
         )
         is Visual.Cor -> Box(
             Modifier

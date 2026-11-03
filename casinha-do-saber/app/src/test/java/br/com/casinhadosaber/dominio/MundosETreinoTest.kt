@@ -149,7 +149,7 @@ class CinquentaFasesTest {
     fun `labirinto e compacto, tem um caminho so e a seta certa`() {
         val g = GeradorDeFases(Random(12))
         val fases = listOf(30, 35, 41).map { g.fases(Trilha.LOGICA)[it] }
-        val setas = mapOf("⬆️" to (-1 to 0), "⬇️" to (1 to 0), "⬅️" to (0 to -1), "➡️" to (0 to 1))
+        val setas = mapOf(DirecaoDaSeta.CIMA to (-1 to 0), DirecaoDaSeta.BAIXO to (1 to 0), DirecaoDaSeta.ESQUERDA to (0 to -1), DirecaoDaSeta.DIREITA to (0 to 1))
         var vistos = 0
         repeat(40) {
             for (f in fases) for (p in g.perguntas(f)) {
@@ -171,11 +171,11 @@ class CinquentaFasesTest {
                 when (p.instrucao) {
                     "Quantas pedrinhas tem no caminho?" -> assertEquals((caminho.size - 2).toString(), (certa as Visual.Texto).texto)
                     "Para que lado você vai primeiro?" -> {
-                        val (dl, dc) = setas.getValue((certa as Visual.Emoji).emoji)
+                        val (dl, dc) = setas.getValue((certa as Visual.Seta).direcao)
                         assertEquals(caminho[1], caminho[0].first + dl to caminho[0].second + dc)
                     }
                     else -> {
-                        val (dl, dc) = setas.getValue((certa as Visual.Emoji).emoji)
+                        val (dl, dc) = setas.getValue((certa as Visual.Seta).direcao)
                         val a = caminho[caminho.size - 2]
                         assertEquals(caminho.last(), a.first + dl to a.second + dc)
                     }
@@ -262,6 +262,7 @@ class CinquentaFasesTest {
             is Visual.Emoji -> assertTrue("$fase: figura vazia", v.emoji.isNotBlank())
             is Visual.Sombra -> assertTrue(v.emoji.isNotBlank())
             is Visual.Cor -> Unit
+            is Visual.Seta -> assertTrue("$fase: seta sem fala", o.fala.isNotEmpty())
         }
         (p.cena as? Cena.Grade)?.let { assertEquals("$fase: quadro torto", 0, it.itens.size % it.colunas) }
     }
