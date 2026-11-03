@@ -7,6 +7,13 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.Dp
+import br.com.casinhadosaber.ui.componentes.caminhoEstrela
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -63,7 +70,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.casinhadosaber.dominio.Categoria
+import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Fase
+import br.com.casinhadosaber.dominio.Loja
+import br.com.casinhadosaber.dominio.Produto
 import br.com.casinhadosaber.dominio.ItemCasa
 import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Perfil
@@ -82,7 +93,8 @@ import kotlinx.coroutines.delay
 
 /**
  * Comemoração ao vencer uma fase. Na primeira vitória, um presente aparece:
- * a criança toca para abrir e descobre a peça nova da casa.
+ * a criança toca para abrir e descobre a peça nova da casa. Depois das 40 peças,
+ * o presente é um [brinde] da loja (já aplicado ao estado pelo domínio) e mais moedinhas.
  */
 @Composable
 fun TelaPremio(
@@ -95,6 +107,8 @@ fun TelaPremio(
     onColocarNaCasa: () -> Unit,
     onProxima: () -> Unit,
     onVoltar: () -> Unit,
+    /** Presente da loja quando a casa já está completa (ver `ResultadoPartida.brinde`). */
+    brinde: Produto? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -103,30 +117,38 @@ fun TelaPremio(
     var confete by remember { mutableIntStateOf(0) }
     val nome = perfil?.nome.orEmpty()
     val vibracao = LocalHapticFeedback.current
+    // A peça da casa tem prioridade; sem ela, o brinde da loja.
+    val brindeDaLoja = if (item == null) brinde else null
+    val temPresente = item != null || brindeDaLoja != null
 
     fun abrir() {
-        if (aberto || item == null) return
+        if (aberto || !temPresente) return
         aberto = true
         confete++
         vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
         sons.premio()
-        val ultima = item == ItensDaCasa.ordem.last()
-        narrador.falar(
-            listOf(pt("Você ganhou ${item.comArtigo}! Em inglês:"), en(item.nomeEn)) +
-                if (ultima) listOf(pt("Sua casa está completa! Você é um campeão!")) else listOf(pt("Vamos colocar na sua casa?")),
-        )
+        if (item != null) {
+            val ultima = item == ItensDaCasa.ordem.last()
+            narrador.falar(
+                listOf(pt("Você ganhou ${item.comArtigo}! Em inglês:"), en(item.nomeEn)) +
+                    if (ultima) listOf(pt("Sua casa está completa! Você é um campeão!")) else listOf(pt("Vamos colocar na sua casa?")),
+            )
+        } else if (brindeDaLoja != null) {
+            narrador.falar(falaDoBrinde(brindeDaLoja))
+            sons.moeda()
+        }
     }
 
     LaunchedEffect(Unit) {
         sons.acerto()
         val parabens = if (nome.isBlank()) "Parabéns! Você terminou a fase!" else "Parabéns, $nome! Você terminou a fase!"
-        narrador.falar(if (item != null) "$parabens Toque no presente três vezes para abrir!" else parabens)
+        narrador.falar(if (temPresente) "$parabens Toque no presente três vezes para abrir!" else parabens)
         for (i in 1..estrelas) {
             delay(380)
             estrelasVisiveis = i
             sons.toque()
         }
-        if (item == null) confete++
+        if (!temPresente) confete++
         if (moedas > 0) {
             delay(250)
             sons.moeda()
@@ -181,14 +203,57 @@ fun TelaPremio(
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Spacer(Modifier.height(8.dp))
-                Presente(item, aberto, onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) }, onAbrir = ::abrir)
+                Presente(
+                    nomeAberto = item.nome,
+                    aberto = aberto,
+                    onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
+                    onAbrir = ::abrir,
+                ) { m -> IconeDoItem(item, 130.dp, m) }
                 if (aberto) {
-                    Text(item.nome, style = MaterialTheme.typography.headlineLarge)
+                    Text(item.nome, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
                     Text("Em inglês: ${item.nomeEn}", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)
                 }
                 perfil?.let {
                     Spacer(Modifier.height(12.dp))
                     Crianca(it, Modifier.height(if (aberto) 110.dp else 160.dp), acenando = true)
+                }
+            } else if (brindeDaLoja != null) {
+                Text(
+                    if (aberto) "Você ganhou:" else "Um presente da lojinha!",
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Spacer(Modifier.height(8.dp))
+                Presente(
+                    nomeAberto = brindeDaLoja.nome,
+                    aberto = aberto,
+                    onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
+                    onAbrir = ::abrir,
+                ) { m -> DesenhoDoBrinde(brindeDaLoja, 130.dp, m) }
+                if (aberto) {
+                    Text(brindeDaLoja.nome, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(6.dp))
+                    // As moedinhas extras do brinde, num selo dourado.
+                    Row(
+                        Modifier
+                            .background(Cores.Estrela, RoundedCornerShape(50))
+                            .border(3.dp, Color(0xFFE0A800), RoundedCornerShape(50))
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .semantics(mergeDescendants = true) { contentDescription = "Mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas" },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("+${EstadoJogo.MOEDAS_DO_BRINDE} 🪙", style = MaterialTheme.typography.headlineMedium)
+                    }
+                }
+                perfil?.let {
+                    // O chapéu ganho aparece na cabeça da criança só depois de abrir (surpresa).
+                    val vestido = when {
+                        brindeDaLoja.categoria != Categoria.CHAPEU -> it
+                        aberto -> it.copy(chapeu = brindeDaLoja.valor)
+                        it.chapeu == brindeDaLoja.valor -> it.copy(chapeu = "")
+                        else -> it
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Crianca(vestido, Modifier.height(if (aberto) 120.dp else 160.dp), acenando = true)
                 }
             } else {
                 perfil?.let { Crianca(it, Modifier.height(170.dp), acenando = true) }
@@ -201,12 +266,13 @@ fun TelaPremio(
             }
 
             Spacer(Modifier.height(24.dp))
-            AnimatedVisibility(visible = item == null || aberto, enter = fadeIn() + scaleIn()) {
+            AnimatedVisibility(visible = !temPresente || aberto, enter = fadeIn() + scaleIn()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    if (item != null) {
-                        BotaoFofo(onClick = onColocarNaCasa, cor = Cores.Certo, modifier = Modifier.pulsando(), descricao = "Colocar na casa") {
+                    if (temPresente) {
+                        val texto = if (item != null) "🏠 Colocar na casa" else "🏠 Ver na casa"
+                        BotaoFofo(onClick = onColocarNaCasa, cor = Cores.Certo, modifier = Modifier.pulsando(), descricao = texto.removePrefix("🏠 ")) {
                             Text(
-                                "🏠 Colocar na casa",
+                                texto,
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = Color.White,
                                 modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
@@ -216,7 +282,7 @@ fun TelaPremio(
                     Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
                         BotaoRedondo("🗺️", "Voltar para o caminho", onVoltar, tamanho = 60.dp)
                         if (temProxima) {
-                            if (item == null) {
+                            if (!temPresente) {
                                 BotaoFofo(onClick = onProxima, cor = Color(fase.trilha.corArgb), corBase = Color(fase.trilha.corEscuraArgb), modifier = Modifier.pulsando(), descricao = "Próxima fase") {
                                     Text("Próxima ▶", style = MaterialTheme.typography.headlineMedium, color = Color.White, modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp))
                                 }
@@ -232,8 +298,85 @@ fun TelaPremio(
     }
 }
 
+/** O que o narrador diz ao abrir o brinde: o que ganhou, onde já está e as moedinhas extras. */
+private fun falaDoBrinde(p: Produto): String {
+    val primeira = p.nome.substringBefore(' ')
+    val feminino = primeira.endsWith("a") || primeira in setOf("Parede", "Flor", "Neve")
+    val artigo = if (feminino) "uma" else "um"
+    val oQue = when (p.categoria) {
+        Categoria.CLIMA -> "Você ganhou um presente da lojinha: ${p.nome.lowercase()}!"
+        else -> "Você ganhou um presente da lojinha: $artigo ${p.nome.lowercase()}!"
+    }
+    val onde = when (p.categoria) {
+        Categoria.TELHADO, Categoria.PORTA, Categoria.PAREDE -> "Já está na sua casa!"
+        Categoria.CHAPEU -> "Olha só, você já está usando!"
+        Categoria.VISITANTE -> "Vai passear no seu jardim!"
+        Categoria.CLIMA -> if (p.valor == "2") "Agora pode nevar na sua casa!" else "Agora pode chover na sua casa!"
+    }
+    return "$oQue $onde E mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas!"
+}
+
+/** Desenho grande do brinde: telhado e porta na cor ganha, amostra do papel de parede, ou o emoji. */
 @Composable
-private fun Presente(item: ItemCasa, aberto: Boolean, onToque: () -> Unit, onAbrir: () -> Unit) {
+private fun DesenhoDoBrinde(p: Produto, lado: Dp, modifier: Modifier = Modifier) {
+    val indice = p.valor.toIntOrNull() ?: 0
+    Box(modifier.size(lado), contentAlignment = Alignment.Center) {
+        when (p.categoria) {
+            Categoria.TELHADO -> Canvas(Modifier.fillMaxSize()) {
+                val w = size.width
+                val h = size.height
+                val cor = Color(Loja.coresDoTelhado.getOrElse(indice) { Loja.coresDoTelhado[0] })
+                val escura = Color(Loja.coresDoTelhadoEscuras.getOrElse(indice) { Loja.coresDoTelhadoEscuras[0] })
+                drawRoundRect(Color(0xFFFFE9C7), Offset(w * 0.2f, h * 0.48f), Size(w * 0.6f, h * 0.44f), CornerRadius(w * 0.03f))
+                drawRoundRect(Color(0xFFA0522D), Offset(w * 0.43f, h * 0.66f), Size(w * 0.14f, h * 0.26f), CornerRadius(w * 0.05f))
+                drawRoundRect(Color(0xFF8FD3FF), Offset(w * 0.26f, h * 0.58f), Size(w * 0.12f, h * 0.11f), CornerRadius(w * 0.02f))
+                drawRoundRect(Color(0xFF8FD3FF), Offset(w * 0.62f, h * 0.58f), Size(w * 0.12f, h * 0.11f), CornerRadius(w * 0.02f))
+                val telhado = Path().apply {
+                    moveTo(w * 0.06f, h * 0.52f); lineTo(w * 0.5f, h * 0.1f); lineTo(w * 0.94f, h * 0.52f); close()
+                }
+                drawPath(telhado, cor)
+                drawPath(telhado, escura, style = Stroke(w * 0.035f))
+            }
+            Categoria.PORTA -> Canvas(Modifier.fillMaxSize()) {
+                val w = size.width
+                val h = size.height
+                val cor = Color(Loja.coresDaPorta.getOrElse(indice) { Loja.coresDaPorta[0] })
+                drawRoundRect(Color(0xFFFFE9C7), Offset(w * 0.12f, h * 0.06f), Size(w * 0.76f, h * 0.9f), CornerRadius(w * 0.06f))
+                drawRoundRect(cor, Offset(w * 0.27f, h * 0.14f), Size(w * 0.46f, h * 0.82f), CornerRadius(w * 0.23f, w * 0.23f))
+                drawRoundRect(Color.Black.copy(alpha = 0.18f), Offset(w * 0.27f, h * 0.14f), Size(w * 0.46f, h * 0.82f), CornerRadius(w * 0.23f, w * 0.23f), style = Stroke(w * 0.025f))
+                drawCircle(Color(0xFFFFD166), w * 0.045f, Offset(w * 0.63f, h * 0.58f))
+            }
+            Categoria.PAREDE -> Canvas(Modifier.fillMaxSize()) {
+                val w = size.width
+                drawRoundRect(Color(0xFFFFF1C9), cornerRadius = CornerRadius(w * 0.1f))
+                val passo = w / 5
+                for (i in 0 until 5) for (j in 0 until 5) {
+                    val c = Offset(passo * (i + 0.5f), passo * (j + 0.5f))
+                    when (p.valor) {
+                        "1" -> if (i % 2 == 0 && j == 0) drawRect(Color(0x33EF476F), Offset(passo * i + passo * 0.25f, 0f), Size(passo / 2, size.height))
+                        "2" -> drawCircle(Color(0x554D96FF), passo * 0.2f, c)
+                        else -> if ((i + j) % 2 == 0) drawPath(caminhoEstrela(c, passo * 0.38f), Color(0xFFFFC93C))
+                    }
+                }
+                drawRoundRect(Color(0xFFE6B98F), cornerRadius = CornerRadius(w * 0.1f), style = Stroke(w * 0.04f))
+            }
+            else -> Text(
+                p.icone,
+                style = MaterialTheme.typography.displayLarge.copy(fontSize = (lado.value * 0.62f).sp, lineHeight = (lado.value * 0.72f).sp),
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+@Composable
+private fun Presente(
+    nomeAberto: String,
+    aberto: Boolean,
+    onToque: () -> Unit,
+    onAbrir: () -> Unit,
+    conteudo: @Composable (Modifier) -> Unit,
+) {
     var toques by remember { mutableIntStateOf(0) }
     val escala = remember { Animatable(1f) }
     val giro = remember { Animatable(0f) }
@@ -268,7 +411,7 @@ private fun Presente(item: ItemCasa, aberto: Boolean, onToque: () -> Unit, onAbr
     Box(
         Modifier
             .size(230.dp)
-            .semantics { contentDescription = if (aberto) item.nome else "Presente. Toque para abrir." }
+            .semantics { contentDescription = if (aberto) nomeAberto else "Presente. Toque para abrir." }
             .clickable(enabled = !aberto, role = Role.Button, onClick = ::tocar),
         contentAlignment = Alignment.Center,
     ) {
@@ -291,7 +434,7 @@ private fun Presente(item: ItemCasa, aberto: Boolean, onToque: () -> Unit, onAbr
                 }
                 drawCircle(Color.White.copy(alpha = 0.9f), r * 0.68f, c)
             }
-            IconeDoItem(item, 130.dp, Modifier.graphicsLayer { scaleX = escala.value; scaleY = escala.value })
+            conteudo(Modifier.graphicsLayer { scaleX = escala.value; scaleY = escala.value })
         } else {
             MaoGuia(Modifier.align(Alignment.BottomEnd), espera = 1200)
             Box(

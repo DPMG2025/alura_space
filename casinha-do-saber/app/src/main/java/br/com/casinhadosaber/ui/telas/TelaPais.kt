@@ -36,6 +36,21 @@ import android.content.Intent
 import android.speech.tts.TextToSpeech
 import androidx.compose.ui.platform.LocalContext
 import br.com.casinhadosaber.dominio.EstadoJogo
+import br.com.casinhadosaber.dominio.Fase
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItensDaCasa
@@ -98,6 +113,10 @@ private fun Painel(
 ) {
     var confirmar by remember { mutableStateOf(false) }
     val gerador = remember { GeradorDeFases() }
+    // Caminhos abertos na lista de fases (nomes separados por vírgula, para sobreviver a girar a tela).
+    // Começa com o caminho da fase que está sendo praticada, se houver.
+    val praticandoInicial = remember(estado) { faseMaisDificil(estado, gerador) }
+    var abertos by rememberSaveable { mutableStateOf(praticandoInicial?.first?.trilha?.name.orEmpty()) }
 
     Cartao {
         Text("🔒 Sem internet • Sem anúncios • Sem coleta de dados", style = MaterialTheme.typography.titleMedium, color = Cores.Certo)
@@ -147,11 +166,7 @@ private fun Painel(
             style = MaterialTheme.typography.bodyLarge,
         )
         // A fase liberada em que mais erra de primeira (últimas 10 respostas).
-        val praticando = Trilha.entries.flatMap { gerador.fases(it) }
-            .filter { estado.liberada(it) }
-            .mapNotNull { f -> estado.precisaoDaFase(EstadoJogo.chave(f.trilha, f.numero))?.let { f to it } }
-            .filter { it.second < 80 }
-            .minByOrNull { it.second }
+        val praticando = praticandoInicial
         if (praticando != null) {
             Spacer(Modifier.height(8.dp))
             Text(
@@ -161,32 +176,25 @@ private fun Painel(
                 color = Cores.Texto,
             )
         }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "Toque num caminho para ver as ${GeradorDeFases.FASES_POR_TRILHA} fases. As porcentagens são dos acertos de primeira nas últimas 10 respostas de cada fase.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Cores.TextoSuave,
+        )
         for (t in Trilha.entries) {
             Spacer(Modifier.height(10.dp))
-            Text("${t.emoji} ${t.titulo}: ${estado.vencidasNa(t)}/${GeradorDeFases.FASES_POR_TRILHA}", style = MaterialTheme.typography.titleMedium)
-            for (f in gerador.fases(t)) {
-                val e = estado.estrelasDa(f)
-                val p = estado.precisaoDaFase(EstadoJogo.chave(f.trilha, f.numero))
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 8.dp, top = 2.dp)) {
-                    // Bolinha colorida: verde (80% ou mais de primeira), amarela (aprendendo), cinza (não jogou).
-                    Box(
-                        Modifier
-                            .size(12.dp)
-                            .background(
-                                when {
-                                    p == null -> Color(0xFFD0D0D0)
-                                    p >= 80 -> Cores.Certo
-                                    else -> Cores.Estrela
-                                },
-                                RoundedCornerShape(50),
-                            ),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text("${f.numero + 1}. ${f.titulo}", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                    if (p != null) Text("$p%  ", style = MaterialTheme.typography.bodyMedium, color = Cores.TextoSuave)
-                    if (e > 0) FileiraDeEstrelas(e, tamanho = 16.dp) else Text("ainda não", style = MaterialTheme.typography.bodyMedium, color = Cores.TextoSuave)
-                }
-            }
+            CaminhoRecolhivel(
+                trilha = t,
+                fases = gerador.fases(t),
+                estado = estado,
+                praticando = praticando?.first,
+                aberto = t.name in abertos.split(","),
+                onAlternar = {
+                    val lista = abertos.split(",").filter { it.isNotEmpty() }
+                    abertos = (if (t.name in lista) lista - t.name else lista + t.name).joinToString(",")
+                },
+            )
         }
     }
 
@@ -248,9 +256,10 @@ private fun Painel(
                 "• Cada caminho vai do mais fácil ao mais difícil: primeiro contar, depois somar e tirar; " +
                 "primeiro vogais, depois letras, sílabas e rimas; cores e bichos em inglês; padrões e sequências na lógica.\n" +
                 "• Errar não tira nada: a criança ouve o nome do que tocou e tenta de novo. Depois de dois erros, a resposta certa brilha.\n" +
-                "• Para ganhar o presente da fase, é preciso acertar pelo menos 3 de 5 de primeira. Assim a casa cresce junto com o aprendizado.\n" +
+                "• Para ganhar o presente da fase, é preciso acertar pelo menos ${EstadoJogo.MINIMO_PARA_VENCER} de 5 de primeira. Assim a casa cresce junto com o aprendizado.\n" +
                 "• Toda fase revisa uma pergunta de uma fase anterior.\n" +
-                "• Cada fase nova vencida dá uma peça para a casa. Montar a casa (tocar, arrastar, pintar) treina coordenação e dá vontade de continuar.\n" +
+                "• Cada fase nova vencida dá uma peça para a casa. Montar a casa (tocar, arrastar, pintar) treina coordenação e dá vontade de continuar. " +
+                "Depois das ${ItensDaCasa.total} peças, cada fase nova dá um enfeite da lojinha e mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas.\n" +
                 "• Sessões curtas, de 10 a 15 minutos, funcionam melhor nessa idade. Jogue junto e comemore cada peça!\n" +
                 "• O app não usa internet, não tem anúncios e não coleta dados. Para ouvir as palavras em inglês, " +
                 "instale a voz em inglês nas configurações de voz (Texto para fala) do celular.",
@@ -266,6 +275,125 @@ private fun Painel(
             confirmButton = { TextButton(onClick = { confirmar = false; onApagarTudo() }) { Text("Apagar", color = Cores.Errado) } },
             dismissButton = { TextButton(onClick = { confirmar = false }) { Text("Cancelar") } },
         )
+    }
+}
+
+/** A fase liberada em que a criança mais erra de primeira (abaixo de 80%), com a porcentagem. */
+private fun faseMaisDificil(estado: EstadoJogo, gerador: GeradorDeFases): Pair<Fase, Int>? =
+    Trilha.entries.flatMap { gerador.fases(it) }
+        .filter { estado.liberada(it) }
+        .mapNotNull { f -> estado.precisaoDaFase(EstadoJogo.chave(f.trilha, f.numero))?.let { f to it } }
+        .filter { it.second < 80 }
+        .minByOrNull { it.second }
+
+private val CinzaSemJogo = Color(0xFFD0D0D0)
+private val CinzaFechada = Color(0xFFEDEDED)
+
+private fun corDaFase(estado: EstadoJogo, f: Fase): Color {
+    val p = estado.precisaoDaFase(EstadoJogo.chave(f.trilha, f.numero))
+    return when {
+        p != null && p >= 80 -> Cores.Certo
+        p != null -> Cores.Estrela
+        estado.estrelasDa(f) > 0 -> Cores.Certo
+        estado.liberada(f) -> CinzaSemJogo
+        else -> CinzaFechada
+    }
+}
+
+/**
+ * Um caminho na lista de progresso: o cabeçalho resume (vencidas, acertos de primeira, fases para reforçar,
+ * uma faixa com uma cor por fase) e, ao tocar, abre a lista das fases.
+ */
+@Composable
+private fun CaminhoRecolhivel(
+    trilha: Trilha,
+    fases: List<Fase>,
+    estado: EstadoJogo,
+    praticando: Fase?,
+    aberto: Boolean,
+    onAlternar: () -> Unit,
+) {
+    val cor = Color(trilha.corArgb)
+    val vencidas = estado.vencidasNa(trilha)
+    val precisao = estado.precisao(trilha)
+    val reforcar = fases.count { f -> estado.precisaoDaFase(EstadoJogo.chave(f.trilha, f.numero))?.let { it < 80 } == true }
+    val giro by animateFloatAsState(if (aberto) 90f else 0f, label = "seta")
+    val resumo = buildString {
+        append("$vencidas de ${fases.size} vencidas")
+        append(if (precisao == null) " • ainda não jogou" else " • $precisao% de primeira")
+        if (reforcar > 0) append(" • $reforcar para reforçar")
+    }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(cor.copy(alpha = 0.08f))
+            .border(2.dp, cor.copy(alpha = 0.35f), RoundedCornerShape(16.dp)),
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clickable(role = Role.Button, onClickLabel = if (aberto) "Recolher" else "Ver as fases", onClick = onAlternar)
+                .semantics(mergeDescendants = true) {
+                    stateDescription = if (aberto) "aberto" else "recolhido"
+                }
+                .padding(12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("${trilha.emoji} ${trilha.titulo}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                Text("$vencidas/${fases.size}", style = MaterialTheme.typography.titleMedium, color = Color(trilha.corEscuraArgb))
+                Spacer(Modifier.width(8.dp))
+                Text("▶", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave, modifier = Modifier.rotate(giro))
+            }
+            Text(resumo, style = MaterialTheme.typography.bodyMedium, color = Cores.TextoSuave)
+            Spacer(Modifier.height(6.dp))
+            // Uma fatia por fase: verde (80% ou mais), amarela (aprendendo), cinza (não jogou), clarinha (fechada).
+            Row(Modifier.fillMaxWidth().height(10.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                for (f in fases) {
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(corDaFase(estado, f), RoundedCornerShape(3.dp)),
+                    )
+                }
+            }
+        }
+        AnimatedVisibility(visible = aberto, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 10.dp)) {
+                for (f in fases) {
+                    val e = estado.estrelasDa(f)
+                    val p = estado.precisaoDaFase(EstadoJogo.chave(f.trilha, f.numero))
+                    val destaque = f == praticando
+                    if (f.numero > 0 && f.numero % 5 == 0) {
+                        // Divisória a cada 5 fases, como os marcos do caminho da criança.
+                        Box(Modifier.fillMaxWidth().padding(vertical = 4.dp).height(1.dp).background(cor.copy(alpha = 0.3f)))
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(if (destaque) Modifier.background(Cores.Estrela.copy(alpha = 0.25f), RoundedCornerShape(8.dp)) else Modifier)
+                            .padding(vertical = 3.dp, horizontal = 4.dp),
+                    ) {
+                        Box(Modifier.size(12.dp).background(corDaFase(estado, f), RoundedCornerShape(50)))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "${f.numero + 1}. ${f.titulo}" + if (destaque) "  (praticando agora)" else "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (estado.liberada(f)) Cores.Texto else Cores.TextoSuave,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (p != null) Text("$p%  ", style = MaterialTheme.typography.bodyMedium, color = Cores.TextoSuave)
+                        when {
+                            e > 0 -> FileiraDeEstrelas(e, tamanho = 16.dp)
+                            estado.liberada(f) -> Text("ainda não", style = MaterialTheme.typography.bodyMedium, color = Cores.TextoSuave)
+                            else -> Text("🔒", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
