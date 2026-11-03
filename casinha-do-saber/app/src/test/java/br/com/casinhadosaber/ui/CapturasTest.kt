@@ -637,7 +637,8 @@ class CapturasTest {
                 val com = imagem(i, j)
                 org.junit.Assert.assertTrue("tamanhos diferentes", com.width == w && com.height == sem.height)
                 var x0 = Int.MAX_VALUE; var y0 = Int.MAX_VALUE; var x1 = -1; var y1 = -1; var n = 0
-                for (y in 0 until sem.height) {
+                // Só a faixa da cabeça e acima conta (o chapéu mora ali; o corpo parado pode variar um pouco).
+                for (y in 0 until minOf(sem.height, (centroY + raio).toInt())) {
                     // Linha com só um ou dois pixels diferentes é borda antisserrilhada, não chapéu.
                     val xs = (0 until w).filter { x -> diferente(com.getPixel(x, y), sem.getPixel(x, y)) }
                     if (xs.size < 3) continue
