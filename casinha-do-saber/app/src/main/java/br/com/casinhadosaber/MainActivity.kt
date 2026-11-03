@@ -67,6 +67,8 @@ sealed interface Tela {
         val mensagem: String? = null,
         /** Fim do treino: sem botão de próxima fase. */
         val doTreino: Boolean = false,
+        /** Fases vencidas antes da partida (só nas fases normais): cena do chefão e festa do mascote. */
+        val fasesAntes: Int? = null,
     ) : Tela
     /** [colocar]: item que acabou de ser ganho e já vai direto para a casa. */
     data class Casa(val colocar: String? = null) : Tela
@@ -286,6 +288,7 @@ class MainActivity : ComponentActivity() {
                         fase = atual.fase,
                         perfil = estado.perfil,
                         facilitada = estado.facilitada(atual.fase),
+                        comHistoria = estado.estrelasDa(atual.fase) == 0,
                         onSair = { irPara(Tela.Caminho(atual.fase.trilha)) },
                         onConcluir = { resultados ->
                             val acertos = resultados.count { it }
@@ -297,7 +300,7 @@ class MainActivity : ComponentActivity() {
                             }
                             irPara(
                                 if (resultado.venceu) {
-                                    Tela.Premio(atual.fase, resultado.estrelas, resultado.item, resultado.moedasGanhas, resultado.brinde)
+                                    Tela.Premio(atual.fase, resultado.estrelas, resultado.item, resultado.moedasGanhas, resultado.brinde, fasesAntes = resultado.estado.fasesVencidas - if (resultado.faseNova) 1 else 0)
                                 } else {
                                     Tela.Quase(atual.fase, acertos)
                                 },
@@ -340,6 +343,8 @@ class MainActivity : ComponentActivity() {
                             onVoltar = { irPara(Tela.Caminho(atual.fase.trilha)) },
                             brinde = atual.brinde,
                             mensagem = atual.mensagem,
+                            estado = estado,
+                            fasesAntes = atual.fasesAntes,
                         )
                     }
 
@@ -351,6 +356,8 @@ class MainActivity : ComponentActivity() {
                         onJogar = { irPara(Tela.Inicio) },
                         onEspelho = { irPara(Tela.Espelho(Tela.Casa())) },
                         onEntrar = { irPara(Tela.CasaPorDentro) },
+                        hoje = repo.hojeData(),
+                        perguntarMascote = true,
                     )
 
                     Tela.CasaPorDentro -> TelaCasaPorDentro(

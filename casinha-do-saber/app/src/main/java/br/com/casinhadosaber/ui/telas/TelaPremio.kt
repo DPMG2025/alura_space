@@ -95,6 +95,11 @@ import br.com.casinhadosaber.ui.componentes.Estrela
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import kotlinx.coroutines.delay
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
+import br.com.casinhadosaber.dominio.Crescimento
+import br.com.casinhadosaber.dominio.Historia
+import br.com.casinhadosaber.ui.componentes.MascoteAnimado
 
 /**
  * Comemoração ao vencer uma fase. Na primeira vitória, um presente aparece:
@@ -116,6 +121,13 @@ fun TelaPremio(
     brinde: Produto? = null,
     /** Fala no lugar de "Você terminou a fase!" (no fim do treino, por exemplo). */
     mensagem: String? = null,
+    /** Estado depois da partida: o mascote comemora junto (e cresce, ver [fasesAntes]). */
+    estado: EstadoJogo? = null,
+    /**
+     * Fases vencidas antes desta partida (só numa fase normal; null no treino e na missão). Com ela a tela
+     * mostra a cena do chefão vencido pela primeira vez e a festa quando o mascote cresce ou ganha enfeite.
+     */
+    fasesAntes: Int? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -127,6 +139,17 @@ fun TelaPremio(
     // A peça da casa tem prioridade; sem ela, o brinde da loja.
     val brindeDaLoja = if (item == null) brinde else null
     val temPresente = item != null || brindeDaLoja != null
+    // Mascote (sugestão 2) e história (sugestão 3): cenas que aparecem antes da comemoração de sempre.
+    val mascote = estado?.mascote?.takeIf { it.escolhido }
+    val fasesDepois = estado?.fasesVencidas ?: 0
+    val faseNova = fasesAntes != null && fasesDepois > fasesAntes
+    var cenaDoChefao by remember { mutableStateOf(if (faseNova) Historia.cenaDoChefao(fase) else null) }
+    var festaDoMascote by remember {
+        mutableStateOf(
+            mascote != null && fasesAntes != null &&
+                (Crescimento.cresceu(fasesAntes, fasesDepois) || Crescimento.acessoriosNovos(fasesAntes, fasesDepois).isNotEmpty()),
+        )
+    }
 
     fun abrir() {
         if (aberto || !temPresente) return
@@ -147,6 +170,8 @@ fun TelaPremio(
     }
 
     LaunchedEffect(Unit) {
+        // Espera as cenas da história e do mascote terminarem (o narrador fala uma coisa de cada vez).
+        snapshotFlow { cenaDoChefao == null && !festaDoMascote }.first { it }
         sons.acerto()
         val parabens = mensagem ?: br.com.casinhadosaber.dominio.FrasesComNome.vitoria(nome, estrelas)
         narrador.falar(if (temPresente) "$parabens Toque no presente três vezes para abrir!" else parabens)
@@ -295,7 +320,13 @@ fun TelaPremio(
                         else -> if (alta) 210.dp else 160.dp
                     }
                     Spacer(Modifier.height(12.dp))
-                    Crianca(vestido, Modifier.height(altura), acenando = true)
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Crianca(vestido, Modifier.height(altura), acenando = true)
+                        // O mascote comemora ao lado da criança, do tamanho do estágio dele.
+                        mascote?.especie?.let { e ->
+                            MascoteAnimado(e, Crescimento.estagio(fasesDepois), Modifier.size(altura * 0.62f), mascote.acessorioEmUso, mascote.nomeParaMostrar, pulando = true)
+                        }
+                    }
                 }
                 Spacer(Modifier.height(16.dp))
                 AnimatedVisibility(visible = !temPresente || aberto, enter = fadeIn() + scaleIn()) {
@@ -328,6 +359,10 @@ fun TelaPremio(
             }
         }
         Confete(confete)
+        cenaDoChefao?.let { texto -> CenaDaHistoria(fase, texto, chefao = true) { cenaDoChefao = null } }
+        if (cenaDoChefao == null && festaDoMascote && mascote != null && fasesAntes != null) {
+            FestaDoMascote(mascote, fasesAntes, fasesDepois) { festaDoMascote = false }
+        }
     }
 }
 

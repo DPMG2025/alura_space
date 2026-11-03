@@ -555,6 +555,12 @@ class JogoNoEmuladorTest {
         capturar("e03_caminho")
         regra.onAllNodes(hasContentDescription("Fase 1, Contar até 3", substring = true)).onFirst().performClick()
 
+        // Primeira fase do mundo: a Corujinha Professora conta a história; o botão grande começa a fase.
+        regra.waitUntilAtLeastOneExists(hasTestTag("historia_continuar"), 10_000)
+        avancar(1_000)
+        capturar("e03b_historia_do_mundo")
+        regra.onAllNodes(hasTestTag("historia_continuar")).onFirst().performClick()
+
         // Responder as 5 perguntas, errando a primeira de propósito
         regra.waitUntilAtLeastOneExists(hasTestTag("opcao_certa"), 10_000)
         capturar("e04_pergunta")
@@ -650,6 +656,15 @@ class JogoNoEmuladorTest {
 
         esperar("Minha casinha")
         regra.onAllNodes(hasContentDescription("Minha casinha", substring = true)).onFirst().performClick()
+
+        // Primeira vez na casa: escolher o mascote (aparece uma vez só, enquanto não há mascote).
+        regra.waitUntilAtLeastOneExists(hasTestTag("mascote_GATINHO"), 10_000)
+        regra.onAllNodes(hasTestTag("mascote_GATINHO")).onFirst().performClick()
+        avancar(800)
+        capturar("e11a_escolha_do_mascote")
+        regra.onAllNodes(hasTestTag("mascote_pronto")).onFirst().performClick()
+        regra.waitUntil(5_000) { prefs.getString("mascote", "").orEmpty().startsWith("GATINHO") }
+        regra.waitUntil(5_000) { regra.onAllNodes(hasTestTag("mascote_pronto")).fetchSemanticsNodes().isEmpty() }
         esperar("Cama")
         capturar("e11_casa_antes_de_arrastar")
         val antes = prefs.getString("colocados", "")

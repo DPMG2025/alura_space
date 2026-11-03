@@ -73,6 +73,7 @@ import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.Opcao
 import br.com.casinhadosaber.dominio.Perfil
 import br.com.casinhadosaber.dominio.Pergunta
+import br.com.casinhadosaber.dominio.Historia
 import br.com.casinhadosaber.dominio.Visual
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
@@ -132,7 +133,16 @@ fun TelaJogo(
      * se ajustar). O ✖ termina o treino e entrega os resultados em [onConcluir].
      */
     treino: ((resultados: List<Boolean>) -> Pergunta)? = null,
+    /** Mostra a abertura do mundo (Corujinha Professora) antes da primeira fase dele ([Historia.introducao]). */
+    comHistoria: Boolean = false,
 ) {
+    // Abertura do mundo: a cena da história vem antes das perguntas (só na primeira fase do mundo).
+    val abertura = remember(fase) { if (comHistoria && treino == null && perguntasProntas.isEmpty()) Historia.introducao(fase) else null }
+    var historiaVista by remember(fase) { mutableStateOf(abertura == null) }
+    if (!historiaVista && abertura != null) {
+        CenaDaHistoria(fase, abertura) { historiaVista = true }
+        return
+    }
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     val escopo = rememberCoroutineScope()

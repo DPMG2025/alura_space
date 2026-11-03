@@ -85,6 +85,20 @@ import br.com.casinhadosaber.ui.componentes.Confete
 import br.com.casinhadosaber.ui.componentes.IconeDoItem
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.dominio.Crescimento
+import br.com.casinhadosaber.dominio.Data
+import br.com.casinhadosaber.dominio.Eventos
+import br.com.casinhadosaber.dominio.PresenteEspecial
+import br.com.casinhadosaber.dominio.Surpresas
+import br.com.casinhadosaber.dominio.escolherMascote
+import br.com.casinhadosaber.dominio.nomearMascote
+import br.com.casinhadosaber.dominio.presentesGanhos
+import br.com.casinhadosaber.dominio.receberPresenteDoEvento
+import br.com.casinhadosaber.dominio.vestirMascote
+import br.com.casinhadosaber.ui.componentes.DecoracaoDoEvento
+import br.com.casinhadosaber.ui.componentes.MascoteAnimado
+import br.com.casinhadosaber.ui.componentes.PrateleiraDePresentes
+import androidx.compose.ui.platform.testTag
 
 @Composable
 fun TelaCasa(
@@ -101,6 +115,13 @@ fun TelaCasa(
     onEspelho: () -> Unit = {},
     /** Porta 🚪: entra na casa por dentro (isométrica). */
     onEntrar: () -> Unit = {},
+    /**
+     * Data de hoje (`repo.hojeData()`): liga os enfeites do evento do dia, o presente do evento e o visitante
+     * da semana (que também entra na lojinha). Null (capturas antigas) = dia comum, sem visitante.
+     */
+    hoje: Data? = null,
+    /** Pergunta qual mascote a criança quer, se ela ainda não escolheu (o app liga; as capturas antigas não). */
+    perguntarMascote: Boolean = false,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -114,7 +135,18 @@ fun TelaCasa(
             previa = null
         }
     }
-    val estadoNaCena = previa?.let { p -> estado.copy(moedas = Int.MAX_VALUE / 2).usar(p) } ?: estado
+    // Eventos do ano e surpresa da semana (sugestão 4): tudo pela data recebida, nada lê o relógio aqui.
+    val evento = remember(hoje, estado.perfil?.aniversario) { hoje?.let { Eventos.principal(it, estado.perfil?.aniversario) } }
+    val visitaDaSemana = remember(hoje) { hoje?.let { Surpresas.daSemana(it) }?.visitante }
+    val novidadesDaLoja = remember(hoje) { hoje?.let { Surpresas.liberadas(it) }.orEmpty() }
+    var presenteDoEvento by remember { mutableStateOf<PresenteEspecial?>(null) }
+    // Mascote (sugestão 2): a escolha aparece uma vez, ao abrir a casa sem um presente chegando.
+    var escolhendoMascote by remember { mutableStateOf(perguntarMascote && !estado.mascote.escolhido && colocarAoAbrir == null) }
+    var noCantinho by remember { mutableStateOf(false) }
+    val estadoNaCena = (previa?.let { p -> estado.copy(moedas = Int.MAX_VALUE / 2).usar(p) } ?: estado).let { e ->
+        // O visitante da semana passeia de graça no jardim, junto com os comprados.
+        visitaDaSemana?.let { v -> e.copy(visitantes = e.visitantes + v.valor) } ?: e
+    }
     var novaEstrutura by remember { mutableStateOf<Estrutura?>(null) }
     var destaque by remember { mutableStateOf<String?>(null) }
     var pulo by remember { mutableIntStateOf(0) }
@@ -124,8 +156,23 @@ fun TelaCasa(
     val casaCompleta = estado.colocados.size == ItensDaCasa.total
     val vibracao = LocalHapticFeedback.current
 
+    // Presente do evento: entregue uma vez por evento e ano, com a saudação do narrador.
+    LaunchedEffect(evento, escolhendoMascote) {
+        val ev = evento ?: return@LaunchedEffect
+        if (escolhendoMascote) return@LaunchedEffect
+        val presente = estado.receberPresenteDoEvento(ev).second ?: return@LaunchedEffect
+        onAtualizar { it.receberPresenteDoEvento(ev).first }
+        delay(1200)
+        presenteDoEvento = presente
+        confete++
+        sons.premio()
+        narrador.falar("${ev.saudacao(nome.ifBlank { null })} Você ganhou: ${presente.nome}!")
+        delay(9000)
+        presenteDoEvento = null
+    }
+
     LaunchedEffect(Unit) {
-        if (colocarAoAbrir != null) return@LaunchedEffect
+        if (colocarAoAbrir != null || escolhendoMascote) return@LaunchedEffect
         narrador.falar(
             when {
                 bau.isNotEmpty() -> "Toque num presente do baú para colocar na casa!"
@@ -245,6 +292,7 @@ fun TelaCasa(
             itens = bau,
             estado = estado,
             lojaInicial = lojaInicial,
+            extras = novidadesDaLoja,
             onEscolher = ::colocarDoBau,
             onJogar = onJogar,
             previa = previa,
@@ -423,6 +471,29 @@ fun TelaCasa(
                     },
                     onMoverCrianca = { pos: Posicao -> onAtualizar { it.copy(posicaoCrianca = pos) } },
                 )
+                // Enfeites do evento do dia, por cima da cena (sem pegar os toques).
+                evento?.let { DecoracaoDoEvento(it.tipo, Modifier.clip(RoundedCornerShape(24.dp))) }
+                // Presentes dos eventos ficam para sempre numa prateleira no alto.
+                PrateleiraDePresentes(estado.presentesGanhos, Modifier.align(Alignment.TopCenter).padding(top = 14.dp))
+                // O mascote mora na casa: tocar abre o cantinho dele (enfeites e quanto falta para crescer).
+                estado.mascote.especie?.let { especie ->
+                    Box(
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 6.dp, bottom = 6.dp)
+                            .size(96.dp)
+                            .testTag("mascote_na_casa")
+                            .clickable {
+                                sons.piu(1)
+                                noCantinho = true
+                            },
+                    ) {
+                        MascoteAnimado(especie, Crescimento.estagio(estado.fasesVencidas), Modifier.size(96.dp), estado.mascote.acessorioEmUso, estado.mascote.nomeParaMostrar)
+                    }
+                }
+                presenteDoEvento?.let { p ->
+                    AvisoDoPresente(p, evento?.tipo?.nome.orEmpty(), Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)) { presenteDoEvento = null }
+                }
                 // Espelho: trocar a aparência a qualquer momento (deitada, ele fica na coluna ao lado).
                 if (!atalhosNaColuna) BotaoRedondo(
                     "🪞",
@@ -475,6 +546,45 @@ fun TelaCasa(
             if (!deitada) BauDaCasa(Modifier.fillMaxWidth(), lateral = false)
         }
         Confete(confete)
+        if (escolhendoMascote) {
+            EscolhaDoMascote { especie, nomeDoMascote ->
+                onAtualizar { it.escolherMascote(especie).nomearMascote(nomeDoMascote) }
+                escolhendoMascote = false
+                confete++
+            }
+        }
+        if (noCantinho) {
+            CantinhoDoMascote(
+                mascote = estado.mascote,
+                fasesVencidas = estado.fasesVencidas,
+                nomeDaCrianca = nome.ifBlank { null },
+                onVestir = { a -> onAtualizar { it.vestirMascote(a) } },
+                onFechar = { noCantinho = false },
+            )
+        }
+    }
+}
+
+/** Aviso do presente do evento (some sozinho ou com um toque). */
+@Composable
+private fun AvisoDoPresente(p: PresenteEspecial, evento: String, modifier: Modifier, onFechar: () -> Unit) {
+    Row(
+        modifier
+            .shadow(8.dp, RoundedCornerShape(24.dp))
+            .background(Color.White, RoundedCornerShape(24.dp))
+            .border(4.dp, Cores.Estrela, RoundedCornerShape(24.dp))
+            .clickable(onClick = onFechar)
+            .semantics(mergeDescendants = true) { contentDescription = "Presente de $evento: ${p.nome}" }
+            .heightIn(min = TOQUE_MINIMO)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text(p.emoji, fontSize = 40.sp)
+        Column {
+            Text("Presente de $evento!", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)
+            Text(p.nome, style = MaterialTheme.typography.titleLarge)
+        }
     }
 }
 
@@ -502,6 +612,8 @@ private fun Bau(
     previa: Produto? = null,
     /** Atalhos grandes no pé da coluna lateral (só fora da loja). Com eles, o botão Jogar sai do baú vazio. */
     atalhosLaterais: (@Composable () -> Unit)? = null,
+    /** Produtos que não estão em [Loja.produtos] (os visitantes semanais já liberados, ver [Surpresas]). */
+    extras: List<Produto> = emptyList(),
     onEscolher: (ItemCasa) -> Unit,
     onJogar: () -> Unit,
     onComprar: (Produto) -> Unit,
@@ -541,7 +653,9 @@ private fun Bau(
         }
         Spacer(Modifier.height(8.dp))
         if (naLoja) {
-            val vitrine = Loja.vitrine(estado, Loja.categoriasDeFora)
+            val vitrine = Loja.vitrine(estado, Loja.categoriasDeFora).let { v ->
+                if (extras.isEmpty()) v else (v + extras.filter { e -> v.none { it.id == e.id } }).sortedWith(compareBy({ it.id in estado.comprados }, { it.precoBase }))
+            }
             if (lateral) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
