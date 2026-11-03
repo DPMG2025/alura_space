@@ -182,6 +182,8 @@ jobs:
           find $SAIDA -type f \( -name "*.wav" -o -name "vozes_relatorio.txt" \) -exec cp {} docs/emulador/vozes/ \; 2>/dev/null || true
           find app/build/outputs/androidTest-results -name "*.xml" -exec grep -h -A8 "<failure" {} \; > docs/emulador/falhas.txt 2>/dev/null || true
           [ -s docs/emulador/falhas.txt ] || rm -f docs/emulador/falhas.txt
+          # Quando falha, o fim do logcat (avisos e erros) vai junto, para achar a causa.
+          if [ -f emulador-falhou.txt ] && [ -f logcat-emulador.txt ]; then tail -n 4000 logcat-emulador.txt > docs/emulador/logcat.txt; fi
           if [ -f emulador-falhou.txt ]; then echo "RESULTADO: FALHOU" > docs/emulador/relatorio.txt; else echo "RESULTADO: TODOS OS TESTES PASSARAM" > docs/emulador/relatorio.txt; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
