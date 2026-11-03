@@ -87,6 +87,16 @@ jobs:
           CASINHA_KEY_PASSWORD: ${{ secrets.CASINHA_KEY_PASSWORD }}
         run: ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease
 
+      # Promessas da ficha da loja: sem ID de publicidade e sem internet no pacote final.
+      - name: Conferir permissões do pacote final
+        run: |
+          MANIFESTO=$(find app/build/intermediates -path "*release*" -name AndroidManifest.xml | grep -i merged | head -1)
+          echo "Manifesto final: $MANIFESTO"
+          [ -f "$MANIFESTO" ] || { echo "ERRO: manifesto final não encontrado"; exit 1; }
+          grep -o 'uses-permission[^>]*' "$MANIFESTO" || echo "Nenhuma permissão declarada"
+          if grep -q 'permission.AD_ID' "$MANIFESTO"; then echo "ERRO: o pacote pede o ID de publicidade"; exit 1; fi
+          if grep -q 'android.permission.INTERNET' "$MANIFESTO"; then echo "ERRO: o pacote pede acesso à internet"; exit 1; fi
+
       - name: Publicar pacote da Play Store (.aab)
         uses: actions/upload-artifact@v5
         with:
