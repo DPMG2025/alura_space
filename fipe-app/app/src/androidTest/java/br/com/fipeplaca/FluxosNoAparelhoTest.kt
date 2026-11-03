@@ -36,6 +36,17 @@ import androidx.test.services.storage.TestStorage
 class FluxosNoAparelhoTest {
     @get:Rule val regra = createAndroidComposeRule<MainActivity>()
 
+    /** Grava a pilha completa de qualquer falha no relatorio (o log do CI corta a mensagem). */
+    @get:Rule val registroDeFalhas = object : org.junit.rules.TestWatcher() {
+        override fun failed(e: Throwable, d: org.junit.runner.Description) {
+            runCatching {
+                saida.openOutputFile("falha-${d.methodName}.txt", true).use {
+                    it.write((e.stackTraceToString() + "\n" + (e.cause?.stackTraceToString() ?: "")).toByteArray())
+                }
+            }
+        }
+    }
+
     private val app get() = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as FipeApp
     /** Saida oficial dos testes: o Gradle copia para build/outputs/connected_android_test_additional_output. */
     private val saida = TestStorage()

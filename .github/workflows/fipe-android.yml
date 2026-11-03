@@ -46,8 +46,12 @@ jobs:
             echo "Nenhuma tela mudou em relacao a versao anterior." > regressao-visual.txt
           else
             echo "Telas com diferenca visual em relacao a versao anterior (revisar):" > regressao-visual.txt
-            grep -l "<failure" app/build/test-results/testDebugUnitTest/TEST-br.com.fipeplaca.TelasCapturaTest.xml >/dev/null 2>&1 && \
-              grep -o 'testcase name="[^"]*"[^>]*>\s*<failure' app/build/test-results/testDebugUnitTest/TEST-br.com.fipeplaca.TelasCapturaTest.xml | sed 's/testcase name="\([^"]*\)".*/\1/' >> regressao-visual.txt || true
+            python3 - >> regressao-visual.txt <<'PY' || true
+          import re
+          s = open("app/build/test-results/testDebugUnitTest/TEST-br.com.fipeplaca.TelasCapturaTest.xml").read()
+          for nome in re.findall(r'<testcase name="([^"]+)"[^>]*>\s*<failure', s):
+              print("* " + nome)
+          PY
           fi
           rm -rf app/build/outputs/roborazzi
 
