@@ -303,7 +303,7 @@ private fun BotaoDeSom(
             .graphicsLayer {
                 scaleX = escala
                 scaleY = escala
-                rotationZ = tremida
+                translationX = tremida * density
                 alpha = if (apagado) 0.82f else 1f
             }
             .brilhoN4(destacar, raio = lado * 0.22f),

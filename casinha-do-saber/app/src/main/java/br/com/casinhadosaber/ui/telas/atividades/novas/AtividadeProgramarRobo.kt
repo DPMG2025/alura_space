@@ -747,10 +747,17 @@ private fun GradeDoRobo(
             for (l in 0 until jogo.linhas) for (k in 0 until jogo.colunas) {
                 val o = Offset(k * c, l * c)
                 val claro = (l + k) % 2 == 0
+                // Casinha um pouco funda: faixa mais escura em cima (sombra de dentro) e a grama por cima.
                 drawRoundRect(
-                    if (claro) Color(0xFFA8DD8E) else Color(0xFF95D07C),
+                    if (claro) Color(0xFF86C46E) else Color(0xFF78B862),
                     topLeft = o + Offset(c * 0.04f, c * 0.04f),
                     size = Size(c * 0.92f, c * 0.92f),
+                    cornerRadius = raio,
+                )
+                drawRoundRect(
+                    if (claro) Color(0xFFA8DD8E) else Color(0xFF95D07C),
+                    topLeft = o + Offset(c * 0.055f, c * 0.075f),
+                    size = Size(c * 0.89f, c * 0.87f),
                     cornerRadius = raio,
                 )
                 // tufinhos de grama

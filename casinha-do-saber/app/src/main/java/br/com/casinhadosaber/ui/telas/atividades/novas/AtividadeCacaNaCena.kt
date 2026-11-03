@@ -21,7 +21,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -52,6 +51,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
+import br.com.casinhadosaber.ui.telas.atividades.painelDaCena
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.max
@@ -145,7 +145,7 @@ internal fun AtividadeCacaNaCena(
     val parada = n1Parada(interacoes, ativa, terminou, ajuda, ajudaInicial)
     val relogio = n1Relogio()
 
-    BoxWithConstraints(modifier.fillMaxSize().clipToBounds()) {
+    BoxWithConstraints(modifier.fillMaxSize().painelDaCena()) {
         val w = constraints.maxWidth.toFloat()
         val h = constraints.maxHeight.toFloat()
         val d = densidade.density
@@ -229,6 +229,8 @@ internal fun AtividadeCacaNaCena(
             for (e in enfeites) {
                 val c = Offset(margem + e.x * cenaW, cenaTopo + e.y * cenaH)
                 val r = e.r * cenaW
+                // Enfeite do fundo nunca encosta numa figura (senão parece que ela está em cima da pedra).
+                if (itens.any { (centro(it) - c).getDistance() < ladoToque(it) * 0.62f + r * 1.4f }) continue
                 when (e.tipo) {
                     0 -> desenharMoita(c, r * 0.8f, cenario.moita)
                     1 -> desenharPedra(c, r * 0.6f, cenario.pedra)
@@ -264,7 +266,7 @@ internal fun AtividadeCacaNaCena(
                         val escala = if (v < 0.25f) 1f + v * 1.2f else 1.3f - (1.3f - ladoBarra / lado) * ((v - 0.25f) / 0.75f)
                         scaleX = escala
                         scaleY = escala
-                        rotationZ = e.tremida.value
+                        translationX = e.tremida.value * density
                     }
                     .testTag(
                         when {
@@ -294,11 +296,12 @@ internal fun AtividadeCacaNaCena(
                 if (e.indice % 3 != 1 || e.voo.value > 0f) continue
                 val c = centro(e)
                 val l = ladoFigura(e)
-                val frente = Offset(c.x + (if (e.indice % 2 == 0) -l * 0.12f else l * 0.12f), c.y + l * 0.36f)
+                // Só o pé da figura fica escondido (um terço, no máximo): a criança sempre reconhece o que é.
+                val frente = Offset(c.x + (if (e.indice % 2 == 0) -l * 0.12f else l * 0.12f), c.y + l * 0.5f)
                 when {
-                    c.y < horizonte -> desenharNuvemDaCena(frente, l * 0.22f)
-                    e.indice % 2 == 0 -> desenharPedra(frente, l * 0.34f, cenario.pedra)
-                    else -> desenharMoita(frente, l * 0.3f, cenario.moita)
+                    c.y + l * 0.3f < horizonte -> desenharNuvemDaCena(frente, l * 0.18f)
+                    e.indice % 2 == 0 -> desenharPedra(frente, l * 0.3f, cenario.pedra)
+                    else -> desenharMoita(frente, l * 0.25f, cenario.moita)
                 }
             }
             // Brilho de quem acabou de ser achado.

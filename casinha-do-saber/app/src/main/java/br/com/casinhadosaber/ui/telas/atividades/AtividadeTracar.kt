@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -63,7 +65,10 @@ import br.com.casinhadosaber.dominio.Atividade
 import br.com.casinhadosaber.dominio.Vocabulario
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.clarear
+import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.tema.Fredoka
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -182,7 +187,7 @@ internal fun AtividadeTracar(
                     .size(largura, altura)
                     .clip(RoundedCornerShape(28.dp))
                     .background(Color.White)
-                    .border(3.dp, Color(0xFFEDE6FF), RoundedCornerShape(28.dp))
+                    .border(3.dp, ContornoDoJogo, RoundedCornerShape(28.dp))
                     .testTag("area_tracar")
                     .semantics { contentDescription = "Letra ${tracar.letra} para traçar" },
             ) {
@@ -274,11 +279,18 @@ internal fun AtividadeTracar(
                     val tinta = 18.dp.toPx()
                     val pontilhado = PathEffect.dashPathEffect(floatArrayOf(0.1f, 15.dp.toPx()))
 
-                    // 1) O caminho de cada traço: linha bem fina e bolinhas (os que faltam).
+                    // 0) A letra inteira como um traço gordo e redondo (lilás clarinho com um fio branco no
+                    //    meio): a criança vê o desenho da letra antes de começar.
+                    val gordo = 34.dp.toPx()
+                    // Camada por camada (contorno, corpo, fio), para os traços se juntarem sem costura.
+                    val corpos = emTela.filter { it.size >= 2 }.map { caminhoDe(it) }
+                    for (c in corpos) drawPath(c, Color(0xFFE2D9F7), style = Stroke(gordo + fino * 2f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                    for (c in corpos) drawPath(c, Color(0xFFF1ECFC), style = Stroke(gordo, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                    for (c in corpos) drawPath(c, Color.White, style = Stroke(fino * 1.5f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                    // 1) O caminho de cada traço que falta: bolinhas.
                     emTela.forEachIndexed { i, t ->
                         if (i < tracoAtual || t.size < 2) return@forEachIndexed
                         val caminho = caminhoDe(t)
-                        drawPath(caminho, Color(0xFFEDE6FF), style = Stroke(fino * 6f, cap = StrokeCap.Round, join = StrokeJoin.Round))
                         val daVez = i == tracoAtual
                         drawPath(
                             caminho,
@@ -293,8 +305,22 @@ internal fun AtividadeTracar(
                             i == tracoAtual -> alcancado
                             else -> 0
                         }
-                        if (fim >= 2) drawPath(caminhoDe(t.take(fim)), cor, style = Stroke(tinta, cap = StrokeCap.Round, join = StrokeJoin.Round))
-                        else if (fim == 1) drawCircle(cor, tinta / 2f, t[0])
+                        if (fim >= 2) {
+                            // Tinta com degradê (do tom forte no começo ao clarinho no fim do traço).
+                            val degrade = Brush.linearGradient(listOf(escurecer(cor, 0.9f), cor, clarear(cor, 0.35f)), t[0], t.last())
+                            drawPath(caminhoDe(t.take(fim)), degrade, style = Stroke(tinta, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                            drawPath(caminhoDe(t.take(fim)), Color.White.copy(alpha = 0.35f), style = Stroke(tinta * 0.25f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                        } else if (fim == 1) drawCircle(cor, tinta / 2f, t[0])
+                        // Traço pronto ganha brilhinhos ao longo dele.
+                        if (fim == t.size && t.size >= 2) {
+                            val brilho = Path()
+                            for (k in 0 until 3) {
+                                brilho.reset()
+                                estrela(brilho, pontoNoCaminho(t, 0.2f + 0.3f * k), tinta * (0.55f - 0.08f * k), 15f * k)
+                                drawPath(brilho, Color.White.copy(alpha = 0.95f))
+                                drawPath(brilho, Cores.Estrela, style = Stroke(fino * 0.8f))
+                            }
+                        }
                     }
                     // 3) O rastro do dedo, clarinho.
                     if (rastro.size >= 2) {
@@ -302,6 +328,23 @@ internal fun AtividadeTracar(
                     }
                     // 4) Setas numeradas e o ponto verde do começo (os traços que faltam, do último ao da vez).
                     if (!terminou) {
+                        // Onde fica o número de cada traço: no começo dele, mas se encostar no número de outro
+                        // traço (traços que começam no mesmo ponto), anda um pouco pelo próprio traço.
+                        val marcas = HashMap<Int, Offset>()
+                        val ordem = listOf(tracoAtual) + emTela.indices.filter { it > tracoAtual }
+                        for (i in ordem) {
+                            val t = emTela.getOrNull(i) ?: continue
+                            if (t.isEmpty()) continue
+                            val daVez = i == tracoAtual
+                            val r = if (daVez) 19.dp.toPx() else 14.dp.toPx()
+                            var pos = if (daVez && alcancado > 0) t[min(alcancado, t.lastIndex)] else t[0]
+                            var k = 0f
+                            while (k < 0.4f && t.size >= 2 && marcas.values.any { (it - pos).getDistance() < r + 19.dp.toPx() + 4.dp.toPx() }) {
+                                k += 0.04f
+                                pos = pontoNoCaminho(t, k)
+                            }
+                            marcas[i] = pos
+                        }
                         for (i in emTela.indices.reversed()) {
                             if (i < tracoAtual) continue
                             val t = emTela[i]
@@ -309,7 +352,7 @@ internal fun AtividadeTracar(
                             val corDaMarca = if (daVez) VerdeDoComeco else LilasDoCaminho
                             setinha(t, 0.45f, corDaMarca, if (daVez) 15.dp.toPx() else 11.dp.toPx())
                             if (t.size > 12) setinha(t, 0.85f, corDaMarca.copy(alpha = 0.7f), if (daVez) 12.dp.toPx() else 9.dp.toPx())
-                            val inicio = if (daVez && alcancado > 0) t[min(alcancado, t.lastIndex)] else t[0]
+                            val inicio = marcas[i] ?: continue
                             val r = if (daVez) 19.dp.toPx() else 14.dp.toPx()
                             if (daVez && alcancado == 0) {
                                 // Pulso: um anel que cresce e some.
@@ -320,7 +363,7 @@ internal fun AtividadeTracar(
                             if (daVez && alcancado > 0) continue
                             val numero = medidor.measure(
                                 "${i + 1}",
-                                TextStyle(fontSize = if (daVez) 20.sp else 15.sp, fontWeight = FontWeight.Bold, color = Color.White),
+                                TextStyle(fontFamily = Fredoka, fontSize = if (daVez) 20.sp else 15.sp, fontWeight = FontWeight.Bold, color = Color.White),
                             )
                             drawText(
                                 numero,
@@ -344,20 +387,33 @@ internal fun AtividadeTracar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                // Barrinha colorida: trilho na cor do mundo bem clarinho, enchimento com degradê e brilho.
+                val corDaBarra = if (terminou) Cores.Certo else cor
                 Box(
                     Modifier
                         .width(largura * 0.72f)
                         .height(24.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White)
-                        .border(3.dp, Color(0xFFEDE6FF), RoundedCornerShape(12.dp)),
+                        .background(clarear(corDaBarra, 0.8f))
+                        .border(2.dp, ContornoDoJogo, RoundedCornerShape(12.dp)),
                 ) {
                     Box(
                         Modifier
                             .fillMaxHeight()
                             .fillMaxWidth(progresso.coerceIn(0f, 1f))
-                            .background(if (terminou) Cores.Certo else cor, RoundedCornerShape(12.dp)),
-                    )
+                            .background(
+                                Brush.verticalGradient(listOf(clarear(corDaBarra, 0.25f), corDaBarra, escurecer(corDaBarra, 0.88f))),
+                                RoundedCornerShape(12.dp),
+                            ),
+                    ) {
+                        Box(
+                            Modifier
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .fillMaxWidth()
+                                .height(5.dp)
+                                .background(Color.White.copy(alpha = 0.45f), RoundedCornerShape(3.dp)),
+                        )
+                    }
                 }
                 Text("⭐", fontSize = 28.sp, modifier = Modifier.alpha(if (terminou) 1f else 0.3f + 0.5f * progresso.coerceIn(0f, 1f)))
             }

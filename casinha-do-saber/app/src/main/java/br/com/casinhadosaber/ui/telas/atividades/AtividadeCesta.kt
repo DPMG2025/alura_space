@@ -1,6 +1,8 @@
 package br.com.casinhadosaber.ui.telas.atividades
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -62,6 +64,8 @@ import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
+import kotlin.math.PI
+import kotlin.math.sin
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -77,6 +81,10 @@ private class FiguraDaCesta(val id: Int, val emoji: String, val certa: Boolean) 
     var vaga by mutableIntStateOf(-1)
     /** Já foi recusada pela cesta (fica mais clarinha, para a criança lembrar). */
     var recusada by mutableStateOf(false)
+    /** 0 a 1: o pulinho em arco ao entrar na cesta. */
+    val voo = Animatable(1f)
+    /** Já caiu dentro da cesta (o festejo acontece na hora em que cai). */
+    var pousou by mutableStateOf(false)
 }
 
 private val CorPalha = Color(0xFFD9A066)
@@ -226,7 +234,17 @@ internal fun AtividadeCesta(
             for (g in figuras) {
                 if (g !== f && g.peca.arrastando) continue
                 val dif = antes.getValue(g) - lugar(g)
-                if (g === f || dif.getDistance() > 1f) {
+                if (g === f && novaVaga >= 0 && dif.getDistance() > 1f) {
+                    // Entrou na cesta: vai num arco (sobe e cai lá dentro) e festeja quando cai.
+                    g.pousou = false
+                    escopo.launch(start = CoroutineStart.UNDISPATCHED) { g.peca.pousar(dif, tween(460, easing = FastOutSlowInEasing)) }
+                    escopo.launch(start = CoroutineStart.UNDISPATCHED) {
+                        g.voo.snapTo(0f)
+                        g.voo.animateTo(1f, tween(460, easing = LinearEasing))
+                        g.pousou = g.vaga >= 0
+                    }
+                } else if (g === f || dif.getDistance() > 1f) {
+                    if (g === f) g.pousou = novaVaga >= 0 && g.pousou
                     escopo.launch(start = CoroutineStart.UNDISPATCHED) { g.peca.pousar(dif, molinha) }
                 }
             }
@@ -386,9 +404,13 @@ internal fun AtividadeCesta(
                     .graphicsLayer {
                         scaleX = escala
                         scaleY = escala
-                        rotationZ = (if (dentroDaCesta) giro * 1.6f else giro * 0.6f) + f.peca.tremida.value
+                        rotationZ = if (dentroDaCesta) giro * 1.6f else giro * 0.6f
+                        translationX = f.peca.tremida.value * density
+                        // Pulinho em arco ao entrar na cesta (a figura sobe e cai lá dentro).
+                        translationY = -sin(PI.toFloat() * f.voo.value) * lado * 0.9f
                         alpha = if (f.recusada && !f.peca.arrastando) 0.55f else 1f
                     }
+                    .festejo(f.pousou)
                     .then(if (destacar) Modifier.pulsando() else Modifier)
                     .then(
                         if (destacar) Modifier.background(Color(0xFFFFF3C4), CircleShape).border(3.dp, Cores.Estrela, CircleShape)

@@ -370,7 +370,7 @@ internal fun AtividadeBalanca(
                     .graphicsLayer {
                         scaleX = escala
                         scaleY = escala
-                        rotationZ = p.peca.tremida.value
+                        translationX = p.peca.tremida.value * density
                     }
                     .then(if (brilhar || tirar) Modifier.pulsando() else Modifier)
                     .then(

@@ -61,6 +61,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.clarear
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.telas.atividades.festejo
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import br.com.casinhadosaber.ui.telas.atividades.GestoDeArrastar
@@ -238,6 +239,30 @@ internal fun AtividadeTrem(
         // ---------------------------------------------------------------- trilhos, locomotiva e engates vazios
         val brilhoEngate = if (ajuda && !terminou) engateDaVez else null
         Canvas(Modifier.matchParentSize()) {
+            // Paisagem: morrinhos ao longe atrás do trem, e o pátio de grama onde esperam os vagões soltos.
+            val baseDoTrem = tremY + linhasDoTrem * faixa
+            val patio = soltosY - px(26f)
+            if (patio - baseDoTrem > px(40f)) {
+                drawOval(Color(0xFFDDEFC8), Offset(-w * 0.25f, baseDoTrem + px(4f)), Size(w * 0.8f, (patio - baseDoTrem) * 2f))
+                drawOval(Color(0xFFD2EABB), Offset(w * 0.4f, baseDoTrem + (patio - baseDoTrem) * 0.35f), Size(w * 0.9f, (patio - baseDoTrem) * 2f))
+                // Arvorezinhas no morro.
+                for (k in 0 until 3) {
+                    val x = w * (0.16f + 0.33f * k)
+                    val y = baseDoTrem + (patio - baseDoTrem) * (0.55f + 0.12f * (k % 2))
+                    drawLine(Color(0xFFB98A5E), Offset(x, y), Offset(x, y - px(16f)), px(5f), cap = StrokeCap.Round)
+                    drawCircle(Color(0xFF8FCB72), px(14f), Offset(x, y - px(24f)))
+                    drawCircle(Color.White.copy(alpha = 0.25f), px(5f), Offset(x - px(4f), y - px(29f)))
+                }
+            }
+            drawRoundRect(Color(0xFFBFE3A0), Offset(-px(20f), patio), Size(w + px(40f), h - patio + px(40f)), CornerRadius(px(40f)))
+            drawRoundRect(Color(0xFFCBEAAE), Offset(-px(20f), patio + px(8f)), Size(w + px(40f), h - patio + px(40f)), CornerRadius(px(40f)))
+            for (k in 0 until 12) {
+                val x = w * ((k * 37 + 7) % 100) / 100f
+                val y = patio + px(16f) + (h - patio - px(24f)) * (((k * 53) % 100) / 100f)
+                val folha = Color(0xFF8CC96E)
+                drawLine(folha, Offset(x, y), Offset(x - px(3f), y - px(7f)), px(2.2f), cap = StrokeCap.Round)
+                drawLine(folha, Offset(x, y), Offset(x + px(3f), y - px(7f)), px(2.2f), cap = StrokeCap.Round)
+            }
             for (linha in 0 until linhasDoTrem) trilhos(tremY + linha * faixa + vh + px(2f), trilho)
             for (linha in 0 until linhasSoltos) trilhos(soltosY + linha * faixa + vh + px(2f), trilho)
             // Na linha de baixo do trem, um gancho mostra que os vagões continuam.
@@ -330,8 +355,9 @@ internal fun AtividadeTrem(
                     .graphicsLayer {
                         scaleX = escala
                         scaleY = escala
-                        rotationZ = v.peca.tremida.value
+                        translationX = v.peca.tremida.value * density
                     }
+                    .festejo(v.engate >= 0)
                     .then(if (destacar) Modifier.pulsando() else Modifier),
             ) {
                 DesenhoDoVagaoN2(v.opcao, v.cor, vwDp, vh / densidade.density, brilho = destacar, erguido = v.peca.arrastando)

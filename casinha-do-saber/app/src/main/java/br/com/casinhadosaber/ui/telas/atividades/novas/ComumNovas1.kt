@@ -260,7 +260,7 @@ internal fun N1BarraDeAchados(total: Int, achados: List<Opcao>, cor: Color, larg
     Row(
         modifier
             .testTag("barra_achados")
-            .background(Color.White.copy(alpha = 0.82f), CircleShape)
+            .background(Color.White.copy(alpha = 0.95f), CircleShape)
             .border(3.dp, cor.copy(alpha = 0.5f), CircleShape)
             .size(width = (lado + 6.dp) * total + 12.dp, height = lado + 12.dp),
         horizontalArrangement = Arrangement.Center,
