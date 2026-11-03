@@ -455,9 +455,9 @@ class JogoNoEmuladorTest {
 
     private val relatorioDasFases = StringBuilder()
 
-    private fun registrar(caminho: String, numero: Int, tipos: List<String>) {
+    private fun registrar(arquivo: String, caminho: String, numero: Int, tipos: List<String>) {
         relatorioDasFases.appendLine("$caminho fase $numero: ${tipos.joinToString(", ")}")
-        armazenamento.openOutputFile("fases_altas_${Thread.currentThread().id}.txt").use { it.write(relatorioDasFases.toString().toByteArray()) }
+        armazenamento.openOutputFile("$arquivo.txt").use { it.write(relatorioDasFases.toString().toByteArray()) }
     }
 
     /** Fase 100 (chefão do Circo) de cada caminho: sorteia os desafios novos num Android de verdade. */
@@ -471,7 +471,7 @@ class JogoNoEmuladorTest {
             Triple("LOGICA", "Lógica", "e23_logica_100"),
         )) {
             val tipos = jogarFaseAlta(chave, caminho, 100, captura)
-            registrar(caminho, 100, tipos)
+            registrar("fases_100", caminho, 100, tipos)
             novos += tipos.filter { it !in TIPOS_ANTIGOS }
         }
         assertTrue("as fases 100 deveriam sortear desafios novos: $novos", novos.size >= 3)
@@ -493,7 +493,7 @@ class JogoNoEmuladorTest {
             Triple("INGLES", "Inglês", 127),
         )) {
             val tipos = jogarFaseAlta(chave, caminho, numero, "e24_${chave.lowercase()}_$numero")
-            registrar(caminho, numero, tipos)
+            registrar("fases_altas", caminho, numero, tipos)
             novos += tipos.filter { it !in TIPOS_ANTIGOS }
         }
         assertTrue("as fases altas deveriam sortear vários desafios novos: $novos", novos.size >= 6)

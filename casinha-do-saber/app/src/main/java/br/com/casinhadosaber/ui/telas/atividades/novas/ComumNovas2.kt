@@ -99,8 +99,9 @@ internal fun VisualN2(v: Visual, lado: Dp, modifier: Modifier = Modifier, corTex
         when (v) {
             is Visual.Texto -> {
                 val n = v.texto.length.coerceAtLeast(1)
-                // Até 2 letras ocupam bem o quadrado; palavras longas encolhem para caber numa linha.
-                val tamanho = min(lado.value * 0.56f, lado.value * 1.5f / n)
+                // Até 2 letras ocupam bem o quadrado; palavras longas encolhem para caber numa linha
+                // (letra de forma em negrito tem uns 0,72 da altura de largura: CACHORRO cabe inteiro).
+                val tamanho = min(lado.value * 0.56f, lado.value * (if (n <= 2) 1.5f else 1.15f) / n)
                 Text(
                     v.texto,
                     fontSize = tamanho.sp,
