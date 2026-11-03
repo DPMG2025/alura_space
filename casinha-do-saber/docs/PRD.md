@@ -1,6 +1,6 @@
 # PRD: Casinha do Saber
 
-Documento de produto para continuar o desenvolvimento numa nova sessão. Atualizado em 3 de novembro de 2026.
+Documento de produto para continuar o desenvolvimento numa nova sessão. Atualizado em 3 de novembro de 2026 (fim do dia).
 
 ## 1. Visão
 
@@ -40,11 +40,13 @@ O ambiente da sessão **não acessa o Google Maven**, então o APK é compilado 
 4. **Versão de teste para celular**: o CI publica `CasinhaDoSaber.apk` na Release `casinha-teste`:
    https://github.com/DPMG2025/alura_space/releases/download/casinha-teste/CasinhaDoSaber.apk
 5. **Emulador Android real** (`JogoNoEmuladorTest.kt`): perfil, boas vindas, fase inteira com um erro (cada tipo de atividade é jogado de verdade: tocar, cesta, memória, montar palavra e traçar pelos traços de `TracosDasLetras`), presente com 3 toques, item entra na casa, arrastar a cama, cama recusada no jardim, fase de cestas, relatório das vozes. Resultados em `docs/emulador/`.
-6. **Revisor independente**: um subagente avalia as capturas com régua de app AAA e dá nota. Evolução: 6 → 7 → 7,5 → 8 → 8,5 → 8,5 → 9 → 9 → 8,5 → 9 → 9,5 → 9,5 (a régua subiu depois da casa por dentro; o 9 veio com os móveis arrastáveis, a paisagem com tabuleiro e o caminho limpo; o 9,5, no fim de 3 de novembro, com telhado e céu na casa por dentro, patinho de borracha desenhado, dica de arrastar e os cortes do caminho e da coluna resolvidos; o segundo 9,5, em 3 de novembro à noite, já com a régua mais alta, com roupas e acessórios, 200 fases em 5 mundos e o treino sem fim).
+6. **Revisor independente**: um subagente avalia as capturas com régua de app AAA e dá nota. Evolução: 6 → 7 → 7,5 → 8 → 8,5 → 8,5 → 9 → 9 → 8,5 → 9 → 9,5 → 9,5 (a régua subiu depois da casa por dentro; o 9 veio com os móveis arrastáveis, a paisagem com tabuleiro e o caminho limpo; o 9,5, no fim de 3 de novembro, com telhado e céu na casa por dentro, patinho de borracha desenhado, dica de arrastar e os cortes do caminho e da coluna resolvidos; o segundo 9,5, em 3 de novembro à noite, já com a régua mais alta, com roupas e acessórios, 200 fases em 5 mundos e o treino sem fim; o terceiro 9,5, no fim de 3 de novembro, com material dourado, sudoku de uma casinha só, labirinto compacto, "I like" sem entregar a frase e todos os enfeites da casa por dentro desenhados à mão).
 
 Ler os logs do CI pelo MCP do GitHub (`actions_list`, `get_job_logs` com `failed_only`; erros de Kotlin aparecem como `e: file://`). Cada push cancela o build anterior (concurrency), inclusive o emulador: não fazer push enquanto o emulador roda. O passo de capturas usa `git pull --rebase -X theirs`; antes de cada push local, `git pull --no-rebase`.
 
 Lições do polimento: `Offset` é classe de valor e não pode ser parâmetro `vararg` (erro de compilação que só o CI pega). O lint do CI trata `BoxWithConstraints` sem usar `maxWidth` ou `maxHeight` como erro (`UnusedBoxWithConstraintsScope`): nesse caso usar `Box`.
+
+Lição da conferência local: dá para ver telas antes do CI com Compose Desktop 1.5.12 (o único com as bibliotecas de execução no cache), num projeto `scratchpad/ver` que compila só `dominio/`, `Isometrico.kt`, `Enfeites.kt`, `Crianca.kt` (trocando `quadraticTo` por `quadraticBezierTo`) e `CenasDesenhadas.kt`, e salva PNG com `ImageComposeScene`. Por isso desenhos novos ficam em arquivos pequenos, sem depender das telas inteiras.
 
 Lições das capturas (Robolectric): a tela só é desenhada na hora da captura, então o que é calculado em `drawWithCache` não existe antes dela (a geometria da casa por dentro agora também é montada em `onSizeChanged`). Esperas de animação que precisam aparecer nas capturas contam o tempo pelos quadros (`esperarQuadros`, com `withFrameNanos`), não com `delay`. Não fazer push enquanto o emulador roda, nem quando o laço de espera termina por tempo esgotado: conferir o estado antes.
 
@@ -52,7 +54,7 @@ Lições das capturas (Robolectric): a tela só é desenhada na hora da captura,
 
 **Aprendizado**
 * 4 caminhos com **50 fases cada (200 fases)** em **5 mundos de 10 fases** (Jardim, Floresta, Praia, Montanha, Espaço; `Mundos.kt`), 5 perguntas por fase, perguntas sorteadas, **4 opções em todas as perguntas de escolha**. As 25 fases antigas mantêm o número (o progresso salvo continua valendo); as fases 26 a 50 ficam no fim de `GeradorDeFases.kt` e o vocabulário delas em `VocabularioDosMundos.kt`.
-* Conteúdo das fases 26 a 50 (BNCC da educação infantil e 1º ano): **Números** contar até 20, traçar algarismos, somar e tirar até 20, de 10 em 10 até 100, dezenas e unidades, dobro e metade, pesado, leve e alto, horas cheias, moedinhas (com cesta para pagar), gráfico de figuras, problemas narrados (inclusive de dois passos), posições na fila e lados das formas, sequências, comparar até 100. **Letras** som das letras (fonético), famílias silábicas, sílaba que falta, letras pequenas (b d p q), traçar minúsculas, CH LH NH, BR PR TR, palavras de 3 e 4 sílabas, montar com letras, ler frases e escolher a figura, ordem alfabética, quantas letras, como se escreve, última letra. **Inglês** school, nature, feelings, jobs, verbs, wild animals, opposites, números até 20, How many?, What color is it?, frases "I like", "I am", "I can". **Lógica** filas de 4 e 5, intrusos (simples e com dois critérios), cor e forma, memória de 6, labirinto (lado e passos) e sudoku de figuras 4 por 4 em `Cena.Grade`, cesta com dois critérios.
+* Conteúdo das fases 26 a 50 (BNCC da educação infantil e 1º ano): **Números** contar até 20, traçar algarismos, somar e tirar até 20, de 10 em 10 até 100, dezenas e unidades, dobro e metade, pesado, leve e alto, horas cheias, moedinhas (com cesta para pagar), gráfico de figuras, problemas narrados (inclusive de dois passos), posições na fila e lados das formas, sequências, comparar até 100. **Letras** som das letras (fonético), famílias silábicas, sílaba que falta, letras pequenas (b d p q), traçar minúsculas, CH LH NH, BR PR TR, palavras de 3 e 4 sílabas, montar com letras, ler frases e escolher a figura, ordem alfabética, quantas letras, como se escreve, última letra. **Inglês** school, nature, feelings, jobs, verbs, wild animals, opposites, números até 20, How many?, What color is it?, frases "I like", "I am", "I can". **Lógica** filas de 4 e 5, intrusos (simples e com dois critérios), cor e forma, memória de 6, **labirinto** (`Cena.Labirinto`: quadro recortado em volta do caminho, caminho de terra com pedrinhas, a criança no começo e a casinha na chegada; perguntas de lado e de quantas pedrinhas) e **sudoku** de figuras 4 por 4 em `Cena.Grade` (só a casinha amarela a descobrir; nos mais difíceis, outras casinhas viram tampinhas de madeira fechadas), cesta com dois critérios. **Dezenas e unidades** com material dourado (`Cena.MaterialDourado`: barrinhas de dez cubinhos e cubinhos soltos). No "I like" o balão diz "Leia e escolha a figura" e a frase aparece só no cartão.
 * **Treino sem fim** por caminho (botão "Treinar" embaixo do caminho, depois da primeira fase vencida): `Treino.kt` sorteia perguntas das fases vencidas com peso nas de menor precisão, abre fases mais novas a cada 3 acertos seguidos e volta com 2 erros seguidos; o ✖ termina e mostra o prêmio com moedinhas (dentro do limite diário) e o histórico das fases é atualizado.
 * **Treino e voltar do Android**: o voltar do Android no treino termina igual ao ✖ (guarda moedinhas e histórico, uma vez só), com teste em `CapturasTest` (`voltarNoTreinoTerminaComoOX`).
 * Fase só é vencida com **4 de 5 acertos de primeira** (3 estrelas com 5, 2 com 4). Abaixo disso, tela "Quase!" com o presente trancado.
@@ -87,6 +89,7 @@ Lições das capturas (Robolectric): a tela só é desenhada na hora da captura,
 * **Arrastar móveis**: segurar (ou sair arrastando) leva o móvel ladrilho por ladrilho, com realce verde quando cabe e vermelho quando não cabe; as posições ficam salvas (`moveisDentro` no `EstadoJogo`, chave `moveis_dentro` no `Repositorio`) e a criança dá um passinho se o móvel cair onde ela está.
 * **Patinho de borracha** amarelo desenhado em Canvas (corpo, rabinho, bico laranja, olho, asinha), balançando na água da banheira (quac quac, "duck"), e **lixeira** com tampa, com sons próprios em `SonsDaCasa`.
 * **Telhado aberto** no andar de cima, como numa casinha de bonecas: forro de madeira com vigas, empena com janelinha redonda, telhas na cor do telhado de fora e chaminé (quando a casa já tem). Aparece quando sobra altura (celular em pé); com painel aberto ou tela baixa, a casa usa a altura toda sem ele. Na faixa de céu acima, **sol e nuvens** que se mexem devagar.
+* **Enfeites desenhados à mão** (`ui/componentes/Enfeites.kt`): gato laranja sentado no sofá, ursinho com lacinho na cama, violão encostado, plantinha no vaso de barro, pilha de livros, bolo de dois andares com velinha, lixeira com tampa e vaso sanitário, todos em Canvas no traço dos móveis. A casa por dentro não tem mais emoji ao lado de móvel vetorial (só as setinhas da escada e as comidas da geladeira).
 * Quarto sem sobreposição: o **violão** fica no canto da frente do quarto e a **plantinha** foi para o canto da frente do banheiro.
 * **Dica de arrastar**: na primeira visita, depois de uns segundos parada, a mãozinha (`MaoQueArrasta`, em `Comuns.kt`) segura um móvel (de preferência o sofá), leva para o lado com o realce verde e solta, com a narração "Psiu! Os móveis mudam de lugar. Segure um e arraste!". Fica salvo que já viu (`viuDicaDeArrastar`, chave `viu_dica_arrastar`); enquanto a criança nunca arrastou nada, a dica volta depois de 30 s parada (no máximo uma vez por minuto). Qualquer toque interrompe. A escolha do móvel está no domínio (`PlantaDaCasa.sugestaoDeArraste`, com teste). Captura 32b.
 
@@ -98,34 +101,32 @@ Lições das capturas (Robolectric): a tela só é desenhada na hora da captura,
 * Material da Play Store: `docs/play-store.md`, `docs/politica-de-privacidade.md`, `docs/publicar.md`.
 
 **Testes**
-* 83 testes de domínio (inclusive acessórios, mundos e treino). Capturas novas: 58 a 60 (roupas, acessórios, provador), 61 (caminho com treino e mundo 3), 62 a 66 (dezenas e unidades, ler frases, I like, sudoku 4 por 4, labirinto grande).
+* 84 testes de domínio (inclusive acessórios, mundos e treino; material dourado, sudoku com uma casinha só a descobrir, labirinto compacto sem atalho e balão que nunca entrega a frase de ler). Capturas novas: 58 a 60 (roupas, acessórios, provador), 61 (caminho com treino e mundo 3), 62 a 66 (dezenas e unidades, ler frases, I like, sudoku 4 por 4, labirinto grande).
 * Sobreposição dos objetos da casa completa, chapéu na cabeça (menina e menino, todos os chapéus), chuva só fora (teste corrigido), cama recusada, capturas em paisagem, planta da casa por dentro (`CasaPorDentroTest.kt`), emulador jogando todos os tipos de atividade.
 
 ## 6. O que resta (começar por aqui)
 
-Feitos em 3 de novembro à noite: as duas frentes (roupas e acessórios; 200 fases com mundos e treino) foram juntadas e compilam juntas, com build e emulador verdes; o voltar do Android no treino agora guarda moedinhas e histórico; o botão Treinar ganhou esmaecido embaixo.
+Feitos no fim de 3 de novembro: material dourado nas dezenas, sudoku com uma casinha só a descobrir, labirinto compacto e bonito, "I like" sem entregar a frase e os enfeites da casa por dentro desenhados (build e emulador verdes, run 41594702111). De quebra, o gerador deixou de repetir seguida a mesma atividade de mexer (a cesta dupla podia vir igual duas vezes).
 
 1. **Voz**: confirmar a voz em português num celular real (no emulador escolheu `pt-br-x-pte-local`, qualidade 400) e ouvir, no celular, a leitura dos **sons esticados** das fases de som das letras. Depende do dono.
-2. **Emojis novos na fonte embutida**: conferir num celular antigo (Android 7 a 9) se 🪙 🪶 🪟 aparecem pela fonte Noto embutida e não como quadradinho.
-3. **Estilo misto na casa por dentro**: violão, plantinha, gato, ursinho, livros e bolo ainda são emojis ao lado de móveis vetoriais; desenhá-los à mão, como o patinho, deixaria o estilo uniforme.
-4. **Achados novos do revisor** (seção 7): dezenas e unidades com 🔟 em tecla e bolinha (melhor seria barrinha de dez e cubinhos, como material dourado); sudoku com casas vazias que parecem faltar figura; labirinto com fileiras inteiras de árvores (a grade poderia ser mais justa ao caminho); no "I like" o balão de cima já mostra a frase que a criança deveria ler.
-5. **Publicação** (seção 8). Depende do dono.
+2. **Emojis novos na fonte embutida**: conferir num celular antigo (Android 7 a 9) se 🪙 🪶 🪟 aparecem pela fonte Noto embutida e não como quadradinho. Depende do dono.
+3. **Publicação** (seção 8). Depende do dono.
+4. Achados pequenos novos: as setas do labirinto ainda são teclas de emoji (⬆️) e poderiam ser desenhadas no mesmo traço do quadro; na casa por dentro, a pilha de livros fica meio escondida atrás da TV e o vaso sanitário quase todo atrás da pia e da banheira.
 
 3D "de verdade" (Filament ou SceneView) só faz sentido com modelos 3D de artista (loja de modelos glTF); a casa isométrica em código foi a escolha.
 
 ## 7. Pendências apontadas pelo revisor (última nota 9,5/10)
 
-Nota 9,5 em 3 de novembro à noite, sobre as capturas 01, 14, 32, 40 e 58 a 66, com build e emulador verdes (run 41590052335). A régua subiu de novo: com 200 fases e um guarda roupa de verdade, o app agora se compara em conteúdo com Khan Academy Kids e em brinquedo com Toca Boca e Sago Mini; manteve o 9,5.
+Nota 9,5 no fim de 3 de novembro, sobre as capturas 32 e 62 a 66, com build e emulador verdes (run 41594702111). Os quatro achados de fase e o estilo misto da casa foram resolvidos; a nota não sobe para 10 porque o que falta não se resolve com código: uso real com crianças e voz num celular de verdade.
 
-Pontos fortes: roupas e acessórios desenhados no mesmo traço da criança, combináveis e para qualquer criança (58, 59); provador que mostra cada peça já vestida (60); fases novas limpas e grandes, com sudoku 4 por 4 e labirinto bem legíveis (65, 66); caminho com mundos e treino sem fim (61). Nenhuma regressão nas telas antigas (01, 14, 32, 40).
+Pontos fortes novos: material dourado com barrinhas de dez e cubinhos soltos separados, fácil de contar (62); sudoku com uma só casinha amarela e tampinhas que não parecem falta de figura (65); labirinto justo ao caminho, com pedrinhas para contar, a criança e a casinha, sem fileiras vazias de árvore (66); "I like" com a frase só no cartão (64); casa por dentro com todos os enfeites no mesmo traço vetorial (32).
 
-Avaliação pedagógica: 200 fases de 5 perguntas sorteadas, mais o treino adaptativo e a missão do dia, sustentam meses de uso (uma fase por dia dá mais de seis meses). A sequência segue a BNCC da educação infantil ao 1º ano: em letras vai de vogais e consciência fonológica (som das letras, sílabas, rimas) à leitura de frases curtas e escrita com letras móveis e traçado de minúsculas; em matemática, de contagem até 20 a dezenas e unidades, comparação até 100, dobro e metade, horas e dinheiro. É um bom complemento à alfabetização, mas não substitui leitura compartilhada nem material concreto; a representação de dezenas ainda é fraca (seção 6).
+Avaliação pedagógica: a representação de dezenas agora segue o material concreto usado na escola (barrinha de dez e cubinho), o que liga a contagem ao valor posicional; o labirinto passou a pedir contagem de pedrinhas, mais concreta que "passos". O resto da avaliação anterior continua valendo: bom complemento à alfabetização e à matemática da educação infantil ao 1º ano, sem substituir leitura compartilhada.
 
 O que segura o 10:
 
-* Estilo misto na casa por dentro: objetos em emoji ao lado de móveis vetoriais (seção 6).
-* Pequenos acertos nas fases novas: material dourado nas dezenas, casas vazias do sudoku, labirinto com folga demais, frase do "I like" já escrita no balão (seção 6).
 * Só o uso real confirma: voz num celular de verdade e teste com crianças (seção 8).
+* Detalhes de acabamento da seção 6, item 4 (setas em emoji no labirinto, livros e vaso meio escondidos na casa por dentro).
 
 ## 8. Publicação (fora do alcance da sessão)
 
