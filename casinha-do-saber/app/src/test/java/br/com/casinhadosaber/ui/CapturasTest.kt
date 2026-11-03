@@ -637,11 +637,13 @@ class CapturasTest {
                 val com = imagem(i, j)
                 org.junit.Assert.assertTrue("tamanhos diferentes", com.width == w && com.height == sem.height)
                 var x0 = Int.MAX_VALUE; var y0 = Int.MAX_VALUE; var x1 = -1; var y1 = -1; var n = 0
-                for (y in 0 until sem.height) for (x in 0 until w) {
-                    if (!diferente(com.getPixel(x, y), sem.getPixel(x, y))) continue
-                    n++
-                    if (x < x0) x0 = x
-                    if (x > x1) x1 = x
+                for (y in 0 until sem.height) {
+                    // Linha com só um ou dois pixels diferentes é borda antisserrilhada, não chapéu.
+                    val xs = (0 until w).filter { x -> diferente(com.getPixel(x, y), sem.getPixel(x, y)) }
+                    if (xs.size < 3) continue
+                    n += xs.size
+                    if (xs.first() < x0) x0 = xs.first()
+                    if (xs.last() > x1) x1 = xs.last()
                     if (y < y0) y0 = y
                     if (y > y1) y1 = y
                 }
