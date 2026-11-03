@@ -240,10 +240,11 @@ class LojaPlayTest {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize()) {
                     drawRect(Brush.verticalGradient(listOf(Color(0xFF7EC8FF), Color(0xFFBFE6FF))))
-                    // Janela de 84 unidades (de 12 a 96) do desenho de 108: o gramado começa na base das paredes (80).
-                    val topo = size.height * (80f - 12f) / 84f
+                    // Janela de 84 unidades (de 12 a 96) do desenho de 108: o gramado, da mesma cor da grama
+                    // do desenho, começa onde ela começa (78) e vai até embaixo, sem degrau.
+                    val topo = size.height * (78f - 12f) / 84f
                     drawRect(
-                        Brush.verticalGradient(listOf(Color(0xFF7CC56B), Color(0xFF5DAA4E)), startY = topo, endY = size.height),
+                        Color(0xFF7CC56B),
                         topLeft = Offset(0f, topo),
                         size = Size(size.width, size.height - topo),
                     )
@@ -275,12 +276,12 @@ class LojaPlayTest {
                         size = Size(size.width, size.height - chao),
                     )
                 }
-                Box(Modifier.align(Alignment.BottomStart).offset(x = 22.dp).size(217.dp, 250.dp)) {
+                Box(Modifier.align(Alignment.BottomStart).size(217.dp, 250.dp)) {
                     CenaDaCasa(casa, Modifier.fillMaxSize(), preencherAltura = true)
                 }
                 Crianca(
                     menina.copy(chapeu = "👑"),
-                    Modifier.align(Alignment.BottomStart).offset(x = 206.dp, y = (-10).dp).height(128.dp),
+                    Modifier.align(Alignment.BottomStart).offset(x = 190.dp, y = (-10).dp).height(128.dp),
                     acenando = true,
                 )
                 Column(
@@ -404,7 +405,7 @@ class LojaPlayTest {
     }
 
     private fun celular(nome: String, titulo: String, cores: Pair<Long, Long>, acao: (() -> Unit)? = null, tela: @Composable () -> Unit) {
-        montar { Vitrine(titulo, cores, 393, 820, 112.dp, 29.sp, 22.dp, tela) }
+        montar { Vitrine(titulo, cores, 393, 852, 112.dp, 29.sp, 22.dp, tela) }
         regra.mainClock.advanceTimeBy(2500)
         if (acao != null) {
             acao()
@@ -463,7 +464,10 @@ class LojaPlayTest {
     }
 
     @Test fun celular06Espelho() = celular("loja_celular_06.png", "16 roupas e 18 acessórios", rosa) {
-        val comprados = setOf("acessoriooculos", "acessoriobalao", "acessoriotenis", "roupafutebol", "chapeu👑")
+        val comprados = setOf(
+            "acessoriooculos", "acessoriobalao", "acessoriotenis", "chapeu👑",
+            "roupafutebol", "roupaastronauta", "roupafada", "roupadinossauro", "roupapirata", "roupaabelha",
+        )
         val p = menina.copy(traje = "futebol", acessorios = mapOf(ParteDoCorpo.ROSTO to "oculos", ParteDoCorpo.MAO to "balao"))
         TelaPerfil(p, espelho = true, comprados = comprados, onVoltar = {}) {}
     }

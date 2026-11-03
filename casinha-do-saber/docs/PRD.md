@@ -44,6 +44,8 @@ O ambiente da sessão **não acessa o Google Maven**, então o APK é compilado 
 
 Ler os logs do CI pelo MCP do GitHub (`actions_list`, `get_job_logs` com `failed_only`; erros de Kotlin aparecem como `e: file://`). Cada push cancela o build anterior (concurrency), inclusive o emulador: não fazer push enquanto o emulador roda. O passo de capturas usa `git pull --rebase -X theirs`; antes de cada push local, `git pull --no-rebase`.
 
+Lição das imagens da loja: os testes de unidade Android não têm `java.awt` nem `javax.imageio` (compilam contra o android.jar), então `LojaPlayTest` lê a captura com `BitmapFactory` e escreve o PNG à mão (IHDR, IDAT com `Deflater`, CRC32), o que garante RGB de 24 bits. Cada imagem é montada numa tela com a densidade que dá o tamanho exato, e a tela do app entra numa moldura com `LocalDensity` e `LocalConfiguration` próprios.
+
 Lições do polimento: `Offset` é classe de valor e não pode ser parâmetro `vararg` (erro de compilação que só o CI pega). O lint do CI trata `BoxWithConstraints` sem usar `maxWidth` ou `maxHeight` como erro (`UnusedBoxWithConstraintsScope`): nesse caso usar `Box`.
 
 Lição da conferência local: dá para ver telas antes do CI com Compose Desktop 1.5.12 (o único com as bibliotecas de execução no cache), num projeto `scratchpad/ver` que compila só `dominio/`, `Isometrico.kt`, `Enfeites.kt`, `Crianca.kt` (trocando `quadraticTo` por `quadraticBezierTo`) e `CenasDesenhadas.kt`, e salva PNG com `ImageComposeScene`. Por isso desenhos novos ficam em arquivos pequenos, sem depender das telas inteiras.
@@ -99,7 +101,7 @@ Lições das capturas (Robolectric): a tela só é desenhada na hora da captura,
 * Presente abre com 3 toques e raios de luz; prêmio vai direto para a casa.
 * **Área dos pais** com as 200 fases **agrupadas por caminho e por mundo** (recolher e abrir), precisão, "Praticando agora", tempo jogado, limite diário de 15/30/60 min, vozes, som e música, apagar progresso.
 * **Tablet**: retrato 30% maior; **paisagem** com início e casa em duas colunas (a coluna da casa tem atalhos de espelho, pintar e entrar, e o baú vazio vira um cartão com o troféu ou o próximo presente e a barrinha de quantas coisas a casa tem, sem vão no meio) e as outras telas numa coluna central com sombra suave sobre o céu.
-* Material da Play Store: `docs/play-store.md`, `docs/politica-de-privacidade.md`, `docs/publicar.md`.
+* Material da Play Store: `docs/play-store.md` (textos e respostas dos formulários do Play Console), `docs/politica-de-privacidade.md` e `.html` (contato guilhermegatdef@gmail.com), `docs/publicar.md` (passo a passo com Windows, link da política e teste fechado de 12 testadores por 14 dias) e as imagens da ficha em `docs/loja/`, geradas pelo CI no tamanho exato por `LojaPlayTest.kt`: ícone 512 x 512 (RGBA opaco), destaque 1024 x 500, 8 capturas de celular 1080 x 1920, 4 de tablet de 7 polegadas 1200 x 1920 e 4 de tablet de 10 polegadas 1920 x 1200, todas em PNG RGB sem alfa. O CI também confere o manifesto final do release: falha se aparecer `AD_ID` ou `INTERNET`.
 
 **Testes**
 * 85 testes de domínio (inclusive acessórios, mundos e treino; material dourado, sudoku com uma casinha só a descobrir, labirinto compacto sem atalho e balão que nunca entrega a frase de ler). Capturas novas: 58 a 60 (roupas, acessórios, provador), 61 (caminho com treino e mundo 3), 62 a 66 (dezenas e unidades, ler frases, I like, sudoku 4 por 4, labirinto grande) e 66b (labirinto com as setas desenhadas).
