@@ -88,6 +88,17 @@ data class EstadoJogo(
     val desafiosDosPaisFeitos: Set<Long> = emptySet(),
     /** Registro curto das partidas para o relatório da semana (últimos [Pais.DIAS_GUARDADOS] dias). */
     val sessoes: List<RegistroDeSessao> = emptyList(),
+    /** Revisões feitas no "Relembrar" ([Relembrar]); com [sessoes], dão a fila de revisão espaçada. */
+    val revisoes: List<RegistroDeRevisao> = emptyList(),
+    /**
+     * "Descobrir o nível" ([Nivelamento]): por caminho, as fases até este índice (inclusive) ficam abertas mesmo
+     * sem a anterior vencida. Abertas, nunca vencidas: estrelas e presentes continuam vindo de jogar.
+     */
+    val liberadaAte: Map<Trilha, Int> = emptyMap(),
+    /** Caminhos em que o "Descobrir o nível" já foi feito (não oferece de novo na primeira visita). */
+    val nivelFeito: Set<Trilha> = emptySet(),
+    /** Livrinhos lidos até o fim ([Livrinhos]): os marcadores da estante. */
+    val livrinhosLidos: Set<String> = emptySet(),
 ) {
     /** A missão do dia aparece uma vez por dia, depois que a criança já venceu alguma fase. */
     fun missaoDisponivel(dia: Long): Boolean = fasesVencidas > 0 && diaDaMissao != dia
@@ -241,9 +252,15 @@ data class EstadoJogo(
 
     fun vencidasNa(trilha: Trilha): Int = estrelas.keys.count { it.startsWith(trilha.name + ":") }
 
-    /** A primeira fase de cada trilha está sempre aberta; as outras abrem quando a anterior é vencida. */
-    fun liberada(fase: Fase): Boolean =
-        fase.numero == 0 || estrelas.containsKey(chave(fase.trilha, fase.numero - 1))
+    /**
+     * A primeira fase de cada trilha está sempre aberta; as outras abrem quando a anterior é vencida
+     * (ou quando o "Descobrir o nível" abriu o caminho até elas, [liberadaAte]).
+     */
+    fun liberada(fase: Fase): Boolean = liberada(fase.trilha, fase.numero)
+
+    /** O mesmo que [liberada] pela trilha e o número da fase (para quem não tem o [Fase] na mão). */
+    fun liberada(trilha: Trilha, numero: Int): Boolean =
+        numero == 0 || numero <= (liberadaAte[trilha] ?: 0) || estrelas.containsKey(chave(trilha, numero - 1))
 
     fun temEstrutura(e: Estrutura): Boolean =
         ItensDaCasa.ordem.firstOrNull { it.estrutura == e }?.id?.let { it in colocados } ?: false

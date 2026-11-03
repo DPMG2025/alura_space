@@ -264,7 +264,7 @@ fun TelaPerfil(
         if (mostrarNome) {
             OutlinedTextField(
                 value = nome,
-                onValueChange = { nome = it.take(16) },
+                onValueChange = { nome = br.com.casinhadosaber.dominio.Familia.cortarNome(it) },
                 label = { Text("Nome da criança (opcional)") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),

@@ -168,4 +168,44 @@ class CopiaEFamiliaTest {
         val texto = Copia.paraTexto(copiaDeDuas()).replace("\"ativa\": \"2\"", "\"ativa\": \"9\"")
         assertEquals("1", (Copia.deTexto(texto) as ResultadoDaCopia.Valida).copia.ativa)
     }
+
+    @Test
+    fun copiaComBomNoComecoEhLida() {
+        val texto = "\uFEFF" + Copia.paraTexto(copiaDeDuas())
+        val r = Copia.deTexto(texto)
+        assertTrue("cópia com BOM deveria ser válida: $r", r is ResultadoDaCopia.Valida)
+        assertEquals(copiaDeDuas().criancas, (r as ResultadoDaCopia.Valida).copia.criancas)
+    }
+
+    @Test
+    fun conjuntoDeTextosVaiEVolta() {
+        val dados = mapOf(
+            "nome" to ValorGuardado.Texto("Ana"),
+            "algum_conjunto" to ValorGuardado.Conjunto(setOf("b", "a \"c\"", "🦄")),
+            "vazio" to ValorGuardado.Conjunto(emptySet()),
+        )
+        val copia = CopiaDoProgresso(listOf(CriancaGuardada("1", dados)), "1")
+        val texto = Copia.paraTexto(copia)
+        // Sempre em ordem: a mesma cópia sai sempre igual.
+        assertEquals(texto, Copia.paraTexto(copia.copy(criancas = listOf(CriancaGuardada("1", dados.toList().reversed().toMap())))))
+        val volta = (Copia.deTexto(texto) as ResultadoDaCopia.Valida).copia
+        assertEquals(dados, volta.criancas.single().dados)
+        // Lista com algo que não é texto é recusada sem exceção.
+        val estragada = texto.replace("\"vazio\": {\"t\": \"c\", \"v\": []}", "\"vazio\": {\"t\": \"c\", \"v\": [1]}")
+        assertTrue(estragada != texto)
+        assertTrue(Copia.deTexto(estragada) is ResultadoDaCopia.Invalida)
+    }
+
+    @Test
+    fun cortarNomeNaoPartaEmoji() {
+        assertEquals("Ana", Familia.cortarNome("Ana"))
+        assertEquals("ABCDEFGHIJKLMNOP", Familia.cortarNome("ABCDEFGHIJKLMNOPQRS"))
+        // 15 letras e um unicórnio (dois chars em UTF-16): cabe inteiro.
+        val com = "ABCDEFGHIJKLMNO🦄"
+        assertEquals(com, Familia.cortarNome(com + "XYZ"))
+        // Um unicórnio na posição 16 nunca fica pela metade.
+        val cortado = Familia.cortarNome("🦄".repeat(20))
+        assertEquals(16, cortado.codePointCount(0, cortado.length))
+        assertFalse(Character.isHighSurrogate(cortado.last()))
+    }
 }

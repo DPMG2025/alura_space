@@ -88,6 +88,7 @@ import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.AtividadeInterativa
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 private val elogios = listOf("Muito bem!", "Isso aí!", "Acertou!", "Você é demais!", "Perfeito!", "Uau, que esperto!")
@@ -133,6 +134,11 @@ fun TelaJogo(
      * se ajustar). O ✖ termina o treino e entrega os resultados em [onConcluir].
      */
     treino: ((resultados: List<Boolean>) -> Pergunta)? = null,
+    /**
+     * Com [treino]: depois de cada acerto, se devolver true a partida termina e entrega os resultados em
+     * [onConcluir] (o "Descobrir o nível" para sozinho; o treino sem fim não passa nada).
+     */
+    fimDoTreino: ((resultados: List<Boolean>) -> Boolean)? = null,
     /** Mostra a abertura do mundo (Corujinha Professora) antes da primeira fase dele ([Historia.introducao]). */
     comHistoria: Boolean = false,
 ) {
@@ -200,12 +206,28 @@ fun TelaJogo(
         confete++
         sons.acerto()
         // Um elogio sim, outro não, com o nome da criança (de Perfil.nome; sem nome, a versão sem nome).
-        val elogio = if (indice % 2 == 0) br.com.casinhadosaber.dominio.FrasesComNome.elogio(perfil?.nome, indice / 2) else elogios.random()
-        narrador.falar(listOf(pt(elogio)) + pergunta.reforco)
-        val caracteres = elogio.length + pergunta.reforco.sumOf { it.texto.length }
+        // Com voz da família gravada (área dos pais), o elogio sai com a voz do pai ou da mãe.
+        val elogio = if (indice % 2 == 0) br.com.casinhadosaber.dominio.VozesDaFamilia.elogio(perfil?.nome, indice / 2)
+        else br.com.casinhadosaber.dominio.VozesDaFamilia.parte(elogios.random())
+        val partes = listOf(elogio) + pergunta.reforco.map { br.com.casinhadosaber.dominio.ParteDaFala(it) }
+        // Gravação da família no meio: ela pode durar até 8 s, mais que a estimativa pelo texto.
+        val gravadas = narrador.familia.paraTocar()
+        val comGravacao = partes.any { it.chave != null && it.chave in gravadas }
+        narrador.falarPartes(partes)
+        val caracteres = elogio.trecho.texto.length + pergunta.reforco.sumOf { it.texto.length }
         escopo.launch {
-            delay((1200L + caracteres * 65L).coerceAtMost(5000L))
-            if (treino != null) {
+            if (comGravacao) {
+                // Espera a fala com a gravação terminar (no máximo 9 s no total, para nunca travar a partida).
+                delay(1200L)
+                kotlinx.coroutines.withTimeoutOrNull(7_800L) {
+                    androidx.compose.runtime.snapshotFlow { narrador.falando }.first { !it }
+                }
+            } else {
+                delay((1200L + caracteres * 65L).coerceAtMost(5000L))
+            }
+            if (treino != null && fimDoTreino?.invoke(resultados) == true) {
+                onConcluir(resultados)
+            } else if (treino != null) {
                 // Treino sem fim: a próxima pergunta já vem ajustada aos acertos e erros até aqui.
                 perguntas.add(treino(resultados))
                 indice++
@@ -233,8 +255,9 @@ fun TelaJogo(
                 // Ajuda: depois de dois erros, a resposta certa brilha e a pergunta é repetida.
                 narrador.falar(pergunta.opcoes[i].fala + pt("Vamos juntos? Olhe a que está brilhando.") + pergunta.fala)
             } else {
-                val incentivo = if (indice % 2 == 1) br.com.casinhadosaber.dominio.FrasesComNome.incentivo(perfil?.nome, indice / 2) else "Tente outra vez!"
-                narrador.falar(pergunta.opcoes[i].fala + pt(incentivo))
+                val incentivo = if (indice % 2 == 1) br.com.casinhadosaber.dominio.VozesDaFamilia.incentivo(perfil?.nome, indice / 2)
+                else br.com.casinhadosaber.dominio.VozesDaFamilia.parte("Tente outra vez!")
+                narrador.falarPartes(pergunta.opcoes[i].fala.map { br.com.casinhadosaber.dominio.ParteDaFala(it) } + incentivo)
             }
         }
     }

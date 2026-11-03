@@ -53,6 +53,7 @@ import br.com.casinhadosaber.dominio.Mercadinho
 import br.com.casinhadosaber.dominio.Relogio
 import br.com.casinhadosaber.dominio.ProgramarRobo
 import br.com.casinhadosaber.dominio.MontarFrase
+import br.com.casinhadosaber.dominio.EscreverPalavra
 import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadePescaria
 import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeBaloes
 import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeLigarPares
@@ -70,6 +71,7 @@ import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeMercadinho
 import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeRelogio
 import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeProgramarRobo
 import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeMontarFrase
+import br.com.casinhadosaber.ui.telas.atividades.novas.AtividadeEscrever
 import br.com.casinhadosaber.dominio.Trecho
 import br.com.casinhadosaber.dominio.Vocabulario
 import br.com.casinhadosaber.ui.componentes.MaoGuia
@@ -121,6 +123,8 @@ fun AtividadeInterativa(
         is Relogio -> AtividadeRelogio(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
         is ProgramarRobo -> AtividadeProgramarRobo(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
         is MontarFrase -> AtividadeMontarFrase(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
+        // Escrever com o dedo (docs/PRD.md, "Vozes da família e escrever com o dedo").
+        is EscreverPalavra -> AtividadeEscrever(atividade, fala, ativa, ajudaInicial, cor, onErro, onConcluir, modifier)
     }
 }
 

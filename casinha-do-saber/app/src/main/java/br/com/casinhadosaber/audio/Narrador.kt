@@ -8,7 +8,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import android.speech.tts.Voice
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import br.com.casinhadosaber.dominio.Idioma
+import br.com.casinhadosaber.dominio.ParteDaFala
+import br.com.casinhadosaber.dominio.PassoDaFala
+import br.com.casinhadosaber.dominio.VozesDaFamilia
 import br.com.casinhadosaber.dominio.Trecho
 import br.com.casinhadosaber.dominio.pt
 import java.io.File
@@ -20,6 +25,10 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * Para soar o mais natural possível sem gravações: escolhe a melhor voz instalada (offline) de cada
  * idioma, fala devagar, faz pausas entre as frases e diz as palavras em inglês ainda mais devagar.
+ *
+ * Vozes da família: as falas montadas com [ParteDaFala] (elogios, incentivos, chegada, vitória e boa
+ * noite) tocam a gravação do pai ou da mãe quando a frase foi gravada na área dos pais ([familia]);
+ * sem gravação, tudo é falado pela voz do aparelho, como sempre.
  */
 class Narrador(context: Context) : TextToSpeech.OnInitListener {
 
@@ -37,6 +46,22 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
         private set
     @Volatile private var ultimaFala = ""
     private val gravacoes = ConcurrentHashMap<String, (Boolean) -> Unit>()
+
+    /** As vozes gravadas pela família (área dos pais). */
+    val familia: VozesGravadas by lazy { VozesGravadas(context) }
+    private val principal = Handler(Looper.getMainLooper())
+
+    /** Fim de cada fala com gravação no meio: o id da última frase de um passo leva ao passo seguinte. */
+    private val fimDoPasso = ConcurrentHashMap<String, () -> Unit>()
+
+    /** Cada fala nova (ou parar) troca a vez: os passos de uma fala antiga não continuam. */
+    @Volatile private var vez = 0
+
+    /** Uma fala com gravação da família está em andamento (o onStop de um tts.stop() antigo não a encerra). */
+    @Volatile private var sequenciaDaFamilia = false
+
+    /** Fala com gravação que chegou num passo de voz antes do motor ficar pronto: continua no onInit. */
+    private var planoPendente: Triple<List<PassoDaFala>, Int, Int>? = null
 
     /** O motor de voz já respondeu e está pronto para falar? */
     val estaPronto: Boolean get() = pronto
@@ -60,19 +85,26 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
             override fun onStart(utteranceId: String?) { if (utteranceId == null || !gravacoes.containsKey(utteranceId)) falando = true }
             override fun onDone(utteranceId: String?) {
                 utteranceId?.let { gravacoes.remove(it) }?.let { it(true); return }
+                utteranceId?.let { fimDoPasso.remove(it) }?.let { fim -> principal.post { fim() }; return }
                 if (utteranceId == ultimaFala) falando = false
             }
             @Deprecated("Deprecated in Java")
             override fun onError(utteranceId: String?) {
                 utteranceId?.let { gravacoes.remove(it) }?.let { it(false); return }
-                falando = false
+                utteranceId?.let { fimDoPasso.remove(it) }?.let { fim -> principal.post { fim() }; return }
+                if (!sequenciaDaFamilia) falando = false
             }
-            override fun onStop(utteranceId: String?, interrupted: Boolean) { falando = false }
+            // O tts.stop() de uma fala com gravação chega aqui depois, quando a gravação já está tocando.
+            override fun onStop(utteranceId: String?, interrupted: Boolean) { if (!sequenciaDaFamilia) falando = false }
         })
         // Só fica pronto depois de escolher as vozes: assim a primeira fala já sai com a voz boa.
         pronto = true
         pendente?.let { falar(it) }
         pendente = null
+        planoPendente?.let { (plano, i, minhaVez) ->
+            planoPendente = null
+            principal.post { seguir(plano, i, minhaVez) }
+        }
     }
 
     /** A voz offline de maior qualidade para o idioma (e o país, quando der). */
@@ -88,17 +120,78 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
 
     fun falar(trechos: List<Trecho>) {
         if (!ativo || trechos.isEmpty()) return
+        pararFamilia()
         if (!pronto) {
             pendente = trechos
             return
         }
-        frases(trechos).forEachIndexed { i, (frase, ingles) ->
+        falarAgora(trechos)
+    }
+
+    /**
+     * Fala os [trechos] (a primeira frase corta o que estava sendo dito). [aoTerminar], se houver, é chamado
+     * quando a última frase termina. Devolve se falou alguma coisa.
+     */
+    private fun falarAgora(trechos: List<Trecho>, aoTerminar: (() -> Unit)? = null): Boolean {
+        val lista = frases(trechos)
+        lista.forEachIndexed { i, (frase, ingles) ->
             if (i > 0) tts.playSilentUtterance(if (ingles) 300L else 220L, TextToSpeech.QUEUE_ADD, null)
             configurar(ingles)
             val id = "fala-${System.nanoTime()}"
             ultimaFala = id
+            // O fim fica registrado antes de falar: a voz pode terminar antes desta função voltar.
+            if (i == lista.lastIndex && aoTerminar != null) fimDoPasso[id] = aoTerminar
             tts.speak(frase, if (i == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, null, id)
         }
+        return lista.isNotEmpty()
+    }
+
+    /**
+     * Fala com as vozes da família: cada parte com gravação toca a gravação, as outras são faladas pela voz
+     * do aparelho, na ordem ([VozesDaFamilia.planejar]). Sem nenhuma gravação é igual a [falar].
+     */
+    fun falarPartes(partes: List<ParteDaFala>) {
+        if (!ativo || partes.isEmpty()) return
+        val plano = VozesDaFamilia.planejar(partes, familia.paraTocar())
+        if (plano.none { it is PassoDaFala.Gravacao }) {
+            falar(partes.map { it.trecho })
+            return
+        }
+        pararFamilia()
+        pendente = null
+        if (pronto) tts.stop()
+        val minhaVez = ++vez
+        sequenciaDaFamilia = true
+        falando = true
+        seguir(plano, 0, minhaVez)
+    }
+
+    private fun seguir(plano: List<PassoDaFala>, i: Int, minhaVez: Int) {
+        if (minhaVez != vez) return
+        if (i >= plano.size) {
+            sequenciaDaFamilia = false
+            falando = false
+            return
+        }
+        val proximo = { seguir(plano, i + 1, minhaVez) }
+        falando = true
+        when (val passo = plano[i]) {
+            is PassoDaFala.Gravacao -> familia.tocar(passo.chave) { principal.post { proximo() } }
+            is PassoDaFala.Voz -> when {
+                // Motor de voz ainda abrindo: guarda o resto da fala e continua no onInit (nada se perde).
+                !pronto -> planoPendente = Triple(plano, i, minhaVez)
+                !falarAgora(passo.trechos, proximo) -> principal.post { proximo() }
+            }
+        }
+    }
+
+    /** Interrompe uma fala com gravação no meio (a gravação para e os passos seguintes não acontecem). */
+    private fun pararFamilia() {
+        vez++
+        sequenciaDaFamilia = false
+        planoPendente = null
+        fimDoPasso.clear()
+        familia.pararDeTocar()
     }
 
     /**
@@ -129,10 +222,14 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
 
     fun parar() {
         pendente = null
+        pararFamilia()
+        falando = false
         if (pronto) tts.stop()
     }
 
     fun desligar() {
+        pararFamilia()
+        familia.liberar()
         tts.stop()
         tts.shutdown()
     }

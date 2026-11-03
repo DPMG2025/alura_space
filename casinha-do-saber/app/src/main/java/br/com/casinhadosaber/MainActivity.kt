@@ -33,6 +33,7 @@ import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.dominio.Produto
 import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.dominio.registrarTreino
+import br.com.casinhadosaber.ui.LocalCriancaAtiva
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.MolduraDoApp
@@ -64,8 +65,22 @@ import br.com.casinhadosaber.dados.ArquivoDaCopia
 import br.com.casinhadosaber.dominio.Copia
 import br.com.casinhadosaber.dominio.CopiaDoProgresso
 import br.com.casinhadosaber.dominio.ResultadoDaCopia
+import br.com.casinhadosaber.dominio.resumo
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import br.com.casinhadosaber.dominio.Livrinhos
+import br.com.casinhadosaber.dominio.Nivelamento
+import br.com.casinhadosaber.dominio.aplicarNivel
+import br.com.casinhadosaber.dominio.concluirRelembrar
+import br.com.casinhadosaber.dominio.paraRelembrar
+import br.com.casinhadosaber.dominio.terminarLivrinho
+import br.com.casinhadosaber.ui.telas.TelaConviteNivel
+import br.com.casinhadosaber.ui.telas.TelaConviteRelembrar
+import br.com.casinhadosaber.ui.telas.TelaEstante
+import br.com.casinhadosaber.ui.telas.TelaFimRelembrar
+import br.com.casinhadosaber.ui.telas.TelaLivrinho
+import br.com.casinhadosaber.ui.telas.TelaResultadoNivel
+import br.com.casinhadosaber.ui.telas.perguntasDoRelembrar
 
 /** As telas do app. A navegação é simples e fica toda aqui. */
 sealed interface Tela {
@@ -110,6 +125,22 @@ sealed interface Tela {
     data class Mapa(val trilha: Trilha) : Tela
     data class Diplomas(val voltar: Tela) : Tela
     data class Album(val trilha: Trilha, val mundo: Int, val voltar: Tela) : Tela
+
+    // ---- No ritmo da criança: Relembrar (revisão espaçada), Descobrir o nível e livrinhos para ler sozinho
+    /** Convite da Corujinha para relembrar (de um caminho, ou de todos quando [trilha] é null). */
+    data class Relembrar(val trilha: Trilha?, val voltar: Tela) : Tela
+    data class RodadaRelembrar(
+        val fases: List<Pair<Trilha, Int>>,
+        val fase: Fase,
+        val perguntas: List<br.com.casinhadosaber.dominio.Pergunta>,
+        val voltar: Tela,
+    ) : Tela
+    data class FimRelembrar(val acertos: Int, val total: Int, val moedas: Int, val voltar: Tela) : Tela
+    data class Nivel(val trilha: Trilha, val voltar: Tela) : Tela
+    data class NivelJogo(val trilha: Trilha, val voltar: Tela) : Tela
+    data class NivelResultado(val trilha: Trilha, val resultados: List<Boolean>) : Tela
+    data class Estante(val voltar: Tela) : Tela
+    data class Livrinho(val id: String, val voltar: Tela) : Tela
 }
 
 class MainActivity : ComponentActivity() {
@@ -135,7 +166,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TemaCasinha {
-                CompositionLocalProvider(LocalNarrador provides narrador, LocalSons provides sons) {
+                CompositionLocalProvider(LocalNarrador provides narrador, LocalSons provides sons, LocalCriancaAtiva provides repositorio.ativa) {
                     App(repositorio)
                 }
             }
@@ -146,13 +177,29 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         narrador.parar()
         musica.pausar()
-        // Tempo de uso, só para a área dos pais (fica no aparelho).
-        if (inicioDaSessao > 0) {
-            val segundos = (System.currentTimeMillis() - inicioDaSessao) / 1000
-            repositorio.atualizar { it.copy(segundosJogados = it.segundosJogados + segundos) }
-            repositorio.somarTempoDeHoje(segundos)
-            inicioDaSessao = 0
-        }
+        fecharTempoDaSessao()
+        inicioDaSessao = 0
+    }
+
+    /**
+     * Soma o tempo desde [inicioDaSessao] na criança que está jogando (área dos pais) e na contagem do
+     * aparelho, e recomeça a contar. Chamado ao pausar e antes de trocar de criança ou recuperar uma cópia,
+     * para o tempo não ir para a criança errada.
+     */
+    private fun fecharTempoDaSessao() {
+        if (inicioDaSessao <= 0) return
+        val agora = System.currentTimeMillis()
+        val segundos = (agora - inicioDaSessao) / 1000
+        repositorio.atualizar { it.copy(segundosJogados = it.segundosJogados + segundos) }
+        repositorio.somarTempoDeHoje(segundos)
+        inicioDaSessao = agora
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // App em segundo plano no meio de uma gravação da família: joga fora (a gravação antiga continua).
+        // Sem isso, o limite de 8 s guardaria silêncio por cima de uma gravação boa.
+        narrador.familia.terminarGravacao(guardar = false)
     }
 
     override fun onResume() {
@@ -240,6 +287,14 @@ class MainActivity : ComponentActivity() {
                     is Tela.Mapa -> Tela.Caminho(t.trilha)
                     is Tela.Diplomas -> t.voltar
                     is Tela.Album -> t.voltar
+                    is Tela.Relembrar -> t.voltar
+                    is Tela.RodadaRelembrar -> t.voltar
+                    is Tela.FimRelembrar -> t.voltar
+                    is Tela.Nivel -> t.voltar
+                    is Tela.NivelJogo -> t.voltar
+                    is Tela.NivelResultado -> Tela.Caminho(t.trilha)
+                    is Tela.Estante -> t.voltar
+                    is Tela.Livrinho -> Tela.Estante(t.voltar)
                     else -> Tela.Inicio
                 },
             )
@@ -283,6 +338,9 @@ class MainActivity : ComponentActivity() {
                             val revisar = estado.fasesParaRevisar(Trilha.entries.flatMap { gerador.fases(it) })
                             if (revisar.isNotEmpty()) irPara(Tela.Missao(revisar.first(), gerador.perguntasDaMissao(revisar)))
                         },
+                        relembrar = estado.paraRelembrar(repo.hoje()).size,
+                        onRelembrar = { irPara(Tela.Relembrar(null, Tela.Inicio)) },
+                        onEstante = { irPara(Tela.Estante(Tela.Inicio)) },
                     )
 
                     is Tela.Caminho -> TelaTrilha(
@@ -292,6 +350,10 @@ class MainActivity : ComponentActivity() {
                         onJogar = { irPara(Tela.Jogo(it)) },
                         onTreinar = { irPara(Tela.Treino(atual.trilha)) },
                         onMapa = { irPara(Tela.Mapa(atual.trilha)) },
+                        relembrar = estado.paraRelembrar(repo.hoje(), atual.trilha).size,
+                        onRelembrar = { irPara(Tela.Relembrar(atual.trilha, atual)) },
+                        onDescobrirNivel = { irPara(Tela.Nivel(atual.trilha, atual)) },
+                        onEstante = if (atual.trilha == Trilha.PORTUGUES) ({ irPara(Tela.Estante(atual)) }) else null,
                     )
 
                     is Tela.Treino -> {
@@ -471,12 +533,98 @@ class MainActivity : ComponentActivity() {
                         onVoltar = { irPara(if (repo.estado.perfil == null) Tela.Perfil else Tela.Inicio) },
                         familia = familiaECopia.first,
                         copia = familiaECopia.second,
+                        onDescobrirNivel = { t -> irPara(Tela.Nivel(t, Tela.Pais)) },
                     )
 
                     Tela.QuemVaiJogar -> TelaQuemVaiJogar(repo.criancas) { id ->
+                        fecharTempoDaSessao()
                         repo.trocarCrianca(id)
                         conquistas = NovasConquistas()
                         irPara(if (repo.estado.perfil == null) Tela.Perfil else Tela.Inicio)
+                    }
+
+                    is Tela.Relembrar -> {
+                        val itens = estado.paraRelembrar(repo.hoje(), atual.trilha)
+                        // Nada para hoje (já relembrou): volta, sem convite vazio.
+                        if (itens.isEmpty()) LaunchedEffect(Unit) { irPara(atual.voltar) }
+                        TelaConviteRelembrar(
+                            nome = estado.perfil?.nome,
+                            quantas = itens.size,
+                            onVamos = {
+                                val fases = br.com.casinhadosaber.dominio.Relembrar.fasesDaRodada(itens)
+                                val rodada = perguntasDoRelembrar(gerador, fases)
+                                irPara(if (rodada == null) atual.voltar else Tela.RodadaRelembrar(fases, rodada.first, rodada.second, atual.voltar))
+                            },
+                            onAgoraNao = { irPara(atual.voltar) },
+                        )
+                    }
+
+                    is Tela.RodadaRelembrar -> TelaJogo(
+                        fase = atual.fase,
+                        perfil = estado.perfil,
+                        perguntasProntas = atual.perguntas,
+                        onSair = { irPara(atual.voltar) },
+                        onConcluir = { resultados ->
+                            val (novo, moedas) = repo.estado.concluirRelembrar(atual.fases, resultados, repo.hoje())
+                            repo.atualizar { novo }
+                            irPara(Tela.FimRelembrar(resultados.count { it }, resultados.size, moedas, atual.voltar))
+                        },
+                    )
+
+                    is Tela.FimRelembrar -> TelaFimRelembrar(estado.perfil?.nome, atual.acertos, atual.total, atual.moedas) { irPara(atual.voltar) }
+
+                    is Tela.Nivel -> TelaConviteNivel(
+                        trilha = atual.trilha,
+                        nome = estado.perfil?.nome,
+                        onComecar = { irPara(Tela.NivelJogo(atual.trilha, atual.voltar)) },
+                        onAgoraNao = { irPara(atual.voltar) },
+                    )
+
+                    is Tela.NivelJogo -> {
+                        val fasesDoCaminho = remember(atual.trilha) { gerador.fases(atual.trilha) }
+                        fun pergunta(r: List<Boolean>) =
+                            gerador.perguntaDaFase(fasesDoCaminho[Nivelamento.de(atual.trilha, r).faseDaPergunta.coerceIn(0, fasesDoCaminho.lastIndex)])
+                        TelaJogo(
+                            fase = fasesDoCaminho.first(),
+                            perfil = estado.perfil,
+                            onSair = { irPara(atual.voltar) },
+                            treino = ::pergunta,
+                            fimDoTreino = { r -> Nivelamento.de(atual.trilha, r).terminou },
+                            onConcluir = { r ->
+                                // Saiu no meio (✖ ou voltar): não aplica nada nem marca o nível como feito.
+                                if (r.isEmpty() || !Nivelamento.de(atual.trilha, r).terminou) {
+                                    irPara(atual.voltar)
+                                } else {
+                                    repo.atualizar { it.aplicarNivel(Nivelamento.de(atual.trilha, r)) }
+                                    irPara(Tela.NivelResultado(atual.trilha, r))
+                                }
+                            },
+                        )
+                    }
+
+                    is Tela.NivelResultado -> TelaResultadoNivel(Nivelamento.de(atual.trilha, atual.resultados), estado.perfil?.nome) {
+                        irPara(Tela.Caminho(atual.trilha))
+                    }
+
+                    is Tela.Estante -> TelaEstante(
+                        estado = estado,
+                        onAbrir = { irPara(Tela.Livrinho(it.id, atual.voltar)) },
+                        onVoltar = { irPara(atual.voltar) },
+                    )
+
+                    is Tela.Livrinho -> {
+                        val livro = Livrinhos.porId[atual.id]
+                        if (livro == null) {
+                            LaunchedEffect(Unit) { irPara(Tela.Estante(atual.voltar)) }
+                        } else {
+                            TelaLivrinho(
+                                livro = livro,
+                                nome = estado.perfil?.nome,
+                                onTerminar = { repo.atualizar { it.terminarLivrinho(livro.id) } },
+                                onVoltar = { irPara(Tela.Estante(atual.voltar)) },
+                                genero = estado.perfil?.genero,
+                            )
+                        }
                     }
                 }
                 }
@@ -532,14 +680,18 @@ class MainActivity : ComponentActivity() {
         val familia = AcoesDaFamilia(
             criancas = repo.criancas,
             ativa = repo.ativa,
-            onAdicionar = { if (repo.novaCrianca() != null) { aoTrocar(); irPara(Tela.Perfil) } },
+            onAdicionar = {
+                fecharTempoDaSessao()
+                if (repo.novaCrianca() != null) { aoTrocar(); irPara(Tela.Perfil) }
+            },
             onJogarCom = { id ->
+                fecharTempoDaSessao()
                 repo.trocarCrianca(id)
                 aoTrocar()
                 irPara(if (repo.estado.perfil == null) Tela.Perfil else Tela.Inicio)
             },
             onRenomear = repo::renomearCrianca,
-            onApagar = { id -> repo.apagarCrianca(id); aoTrocar() },
+            onApagar = { id -> fecharTempoDaSessao(); repo.apagarCrianca(id); aoTrocar() },
         )
         val copia = AcoesDaCopia(
             onGuardar = { runCatching { guardar.launch(Copia.nomeDoArquivo(repo.hojeData())) } },
@@ -549,11 +701,24 @@ class MainActivity : ComponentActivity() {
             },
             onRecuperar = { runCatching { recuperar.launch(arrayOf("*/*")) } },
             pendente = pendente,
+            // O que está no aparelho agora, para o adulto comparar com a cópia antes de recuperar.
+            atual = if (pendente != null) repo.copiaDoProgresso().resumo() else emptyList(),
             onConfirmar = {
-                pendente?.let { repo.restaurar(it) }
+                fecharTempoDaSessao()
+                pendente?.let { repo.recuperar(it) }
                 pendente = null
                 aoTrocar()
-                aviso = "Pronto! O progresso da cópia voltou."
+                aviso = "Pronto! O progresso da cópia voltou. Se foi engano, toque em \"Desfazer a recuperação\"."
+            },
+            onDesfazer = if (repo.podeDesfazerRecuperacao) {
+                {
+                    fecharTempoDaSessao()
+                    val ok = repo.desfazerRecuperacao()
+                    aoTrocar()
+                    aviso = if (ok) "Pronto! O progresso de antes da recuperação voltou." else "Não deu para desfazer a recuperação."
+                }
+            } else {
+                null
             },
             onCancelar = { pendente = null },
             aviso = aviso,

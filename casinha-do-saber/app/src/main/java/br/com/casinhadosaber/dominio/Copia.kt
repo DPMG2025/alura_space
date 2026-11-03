@@ -26,6 +26,8 @@ sealed interface ValorGuardado {
     data class Longo(val valor: Long) : ValorGuardado
     data class Decimal(val valor: Float) : ValorGuardado
     data class Logico(val valor: Boolean) : ValorGuardado
+    /** Conjunto de textos (`putStringSet`): o app de hoje não grava, mas a cópia não pode perder um. */
+    data class Conjunto(val valor: Set<String>) : ValorGuardado
 }
 
 /** Os dados de uma criança: o id do perfil e as chaves do arquivo dela. */
@@ -78,6 +80,8 @@ object Copia {
             "colocados", "cores", "respondidas", "acertos", "tentativas", "comprados", "historico", "visitantes",
             "moveis_dentro", "mascote", "presentes_especiais", "eventos_recebidos", "desenhos", "quadros_parede",
             "desafios_pais", "sessoes",
+            // Relembrar, Descobrir o nível e Livrinhos (por criança, como o resto do progresso).
+            "revisoes", "liberada_ate", "nivel_feito", "livrinhos_lidos",
         ).forEach { put(it, 's') }
         listOf("pele", "cabelo", "roupa", "estilo_cabelo", "moedas", "moedas_hoje", "cor_telhado", "cor_porta", "papel", "clima", "timer")
             .forEach { put(it, 'i') }
@@ -92,6 +96,7 @@ object Copia {
         is ValorGuardado.Longo -> 'l'
         is ValorGuardado.Decimal -> 'f'
         is ValorGuardado.Logico -> 'b'
+        is ValorGuardado.Conjunto -> 'c'
     }
 
     /** Lança exceção se alguma chave conhecida vier com o tipo errado. */
@@ -117,17 +122,21 @@ object Copia {
     private fun mapaParaJson(mapa: Map<String, ValorGuardado>): String =
         mapa.entries.sortedBy { it.key }.joinToString(", ", "{", "}") { (k, v) ->
             val (tipo, valor) = when (v) {
-                is ValorGuardado.Texto -> "s" to v.valor
-                is ValorGuardado.Inteiro -> "i" to v.valor.toString()
-                is ValorGuardado.Longo -> "l" to v.valor.toString()
-                is ValorGuardado.Decimal -> "f" to v.valor.toString()
-                is ValorGuardado.Logico -> "b" to v.valor.toString()
+                is ValorGuardado.Texto -> "s" to Json.texto(v.valor)
+                is ValorGuardado.Inteiro -> "i" to Json.texto(v.valor.toString())
+                is ValorGuardado.Longo -> "l" to Json.texto(v.valor.toString())
+                is ValorGuardado.Decimal -> "f" to Json.texto(v.valor.toString())
+                is ValorGuardado.Logico -> "b" to Json.texto(v.valor.toString())
+                // Conjunto: uma lista de textos, em ordem (a mesma cópia sai sempre igual).
+                is ValorGuardado.Conjunto -> "c" to v.valor.sorted().joinToString(", ", "[", "]") { Json.texto(it) }
             }
-            "${Json.texto(k)}: {\"t\": \"$tipo\", \"v\": ${Json.texto(valor)}}"
+            "${Json.texto(k)}: {\"t\": \"$tipo\", \"v\": $valor}"
         }
 
     /** Lê e valida a cópia inteira. Nunca lança exceção. */
-    fun deTexto(texto: String?): ResultadoDaCopia {
+    fun deTexto(textoLido: String?): ResultadoDaCopia {
+        // Alguns editores e apps de nuvem gravam o arquivo com BOM (U+FEFF) no começo.
+        val texto = textoLido?.removePrefix("\uFEFF")
         if (texto.isNullOrBlank() || texto.length > TAMANHO_MAXIMO) return ResultadoDaCopia.Invalida(NAO_E_COPIA)
         val raiz = runCatching { Json.ler(texto) }.getOrNull() as? Map<*, *>
             ?: return ResultadoDaCopia.Invalida(NAO_E_COPIA)
@@ -164,6 +173,10 @@ object Copia {
         val chave = k as String
         require(chaveValida.matches(chave))
         val campo = v as Map<*, *>
+        if (campo["t"] == "c") {
+            val lista = campo["v"] as List<*>
+            return@associate chave to ValorGuardado.Conjunto(lista.map { it as String }.toSet())
+        }
         val valor = campo["v"] as String
         chave to when (campo["t"]) {
             "s" -> ValorGuardado.Texto(valor)

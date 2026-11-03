@@ -62,6 +62,7 @@ import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Mundos
 import br.com.casinhadosaber.dominio.Trilha
+import br.com.casinhadosaber.dominio.desfazerNivel
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.FileiraDeEstrelas
@@ -90,8 +91,17 @@ fun TelaPais(
     familia: AcoesDaFamilia? = null,
     /** Cópia do progresso sem internet (guardar, enviar, recuperar). Null esconde o cartão. */
     copia: AcoesDaCopia? = null,
+    /** "Descobrir o nível" de um caminho, aberto pelo adulto (a criança responde). */
+    onDescobrirNivel: (Trilha) -> Unit = {},
 ) {
     var liberado by rememberSaveable { mutableStateOf(false) }
+    // "Meu caderno" (palavras escritas com o dedo) abre por cima da área dos pais, depois do portão.
+    var verCaderno by rememberSaveable { mutableStateOf(false) }
+    if (liberado && verCaderno) {
+        androidx.activity.compose.BackHandler { verCaderno = false }
+        TelaCaderno(lembrarCaderno(), onVoltar = { verCaderno = false })
+        return
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -109,7 +119,7 @@ fun TelaPais(
         if (!liberado) {
             PortaoDeAdulto(onLiberar = { liberado = true })
         } else {
-            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite, hoje, onAtualizar, familia, copia)
+            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite, hoje, onAtualizar, familia, copia, onAbrirCaderno = { verCaderno = true }, onDescobrirNivel = onDescobrirNivel)
         }
     }
 }
@@ -129,6 +139,8 @@ private fun Painel(
     onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit,
     familia: AcoesDaFamilia?,
     copia: AcoesDaCopia?,
+    onAbrirCaderno: () -> Unit = {},
+    onDescobrirNivel: (Trilha) -> Unit = {},
 ) {
     var confirmar by remember { mutableStateOf(false) }
     val variasCriancas = (familia?.criancas?.size ?: 1) > 1
@@ -158,6 +170,13 @@ private fun Painel(
         Pais.relatorioDaSemana(estado.sessoes, hoje) { t, n -> gerador.fases(t).getOrNull(n)?.titulo ?: Pais.nomePadrao(t, n) }
     }
     CartaoRelatorioDaSemana(relatorio)
+
+    CartaoDoRitmo(
+        estado = estado,
+        hoje = hoje,
+        onDescobrir = onDescobrirNivel,
+        onDesfazer = { t -> onAtualizar { it.desfazerNivel(t) } },
+    )
 
     Cartao {
         Text("O que a criança está aprendendo", style = MaterialTheme.typography.titleLarge)
@@ -247,6 +266,9 @@ private fun Painel(
         onAlternar = { t -> onAtualizar { it.alternarTema(t) } },
         habilitado = estado.perfil != null,
     )
+    // Vozes da família e "Meu caderno" (docs/PRD.md, "Vozes da família e escrever com o dedo").
+    CartaoVozesDaFamilia(nome = estado.perfil?.nome)
+    CartaoMeuCaderno(lembrarCaderno(), onAbrir = onAbrirCaderno)
 
     copia?.let {
         CartaoCopiaDoProgresso(it)
@@ -332,7 +354,8 @@ private fun Painel(
         AlertDialog(
             onDismissRequest = { confirmar = false },
             title = { Text(if (variasCriancas) "Apagar o progresso desta criança?" else "Apagar tudo?") },
-            text = { Text("A casa, as estrelas e o personagem" + (if (variasCriancas) " da criança que está jogando" else "") + " serão apagados. Isso não pode ser desfeito.") },
+            // O caderno da criança é apagado pelo Repositorio junto com o progresso (cada criança tem o seu).
+            text = { Text("A casa, as estrelas, o personagem e o caderno" + (if (variasCriancas) " da criança que está jogando" else "") + " serão apagados. Isso não pode ser desfeito. As vozes gravadas da família continuam (apague cada uma no cartão Vozes da família).") },
             confirmButton = { TextButton(onClick = { confirmar = false; onApagarTudo() }) { Text("Apagar", color = Cores.Errado) } },
             dismissButton = { TextButton(onClick = { confirmar = false }) { Text("Cancelar") } },
         )

@@ -38,7 +38,7 @@ INGLÊS: cores, animais, números, frutas, corpo, casa, brinquedos, escola, sent
 LÓGICA: igual e diferente, sequências, sombras, grupos, jogo da memória, sudoku de figuras e labirinto.
 
 ATIVIDADES DE MEXER
-Além de tocar na resposta certa, a criança arrasta frutas para a cesta, separa grupos, monta palavras com sílabas, encontra os pares da memória e traça letras e números seguindo as setinhas. Uma mãozinha mostra o gesto antes.
+Além de tocar na resposta certa, a criança arrasta frutas para a cesta, separa grupos, monta palavras com sílabas, encontra os pares da memória, traça letras e números seguindo as setinhas e escreve palavras inteiras com o dedo, letra por letra, nas linhas do caderno. Uma mãozinha mostra o gesto antes.
 
 MODO TREINO
 Depois de vencer as primeiras fases, o botão Treinar sorteia perguntas das fases já vencidas, com mais atenção ao que a criança ainda erra.
@@ -50,13 +50,13 @@ SEM FRUSTRAÇÃO
 Errar faz parte: a criança ouve o nome do que tocou e tenta de novo. Depois de duas tentativas, a fase fica mais fácil e começa com um exemplo resolvido junto.
 
 ÁREA DOS PAIS
-Protegida por uma continha, mostra o progresso de cada caminho e de cada mundo, o tempo jogado e permite escolher um limite diário de 15, 30 ou 60 minutos, ajustar sons, música e vozes e apagar o progresso.
+Protegida por uma continha, mostra o progresso de cada caminho e de cada mundo, o tempo jogado e permite escolher um limite diário de 15, 30 ou 60 minutos, ajustar sons, música e vozes e apagar o progresso. Em "Vozes da família", o pai ou a mãe grava a própria voz nos elogios, na chegada e no boa noite, e a criança passa a ouvir quem ela ama. Em "Meu caderno", os pais veem as palavras que a criança escreveu com o dedo.
 
 CELULAR E TABLET
 No tablet as telas ficam maiores e o app também funciona deitado.
 
 SEGURO PARA A FAMÍLIA
-Sem anúncios. Sem compras com dinheiro de verdade. Sem internet: funciona totalmente offline. Nenhum dado é coletado ou enviado.
+Sem anúncios. Sem compras com dinheiro de verdade. Sem internet: funciona totalmente offline. Nenhum dado é coletado ou enviado. O microfone só é usado se um adulto quiser gravar as vozes da família, e as gravações nunca saem do aparelho.
 
 Indicado para crianças de 4 a 6 anos.
 
@@ -121,7 +121,17 @@ Todas seguem as regras atuais: PNG sem canal alfa nas capturas e no destaque, la
 * O app coleta ou compartilha algum dos tipos de dados do usuário exigidos? **Não.**
 * Com "Não", o formulário termina sem as perguntas de criptografia e exclusão. Se o Console pedir, os dados ficam só no aparelho e a Área dos pais tem "Apagar todo o progresso".
 * Motivo: o progresso (nome opcional, aparência, estrelas, moedinhas, arrumação da casa) fica salvo apenas no aparelho, em SharedPreferences. O backup automático do Android do próprio usuário não conta como coleta pelo desenvolvedor.
-* Permissões do app: nenhuma permissão perigosa, sem internet, sem microfone, sem câmera, sem localização.
+* **Áudio (vozes da família):** a resposta continua **Não** para "Áudio: gravações de voz ou som". Pela definição do Play Console, "coletar" é transmitir dados do aparelho para fora; o áudio gravado pelos pais fica só no aparelho (pasta privada do app, fora do backup do Android), nunca é enviado (o app nem tem permissão de internet) e é apagado pelo próprio adulto ou ao desinstalar. Dados processados só no aparelho não precisam ser declarados. O mesmo vale para o "Meu caderno" (os traços das palavras que a criança escreve com o dedo).
+* Permissões do app: uma só permissão perigosa, `RECORD_AUDIO` (microfone), sem internet, sem câmera, sem localização. O manifesto declara `android.hardware.microphone` como não obrigatório, então aparelhos sem microfone continuam podendo instalar.
+
+### Permissão do microfone (justificativa)
+Se o Play Console ou a revisão do programa Famílias perguntar por que o app pede o microfone, use este texto:
+
+```
+O microfone é usado apenas no recurso opcional "Vozes da família", dentro da Área dos pais, que é protegida por uma continha de multiplicação. Um adulto pode gravar a própria voz dizendo frases curtas (por exemplo "Muito bem!", "Oi, Ana!" e "Boa noite!") para que o app as toque para a criança no lugar da voz sintetizada. A permissão é pedida só quando o adulto toca em "Gravar"; as telas da criança nunca pedem a permissão e nunca gravam. As gravações ficam apenas no aparelho, em uma pasta privada do app, nunca são enviadas (o app não tem acesso à internet) e podem ser apagadas a qualquer momento na Área dos pais.
+```
+
+* Na política de Famílias: o app não grava a voz da criança e não coleta áudio; quem grava é um adulto, atrás do portão de adulto, e nada sai do aparelho.
 
 ### Apps governamentais
 * O app foi criado por um órgão do governo ou em nome dele? **Não.**
@@ -137,7 +147,7 @@ Todas seguem as regras atuais: PNG sem canal alfa nas capturas e no destaque, la
 
 ### Outras declarações que podem aparecer
 * Política de privacidade: link na seção 4 de `docs/publicar.md`.
-* Apps de VPN, rastreamento de localização, conteúdo gerado pelo usuário, acesso a todos os arquivos, permissões de foto e vídeo: **não se aplica / Não**.
+* Apps de VPN, rastreamento de localização, conteúdo gerado pelo usuário, acesso a todos os arquivos, permissões de foto e vídeo: **não se aplica / Não**. As gravações da família e o caderno não são compartilhados com ninguém, então não contam como conteúdo gerado pelo usuário.
 * Preço: **Gratuito**. Países: comece pelo **Brasil** (o app é em português; as fases de inglês são parte do conteúdo).
 
 ## Checklist técnico

@@ -1,6 +1,8 @@
 package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import br.com.casinhadosaber.dominio.CopiaDoProgresso
+import br.com.casinhadosaber.dominio.ResumoDaCrianca
 import br.com.casinhadosaber.dominio.CriancaDaCasa
 import br.com.casinhadosaber.dominio.Familia
 import br.com.casinhadosaber.dominio.resumo
@@ -72,6 +75,10 @@ data class AcoesDaCopia(
     val onCancelar: () -> Unit = {},
     val aviso: String? = null,
     val onFecharAviso: () -> Unit = {},
+    /** O que está no aparelho agora (mostrado ao lado da cópia na confirmação). */
+    val atual: List<ResumoDaCrianca> = emptyList(),
+    /** Desfaz a última recuperação (volta o progresso de antes dela). Null esconde o botão. */
+    val onDesfazer: (() -> Unit)? = null,
 )
 
 @Composable
@@ -206,7 +213,7 @@ private fun DialogoRenomear(atual: String, onSalvar: (String) -> Unit, onCancela
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = nome,
-                onValueChange = { nome = it.take(16) },
+                onValueChange = { nome = br.com.casinhadosaber.dominio.Familia.cortarNome(it) },
                 label = { Text("Nome (opcional)") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
@@ -237,6 +244,8 @@ fun CaixaDeDialogo(
         Modifier
             .widthIn(max = 440.dp)
             .background(Color.White, RoundedCornerShape(24.dp))
+            // Com muitas crianças (agora e na cópia) a caixa pode passar da tela: rola.
+            .verticalScroll(rememberScrollState())
             .padding(20.dp),
     ) {
         Text(titulo, style = MaterialTheme.typography.titleLarge, color = Cores.Texto)
@@ -276,6 +285,10 @@ fun CartaoCopiaDoProgresso(copia: AcoesDaCopia) {
         }
         Spacer(Modifier.height(10.dp))
         BotaoClaro("📥 Recuperar cópia", "copia_recuperar", copia.onRecuperar, Modifier.fillMaxWidth())
+        copia.onDesfazer?.let {
+            Spacer(Modifier.height(10.dp))
+            BotaoClaro("↩️ Desfazer a recuperação", "copia_desfazer", it, Modifier.fillMaxWidth())
+        }
         Spacer(Modifier.height(6.dp))
         Text(
             "Se o backup do Google estiver ligado no celular, o progresso também vai junto no backup do aparelho.",
@@ -287,26 +300,40 @@ fun CartaoCopiaDoProgresso(copia: AcoesDaCopia) {
 
 /** Confirmação antes de recuperar: mostra quem está na cópia e avisa que o progresso atual será trocado. */
 @Composable
-fun ConfirmarRecuperarCopia(copia: CopiaDoProgresso, onConfirmar: () -> Unit, onCancelar: () -> Unit) {
+fun ConfirmarRecuperarCopia(
+    copia: CopiaDoProgresso,
+    onConfirmar: () -> Unit,
+    onCancelar: () -> Unit,
+    atual: List<ResumoDaCrianca> = emptyList(),
+) {
     val data = copia.feitaEm?.let { " de ${it.dia}/${it.mes.toString().padStart(2, '0')}/${it.ano}" }.orEmpty()
     CaixaDeDialogo(
         titulo = "Recuperar esta cópia$data?",
-        texto = "Isso troca o progresso atual pelo da cópia. O que está no aparelho agora será substituído.",
+        texto = "Isso troca o progresso atual pelo da cópia. O que está no aparelho agora será substituído " +
+            "(dá para desfazer depois, na área dos pais).",
         confirmar = "Recuperar",
         tagConfirmar = "copia_confirmar",
         onConfirmar = onConfirmar,
         onCancelar = onCancelar,
         conteudoExtra = {
+            if (atual.isNotEmpty()) {
+                Spacer(Modifier.height(10.dp))
+                Text("Agora, no aparelho:", style = MaterialTheme.typography.titleMedium, color = Cores.Texto)
+                for (r in atual) LinhaDoResumo(r)
+            }
             Spacer(Modifier.height(10.dp))
             Text("Na cópia:", style = MaterialTheme.typography.titleMedium, color = Cores.Texto)
-            for (r in copia.resumo()) {
-                Text(
-                    "• ${r.nome}: ${r.fasesVencidas} ${if (r.fasesVencidas == 1) "fase vencida" else "fases vencidas"}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Cores.Texto,
-                )
-            }
+            for (r in copia.resumo()) LinhaDoResumo(r)
         },
+    )
+}
+
+@Composable
+private fun LinhaDoResumo(r: ResumoDaCrianca) {
+    Text(
+        "• ${r.nome}: ${r.fasesVencidas} ${if (r.fasesVencidas == 1) "fase vencida" else "fases vencidas"}",
+        style = MaterialTheme.typography.bodyLarge,
+        color = Cores.Texto,
     )
 }
 
@@ -315,7 +342,7 @@ fun ConfirmarRecuperarCopia(copia: CopiaDoProgresso, onConfirmar: () -> Unit, on
 fun DialogosDaCopia(copia: AcoesDaCopia) {
     copia.pendente?.let { p ->
         Dialog(onDismissRequest = copia.onCancelar) {
-            ConfirmarRecuperarCopia(p, copia.onConfirmar, copia.onCancelar)
+            ConfirmarRecuperarCopia(p, copia.onConfirmar, copia.onCancelar, copia.atual)
         }
     }
     copia.aviso?.let { texto ->

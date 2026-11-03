@@ -52,6 +52,20 @@ object Familia {
     fun proximoId(ids: List<String>): String =
         generateSequence(1) { it + 1 }.first { it.toString() !in ids }.toString()
 
+    /** Tamanho máximo do nome da criança, em caracteres que a pessoa vê (um emoji conta como um). */
+    const val TAMANHO_DO_NOME = 16
+
+    /**
+     * Corta [nome] em [maximo] pontos de código, sem partir um emoji ao meio (um par substituto cortado
+     * viraria um caractere estragado). Emojis compostos (família, bandeira) podem perder um pedaço, mas
+     * nunca deixam um caractere inválido.
+     */
+    fun cortarNome(nome: String, maximo: Int = TAMANHO_DO_NOME): String {
+        val pontos = nome.codePointCount(0, nome.length)
+        if (pontos <= maximo) return nome
+        return nome.substring(0, nome.offsetByCodePoints(0, maximo))
+    }
+
     fun idsDeTexto(texto: String?): List<String> =
         texto.orEmpty().split(",").map { it.trim() }.filter { it.isNotEmpty() && it.all(Char::isDigit) }.distinct()
 
