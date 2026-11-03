@@ -178,8 +178,11 @@ fun TelaAtelie(
                 val lado = if (maxWidth < maxHeight) maxWidth else maxHeight
                 QuadroDePintar(
                     pintura = pintura,
-                    cor = cor,
-                    ferramenta = ferramenta,
+                    // Lidos na hora do toque (e não do último desenho da tela): um traço logo depois de outro,
+                    // ou logo depois de trocar a cor, já parte do quadro e da cor certos.
+                    lerPintura = { pintura },
+                    lerCor = { if (ferramenta == Ferramenta.BORRACHA) 0 else cor },
+                    lerFerramenta = { ferramenta },
                     onComeco = { desfazer = (desfazer + pintura).takeLast(30) },
                     onMudar = { pintura = it },
                     onFim = { guardar(it) },
@@ -310,16 +313,15 @@ fun TelaAtelie(
 @Composable
 private fun QuadroDePintar(
     pintura: Pintura,
-    cor: Int,
-    ferramenta: Ferramenta,
+    lerPintura: () -> Pintura,
+    lerCor: () -> Int,
+    lerFerramenta: () -> Ferramenta,
     onComeco: () -> Unit,
     onMudar: (Pintura) -> Unit,
     onFim: (Pintura) -> Unit,
     modifier: Modifier,
 ) {
-    val atual by rememberUpdatedState(pintura)
-    val corAtual by rememberUpdatedState(if (ferramenta == Ferramenta.BORRACHA) 0 else cor)
-    val ferramentaAtual by rememberUpdatedState(ferramenta)
+    val leitura by rememberUpdatedState(Triple(lerPintura, lerCor, lerFerramenta))
     val comeco by rememberUpdatedState(onComeco)
     val mudar by rememberUpdatedState(onMudar)
     val fim by rememberUpdatedState(onFim)
@@ -346,8 +348,10 @@ private fun QuadroDePintar(
                         comeco()
                         val (l0, k0) = celula(down.position)
                         // A pintura do gesto fica aqui: entre dois quadros da tela o dedo pode andar várias casinhas.
-                        var p = atual
-                        if (ferramentaAtual == Ferramenta.BALDE) {
+                        val (lerP, lerC, lerF) = leitura
+                        val corAtual = lerC()
+                        var p = lerP()
+                        if (lerF() == Ferramenta.BALDE) {
                             p = p.encher(l0, k0, corAtual)
                             mudar(p)
                         } else {
