@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -81,12 +82,15 @@ fun TelaInicio(
         )
     }
 
-    Column(
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(Cores.Ceu, Cores.Fundo, Cores.Fundo)))
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
+    // Tela deitada (tablet em paisagem): a casa à esquerda e os quatro caminhos numa coluna à direita.
+    val deitada = maxWidth > maxHeight * 1.15f
+    Column(Modifier.fillMaxSize()) {
         // Cabeçalho
         Row(
             Modifier
@@ -114,11 +118,10 @@ fun TelaInicio(
         }
 
         // A casinha (toque para montar)
+        @Composable
+        fun Casinha(modifier: Modifier) {
         Box(
-            Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp),
+            modifier.padding(horizontal = 12.dp),
             contentAlignment = Alignment.BottomCenter,
         ) {
             Box(
@@ -180,32 +183,54 @@ fun TelaInicio(
             }
         }
 
-        // Caminhos
-        // Em telas altas, os botões dos caminhos crescem (mais fáceis de acertar com o dedo).
-        val alturaBotao = if (LocalConfiguration.current.screenHeightDp > 760) 118.dp else 88.dp
-        Column(
-            Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            for (linha in Trilha.entries.chunked(2)) {
-                Row(Modifier.height(alturaBotao), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    for (t in linha) {
-                        Box(Modifier.weight(1f).fillMaxHeight()) {
-                            BotaoTrilha(t, estado.vencidasNa(t), Modifier.fillMaxSize()) {
-                                sons.toque()
-                                onAbrirTrilha(t)
-                            }
-                            // Primeira vez: a mãozinha mostra por onde começar.
-                            if (estado.fasesVencidas == 0 && t == Trilha.MATEMATICA) {
-                                MaoGuia(Modifier.align(Alignment.BottomEnd).offset(x = 8.dp, y = 12.dp), espera = 2500)
-                            }
-                        }
+        }
+
+        @Composable
+        fun Caminho(t: Trilha, modifier: Modifier) {
+            Box(modifier) {
+                BotaoTrilha(t, estado.vencidasNa(t), Modifier.fillMaxSize()) {
+                    sons.toque()
+                    onAbrirTrilha(t)
+                }
+                // Primeira vez: a mãozinha mostra por onde começar.
+                if (estado.fasesVencidas == 0 && t == Trilha.MATEMATICA) {
+                    MaoGuia(Modifier.align(Alignment.BottomEnd).offset(x = 8.dp, y = 12.dp), espera = 2500)
+                }
+            }
+        }
+
+        if (deitada) {
+            Row(Modifier.weight(1f).fillMaxWidth().padding(bottom = 12.dp)) {
+                Casinha(Modifier.weight(1f).fillMaxHeight())
+                Column(
+                    Modifier.width(LARGURA_DOS_CAMINHOS_DEITADA).fillMaxHeight().padding(end = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    for (t in Trilha.entries) Caminho(t, Modifier.weight(1f).fillMaxWidth())
+                }
+            }
+        } else {
+            Casinha(Modifier.weight(1f).fillMaxWidth())
+            // Caminhos
+            // Em telas altas, os botões dos caminhos crescem (mais fáceis de acertar com o dedo).
+            val alturaBotao = if (LocalConfiguration.current.screenHeightDp > 760) 118.dp else 88.dp
+            Column(
+                Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                for (linha in Trilha.entries.chunked(2)) {
+                    Row(Modifier.height(alturaBotao), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        for (t in linha) Caminho(t, Modifier.weight(1f).fillMaxHeight())
                     }
                 }
             }
         }
     }
+    }
 }
+
+/** Largura da coluna dos caminhos quando a tela está deitada. */
+private val LARGURA_DOS_CAMINHOS_DEITADA = 320.dp
 
 @Composable
 private fun BotaoTrilha(trilha: Trilha, vencidas: Int, modifier: Modifier, onClick: () -> Unit) {

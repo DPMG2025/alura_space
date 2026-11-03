@@ -129,16 +129,12 @@ class CapturasTest {
     private val montarPalavra = deMexer("Monte: OVO", Atividade.MontarPalavra("🥚", "OVO", listOf("O", "VO"), listOf("PA", "LU")))
     private val tracar = deMexer("Trace a letra A", Atividade.Tracar("A"))
 
-    /**
-     * Arrasta a figura [indice] da cesta (contar) para dentro da cesta. O alvo fica um pouco à
-     * esquerda do botão "certinho", que fica colado ao lado direito da cesta, na altura do meio dela.
-     */
+    /** Arrasta a figura [indice] da cesta (contar) até o meio da cesta (marca invisível "cesta"). */
     private fun arrastarParaACesta(indice: Int) {
-        val pronto = regra.onNodeWithTag("atividade_pronto").fetchSemanticsNode().boundsInRoot
+        val cesta = regra.onNodeWithTag("cesta").fetchSemanticsNode().boundsInRoot
         val figura = regra.onAllNodesWithTag("figura_certa")[indice]
         val origem = figura.fetchSemanticsNode().boundsInRoot
-        val recuo = with(regra.density) { 40.dp.toPx() }
-        val alvo = Offset(pronto.left - recuo, pronto.center.y) - origem.topLeft
+        val alvo = cesta.center - origem.topLeft
         figura.performTouchInput { swipe(center, alvo, durationMillis = 400) }
         regra.mainClock.advanceTimeBy(1000)
     }
@@ -419,7 +415,8 @@ class CapturasTest {
         }
         regra.mainClock.advanceTimeBy(1500)
         regra.onNodeWithText("0").assertExists()
-        regra.onNodeWithTag("atividade_pronto").assertIsNotEnabled()
+        // O certinho só aparece quando há fruta na cesta (apagado, parecia um botão para tocar).
+        regra.onNodeWithTag("atividade_pronto").assertDoesNotExist()
 
         arrastarParaACesta(0)
         regra.onNodeWithText("1").assertExists()
@@ -523,6 +520,171 @@ class CapturasTest {
             regra.onAllNodes(hasContentDescription("OK")).onFirst().performClick()
         }) {
             TelaPais(e, true, {}, true, {}, {}, {}, {})
+        }
+    }
+
+    // ------------------------------------------------------------------ regressões visuais e tablet deitado
+
+    /**
+     * Regressão: o chapéu fica na cabeça da criança. Cada criança é desenhada com e sem cada chapéu,
+     * no mesmo quadro (o relógio parado deixa as animações iguais) e com medidas em pixels inteiros.
+     * A diferença entre as duas imagens é o chapéu; a caixa dela tem que encostar na cabeça
+     * (centro em 27% da altura, raio de 34% da largura, como em Crianca.kt), centrada, sem cobrir o rosto.
+     */
+    @Test fun chapeuFicaNaCabeca() {
+        val narrador = Narrador(RuntimeEnvironment.getApplication()).apply { ativo = false }
+        val sons = Sons().apply { ativo = false }
+        val chapeus = listOf("") + Loja.produtos.filter { it.categoria == br.com.casinhadosaber.dominio.Categoria.CHAPEU }.map { it.valor }
+        // Menina com o penteado sem laço (o laço some quando há chapéu e entraria na diferença).
+        val perfis = listOf(menina.copy(estiloCabelo = 2), menino)
+        regra.mainClock.autoAdvance = false
+        regra.setContent {
+            TemaCasinha {
+                CompositionLocalProvider(LocalNarrador provides narrador, LocalSons provides sons) {
+                    androidx.compose.foundation.layout.Column {
+                        for ((i, p) in perfis.withIndex()) {
+                            androidx.compose.foundation.layout.Row {
+                                for ((j, c) in chapeus.withIndex()) {
+                                    // 125 dp de altura dá 77,5 dp de largura: 155 x 370 px inteiros em xhdpi.
+                                    Box(Modifier.testTag("chapeu_${i}_$j").padding(top = 60.dp)) {
+                                        br.com.casinhadosaber.ui.componentes.Crianca(p.copy(chapeu = c), Modifier.height(125.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        regra.mainClock.advanceTimeBy(300)
+        regra.onRoot().captureRoboImage("build/outputs/roborazzi/56_teste_chapeus_na_cabeca.png")
+        val topoDaCrianca = with(regra.density) { 60.dp.toPx() }
+        fun imagem(i: Int, j: Int): android.graphics.Bitmap {
+            val arquivo = java.io.File("build/outputs/roborazzi/teste_chapeu/chapeu_${i}_$j.png")
+            arquivo.parentFile?.mkdirs()
+            arquivo.delete()
+            regra.onNodeWithTag("chapeu_${i}_$j").captureRoboImage(arquivo.path)
+            return android.graphics.BitmapFactory.decodeFile(arquivo.absolutePath) ?: throw AssertionError("captura $i $j ilegível")
+        }
+        fun diferente(a: Int, b: Int): Boolean {
+            val d = kotlin.math.abs(android.graphics.Color.red(a) - android.graphics.Color.red(b)) +
+                kotlin.math.abs(android.graphics.Color.green(a) - android.graphics.Color.green(b)) +
+                kotlin.math.abs(android.graphics.Color.blue(a) - android.graphics.Color.blue(b)) +
+                kotlin.math.abs(android.graphics.Color.alpha(a) - android.graphics.Color.alpha(b))
+            return d > 60
+        }
+        for (i in perfis.indices) {
+            val sem = imagem(i, 0)
+            val w = sem.width
+            val alturaCrianca = sem.height - topoDaCrianca
+            val raio = 0.34f * w
+            val centroX = w / 2f
+            val centroY = topoDaCrianca + 0.27f * alturaCrianca
+            for (j in 1 until chapeus.size) {
+                val com = imagem(i, j)
+                org.junit.Assert.assertTrue("tamanhos diferentes", com.width == w && com.height == sem.height)
+                var x0 = Int.MAX_VALUE; var y0 = Int.MAX_VALUE; var x1 = -1; var y1 = -1; var n = 0
+                for (y in 0 until sem.height) for (x in 0 until w) {
+                    if (!diferente(com.getPixel(x, y), sem.getPixel(x, y))) continue
+                    n++
+                    if (x < x0) x0 = x
+                    if (x > x1) x1 = x
+                    if (y < y0) y0 = y
+                    if (y > y1) y1 = y
+                }
+                val qual = "chapéu ${chapeus[j]} no perfil $i"
+                org.junit.Assert.assertTrue("$qual não foi desenhado", n > 50)
+                org.junit.Assert.assertTrue("$qual cortado no alto (sai da área da criança)", y0 > 1)
+                org.junit.Assert.assertTrue(
+                    "$qual flutua acima da cabeça (base $y1, topo da cabeça ${centroY - raio})",
+                    y1 >= centroY - raio * 1.15f,
+                )
+                org.junit.Assert.assertTrue("$qual cobre o rosto (base $y1, centro da cabeça $centroY)", y1 <= centroY)
+                org.junit.Assert.assertEquals("$qual fora do centro da cabeça", centroX, (x0 + x1) / 2f, raio * 0.3f)
+                org.junit.Assert.assertTrue("$qual largo demais para a cabeça", x1 - x0 <= raio * 2.6f)
+            }
+        }
+    }
+
+    /**
+     * Regressão: na casa completa, os objetos nas posições padrão não se amontoam (a cama com o
+     * ursinho e a mesa com o bolo são de propósito). As caixas vêm do domínio, com a mesma proporção
+     * de desenho que a cena usa, e o tamanho da cena confere com o da interface.
+     */
+    @Test fun objetosDaCasaCompletaNaoSeAmontoam() {
+        org.junit.Assert.assertEquals(br.com.casinhadosaber.ui.componentes.PROPORCAO_CENA, ItensDaCasa.PROPORCAO_DA_CENA, 0.0001f)
+        for (item in ItensDaCasa.ordem.filter { !it.ehEstrutura }) {
+            org.junit.Assert.assertEquals(item.id, br.com.casinhadosaber.ui.componentes.proporcaoDoItem(item), ItensDaCasa.proporcaoDe(item), 0.0001f)
+        }
+        val achadas = ItensDaCasa.sobreposicoesPadrao(limite = 0.25f)
+        org.junit.Assert.assertTrue(
+            "objetos amontoados: " + achadas.joinToString { (a, b, f) -> "$a e $b (${(f * 100).toInt()}%)" },
+            achadas.isEmpty(),
+        )
+    }
+
+    /**
+     * Cama solta no jardim: ela volta tremendo, um balão "não" desenhado aparece em cima dela e o
+     * quarto brilha (o lugar certo). Captura para conferir a olho.
+     */
+    @Test fun camaRecusadaMostraBalaoEBrilho() {
+        montar { TelaCasa(estado(40, 40), {}, {}, {}) }
+        regra.mainClock.advanceTimeBy(1500)
+        // Pega a cama pela beirada esquerda (o ursinho fica no meio dela) e solta no gramado.
+        regra.onAllNodes(hasContentDescription("Cama")).onFirst().performTouchInput {
+            val inicio = Offset(width * 0.12f, height * 0.7f)
+            swipe(inicio, inicio + Offset(0f, height * 2.6f), durationMillis = 500)
+        }
+        regra.mainClock.advanceTimeBy(900)
+        regra.onRoot().captureRoboImage("build/outputs/roborazzi/55_casa_cama_recusada.png")
+        regra.onAllNodes(hasContentDescription("Não pode aqui")).onFirst().assertExists()
+        regra.onAllNodes(hasContentDescription("Lugar certo brilhando")).onFirst().assertExists()
+        // O balão some sozinho.
+        regra.mainClock.advanceTimeBy(4000)
+        org.junit.Assert.assertEquals(0, regra.onAllNodes(hasContentDescription("Não pode aqui")).fetchSemanticsNodes().size)
+    }
+
+    /** Tela como no app: céu atrás, escala de tablet e largura máxima (MainActivity usa a mesma moldura). */
+    @Composable
+    private fun NoTablet(larga: Boolean, conteudo: @Composable () -> Unit) {
+        Box(Modifier.fillMaxSize()) {
+            androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+                drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(br.com.casinhadosaber.ui.tema.Cores.Ceu, br.com.casinhadosaber.ui.tema.Cores.Fundo)))
+            }
+            MolduraDoApp(larga = larga) { conteudo() }
+        }
+    }
+
+    @Config(qualifiers = "w1280dp-h800dp-land-mdpi")
+    @Test fun paisagemInicio() = capturar("50_paisagem_inicio") {
+        NoTablet(larga = true) { TelaInicio(estado(20, 20), true, {}, {}, {}, {}, missaoDisponivel = true) }
+    }
+
+    @Config(qualifiers = "w1280dp-h800dp-land-mdpi")
+    @Test fun paisagemTrilha() = capturar("51_paisagem_trilha") {
+        NoTablet(larga = false) { TelaTrilha(Trilha.INGLES, trilhaVencida(Trilha.INGLES, 22), {}, {}) }
+    }
+
+    @Config(qualifiers = "w1280dp-h800dp-land-mdpi")
+    @Test fun paisagemJogo() = capturar("52_paisagem_jogo") {
+        NoTablet(larga = false) { TelaJogo(gerador.fases(Trilha.MATEMATICA)[1], menina, {}, { }) }
+    }
+
+    @Config(qualifiers = "w1280dp-h800dp-land-mdpi")
+    @Test fun paisagemCasa() = capturar("53_paisagem_casa") {
+        NoTablet(larga = true) { TelaCasa(estado(40, 40), {}, {}, {}, onEspelho = {}, onEntrar = {}) }
+    }
+
+    @Config(qualifiers = "w1280dp-h800dp-land-mdpi")
+    @Test fun paisagemLoja() = capturar("54_paisagem_loja") {
+        val e = estado(30, 30).copy(moedas = 14, comprados = setOf("telhado1"), corTelhado = 1)
+        NoTablet(larga = true) { TelaCasa(e, {}, {}, {}, lojaInicial = true) }
+    }
+
+    @Config(qualifiers = "w1280dp-h800dp-land-mdpi")
+    @Test fun paisagemPremio() = capturar("57_paisagem_premio") {
+        NoTablet(larga = false) {
+            TelaPremio(gerador.fases(Trilha.INGLES)[2], 3, ItensDaCasa.porId.getValue("cama"), menina, 5, true, {}, {}, {})
         }
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +59,7 @@ import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
+import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import kotlinx.coroutines.CoroutineStart
@@ -121,12 +123,28 @@ internal fun AtividadeCesta(
         Vocabulario.objetosParaContar.firstOrNull { it.emoji.replace("\uFE0F", "") == e }?.feminino ?: false
     }
     var erros by remember { mutableIntStateOf(0) }
-    var arrastou by remember { mutableStateOf(false) }
-    var tocouSemArrastar by remember { mutableStateOf(false) }
     var terminou by remember { mutableStateOf(false) }
+    // A mãozinha mostra o gesto quando a criança fica parada: logo no começo e de novo se ela parar.
+    var interacoes by remember { mutableIntStateOf(0) }
+    var tocouSemArrastar by remember { mutableStateOf(false) }
+    var parada by remember { mutableStateOf(false) }
     val tremidaDaCesta = remember { Animatable(0f) }
     val ajuda = ajudaInicial || erros >= ERROS_PARA_AJUDA
     val naCesta = figuras.count { it.vaga >= 0 }
+    LaunchedEffect(interacoes, terminou, ativa, ajuda) {
+        parada = false
+        if (!ativa || terminou) return@LaunchedEffect
+        delay(
+            when {
+                ajudaInicial && interacoes == 0 -> 700L
+                interacoes == 0 -> 1200L
+                tocouSemArrastar -> 900L
+                ajuda -> 3500L
+                else -> 7000L
+            },
+        )
+        parada = true
+    }
 
     BoxWithConstraints(modifier.fillMaxSize()) {
         val w = constraints.maxWidth.toFloat()
@@ -134,34 +152,47 @@ internal fun AtividadeCesta(
         fun px(v: Float) = v * densidade.density
 
         // ---------------------------------------------------------------- medidas (em pixels)
-        val botao = px(84f)
-        val larguraCesta = min(w * (if (classificar) 0.66f else 0.6f), px(360f)).coerceAtMost(w - (if (classificar) 0f else botao + px(16f)))
-        val alturaCesta = min(larguraCesta * 0.5f, h * 0.26f)
+        // A cesta fica embaixo; no modo contar, o certinho aparece à direita dela (o lugar fica reservado).
+        val botao = px(80f)
+        val reservaBotao = if (classificar) 0f else botao + px(14f)
+        val larguraCesta = min(w * (if (classificar) 0.72f else 0.64f), px(440f)).coerceAtMost(w - reservaBotao - px(8f))
+        val alturaCesta = min(larguraCesta * 0.52f, h * 0.27f)
         val alcaCesta = alturaCesta * 0.42f
-        val cestaX = if (classificar) (w - larguraCesta) / 2f else (w - (larguraCesta + px(16f) + botao)) / 2f
+        val cestaX = (w - (larguraCesta + reservaBotao)) / 2f
         val cestaY = h - alturaCesta
-        val bandeja = (cestaY - alcaCesta - px(14f)).coerceAtLeast(px(120f))
+        val bandeja = (cestaY - alcaCesta - px(10f)).coerceAtLeast(px(120f))
 
+        // Figuras grandes: a maior célula que cabe, até 140dp.
         val n = figuras.size
-        var colunas = 3
+        var colunas = 2
         var celula = 0f
-        for (c in 3..6) {
+        for (c in 2..6) {
+            if (c < 3 && n > 6) continue
             val linhas = ceil(n / c.toFloat()).toInt()
             val cel = min(w / c, bandeja / linhas)
             if (cel > celula + 0.5f) { celula = cel; colunas = c }
         }
-        celula = min(celula, px(104f))
-        val lado = celula * 0.88f
+        celula = min(celula, px(140f))
+        val lado = celula * 0.94f
         val linhasBandeja = ceil(n / colunas.toFloat()).toInt()
         val inicioBandejaX = (w - celula * colunas) / 2f
-        val inicioBandejaY = max(0f, (bandeja - celula * linhasBandeja) / 2f)
+        // O que sobra de altura fica mais em cima: as figuras ficam perto da cesta.
+        val inicioBandejaY = max(0f, (bandeja - celula * linhasBandeja) * 0.6f)
 
+        /**
+         * Lugar fora da cesta: as figuras que sobram se reagrupam em fileiras arrumadas, encostadas
+         * embaixo (perto da cesta), com a última fileira centralizada.
+         */
         fun casa(f: FiguraDaCesta): Offset {
-            val linha = f.id / colunas
-            val naLinha = min(colunas, n - linha * colunas)
-            // Última linha incompleta fica centralizada.
+            val fora = figuras.filter { it.vaga < 0 || it === f }
+            val r = fora.indexOf(f).coerceAtLeast(0)
+            val m = fora.size
+            val linhasAgora = ceil(m / colunas.toFloat()).toInt()
+            val linha = r / colunas
+            val naLinha = min(colunas, m - linha * colunas)
             val x0 = inicioBandejaX + (colunas - naLinha) * celula / 2f
-            return Offset(x0 + (f.id % colunas) * celula + (celula - lado) / 2f, inicioBandejaY + linha * celula + (celula - lado) / 2f)
+            val y0 = inicioBandejaY + (linhasBandeja - linhasAgora) * celula
+            return Offset(x0 + (r % colunas) * celula + (celula - lado) / 2f, y0 + linha * celula + (celula - lado) / 2f)
         }
 
         val porFileira = max(3, min(5, (larguraCesta * 0.86f / (lado * 0.55f)).toInt()))
@@ -170,7 +201,7 @@ internal fun AtividadeCesta(
             val coluna = v % porFileira
             val passo = larguraCesta * 0.78f / porFileira
             val cx = cestaX + larguraCesta / 2f + (coluna - (porFileira - 1) / 2f) * passo + (if (fileira % 2 == 1) passo * 0.3f else 0f)
-            val cy = cestaY + alturaCesta * 0.12f - fileira * lado * 0.36f
+            val cy = cestaY + alturaCesta * 0.08f - fileira * lado * 0.3f
             return Offset(cx - lado / 2f, cy - lado / 2f)
         }
 
@@ -185,11 +216,20 @@ internal fun AtividadeCesta(
             narrador.falar(Vocabulario.porExtenso(q, feminino))
         }
 
+        /**
+         * Muda a figura de lugar (cesta ou fora). Ela desliza de onde está até o novo lugar, e as
+         * outras que estão fora se reagrupam, também deslizando (nada pula na tela).
+         */
         fun levarPara(f: FiguraDaCesta, novaVaga: Int) {
-            val agora = posicaoAtual(f)
+            val antes = figuras.associateWith { posicaoAtual(it) }
             f.vaga = novaVaga
-            val destino = lugar(f)
-            escopo.launch(start = CoroutineStart.UNDISPATCHED) { f.peca.pousar(agora - destino, molinha) }
+            for (g in figuras) {
+                if (g !== f && g.peca.arrastando) continue
+                val dif = antes.getValue(g) - lugar(g)
+                if (g === f || dif.getDistance() > 1f) {
+                    escopo.launch(start = CoroutineStart.UNDISPATCHED) { g.peca.pousar(dif, molinha) }
+                }
+            }
         }
 
         fun soltar(f: FiguraDaCesta) {
@@ -316,7 +356,8 @@ internal fun AtividadeCesta(
                                 val travada = classificar && f.vaga >= 0
                                 if (ativaAgora && !terminou && !travada) {
                                     f.peca.arrastando = true
-                                    arrastou = true
+                                    tocouSemArrastar = false
+                                    interacoes++
                                     sons.pegar()
                                     escopo.launch { f.peca.desvio.stop() }
                                 }
@@ -336,6 +377,7 @@ internal fun AtividadeCesta(
                                 // Tocar só diz o nome: para pôr na cesta é preciso arrastar (a mãozinha mostra).
                                 sons.toque()
                                 tocouSemArrastar = true
+                                interacoes++
                                 escopo.launch { f.peca.tremer() }
                                 nomeDaFigura(f.emoji)?.let { narrador.falar(it) }
                             }
@@ -355,7 +397,7 @@ internal fun AtividadeCesta(
                 contentAlignment = Alignment.Center,
             ) {
                 val ladoDp = lado / densidade.density
-                Text(f.emoji, fontSize = (ladoDp * 0.7f).sp, lineHeight = (ladoDp * 0.8f).sp)
+                Text(f.emoji, fontSize = (ladoDp * 0.76f).sp, lineHeight = (ladoDp * 0.86f).sp)
             }
         }
 
@@ -399,11 +441,11 @@ internal fun AtividadeCesta(
                 size = boca.size,
                 style = Stroke(px(8f), cap = StrokeCap.Round),
             )
-            // Ajuda na contagem: bolinhas na cesta mostram quantas faltam.
+            // Ajuda na contagem: bolinhas na cesta mostram quantas faltam (embaixo do número).
             if (!classificar && ajuda) {
-                val raio = min(px(9f), larguraCesta * 0.7f / (cesta.alvo * 2.6f))
+                val raio = min(px(8f), larguraCesta * 0.7f / (cesta.alvo * 2.6f))
                 val passo = raio * 2.6f
-                val y = cestaY + alturaCesta * 0.66f
+                val y = cestaY + alturaCesta * 0.88f
                 val x0 = cestaX + larguraCesta / 2f - passo * (cesta.alvo - 1) / 2f
                 for (i in 0 until cesta.alvo) {
                     val c = Offset(x0 + passo * i, y)
@@ -413,72 +455,104 @@ internal fun AtividadeCesta(
             }
         }
 
-        // ---------------------------------------------------------------- contador e certinho (modo contar)
+        // Alvo invisível do tamanho da cesta (os testes automáticos soltam as figuras no meio dela).
+        Box(
+            Modifier
+                .offset { IntOffset(cestaX.roundToInt(), (cestaY - alcaCesta * 0.5f).roundToInt()) }
+                .size(with(densidade) { larguraCesta.toDp() }, with(densidade) { (alturaCesta + alcaCesta * 0.5f).toDp() })
+                .testTag("cesta"),
+        )
+
+        // ---------------------------------------------------------------- número dentro da cesta e certinho (modo contar)
         if (!classificar) {
             val passou = naCesta > cesta.alvo && ajuda
+            val selo = min(alturaCesta * 0.5f, px(64f))
+            val pulinho = remember { Animatable(1f) }
+            LaunchedEffect(naCesta) {
+                if (naCesta > 0) {
+                    pulinho.snapTo(1.25f)
+                    pulinho.animateTo(1f, spring(dampingRatio = 0.4f))
+                }
+            }
             Box(
                 Modifier
                     .zIndex(4f)
                     .offset {
                         IntOffset(
-                            (cestaX + larguraCesta - px(30f) + tremidaDaCesta.value * densidade.density).roundToInt(),
-                            (cestaY + alturaCesta * 0.32f).roundToInt(),
+                            (cestaX + larguraCesta / 2f - selo / 2f + tremidaDaCesta.value * densidade.density).roundToInt(),
+                            (cestaY + alturaCesta * 0.6f - selo / 2f).roundToInt(),
                         )
                     }
-                    .size(44.dp)
+                    .size(with(densidade) { selo.toDp() })
+                    .graphicsLayer {
+                        scaleX = pulinho.value
+                        scaleY = pulinho.value
+                    }
                     .background(if (passou) Cores.Errado else Color.White, CircleShape)
-                    .border(3.dp, CorPalhaEscura, CircleShape),
+                    .border(4.dp, CorPalhaEscura, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     "$naCesta",
-                    style = MaterialTheme.typography.titleLarge,
+                    fontSize = (selo / densidade.density * 0.52f).sp,
                     fontWeight = FontWeight.Bold,
                     color = if (passou) Color.White else Cores.Texto,
+                    style = MaterialTheme.typography.titleLarge,
                 )
             }
-            val pronto = naCesta > 0 && ativa && !terminou
-            BotaoFofo(
-                onClick = { conferir() },
-                cor = if (pronto) Cores.Certo else Color(0xFFD9D2E6),
-                corBase = if (pronto) Color(0xFF2A9452) else Color(0xFFB9B0C9),
-                forma = CircleShape,
-                descricao = "Pronto",
-                habilitado = pronto,
-                preencher = true,
-                modifier = Modifier
-                    .zIndex(4f)
-                    .offset { IntOffset((cestaX + larguraCesta + px(16f)).roundToInt(), (cestaY + alturaCesta / 2f - botao / 2f).roundToInt()) }
-                    .size(with(densidade) { botao.toDp() })
-                    .testTag("atividade_pronto")
-                    .then(if (pronto && (naCesta == cesta.alvo && ajuda)) Modifier.pulsando() else Modifier),
-            ) {
-                Text("✔", fontSize = 40.sp, color = Color.White, fontWeight = FontWeight.Bold)
+            // O certinho só aparece quando já há fruta na cesta (apagado, parecia um botão para tocar).
+            val aparecer by animateFloatAsState(if (naCesta > 0 || terminou) 1f else 0f, spring(dampingRatio = 0.5f), label = "certinho")
+            if (naCesta > 0 || terminou || aparecer > 0.02f) {
+                val pronto = naCesta > 0 && ativa && !terminou
+                BotaoFofo(
+                    onClick = { conferir() },
+                    cor = Cores.Certo,
+                    corBase = Color(0xFF2A9452),
+                    forma = CircleShape,
+                    descricao = "Pronto",
+                    habilitado = pronto,
+                    preencher = true,
+                    modifier = Modifier
+                        .zIndex(4f)
+                        .offset {
+                            IntOffset(
+                                (cestaX + larguraCesta + px(14f)).roundToInt(),
+                                (cestaY + alturaCesta * 0.55f - botao / 2f).roundToInt(),
+                            )
+                        }
+                        .size(with(densidade) { botao.toDp() })
+                        .graphicsLayer {
+                            scaleX = aparecer
+                            scaleY = aparecer
+                            alpha = aparecer.coerceIn(0f, 1f)
+                        }
+                        .testTag("atividade_pronto")
+                        .then(if (pronto && (naCesta == cesta.alvo && ajuda)) Modifier.pulsando() else Modifier),
+                ) {
+                    Text("✔", fontSize = 38.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                }
             }
         }
 
         // ---------------------------------------------------------------- mãozinha: mostra o gesto de arrastar
-        val alvoDaMao = Offset(cestaX + larguraCesta / 2f, cestaY + alturaCesta * 0.2f)
-        val origemDaMao = when {
-            // Contar: todas as figuras são iguais, pode mostrar com uma delas.
-            !classificar -> figuras.firstOrNull { it.vaga < 0 }?.let { casa(it) + Offset(lado / 2f, lado / 2f) }
-            // Classificar com ajuda: mostra uma figura do grupo.
-            ajuda -> figuras.firstOrNull { it.certa && it.vaga < 0 }?.let { casa(it) + Offset(lado / 2f, lado / 2f) }
-            // Classificar sem ajuda: sai de um ponto neutro, para não entregar a resposta.
-            else -> Offset(w / 2f, bandeja - px(6f))
-        }
-        val mostrarMao = ativa && !terminou && origemDaMao != null && (!arrastou || ajuda)
+        // Pega uma figura (uma do grupo, ao classificar) e leva até a boca da cesta, com rastro de bolinhas.
+        val alvoDaMao = Offset(cestaX + larguraCesta / 2f, cestaY + alturaCesta * 0.12f)
+        val exemploDaMao = figuras.lastOrNull { it.vaga < 0 && (it.certa || !classificar) }
+        val ninguemArrastando = figuras.none { it.peca.arrastando }
         Box(Modifier.matchParentSize().zIndex(6f)) {
-            key(tocouSemArrastar, ajuda) {
-                MaoQueSegue(
-                    pontos = listOfNotNull(origemDaMao, alvoDaMao),
-                    ativa = mostrarMao,
-                    espera = when {
-                        ajudaInicial -> 900L
-                        tocouSemArrastar || ajuda -> 1200L
-                        else -> 3500L
-                    },
-                )
+            if (exemploDaMao != null) {
+                key(exemploDaMao.id) {
+                    GestoDeArrastar(
+                        origem = casa(exemploDaMao) + Offset(lado / 2f, lado / 2f),
+                        destino = alvoDaMao,
+                        ativa = ativa && !terminou && parada && ninguemArrastando,
+                        cor = escurecer(cor),
+                        tamanhoCarga = with(densidade) { lado.toDp() },
+                    ) {
+                        val ladoDp = lado / densidade.density
+                        Text(exemploDaMao.emoji, fontSize = (ladoDp * 0.76f).sp, lineHeight = (ladoDp * 0.86f).sp)
+                    }
+                }
             }
         }
     }

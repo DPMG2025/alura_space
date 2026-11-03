@@ -21,10 +21,13 @@
         android:theme="@style/Theme.CasinhaDoSaber"
         tools:targetApi="35">
 
+        <!-- Em pé no celular; o tablet libera a paisagem em MainActivity.onCreate. Girar não recria a
+             tela (configChanges): o Compose se recompõe e a criança não perde a partida. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
             android:windowSoftInputMode="adjustResize"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">
             <intent-filter>

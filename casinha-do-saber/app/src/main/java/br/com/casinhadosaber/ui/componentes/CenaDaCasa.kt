@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -71,6 +72,7 @@ import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.dominio.Lugar
 import br.com.casinhadosaber.dominio.Posicao
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -355,6 +357,24 @@ private fun CenaPlana(
             )
         }
 
+        // Recusa (cama no jardim): a peça volta tremendo, com um balão "não" desenhado em cima dela.
+        // Sugestão: o lugar certo brilha (forte quando a peça foi recusada, suave quando só foi para o
+        // cômodo "errado", que vale, mas a dica ajuda).
+        var vezes by remember { mutableIntStateOf(0) }
+        var recusa by remember { mutableStateOf<Recusa?>(null) }
+        var sugestao by remember { mutableStateOf<Sugestao?>(null) }
+        LaunchedEffect(recusa?.vez) {
+            if (recusa != null) {
+                delay(DURACAO_DA_RECUSA)
+                recusa = null
+            }
+        }
+        sugestao?.let { s ->
+            key(s.vez) {
+                BrilhoNoLugar(s, larguraPx, alturaPx, jardimExtra) { if (sugestao?.vez == s.vez) sugestao = null }
+            }
+        }
+
         for (item in ItensDaCasa.ordem) {
             if (item.ehEstrutura) continue
             // À noite não tem arco-íris, pipa nem borboleta.
@@ -370,6 +390,7 @@ private fun CenaPlana(
                 alturaCena = alturaPx,
                 interativo = interativa && !pintando,
                 aparecer = item.id == destaqueId,
+                recusas = recusa?.takeIf { it.item.id == item.id }?.vez ?: 0,
                 vida = vidaDo(item.id),
                 tempo = t,
                 noite = noite,
@@ -381,9 +402,18 @@ private fun CenaPlana(
                     } else {
                         val destino = encaixar(item.id, jardim.limitar(nova), estado)
                         if (destino == null) {
+                            vezes++
+                            recusa = Recusa(item, pos, vezes)
+                            lugarCertoDe(item)?.let { sugestao = Sugestao(it, forte = true, vez = vezes) }
                             onRecusarItem(item)
                             pos
                         } else {
+                            val certo = item.comodo
+                            val caiu = comodoEm(destino.x, destino.y - 0.02f)
+                            if (certo != null && caiu != null && caiu != certo) {
+                                vezes++
+                                sugestao = Sugestao(LugarCerto.NoComodo(certo), forte = false, vez = vezes)
+                            }
                             destino.also { onMoverItem(item, jardim.paraGuardar(it)) }
                         }
                     }
@@ -392,6 +422,8 @@ private fun CenaPlana(
                 if (noite && item.id == "sol") EmojiGrande("🌙", w) else ConteudoDoItem(item, w)
             } }
         }
+
+        recusa?.let { r -> key(r.vez) { BalaoDeNao(r, larguraPx, alturaPx) } }
 
         // Visitantes comprados na loja passeiam pelo jardim, cada um no seu ritmo.
         if (!semVisitantes) estado.visitantes.forEachIndexed { i, bicho ->
@@ -556,6 +588,8 @@ private fun ObjetoNaCena(
     interativo: Boolean,
     aparecer: Boolean,
     onTocar: () -> Unit,
+    /** Muda (aumenta) cada vez que o objeto é recusado: ele treme ao chegar de volta. */
+    recusas: Int = 0,
     /** Recebe onde o objeto foi solto e devolve onde ele fica (ou null se foi guardado no baú). */
     onSoltar: (Posicao) -> Posicao?,
     larguraRelativa: Float = item?.tamanho ?: 0.1f,
@@ -579,7 +613,17 @@ private fun ObjetoNaCena(
     var arrastando by remember { mutableStateOf(false) }
     val escala = remember { Animatable(if (aparecer) 0f else 1f) }
     val salto = remember { Animatable(0f) }
+    val tremor = remember { Animatable(0f) }
     val escopo = rememberCoroutineScope()
+
+    LaunchedEffect(recusas) {
+        if (recusas > 0) {
+            // Espera a volta (a mola) quase terminar e balança a cabeça: "não".
+            delay(320)
+            val forca = with(densidade) { 9.dp.toPx() }
+            for (f in listOf(1f, -1f, 0.8f, -0.8f, 0.5f, -0.5f, 0f)) tremor.animateTo(forca * f, tween(55))
+        }
+    }
 
     LaunchedEffect(aparecer) {
         if (aparecer) {
@@ -611,6 +655,7 @@ private fun ObjetoNaCena(
                 scaleY = s
                 transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
                 if (!arrastando) aplicarVida(vida, (tempo + defasagem) % 1f, larguraCena, alturaCena, densidade.density)
+                translationX += tremor.value
             }
             .semantics {
                 contentDescription = descricao
@@ -701,12 +746,7 @@ private fun ObjetoNaCena(
     }
 }
 
-fun proporcaoDoItem(item: ItemCasa?): Float = when (item?.desenho) {
-    Desenho.GELADEIRA -> 2.1f
-    Desenho.FOGAO -> 1.35f
-    Desenho.MESA -> 0.7f
-    null -> 1f
-}
+fun proporcaoDoItem(item: ItemCasa?): Float = item?.let { ItensDaCasa.proporcaoDe(it) } ?: 1f
 
 /** Desenha o item: emoji ou móvel desenhado. Também é usado no baú. */
 @Composable
@@ -1147,6 +1187,133 @@ fun DrawScope.desenharMovel(d: Desenho) {
             drawRoundRect(Color(0xF2FFFFFF), Offset(w * 0.05f, 0f), Size(w * 0.9f, tampo * 0.9f), CornerRadius(w * 0.03f))
             drawRect(Color(0xFFB0703C), Offset(w * 0.08f, tampo), Size(w * 0.08f, h - tampo))
             drawRect(Color(0xFFB0703C), Offset(w * 0.84f, tampo), Size(w * 0.08f, h - tampo))
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------------------- dicas de lugar
+
+/** Quanto tempo o balão "não" fica em cima da peça recusada (ms). */
+private const val DURACAO_DA_RECUSA = 2600L
+
+/** Onde a peça deveria ir: um cômodo, qualquer lugar dentro de casa, ou o jardim. */
+sealed interface LugarCerto {
+    data class NoComodo(val comodo: Comodo) : LugarCerto
+    data object DentroDeCasa : LugarCerto
+    data object NoJardim : LugarCerto
+}
+
+/** O lugar que brilha para ajudar com [item] (null para o que pode ir em qualquer lugar). */
+fun lugarCertoDe(item: ItemCasa): LugarCerto? = item.comodo?.let { LugarCerto.NoComodo(it) } ?: when (item.lugar) {
+    Lugar.DENTRO -> LugarCerto.DentroDeCasa
+    Lugar.FORA -> LugarCerto.NoJardim
+    Lugar.CEU, Lugar.QUALQUER -> null
+}
+
+/** [pos] é a posição na tela (já convertida do jardim de baixo), para onde a peça voltou. */
+private data class Recusa(val item: ItemCasa, val pos: Posicao, val vez: Int)
+
+private data class Sugestao(val lugar: LugarCerto, val forte: Boolean, val vez: Int)
+
+/** Retângulo do lugar (frações da largura e da altura da cena; o jardim de baixo passa de 1). */
+private fun retanguloDe(lugar: LugarCerto, jardimExtra: Float): Rect = when (lugar) {
+    is LugarCerto.NoComodo -> when (lugar.comodo) {
+        Comodo.QUARTO -> Rect(Planta.ESQ, Planta.TOPO, Planta.DIVISAO_CIMA, Planta.MEIO)
+        Comodo.BANHEIRO -> Rect(Planta.DIVISAO_CIMA, Planta.TOPO, Planta.DIR, Planta.MEIO)
+        Comodo.SALA -> Rect(Planta.ESQ, Planta.MEIO, Planta.DIVISAO_BAIXO, Planta.BASE)
+        Comodo.COZINHA -> Rect(Planta.DIVISAO_BAIXO, Planta.MEIO, Planta.DIR, Planta.BASE)
+    }
+    LugarCerto.DentroDeCasa -> Rect(Planta.ESQ, Planta.TOPO, Planta.DIR, Planta.BASE)
+    LugarCerto.NoJardim -> Rect(0.02f, Planta.BASE + 0.025f, 0.98f, 1f + jardimExtra - 0.02f)
+}
+
+/**
+ * O lugar certo pisca devagar com uma luz dourada e some sozinho. Forte: 3 piscadas (peça recusada).
+ * Suave: 2 piscadas mais fracas (só uma dica, sem punir).
+ */
+@Composable
+private fun BrilhoNoLugar(s: Sugestao, larguraPx: Float, alturaPx: Float, jardimExtra: Float, onFim: () -> Unit) {
+    val luz = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        repeat(if (s.forte) 3 else 2) {
+            luz.animateTo(1f, tween(380))
+            luz.animateTo(0.35f, tween(380))
+        }
+        luz.animateTo(0f, tween(500))
+        onFim()
+    }
+    val r = retanguloDe(s.lugar, jardimExtra)
+    val maximo = if (s.forte) 1f else 0.6f
+    Canvas(
+        Modifier
+            .fillMaxSize()
+            .semantics { contentDescription = "Lugar certo brilhando" },
+    ) {
+        val a = luz.value * maximo
+        val canto = CornerRadius(12.dp.toPx())
+        val topoEsq = Offset(r.left * larguraPx, r.top * alturaPx)
+        val tamanho = Size(r.width * larguraPx, r.height * alturaPx)
+        drawRoundRect(Color(0xFFFFF3B0).copy(alpha = 0.5f * a), topoEsq, tamanho, canto)
+        drawRoundRect(Color(0xFFFFC93C).copy(alpha = a), topoEsq, tamanho, canto, style = Stroke(6.dp.toPx()))
+        // Estrelinhas nos cantos, para chamar o olho.
+        val raio = 7.dp.toPx() * (0.6f + 0.4f * luz.value)
+        for (c in listOf(topoEsq, Offset(topoEsq.x + tamanho.width, topoEsq.y), Offset(topoEsq.x, topoEsq.y + tamanho.height), Offset(topoEsq.x + tamanho.width, topoEsq.y + tamanho.height))) {
+            drawPath(caminhoEstrela(c, raio), Color(0xFFFFD84D).copy(alpha = a))
+        }
+    }
+}
+
+/**
+ * Balão "não" sobre a peça recusada: um círculo vermelho cortado por cima da miniatura da peça,
+ * sem texto (a criança ainda não lê). Aparece com um pulinho e some sozinho.
+ */
+@Composable
+private fun BalaoDeNao(r: Recusa, larguraPx: Float, alturaPx: Float) {
+    val densidade = LocalDensity.current
+    val pop = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { pop.animateTo(1f, spring(dampingRatio = 0.4f, stiffness = Spring.StiffnessMediumLow)) }
+    val pos = r.pos
+    val alturaDaPeca = r.item.tamanho * larguraPx * proporcaoDoItem(r.item)
+    val lado = maxOf(larguraPx * 0.15f, with(densidade) { 56.dp.toPx() })
+    val x = (pos.x * larguraPx - lado / 2).coerceIn(0f, larguraPx - lado)
+    val y = (pos.y * alturaPx - alturaDaPeca - lado * 1.08f).coerceAtLeast(0f)
+    Box(
+        Modifier
+            .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
+            .size(with(densidade) { lado.toDp() })
+            .zIndex(12f)
+            .graphicsLayer {
+                scaleX = pop.value
+                scaleY = pop.value
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
+            }
+            .semantics { contentDescription = "Não pode aqui" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            val raio = size.minDimension * 0.44f
+            val c = Offset(size.width / 2, size.height * 0.46f)
+            // Rabinho do balão apontando para a peça.
+            val rabo = Path().apply {
+                moveTo(c.x - raio * 0.28f, c.y + raio * 0.8f)
+                lineTo(c.x, size.height)
+                lineTo(c.x + raio * 0.28f, c.y + raio * 0.8f)
+                close()
+            }
+            drawPath(rabo, Color.White)
+            drawCircle(Color.White, raio, c)
+            drawCircle(Color(0xFFFFCDD2), raio, c, style = Stroke(3.dp.toPx()))
+        }
+        Box(Modifier.padding(bottom = with(densidade) { (lado * 0.08f).toDp() }), contentAlignment = Alignment.Center) {
+            IconeDoItem(r.item, with(densidade) { (lado * 0.48f).toDp() }, Modifier.graphicsLayer { alpha = 0.85f })
+            Canvas(Modifier.size(with(densidade) { (lado * 0.66f).toDp() })) {
+                val vermelho = Color(0xFFE53935)
+                val traco = size.minDimension * 0.11f
+                val raio = size.minDimension / 2 - traco / 2
+                drawCircle(vermelho, raio, style = Stroke(traco))
+                val d = raio * 0.7071f
+                drawLine(vermelho, Offset(center.x - d, center.y - d), Offset(center.x + d, center.y + d), traco, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            }
         }
     }
 }

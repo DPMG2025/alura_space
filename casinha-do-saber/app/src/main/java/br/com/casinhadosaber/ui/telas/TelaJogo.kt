@@ -109,6 +109,8 @@ fun TelaJogo(
     }
     var indice by remember { mutableIntStateOf(0) }
     var resultados by remember { mutableStateOf(listOf<Boolean>()) }
+    /** Como cada pergunta já feita terminou (índice → acertou de primeira?), para as bolinhas de cima. */
+    var comoFoi by remember { mutableStateOf(mapOf<Int, Boolean>()) }
     var pulo by remember { mutableIntStateOf(0) }
     var erradas by remember { mutableStateOf(setOf<Int>()) }
     var acertou by remember { mutableStateOf(false) }
@@ -138,6 +140,7 @@ fun TelaJogo(
     fun comemorar(dePrimeira: Boolean) {
         acertou = true
         if (!exemplo) resultados = resultados + dePrimeira
+        comoFoi = comoFoi + (indice to (dePrimeira || exemplo))
         humor = Humor.FELIZ
         pulo++
         vibracao.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -189,16 +192,31 @@ fun TelaJogo(
                     Modifier.weight(1f),
                     horizontalArrangement = Arrangement.Center,
                 ) {
+                    // Bolinhas do progresso, uma cor por estado (nunca vermelho: vermelho parece erro):
+                    // verde com estrela = acertou de primeira; amarelo com estrela = acertou com ajuda;
+                    // branca com borda na cor do caminho = a da vez; branca clarinha = ainda vem.
                     for (i in perguntas.indices) {
-                        val feita = i < indice || (i == indice && acertou)
-                        val tamanho = if (i == indice) 22.dp else 16.dp
+                        val resultado = comoFoi[i]
+                        val daVez = i == indice && resultado == null
+                        val tamanho = if (i == indice) 24.dp else 18.dp
+                        val (fundo, borda) = when {
+                            resultado == true -> Cores.Certo to Color(0xFF2A9452)
+                            resultado == false -> Cores.Estrela to Color(0xFFE0A800)
+                            daVez -> Color.White to escurecer(cor)
+                            else -> Color.White to Color(0x33000000)
+                        }
                         Box(
                             Modifier
                                 .padding(horizontal = 4.dp)
                                 .size(tamanho)
-                                .background(if (feita) cor else Color.White, CircleShape)
-                                .border(3.dp, if (feita) escurecer(cor) else Color(0x33000000), CircleShape),
-                        )
+                                .background(fundo, CircleShape)
+                                .border(if (daVez) 4.dp else 3.dp, borda, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (resultado != null) {
+                                Text("★", color = Color.White, fontSize = (tamanho.value * 0.6f).sp, lineHeight = (tamanho.value * 0.7f).sp)
+                            }
+                        }
                     }
                 }
                 BotaoRedondo("🔊", "Ouvir de novo", { narrador.falar(pergunta.fala) }, tamanho = 48.dp)

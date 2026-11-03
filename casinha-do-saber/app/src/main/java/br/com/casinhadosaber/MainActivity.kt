@@ -1,5 +1,6 @@
 package br.com.casinhadosaber
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -12,9 +13,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +33,7 @@ import br.com.casinhadosaber.dominio.Produto
 import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.MolduraDoApp
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.TemaCasinha
 import br.com.casinhadosaber.ui.telas.TelaCasa
@@ -81,6 +80,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // Celular fica sempre em pé (manifesto). Tablet pode deitar: o início e a casa viram duas colunas
+        // e as outras telas ficam centralizadas com a escala ajustada à altura (ver MolduraDoApp).
+        if (resources.configuration.smallestScreenWidthDp >= 600) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+        }
         narrador = Narrador(this)
         sons = Sons()
         repositorio = Repositorio(this)
@@ -173,25 +177,21 @@ class MainActivity : ComponentActivity() {
         }
 
         // Em tablets, o app fica centralizado com largura de celular grande (botões e textos no tamanho certo
-        // para a mão da criança), e o fundo de céu ocupa as laterais.
+        // para a mão da criança), e o fundo de céu ocupa as laterais. Em paisagem, o início e a casa usam
+        // a largura toda, em duas colunas (ver MolduraDoApp).
         Box(
             Modifier
                 .fillMaxSize()
                 .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Cores.Ceu, Cores.Fundo))),
             contentAlignment = androidx.compose.ui.Alignment.TopCenter,
         ) {
-            val config = androidx.compose.ui.platform.LocalConfiguration.current
-            val densidade = androidx.compose.ui.platform.LocalDensity.current
-            val tablet = config.smallestScreenWidthDp >= 600
-            // Em tablet, textos e botões ficam 30% maiores (do tamanho certo para a mão da criança).
-            val densidadeDoApp = if (tablet) androidx.compose.ui.unit.Density(densidade.density * 1.3f, densidade.fontScale) else densidade
-            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides densidadeDoApp) {
             AnimatedContent(
-                modifier = Modifier.widthIn(max = 640.dp).fillMaxHeight(),
+                modifier = Modifier.fillMaxSize(),
                 targetState = tela,
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
                 label = "telas",
             ) { atual ->
+                MolduraDoApp(larga = atual == Tela.Inicio || atual is Tela.Casa) {
                 when (atual) {
                     Tela.Perfil -> TelaPerfil(estado.perfil) { perfil ->
                         val primeiraVez = estado.perfil == null
@@ -321,7 +321,7 @@ class MainActivity : ComponentActivity() {
                         onVoltar = { irPara(Tela.Inicio) },
                     )
                 }
-            }
+                }
             }
         }
     }

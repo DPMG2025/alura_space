@@ -36,6 +36,20 @@ data class ItemCasa(
     val comodo: Comodo? get() = ItensDaCasa.comodoDe(id)
 }
 
+/** Retângulo em frações da cena: [esq] e [dir] da largura, [topo] e [base] da altura. */
+data class CaixaNaCena(val esq: Float, val topo: Float, val dir: Float, val base: Float) {
+    val area get() = (dir - esq).coerceAtLeast(0f) * (base - topo).coerceAtLeast(0f)
+
+    /** Quanto da menor das duas caixas fica coberto pela outra (0 = nada, 1 = inteira). */
+    fun sobreposicao(outra: CaixaNaCena): Float {
+        val l = minOf(dir, outra.dir) - maxOf(esq, outra.esq)
+        val a = minOf(base, outra.base) - maxOf(topo, outra.topo)
+        if (l <= 0f || a <= 0f) return 0f
+        val menor = minOf(area, outra.area)
+        return if (menor <= 0f) 0f else l * a / menor
+    }
+}
+
 enum class Comodo(val nome: String, val cores: List<Long>) {
     QUARTO("Quarto", listOf(0xFFFFE3EC, 0xFFE8E0FF, 0xFFFFF4C2, 0xFFD9F5E5, 0xFFFFE0C7)),
     BANHEIRO("Banheiro", listOf(0xFFD7F3FF, 0xFFE0FFF4, 0xFFFFF0F5, 0xFFF0E8FF, 0xFFFFFBE0)),
@@ -132,6 +146,49 @@ object ItensDaCasa {
     }
 
     val total get() = ordem.size
+
+    /** Altura da cena dividida pela largura (a mesma de `PROPORCAO_CENA`, na interface). */
+    const val PROPORCAO_DA_CENA = 1.15f
+
+    /** Altura do desenho dividida pela largura: móveis desenhados têm a sua; emojis são quadrados. */
+    fun proporcaoDe(item: ItemCasa): Float = when (item.desenho) {
+        Desenho.GELADEIRA -> 2.1f
+        Desenho.FOGAO -> 1.35f
+        Desenho.MESA -> 0.7f
+        null -> 1f
+    }
+
+    /** Pares que ficam um em cima do outro de propósito (o ursinho deitado na cama, o bolo na mesa). */
+    val empilhadosDeProposito: Set<Set<String>> = setOf(setOf("cama", "ursinho"), setOf("mesa", "bolo"))
+
+    /**
+     * Caixa que o desenho de [item] ocupa com o pé em [pos], em frações da largura (x) e da altura (y)
+     * da cena. O emoji usa ~84% da sua caixa (a fonte deixa uma margem), os móveis desenhados, 100%.
+     */
+    fun caixaNaCena(item: ItemCasa, pos: Posicao = Posicao(item.x, item.y)): CaixaNaCena {
+        val miolo = if (item.desenho == null) 0.84f else 1f
+        val largura = item.tamanho * miolo
+        val altura = item.tamanho * proporcaoDe(item) * miolo / PROPORCAO_DA_CENA
+        return CaixaNaCena(pos.x - largura / 2, pos.y - altura, pos.x + largura / 2, pos.y)
+    }
+
+    /**
+     * Objetos (não estruturas) que, nas posições padrão da casa completa, cobrem mais que [limite]
+     * do menor dos dois. Os [empilhadosDeProposito] não contam. Cada par vem com a fração coberta.
+     */
+    fun sobreposicoesPadrao(limite: Float = 0.25f): List<Triple<String, String, Float>> {
+        val objetos = ordem.filter { !it.ehEstrutura }
+        val caixas = objetos.associate { it.id to caixaNaCena(it) }
+        val achadas = mutableListOf<Triple<String, String, Float>>()
+        for (i in objetos.indices) for (j in i + 1 until objetos.size) {
+            val a = objetos[i].id
+            val b = objetos[j].id
+            if (setOf(a, b) in empilhadosDeProposito) continue
+            val f = caixas.getValue(a).sobreposicao(caixas.getValue(b))
+            if (f > limite) achadas += Triple(a, b, f)
+        }
+        return achadas
+    }
 
     /** Itens já conquistados, dado o número de fases vencidas (contando todas as trilhas). */
     fun ganhos(fasesVencidas: Int): List<ItemCasa> = ordem.take(fasesVencidas.coerceIn(0, ordem.size))

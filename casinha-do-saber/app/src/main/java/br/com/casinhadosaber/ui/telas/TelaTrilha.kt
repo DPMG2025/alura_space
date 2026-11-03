@@ -34,9 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
@@ -64,6 +62,10 @@ import br.com.casinhadosaber.ui.componentes.FileiraDeEstrelas
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.unit.Density
+import br.com.casinhadosaber.ui.EscalaDeTablet
+import kotlin.math.roundToInt
 
 /** Altura de cada degrau do caminho: bolinha (88 + 6 de base) e plaquinha de até 2 linhas com estrelas. */
 private val ALTURA_PASSO = 168.dp
@@ -76,6 +78,10 @@ private val ALTURA_CRIANCA = 104.dp
 
 /** A cada [FASES_POR_MARCO] fases, um marco (bandeirinha que vira troféu) ajuda a criança a se orientar. */
 private const val FASES_POR_MARCO = 5
+
+/** Tamanho de tela (já com a escala de tablet) em que o caminho fica no tamanho original. */
+private val LARGURA_DE_REFERENCIA = 400.dp
+private val ALTURA_DE_REFERENCIA = 620.dp
 
 /** Posição horizontal (fração da largura) de cada fase, formando um caminho em zigue-zague. */
 private val zigueZague = listOf(0.5f, 0.74f, 0.5f, 0.26f)
@@ -101,12 +107,13 @@ fun TelaTrilha(
     val cor = Color(trilha.corArgb)
     val corEscura = Color(trilha.corEscuraArgb)
     val rolagem = rememberScrollState()
-    val densidade = LocalDensity.current
 
     LaunchedEffect(trilha) {
         narrador.falar(trilha.chamada + " Toque na bolinha que está brilhando.")
     }
 
+    // No tablet (também quando a tela é usada sozinha, como nas capturas) tudo cresce na mesma proporção.
+    EscalaDeTablet {
     Column(
         Modifier
             .fillMaxSize()
@@ -144,11 +151,23 @@ fun TelaTrilha(
         }
 
         BoxWithConstraints(Modifier.fillMaxSize()) {
+            // Caminho largo e alto (tablet em pé): bolinhas, plaquinhas e criança crescem juntas, até 30%,
+            // para o caminho não ficar fininho no meio da tela. Na paisagem a altura manda e fica 1.
+            val escalaDoCaminho = minOf(maxWidth / LARGURA_DE_REFERENCIA, maxHeight / ALTURA_DE_REFERENCIA).coerceIn(1f, 1.3f)
+            val densidadeDeFora = LocalDensity.current
+            CompositionLocalProvider(
+                LocalDensity provides Density(densidadeDeFora.density * escalaDoCaminho, densidadeDeFora.fontScale),
+            ) {
+            BoxWithConstraints(Modifier.fillMaxSize()) {
             val alturaVisivel = maxHeight
-            // Ao abrir, a fase atual aparece no meio da tela (com 25 fases ela pode estar bem lá embaixo).
+            val densidade = LocalDensity.current
+            // Ao abrir, a fase atual aparece perto do meio da tela (com 25 fases ela pode estar bem lá embaixo).
+            // O topo da área visível cai sempre no começo de um degrau: nenhuma plaquinha fica cortada
+            // embaixo do cabeçalho.
             LaunchedEffect(trilha) {
-                val centroDaFase = 12.dp + ALTURA_PASSO * indiceEmFoco + TOPO_BOLINHA + TAMANHO_BOLINHA / 2
-                val alvo = with(densidade) { (centroDaFase - alturaVisivel / 2).roundToPx() }.coerceAtLeast(0)
+                val centroDaFase = ALTURA_PASSO * indiceEmFoco + TOPO_BOLINHA + TAMANHO_BOLINHA / 2
+                val degraus = ((centroDaFase - alturaVisivel / 2) / ALTURA_PASSO).roundToInt().coerceAtLeast(0)
+                val alvo = with(densidade) { (ALTURA_PASSO * degraus).roundToPx() }
                 if (alvo > 0) {
                     // Pula para perto e desliza o finalzinho: a criança vê o caminho andando até ela.
                     rolagem.scrollTo((alvo - with(densidade) { 160.dp.roundToPx() }).coerceAtLeast(0))
@@ -167,20 +186,7 @@ fun TelaTrilha(
                 Canvas(Modifier.fillMaxWidth().height(alturaTotal)) {
                     val passo = ALTURA_PASSO.toPx()
                     val centroY = TOPO_BOLINHA.toPx() + TAMANHO_BOLINHA.toPx() / 2
-                    // Faixas suaves a cada 5 fases: o caminho fica dividido em "pedacinhos" fáceis de ver.
-                    val margem = 8.dp.toPx()
-                    for (g in 0 until (fases.size + FASES_POR_MARCO - 1) / FASES_POR_MARCO) {
-                        if (g % 2 == 1) {
-                            val y0 = passo * g * FASES_POR_MARCO + margem
-                            val y1 = passo * minOf((g + 1) * FASES_POR_MARCO, fases.size) - margem
-                            drawRoundRect(
-                                Color.White.copy(alpha = 0.22f),
-                                Offset(margem, y0),
-                                Size(size.width - 2 * margem, y1 - y0),
-                                CornerRadius(28.dp.toPx()),
-                            )
-                        }
-                    }
+                    // Só o caminho pontilhado: os marcos (bandeirinha e troféu) já dividem o caminho em pedacinhos.
                     for (i in 0 until fases.size - 1) {
                         val a = Offset(size.width * posicaoX(i), passo * i + centroY)
                         val b = Offset(size.width * posicaoX(i + 1), passo * (i + 1) + centroY)
@@ -245,14 +251,17 @@ fun TelaTrilha(
                 }
                 Spacer(Modifier.height(alturaTotal))
             }
-            // Esmaecido no topo: o que sobe some suavemente, sem corte reto.
+            }
+            }
+            // Esmaecido no topo, alto o bastante para nada parecer cortado embaixo do cabeçalho.
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(24.dp)
+                    .height(40.dp)
                     .background(Brush.verticalGradient(listOf(cor, cor.copy(alpha = 0f)))),
             )
         }
+    }
     }
 }
 

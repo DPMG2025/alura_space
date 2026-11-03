@@ -37,6 +37,8 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -155,139 +157,164 @@ fun TelaPremio(
         }
     }
 
-    Box(
+    val corDaTrilha = Color(fase.trilha.corArgb)
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(fase.trilha.corArgb), Cores.Fundo)))
+            .background(Brush.verticalGradient(listOf(corDaTrilha, Cores.Fundo)))
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
+        // Tela alta: a criança cresce e fica num "palco" (morrinho) que ocupa o terço de baixo.
+        val alta = maxHeight > 720.dp
+        Canvas(Modifier.fillMaxSize()) {
+            val topo = size.height * 0.80f
+            drawOval(corDaTrilha.copy(alpha = 0.16f), Offset(-size.width * 0.35f, topo - size.height * 0.04f), Size(size.width * 1.7f, size.height * 0.5f))
+            drawOval(corDaTrilha.copy(alpha = 0.22f), Offset(-size.width * 0.15f, topo), Size(size.width * 1.3f, size.height * 0.4f))
+            // Brilhinhos espalhados no céu, para o alto da tela não ficar chapado.
+            for (k in 0 until 9) {
+                val x = ((k * 0.37f + 0.11f) % 1f) * size.width
+                val y = ((k * 0.53f + 0.07f) % 0.7f) * size.height
+                drawPath(caminhoEstrela(Offset(x, y), (5 + (k % 3) * 3).dp.toPx()), Color.White.copy(alpha = 0.35f))
+            }
+        }
         Column(
             Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .heightIn(min = maxHeight)
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
+            // Três blocos (parabéns, presente, criança e botões) distribuídos na altura toda.
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(
-                if (nome.isBlank()) "Parabéns!" else "Parabéns, $nome!",
-                style = MaterialTheme.typography.headlineLarge,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for (i in 1..3) {
-                    val escala = remember { Animatable(0.6f) }
-                    LaunchedEffect(estrelasVisiveis >= i) {
-                        if (estrelasVisiveis >= i) {
-                            escala.animateTo(1.3f, tween(140))
-                            escala.animateTo(1f, spring(dampingRatio = 0.4f))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    if (nome.isBlank()) "Parabéns!" else "Parabéns, $nome!",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    for (i in 1..3) {
+                        val escala = remember { Animatable(0.6f) }
+                        LaunchedEffect(estrelasVisiveis >= i) {
+                            if (estrelasVisiveis >= i) {
+                                escala.animateTo(1.3f, tween(140))
+                                escala.animateTo(1f, spring(dampingRatio = 0.4f))
+                            }
+                        }
+                        Estrela(
+                            estrelasVisiveis >= i,
+                            Modifier.graphicsLayer { scaleX = escala.value; scaleY = escala.value },
+                            tamanho = 64.dp,
+                        )
+                    }
+                }
+                if (moedas > 0) {
+                    Spacer(Modifier.height(6.dp))
+                    Text("+$moedas 🪙", style = MaterialTheme.typography.headlineMedium, color = Color.White)
+                }
+            }
+
+            // Meio: o presente (ou o recado, quando a fase já tinha dado presente).
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                if (item != null) {
+                    Text(
+                        if (aberto) "Você ganhou:" else "Um presente para a sua casa!",
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Presente(
+                        nomeAberto = item.nome,
+                        aberto = aberto,
+                        onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
+                        onAbrir = ::abrir,
+                    ) { m -> IconeDoItem(item, 130.dp, m) }
+                    if (aberto) {
+                        Text(item.nome, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
+                        Text("Em inglês: ${item.nomeEn}", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)
+                    }
+                } else if (brindeDaLoja != null) {
+                    Text(
+                        if (aberto) "Você ganhou:" else "Um presente da lojinha!",
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Presente(
+                        nomeAberto = brindeDaLoja.nome,
+                        aberto = aberto,
+                        onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
+                        onAbrir = ::abrir,
+                    ) { m -> DesenhoDoBrinde(brindeDaLoja, 130.dp, m) }
+                    if (aberto) {
+                        Text(brindeDaLoja.nome, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
+                        Spacer(Modifier.height(6.dp))
+                        // As moedinhas extras do brinde, num selo dourado.
+                        Row(
+                            Modifier
+                                .background(Cores.Estrela, RoundedCornerShape(50))
+                                .border(3.dp, Color(0xFFE0A800), RoundedCornerShape(50))
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .semantics(mergeDescendants = true) { contentDescription = "Mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas" },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("+${EstadoJogo.MOEDAS_DO_BRINDE} 🪙", style = MaterialTheme.typography.headlineMedium)
                         }
                     }
-                    Estrela(
-                        estrelasVisiveis >= i,
-                        Modifier.graphicsLayer { scaleX = escala.value; scaleY = escala.value },
-                        tamanho = 64.dp,
+                } else {
+                    Text(
+                        "Você já ganhou o presente desta fase.\nJogue uma fase nova para ganhar mais!",
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
-            if (moedas > 0) {
-                Spacer(Modifier.height(6.dp))
-                Text("+$moedas 🪙", style = MaterialTheme.typography.headlineMedium, color = Color.White)
-            }
-            Spacer(Modifier.height(16.dp))
 
-            if (item != null) {
-                Text(
-                    if (aberto) "Você ganhou:" else "Um presente para a sua casa!",
-                    style = MaterialTheme.typography.titleLarge,
-                )
-                Spacer(Modifier.height(8.dp))
-                Presente(
-                    nomeAberto = item.nome,
-                    aberto = aberto,
-                    onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
-                    onAbrir = ::abrir,
-                ) { m -> IconeDoItem(item, 130.dp, m) }
-                if (aberto) {
-                    Text(item.nome, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
-                    Text("Em inglês: ${item.nomeEn}", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)
-                }
-                perfil?.let {
-                    Spacer(Modifier.height(12.dp))
-                    Crianca(it, Modifier.height(if (aberto) 110.dp else 160.dp), acenando = true)
-                }
-            } else if (brindeDaLoja != null) {
-                Text(
-                    if (aberto) "Você ganhou:" else "Um presente da lojinha!",
-                    style = MaterialTheme.typography.titleLarge,
-                )
-                Spacer(Modifier.height(8.dp))
-                Presente(
-                    nomeAberto = brindeDaLoja.nome,
-                    aberto = aberto,
-                    onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
-                    onAbrir = ::abrir,
-                ) { m -> DesenhoDoBrinde(brindeDaLoja, 130.dp, m) }
-                if (aberto) {
-                    Text(brindeDaLoja.nome, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
-                    Spacer(Modifier.height(6.dp))
-                    // As moedinhas extras do brinde, num selo dourado.
-                    Row(
-                        Modifier
-                            .background(Cores.Estrela, RoundedCornerShape(50))
-                            .border(3.dp, Color(0xFFE0A800), RoundedCornerShape(50))
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
-                            .semantics(mergeDescendants = true) { contentDescription = "Mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas" },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text("+${EstadoJogo.MOEDAS_DO_BRINDE} 🪙", style = MaterialTheme.typography.headlineMedium)
-                    }
-                }
+            // Embaixo: a criança comemorando no morrinho e, depois de abrir, os botões.
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 perfil?.let {
                     // O chapéu ganho aparece na cabeça da criança só depois de abrir (surpresa).
                     val vestido = when {
-                        brindeDaLoja.categoria != Categoria.CHAPEU -> it
+                        brindeDaLoja == null || brindeDaLoja.categoria != Categoria.CHAPEU -> it
                         aberto -> it.copy(chapeu = brindeDaLoja.valor)
                         it.chapeu == brindeDaLoja.valor -> it.copy(chapeu = "")
                         else -> it
                     }
-                    Spacer(Modifier.height(12.dp))
-                    Crianca(vestido, Modifier.height(if (aberto) 120.dp else 160.dp), acenando = true)
-                }
-            } else {
-                perfil?.let { Crianca(it, Modifier.height(170.dp), acenando = true) }
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Você já ganhou o presente desta fase.\nJogue uma fase nova para ganhar mais!",
-                    style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-            AnimatedVisibility(visible = !temPresente || aberto, enter = fadeIn() + scaleIn()) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    if (temPresente) {
-                        val texto = if (item != null) "🏠 Colocar na casa" else "🏠 Ver na casa"
-                        BotaoFofo(onClick = onColocarNaCasa, cor = Cores.Certo, modifier = Modifier.pulsando(), descricao = texto.removePrefix("🏠 ")) {
-                            Text(
-                                texto,
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = Color.White,
-                                modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
-                            )
-                        }
+                    val altura = when {
+                        !temPresente -> if (alta) 210.dp else 170.dp
+                        aberto -> if (alta) 124.dp else 110.dp
+                        else -> if (alta) 210.dp else 160.dp
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        BotaoRedondo("🗺️", "Voltar para o caminho", onVoltar, tamanho = 60.dp)
-                        if (temProxima) {
-                            if (!temPresente) {
-                                BotaoFofo(onClick = onProxima, cor = Color(fase.trilha.corArgb), corBase = Color(fase.trilha.corEscuraArgb), modifier = Modifier.pulsando(), descricao = "Próxima fase") {
-                                    Text("Próxima ▶", style = MaterialTheme.typography.headlineMedium, color = Color.White, modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp))
+                    Spacer(Modifier.height(12.dp))
+                    Crianca(vestido, Modifier.height(altura), acenando = true)
+                }
+                Spacer(Modifier.height(16.dp))
+                AnimatedVisibility(visible = !temPresente || aberto, enter = fadeIn() + scaleIn()) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        if (temPresente) {
+                            val texto = if (item != null) "🏠 Colocar na casa" else "🏠 Ver na casa"
+                            BotaoFofo(onClick = onColocarNaCasa, cor = Cores.Certo, modifier = Modifier.pulsando(), descricao = texto.removePrefix("🏠 ")) {
+                                Text(
+                                    texto,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
+                                )
+                            }
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                            BotaoRedondo("🗺️", "Voltar para o caminho", onVoltar, tamanho = 60.dp)
+                            if (temProxima) {
+                                if (!temPresente) {
+                                    BotaoFofo(onClick = onProxima, cor = corDaTrilha, corBase = Color(fase.trilha.corEscuraArgb), modifier = Modifier.pulsando(), descricao = "Próxima fase") {
+                                        Text("Próxima ▶", style = MaterialTheme.typography.headlineMedium, color = Color.White, modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp))
+                                    }
+                                } else {
+                                    BotaoRedondo("▶️", "Próxima fase", onProxima, tamanho = 60.dp)
                                 }
-                            } else {
-                                BotaoRedondo("▶️", "Próxima fase", onProxima, tamanho = 60.dp)
                             }
                         }
                     }

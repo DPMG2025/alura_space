@@ -9,8 +9,16 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,13 +26,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.Atividade
 import br.com.casinhadosaber.dominio.Trecho
 import br.com.casinhadosaber.dominio.Vocabulario
 import br.com.casinhadosaber.ui.componentes.MaoGuia
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 /**
@@ -111,6 +126,113 @@ internal fun MaoQueSegue(pontos: List<Offset>, ativa: Boolean, espera: Long = 35
         ativa = true,
         espera = espera,
     )
+}
+
+/**
+ * Mostra o gesto de ARRASTAR (e não de tocar): a mãozinha aperta a figura em [origem], leva uma
+ * cópia dela ([carga]) até [destino] deixando um rastro de bolinhas, solta e some; depois repete.
+ * Fica numa camada por cima (sem receber toques). Aparece [espera] ms depois de [ativa].
+ * Posições em pixels, no espaço do pai (que deve ocupar a área toda da atividade).
+ */
+@Composable
+internal fun GestoDeArrastar(
+    origem: Offset,
+    destino: Offset,
+    ativa: Boolean,
+    cor: Color,
+    espera: Long = 0L,
+    tamanhoCarga: Dp = 72.dp,
+    /** Cópia da figura que a mão carrega (vazio: a mão vai sozinha). */
+    carga: @Composable () -> Unit = {},
+) {
+    var visivel by remember { mutableStateOf(false) }
+    LaunchedEffect(ativa, espera) {
+        visivel = false
+        if (ativa) {
+            delay(espera)
+            visivel = true
+        }
+    }
+    if (!visivel || !ativa) return
+    val t = rememberInfiniteTransition(label = "gestoDeArrastar")
+    val f by t.animateFloat(0f, 1f, infiniteRepeatable(tween(3400, easing = LinearEasing)), label = "f")
+    val densidade = LocalDensity.current
+    val meiaCarga = with(densidade) { tamanhoCarga.toPx() / 2f }
+    val ladoMao = 60.dp
+    val ladoMaoPx = with(densidade) { ladoMao.toPx() }
+
+    // Fases: 0 a 0,14 a mão chega e aperta; 0,14 a 0,7 leva; 0,7 a 0,8 solta; até 1 some.
+    fun andou(f: Float) = FastOutSlowInEasing.transform(((f - 0.14f) / 0.56f).coerceIn(0f, 1f))
+    fun onde(f: Float) = origem + (destino - origem) * andou(f)
+    fun opacidade(f: Float) = when {
+        f < 0.08f -> f / 0.08f
+        f > 0.84f -> ((1f - f) / 0.16f).coerceIn(0f, 1f)
+        else -> 1f
+    }
+
+    // Rastro de bolinhas e o alvo piscando.
+    Canvas(Modifier.fillMaxSize()) {
+        val a = opacidade(f)
+        val bolinha = 7.dp.toPx()
+        val efeito = PathEffect.dashPathEffect(floatArrayOf(0.1f, 17.dp.toPx()))
+        drawLine(Color.White.copy(alpha = 0.55f * a), origem, destino, strokeWidth = bolinha * 1.5f, cap = StrokeCap.Round, pathEffect = efeito)
+        drawLine(cor.copy(alpha = 0.3f * a), origem, destino, strokeWidth = bolinha, cap = StrokeCap.Round, pathEffect = efeito)
+        if (andou(f) > 0f) {
+            drawLine(cor.copy(alpha = 0.95f * a), origem, onde(f), strokeWidth = bolinha * 1.25f, cap = StrokeCap.Round, pathEffect = efeito)
+        }
+        val anel = (f * 2f) % 1f
+        drawCircle(
+            cor.copy(alpha = 0.7f * a * (1f - anel)),
+            radius = 16.dp.toPx() + 26.dp.toPx() * anel,
+            center = destino,
+            style = Stroke(4.dp.toPx()),
+        )
+    }
+    // A cópia da figura, carregada pela mão.
+    run {
+        Box(
+            Modifier
+                .offset {
+                    val q = onde(f)
+                    IntOffset((q.x - meiaCarga).roundToInt(), (q.y - meiaCarga).roundToInt())
+                }
+                .size(tamanhoCarga)
+                .graphicsLayer {
+                    val pegou = ((f - 0.08f) / 0.06f).coerceIn(0f, 1f)
+                    val soltou = ((f - 0.72f) / 0.12f).coerceIn(0f, 1f)
+                    alpha = 0.9f * pegou * (1f - soltou)
+                    val escala = 1.12f - 0.3f * soltou
+                    scaleX = escala
+                    scaleY = escala
+                },
+            contentAlignment = Alignment.Center,
+        ) { carga() }
+    }
+    // A mão: a ponta do dedo fica no centro da figura; aperta ao pegar e solta no destino.
+    Box(
+        Modifier
+            .offset {
+                val q = onde(f)
+                IntOffset((q.x - ladoMaoPx * 0.4f).roundToInt(), (q.y - ladoMaoPx * 0.08f).roundToInt())
+            }
+            .size(ladoMao)
+            .graphicsLayer {
+                alpha = opacidade(f)
+                val aperto = when {
+                    f < 0.06f -> 0f
+                    f < 0.14f -> (f - 0.06f) / 0.08f
+                    f < 0.72f -> 1f
+                    f < 0.8f -> 1f - (f - 0.72f) / 0.08f
+                    else -> 0f
+                }
+                val escala = 1f - 0.16f * aperto
+                scaleX = escala
+                scaleY = escala
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.4f, 0.08f)
+            },
+    ) {
+        Text("👆", fontSize = 44.sp, lineHeight = 50.sp)
+    }
 }
 
 /** Ponto a uma fração [k] (0 a 1) do comprimento da linha [pontos]. */

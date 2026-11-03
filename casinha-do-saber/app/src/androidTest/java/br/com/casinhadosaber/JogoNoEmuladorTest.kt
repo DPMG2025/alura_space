@@ -22,6 +22,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.services.storage.TestStorage
+import br.com.casinhadosaber.ui.telas.atividades.TracosDasLetras
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -116,10 +117,13 @@ class JogoNoEmuladorTest {
      */
     private fun soltarNaCesta(i: Int): Boolean {
         val raiz = regra.onRoot().fetchSemanticsNode().boundsInRoot
-        val pronto = regra.onAllNodes(hasTestTag("atividade_pronto")).fetchSemanticsNodes().firstOrNull()?.boundsInRoot
+        // A cesta tem uma marca invisível do tamanho dela ("cesta"); o certinho só aparece com fruta lá dentro.
+        val cesta = regra.onAllNodes(hasTestTag("cesta")).fetchSemanticsNodes().firstOrNull()?.boundsInRoot
         val alvos = buildList {
-            // Contar: o botão "certinho" fica colado à direita da cesta, na altura do meio dela.
-            if (pronto != null) add(Offset(pronto.left - dp(40f), pronto.center.y))
+            if (cesta != null) {
+                add(cesta.center)
+                add(Offset(cesta.center.x, cesta.top + cesta.height * 0.3f))
+            }
             for (d in listOf(100f, 140f, 70f, 180f)) add(Offset(raiz.center.x, raiz.bottom - dp(d)))
         }
         for (alvo in alvos) {
@@ -196,24 +200,23 @@ class JogoNoEmuladorTest {
         }
     }
 
-    /** Traçar: um só traço em zigue-zague cobrindo o quadro todo acende os pontinhos da letra. */
+    /**
+     * Traçar: a instrução diz a letra ("Trace a letra A"); passa o dedo por cada traço da letra, na
+     * ordem e no sentido certos, como a criança (os traços vêm de TracosDasLetras, no mesmo quadro).
+     */
     private fun fazerTracar() {
         avancar(500)
-        regra.onAllNodes(hasTestTag("area_tracar")).onFirst().performTouchInput {
-            fun ponto(x: Float, y: Float) = Offset(width * x, height * y)
-            down(ponto(0.05f, 0.05f))
-            var y = 0.05f
-            var paraDireita = true
-            while (y <= 0.951f) {
-                for (k in 1..18) {
-                    val x = if (paraDireita) 0.05f + 0.05f * k else 0.95f - 0.05f * k
-                    moveTo(ponto(x, y))
-                }
-                y += 0.1f
-                if (y <= 0.951f) moveTo(ponto(if (paraDireita) 0.95f else 0.05f, y))
-                paraDireita = !paraDireita
+        val letra = Regex("""Trace a letra (\S+)""").find(textoDaInstrucao())?.groupValues?.get(1)
+            ?: throw AssertionError("instrução de traçar sem a letra: ${textoDaInstrucao()}")
+        for (traco in TracosDasLetras.tracosDe(letra)) {
+            if (!existe("area_tracar")) break
+            regra.onAllNodes(hasTestTag("area_tracar")).onFirst().performTouchInput {
+                val pontos = TracosDasLetras.pontosDoTraco(traco, 0.02f).map { TracosDasLetras.paraTela(it, width.toFloat(), height.toFloat()) }
+                down(pontos.first())
+                for (p in pontos.drop(1)) moveTo(p)
+                up()
             }
-            up()
+            avancar(300)
         }
         avancar(900)
     }

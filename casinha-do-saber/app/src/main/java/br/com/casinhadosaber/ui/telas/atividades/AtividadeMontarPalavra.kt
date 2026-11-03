@@ -1,5 +1,6 @@
 package br.com.casinhadosaber.ui.telas.atividades
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -11,11 +12,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -46,9 +50,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import br.com.casinhadosaber.dominio.Atividade
+import br.com.casinhadosaber.dominio.Vocabulario
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import kotlinx.coroutines.CoroutineStart
@@ -92,15 +98,31 @@ internal fun AtividadeMontarPalavra(
 
     val silabas = montar.silabas
     val pecas = remember(montar) {
-        (silabas + montar.extras).shuffled().mapIndexed { i, s -> PecaDeSilaba(i, s) }
+        (silabas + extrasDoMesmoTamanho(silabas, montar.extras)).shuffled().mapIndexed { i, s -> PecaDeSilaba(i, s) }
     }
     var erros by remember { mutableIntStateOf(0) }
-    var arrastou by remember { mutableStateOf(false) }
-    var tocouSemArrastar by remember { mutableStateOf(false) }
     var terminou by remember { mutableStateOf(false) }
+    var interacoes by remember { mutableIntStateOf(0) }
+    var tocouSemArrastar by remember { mutableStateOf(false) }
+    var parada by remember { mutableStateOf(false) }
     val ajuda = ajudaInicial || erros >= ERROS_PARA_AJUDA
     val preenchidos = pecas.count { it.encaixe >= 0 }
     val esperado = silabas.getOrNull(preenchidos)
+    // A mãozinha volta a mostrar o gesto quando a criança fica parada.
+    LaunchedEffect(interacoes, terminou, ativa, ajuda, preenchidos) {
+        parada = false
+        if (!ativa || terminou) return@LaunchedEffect
+        delay(
+            when {
+                ajudaInicial && interacoes == 0 -> 700L
+                interacoes == 0 -> 2500L
+                tocouSemArrastar -> 900L
+                ajuda -> 3000L
+                else -> 7000L
+            },
+        )
+        parada = true
+    }
 
     BoxWithConstraints(modifier.fillMaxSize()) {
         val w = constraints.maxWidth.toFloat()
@@ -111,15 +133,22 @@ internal fun AtividadeMontarPalavra(
         val vao = px(10f)
         val k = silabas.size
         val m = pecas.size
-        val larguraPeca = min((w - vao * (k - 1)) / k, px(124f))
+        // Todas as peças com a mesma largura (a de sílaba curta não pode se destacar).
+        val larguraPeca = min((w - vao * (max(k, 2) - 1)) / max(k, 2), px(150f))
         val colunas = max(2, min(m, ((w + vao) / (larguraPeca + vao)).toInt()))
         val linhas = ceil(m / colunas.toFloat()).toInt()
-        val alturaFigura = min(h * 0.27f, px(140f))
-        val livre = h - alturaFigura - px(8f) - px(24f) - vao * (linhas - 1)
-        val alturaPeca = min(min(larguraPeca * 0.8f, px(92f)), livre / (1 + linhas)).coerceAtLeast(px(48f))
+        val alturaFigura = min(h * 0.3f, px(180f))
+        // Entre os encaixes e as peças fica um vão mínimo (soltar a peça parada não pode contar).
+        val livre = h - alturaFigura - px(8f) - px(28f) - vao * (linhas - 1)
+        val alturaPeca = min(min(larguraPeca * 0.78f, px(112f)), livre / (1.6f + linhas)).coerceAtLeast(px(48f))
         val encaixesY = alturaFigura + px(8f)
         val encaixesX = (w - (larguraPeca * k + vao * (k - 1))) / 2f
-        val pecasY0 = h - (linhas * alturaPeca + (linhas - 1) * vao)
+        val alturaDasPecas = linhas * alturaPeca + (linhas - 1) * vao
+        val vaoMinimo = max(px(28f), alturaPeca * 0.6f)
+        // O que sobra de altura vai metade entre os encaixes e as peças, metade embaixo:
+        // as peças ficam perto de onde vão (sem faixa vazia no meio da tela).
+        val sobra = max(0f, h - (encaixesY + alturaPeca + vaoMinimo + alturaDasPecas))
+        val pecasY0 = encaixesY + alturaPeca + vaoMinimo + sobra * 0.4f
 
         fun encaixe(i: Int) = Offset(encaixesX + i * (larguraPeca + vao), encaixesY)
         fun casa(p: PecaDeSilaba): Offset {
@@ -135,7 +164,7 @@ internal fun AtividadeMontarPalavra(
             encaixesX - px(28f),
             encaixesY - alturaPeca * 0.7f,
             encaixesX + larguraPeca * k + vao * (k - 1) + px(28f),
-            encaixesY + alturaPeca * 1.7f,
+            encaixesY + alturaPeca * 1.5f,
         )
         val molinha = spring<Offset>(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow)
 
@@ -184,25 +213,48 @@ internal fun AtividadeMontarPalavra(
 
         // ---------------------------------------------------------------- a figura (tocar diz a palavra)
         val alturaFiguraDp = alturaFigura / densidade.density
+        val larguraFigura = alturaFigura * 1.3f
+        val falou = remember { Animatable(1f) }
         Box(
             Modifier
-                .offset { IntOffset(((w - alturaFigura * 1.3f) / 2f).roundToInt(), 0) }
-                .size(with(densidade) { (alturaFigura * 1.3f).toDp() }, with(densidade) { alturaFigura.toDp() })
+                .offset { IntOffset(((w - larguraFigura) / 2f).roundToInt(), 0) }
+                .size(with(densidade) { larguraFigura.toDp() }, with(densidade) { alturaFigura.toDp() })
                 .semantics { contentDescription = montar.palavra.lowercase() }
+                .graphicsLayer {
+                    scaleX = falou.value
+                    scaleY = falou.value
+                }
+                .background(Color.White.copy(alpha = 0.7f), RoundedCornerShape(28.dp))
                 .pointerInput(montar) {
                     detectTapGestures {
                         sons.toque()
+                        interacoes++
                         narrador.falar(montar.palavra.lowercase())
+                        escopo.launch {
+                            falou.snapTo(1.08f)
+                            falou.animateTo(1f, spring(dampingRatio = 0.4f))
+                        }
                     }
                 },
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 montar.emoji,
-                fontSize = (alturaFiguraDp * 0.68f).sp,
-                lineHeight = (alturaFiguraDp * 0.8f).sp,
+                fontSize = (alturaFiguraDp * 0.62f).sp,
+                lineHeight = (alturaFiguraDp * 0.74f).sp,
                 modifier = Modifier.pulsando(terminou),
             )
+            // Alto-falante: tocar na figura faz ouvir a palavra.
+            Box(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(6.dp)
+                    .size(min(alturaFiguraDp * 0.3f, 44f).dp)
+                    .background(cor, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("🔊", fontSize = (min(alturaFiguraDp * 0.3f, 44f) * 0.5f).sp)
+            }
         }
 
         // ---------------------------------------------------------------- encaixes
@@ -218,7 +270,8 @@ internal fun AtividadeMontarPalavra(
                         IntOffset(e.x.roundToInt(), e.y.roundToInt())
                     }
                     .size(larguraPecaDp, alturaPecaDp)
-                    .then(if (proximo && ajuda) Modifier.pulsando() else Modifier)
+                    // O próximo encaixe pulsa: a criança vê a ordem (primeiro este, depois o do lado).
+                    .then(if (proximo && ativa) Modifier.pulsando() else Modifier)
                     .background(if (proximo) Color.White else Color.White.copy(alpha = 0.6f), RoundedCornerShape(18.dp))
                     .border(
                         if (proximo) 4.dp else 3.dp,
@@ -261,7 +314,8 @@ internal fun AtividadeMontarPalavra(
                             onDragStart = {
                                 if (ativaAgora && !terminou && p.encaixe < 0) {
                                     p.peca.arrastando = true
-                                    arrastou = true
+                                    tocouSemArrastar = false
+                                    interacoes++
                                     sons.pegar()
                                     escopo.launch { p.peca.desvio.stop() }
                                 }
@@ -280,6 +334,7 @@ internal fun AtividadeMontarPalavra(
                             if (ativaAgora && !terminou) {
                                 sons.toque()
                                 if (p.encaixe < 0) tocouSemArrastar = true
+                                interacoes++
                                 escopo.launch { p.peca.tremer() }
                                 narrador.falar(p.texto.lowercase())
                             }
@@ -325,25 +380,64 @@ internal fun AtividadeMontarPalavra(
 
         // ---------------------------------------------------------------- mãozinha: mostra o gesto de arrastar
         val proximoEncaixe = if (preenchidos < k) encaixe(preenchidos) + Offset(larguraPeca / 2f, alturaPeca / 2f) else null
-        val origemDaMao = if (ajuda) {
-            primeiraCerta?.let { casa(it) + Offset(larguraPeca / 2f, alturaPeca / 2f) }
-        } else {
-            // Sem ajuda, a mãozinha sai do vão entre as sílabas, para não entregar a resposta.
-            Offset(w / 2f, pecasY0 - px(12f))
-        }
-        val mostrarMao = ativa && !terminou && proximoEncaixe != null && origemDaMao != null && (!arrastou || ajuda)
+        // Com ajuda, leva a sílaba certa; sem ajuda, sai do vão entre as peças, para não entregar a resposta.
+        val exemplo = if (ajuda) primeiraCerta else null
+        val origemDaMao = exemplo?.let { casa(it) + Offset(larguraPeca / 2f, alturaPeca / 2f) }
+            ?: Offset(w / 2f, pecasY0 - vaoMinimo / 2f)
+        val ninguemArrastando = pecas.none { it.peca.arrastando }
         Box(Modifier.matchParentSize().zIndex(6f)) {
-            key(tocouSemArrastar, ajuda, preenchidos) {
-                MaoQueSegue(
-                    pontos = listOfNotNull(origemDaMao, proximoEncaixe),
-                    ativa = mostrarMao,
-                    espera = when {
-                        ajudaInicial -> 900L
-                        tocouSemArrastar || ajuda -> 1200L
-                        else -> 3500L
-                    },
-                )
+            if (proximoEncaixe != null) {
+                key(exemplo?.id, preenchidos) {
+                    GestoDeArrastar(
+                        origem = origemDaMao,
+                        destino = proximoEncaixe,
+                        ativa = ativa && !terminou && parada && ninguemArrastando,
+                        cor = escurecer(cor),
+                        tamanhoCarga = larguraPecaDp,
+                    ) {
+                        if (exemplo != null) {
+                            Box(
+                                Modifier
+                                    .size(larguraPecaDp, alturaPecaDp)
+                                    .background(Color(0xFFFFF3C4), RoundedCornerShape(18.dp))
+                                    .border(3.dp, Cores.Estrela, RoundedCornerShape(18.dp)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    exemplo.texto,
+                                    fontSize = tamanhoTexto,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Cores.Texto,
+                                    style = MaterialTheme.typography.headlineLarge,
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+}
+
+/**
+ * Troca sílabas a mais para que cada tamanho de sílaba certa (1, 2 ou 3 letras) também apareça
+ * entre as extras: sem isso, o "O" de OVO, sozinho entre peças de duas letras, entregava a resposta.
+ */
+internal fun extrasDoMesmoTamanho(silabas: List<String>, extras: List<String>): List<String> {
+    if (extras.isEmpty()) return extras
+    val resultado = extras.toMutableList()
+    val usadas = (silabas + extras).map { it.uppercase() }.toMutableSet()
+    val banco = Vocabulario.todasAsPalavras.flatMap { it.silabas }.map { it.uppercase() }.distinct() + Vocabulario.vogais
+    for (tamanho in silabas.map { it.length }.distinct()) {
+        if (resultado.any { it.length == tamanho }) continue
+        // Troca uma extra cujo tamanho se repete (ou que não existe entre as certas).
+        val i = resultado.indices.firstOrNull { j ->
+            val t = resultado[j].length
+            t !in silabas.map { it.length } || resultado.count { it.length == t } > 1
+        } ?: continue
+        val nova = banco.filter { it.length == tamanho && it !in usadas }.randomOrNull() ?: continue
+        usadas += nova
+        resultado[i] = nova
+    }
+    return resultado
 }

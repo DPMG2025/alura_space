@@ -436,118 +436,47 @@ class LojaDaCasaPorDentroTest {
     }
 }
 
-class CasaPorDentroTest {
-
-    private val tudo: EstadoJogo = EstadoJogo(estrelas = Trilha.entries.flatMap { t -> (0 until 10).map { "${t.name}:$it" to 3 } }.toMap())
+/** Regressão visual pelo domínio: as posições padrão da casa completa não podem amontoar objetos. */
+class SobreposicaoDaCasaTest {
 
     @Test
-    fun `moveis de dentro aparecem no comodo certo`() {
-        for (m in PlantaDaCasa.moveis) {
-            val c = PlantaDaCasa.limitesDo(m.comodo)
-            assertTrue("${m.id} fora do cômodo", m.x0 >= c.x0 && m.x1 <= c.x1 && m.y0 >= c.y0 && m.y1 <= c.y1)
-            assertTrue("${m.id} ao contrário", m.x1 > m.x0 && m.y1 > m.y0)
-            val certo = m.itemId?.let { ItensDaCasa.comodoDe(it) }
-            if (certo != null) assertEquals(m.id, certo, m.comodo)
-            if (m.itemId != null) assertTrue("${m.id} mora lá fora", ItensDaCasa.porId.getValue(m.itemId!!).lugar != Lugar.FORA)
-        }
-        // Todo móvel "de dentro" da casa ganha lugar aqui.
-        for (i in ItensDaCasa.ordem.filter { it.lugar == Lugar.DENTRO }) assertTrue(i.id, i.id in PlantaDaCasa.pecasDeDentro)
+    fun `objetos padrao da casa completa nao se sobrepoem`() {
+        val achadas = ItensDaCasa.sobreposicoesPadrao(limite = 0.25f)
+        assertTrue(
+            "objetos amontoados nas posições padrão: " +
+                achadas.joinToString { (a, b, f) -> "$a e $b (${(f * 100).toInt()}%)" },
+            achadas.isEmpty(),
+        )
     }
 
     @Test
-    fun `so aparecem as pecas ja ganhas`() {
-        val nada = PlantaDaCasa.moveisDe(EstadoJogo())
-        assertTrue(nada.all { it.fixo })
-        assertTrue(nada.any { it.acao == Acao.GUARDA_ROUPA })
-        val todos = PlantaDaCasa.moveisDe(tudo)
-        assertEquals(PlantaDaCasa.moveis.size, todos.size)
-        assertTrue(todos.any { it.acao == Acao.GELADEIRA })
+    fun `o teste de sobreposicao enxerga um amontoado de verdade`() {
+        // Sem isto o teste acima passaria à toa se a conta das caixas quebrasse.
+        val cama = ItensDaCasa.porId.getValue("cama")
+        val sofa = ItensDaCasa.porId.getValue("sofa")
+        val f = ItensDaCasa.caixaNaCena(cama).sobreposicao(ItensDaCasa.caixaNaCena(sofa, Posicao(cama.x + 0.02f, cama.y)))
+        assertTrue("cama e sofá no mesmo lugar deveriam se cobrir: $f", f > 0.5f)
+        assertEquals(0f, ItensDaCasa.caixaNaCena(cama).sobreposicao(ItensDaCasa.caixaNaCena(sofa)), 0.0001f)
     }
 
     @Test
-    fun `a crianca alcanca todos os comodos pelas portas`() {
-        for (e in listOf(EstadoJogo(), tudo)) {
-            val mapa = Mapa(PlantaDaCasa.moveisDe(e))
-            assertTrue("entrada ocupada", mapa.livre(PlantaDaCasa.entrada.x.toInt(), PlantaDaCasa.entrada.y.toInt()))
-            val alcance = mapa.alcancaveis(PlantaDaCasa.entrada)
-            for (y in 0 until PlantaDaCasa.LADO) for (x in 0 until PlantaDaCasa.LADO) {
-                if (mapa.livre(x, y)) assertTrue("ladrilho ($x,$y) isolado", (x to y) in alcance)
-            }
-            for (c in Comodo.entries) assertTrue(c.name, alcance.any { (x, y) -> PlantaDaCasa.comodoEm(x + 0.5f, y + 0.5f) == c })
+    fun `empilhados de proposito ficam mesmo um sobre o outro`() {
+        for (par in ItensDaCasa.empilhadosDeProposito) {
+            val (a, b) = par.map { ItensDaCasa.caixaNaCena(ItensDaCasa.porId.getValue(it)) }
+            assertTrue("$par deveria estar empilhado", a.sobreposicao(b) > 0.25f)
         }
     }
 
     @Test
-    fun `caminho nao atravessa paredes nem moveis`() {
-        val mapa = Mapa(PlantaDaCasa.moveisDe(tudo))
-        val livres = (0 until 8).flatMap { y -> (0 until 8).map { x -> x to y } }.filter { (x, y) -> mapa.livre(x, y) }
-        for ((ax, ay) in livres) for ((bx, by) in livres) {
-            val de = Posicao(ax + 0.5f, ay + 0.5f)
-            val para = Posicao(bx + 0.5f, by + 0.5f)
-            val caminho = mapa.caminho(de, para)
-            if (ax == bx && ay == by) {
-                assertTrue(caminho.isEmpty())
-                continue
-            }
-            assertTrue("sem caminho de ($ax,$ay) a ($bx,$by)", caminho.isNotEmpty())
-            assertEquals(para, caminho.last())
-            var atual = de
-            for (p in caminho) {
-                assertTrue("atravessou de $atual a $p", mapa.linhaLivre(atual, p))
-                atual = p
-            }
+    fun `coisas do jardim de baixo nao se amontoam`() {
+        // Jardim de baixo de altura 0,3 da cena (tela alta típica): y de 1 a 2 vira 1 a 1,3.
+        val extra = 0.3f
+        val caixas = ItensDaCasa.noJardimDeBaixo.map { (id, p) ->
+            id to ItensDaCasa.caixaNaCena(ItensDaCasa.porId.getValue(id), Posicao(p.x, 1f + (p.y - 1f) * extra))
         }
-    }
-
-    @Test
-    fun `do quarto para a sala passa pela porta`() {
-        val mapa = Mapa(PlantaDaCasa.moveisDe(tudo))
-        // Reto, do quarto (3,3) para a sala (3,5), atravessaria a parede: a porta fica em x = 2.
-        assertFalse(mapa.linhaLivre(Posicao(3.5f, 3.5f), Posicao(3.5f, 5.5f)))
-        val caminho = mapa.caminho(Posicao(3.5f, 3.5f), Posicao(3.5f, 5.5f))
-        assertTrue(caminho.size >= 2)
-        assertTrue(caminho.any { it.x in 2f..3f })
-    }
-
-    @Test
-    fun `tocar num movel leva para o ladrilho livre mais perto do mesmo lado da parede`() {
-        val mapa = Mapa(PlantaDaCasa.moveisDe(tudo))
-        val geladeira = PlantaDaCasa.porId.getValue("geladeira")
-        val perto = mapa.pertoDo(geladeira)
-        assertEquals(Comodo.COZINHA, PlantaDaCasa.comodoEm(perto.x, perto.y))
-        assertTrue(mapa.livre(perto.x.toInt(), perto.y.toInt()))
-        // Tocar em cima da cama: vai para perto dela.
-        val fim = mapa.caminho(PlantaDaCasa.entrada, Posicao(0.7f, 1.0f)).last()
-        assertTrue(mapa.livre(fim.x.toInt(), fim.y.toInt()))
-        assertEquals(Comodo.QUARTO, PlantaDaCasa.comodoEm(fim.x, fim.y))
-    }
-
-    @Test
-    fun `ordem de desenho poe o que esta atras primeiro`() {
-        val caixas = PlantaDaCasa.moveisDe(tudo).filter { !it.naParede && !it.noChao }.map { PlantaDaCasa.caixaDo(it) } + PlantaDaCasa.paredesInternas
-        val ordem = PlantaDaCasa.ordenarParaDesenho(caixas)
-        assertEquals(caixas.size, ordem.toSet().size)
-        val posicao = IntArray(caixas.size)
-        ordem.forEachIndexed { k, i -> posicao[i] = k }
-        for (i in caixas.indices) for (j in caixas.indices) {
-            if (i != j && PlantaDaCasa.atras(caixas[i], caixas[j]) && !PlantaDaCasa.atras(caixas[j], caixas[i])) {
-                assertTrue("${caixas[i]} deveria vir antes de ${caixas[j]}", posicao[i] < posicao[j])
-            }
+        for (i in caixas.indices) for (j in i + 1 until caixas.size) {
+            val f = caixas[i].second.sobreposicao(caixas[j].second)
+            assertTrue("${caixas[i].first} e ${caixas[j].first} amontoados no jardim de baixo ($f)", f <= 0.25f)
         }
-        // O ursinho (em cima da cama) vem depois da cama; a TV vem depois da parede de trás dela.
-        val m = PlantaDaCasa.moveisDe(tudo).filter { !it.naParede && !it.noChao }
-        fun idx(id: String) = posicao[m.indexOfFirst { it.id == id }]
-        assertTrue(idx("ursinho") > idx("cama"))
-        val paredeAtrasDaTv = m.size + PlantaDaCasa.paredesInternas.indexOfFirst { it.x0 == 0f && it.y0 < 4f && it.y1 > 4f }
-        assertTrue(idx("tv") > posicao[paredeAtrasDaTv])
-    }
-
-    @Test
-    fun `crianca fica na frente do que esta atras dela`() {
-        val cama = PlantaDaCasa.caixaDo(PlantaDaCasa.porId.getValue("cama"))
-        assertTrue(PlantaDaCasa.criancaNaFrente(2.5f, 1.5f, cama))
-        assertTrue(PlantaDaCasa.criancaNaFrente(0.5f, 2.5f, cama))
-        val mesa = PlantaDaCasa.caixaDo(PlantaDaCasa.porId.getValue("mesa"))
-        assertFalse(PlantaDaCasa.criancaNaFrente(5.5f, 6.5f, mesa))
     }
 }
