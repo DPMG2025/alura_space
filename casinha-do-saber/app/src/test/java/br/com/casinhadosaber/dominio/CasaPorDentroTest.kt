@@ -272,7 +272,7 @@ class CasaPorDentroTest {
         assertFalse(Mapa(antes, Andar.DE_BAIXO).livre(5, 2))
         assertTrue(PlantaDaCasa.tudoAlcancavel(frente, Andar.DE_BAIXO))
         // O violão vai do quarto para o banheiro pela grade e muda de cômodo.
-        val violao = PlantaDaCasa.mover(antes, "violao", 1, 1)!!.let { daLista(it, "violao") }
+        val violao = PlantaDaCasa.mover(antes, "violao", 1, 0)!!.let { daLista(it, "violao") }
         assertEquals(Comodo.BANHEIRO, violao.comodo)
     }
 

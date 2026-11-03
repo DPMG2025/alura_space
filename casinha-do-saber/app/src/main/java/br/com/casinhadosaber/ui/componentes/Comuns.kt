@@ -180,6 +180,35 @@ fun MaoGuia(modifier: Modifier = Modifier, ativa: Boolean = true, espera: Long =
     }
 }
 
+/**
+ * A mãozinha da [MaoGuia] segurando e arrastando (a dica de que dá para mudar as coisas de lugar).
+ * Quem chama posiciona e move: a ponta do dedo fica a 20 dp da esquerda e do topo, como na [MaoGuia].
+ * [apertando]: o dedo encostado, com um anel firme embaixo; solta, o anel volta a "pingar".
+ */
+@Composable
+fun MaoQueArrasta(apertando: Boolean, modifier: Modifier = Modifier) {
+    val t = rememberInfiniteTransition(label = "maoQueArrasta")
+    val pulso by t.animateFloat(0f, 1f, infiniteRepeatable(tween(900)), label = "pulso")
+    Box(modifier.size(64.dp), contentAlignment = Alignment.TopStart) {
+        Canvas(Modifier.size(40.dp)) {
+            val traco = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx())
+            if (apertando) {
+                drawCircle(Color.White.copy(alpha = 0.5f), radius = size.minDimension * 0.34f)
+                drawCircle(Color.White, radius = size.minDimension * 0.34f, style = traco)
+            } else {
+                drawCircle(Color.White.copy(alpha = 0.8f * (1f - pulso)), radius = size.minDimension * (0.2f + 0.5f * pulso), style = traco)
+            }
+        }
+        Text(
+            "👆",
+            fontSize = 40.sp,
+            modifier = Modifier
+                .padding(start = 12.dp, top = 14.dp)
+                .offset(y = if (apertando) 0.dp else (-8).dp),
+        )
+    }
+}
+
 /** Pequena animação de "respirar" para chamar a atenção (itens novos no baú, botão principal). */
 @Composable
 fun Modifier.pulsando(ativo: Boolean = true): Modifier {

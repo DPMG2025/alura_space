@@ -77,6 +77,8 @@ private val TOPO_BOLINHA = 14.dp
 /** Largura reservada para a plaquinha com o nome (cabe inteira mesmo na bolinha mais à esquerda em 360dp). */
 private val LARGURA_PLACA = 160.dp
 private val ALTURA_CRIANCA = 104.dp
+/** Espaço antes do primeiro degrau, dentro da rolagem. */
+private val ESPACO_NO_TOPO = 12.dp
 
 /** A cada [FASES_POR_MARCO] fases, um marco (bandeirinha que vira troféu) ajuda a criança a se orientar. */
 private const val FASES_POR_MARCO = 5
@@ -96,9 +98,12 @@ private val zigueZague = listOf(0.5f, 0.76f, 0.5f, 0.24f)
 private val RAIO_DA_CURVA = 36.dp
 
 /** Paisagem: distância do centro da bolinha da ponta da fileira até a borda (cabe a volta em "U"). */
-private val MARGEM_SERPENTE = 104.dp
+private val MARGEM_SERPENTE = 120.dp
 
-/** Paisagem: distância horizontal até o trecho de volta, fora da plaquinha (80 dp + pontinho + folga). */
+/**
+ * Paisagem: distância horizontal até o trecho de volta, fora da plaquinha (80 dp + pontinho + folga).
+ * Com a margem de 120 dp, a volta fica a 24 dp da borda: o pontinho (7 dp de raio) aparece inteiro.
+ */
 private val AFASTAMENTO_DA_VOLTA = 96.dp
 
 /** Paisagem: distância mínima entre bolinhas vizinhas na mesma fileira (as plaquinhas não se encostam). */
@@ -214,8 +219,14 @@ fun TelaTrilha(
             // embaixo do cabeçalho.
             LaunchedEffect(trilha) {
                 val centroDaFase = ALTURA_PASSO * disposicao.linha(indiceEmFoco) + TOPO_BOLINHA + TAMANHO_BOLINHA / 2
-                val degraus = ((centroDaFase - alturaVisivel / 2) / ALTURA_PASSO).roundToInt().coerceAtLeast(0)
-                val alvo = with(densidade) { (ALTURA_PASSO * degraus).roundToPx() }
+                // A rolagem não passa do fim do caminho: o degrau escolhido é o último que ainda alinha o topo
+                // (perto do fim, arredondar para cima deixava a rolagem parar no meio de uma plaquinha).
+                val conteudo = ALTURA_PASSO * disposicao.linhas(fases.size) + 40.dp + ESPACO_NO_TOPO
+                val maximo = (conteudo - alturaVisivel).coerceAtLeast(0.dp)
+                val ultimoDegrau = ((maximo - ESPACO_NO_TOPO) / ALTURA_PASSO).toInt().coerceAtLeast(0)
+                val degraus = ((centroDaFase - alturaVisivel / 2) / ALTURA_PASSO).roundToInt().coerceIn(0, ultimoDegrau)
+                // O espaço do topo também sai da tela: ela começa exatamente no começo do degrau.
+                val alvo = if (degraus == 0) 0 else with(densidade) { (ALTURA_PASSO * degraus + ESPACO_NO_TOPO).roundToPx() }
                 if (alvo > 0) {
                     // Pula para perto e desliza o finalzinho: a criança vê o caminho andando até ela.
                     rolagem.scrollTo((alvo - with(densidade) { 160.dp.roundToPx() }).coerceAtLeast(0))
@@ -226,7 +237,7 @@ fun TelaTrilha(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rolagem)
-                    .padding(top = 12.dp),
+                    .padding(top = ESPACO_NO_TOPO),
             ) {
                 val alturaTotal = ALTURA_PASSO * disposicao.linhas(fases.size) + 40.dp
                 val corCaminho = Color.White.copy(alpha = 0.85f)

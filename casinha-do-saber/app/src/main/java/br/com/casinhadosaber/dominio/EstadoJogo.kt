@@ -64,6 +64,8 @@ data class EstadoJogo(
      * ladrilhos). Vazio = tudo no lugar de sempre (saves antigos não têm este campo).
      */
     val moveisDentro: Map<String, Posicao> = emptyMap(),
+    /** A mãozinha já mostrou que os móveis da casa por dentro podem ser arrastados (a dica da primeira visita). */
+    val viuDicaDeArrastar: Boolean = false,
 ) {
     /** A missão do dia aparece uma vez por dia, depois que a criança já venceu alguma fase. */
     fun missaoDisponivel(dia: Long): Boolean = fasesVencidas > 0 && diaDaMissao != dia

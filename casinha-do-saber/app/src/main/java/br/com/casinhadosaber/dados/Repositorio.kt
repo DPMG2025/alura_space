@@ -120,6 +120,7 @@ class Repositorio(context: Context) {
             historico = Serializacao.textoParaMapaDeTexto(prefs.getString(HISTORICO, null)),
             diaDaMissao = prefs.getLong(DIA_MISSAO, -1),
             moveisDentro = Serializacao.textoParaMoveisDentro(prefs.getString(MOVEIS_DENTRO, null)),
+            viuDicaDeArrastar = prefs.getBoolean(DICA_ARRASTAR, false),
         )
     }
 
@@ -155,6 +156,7 @@ class Repositorio(context: Context) {
         putLong(DIA_MISSAO, e.diaDaMissao)
         putString(VISITANTES, e.visitantes.joinToString(","))
         putString(MOVEIS_DENTRO, Serializacao.posicoesParaTexto(e.moveisDentro))
+        putBoolean(DICA_ARRASTAR, e.viuDicaDeArrastar)
     }
 
     private companion object {
@@ -193,5 +195,6 @@ class Repositorio(context: Context) {
         const val VISITANTES = "visitantes"
         const val MUSICA = "musica"
         const val MOVEIS_DENTRO = "moveis_dentro"
+        const val DICA_ARRASTAR = "viu_dica_arrastar"
     }
 }

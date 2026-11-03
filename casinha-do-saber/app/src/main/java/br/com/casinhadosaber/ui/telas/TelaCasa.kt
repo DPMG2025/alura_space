@@ -627,12 +627,27 @@ private fun Bau(
             }
             if (lateral) {
                 Column(
-                    Modifier.fillMaxWidth().weight(1f).padding(16.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        // Com os atalhos embaixo, o baú vazio vira um cartão que ocupa a coluna toda (sem vão no meio).
+                        .then(
+                            if (atalhosLaterais != null) {
+                                Modifier
+                                    .background(Color(0x40FFFFFF), RoundedCornerShape(22.dp))
+                                    .border(2.dp, Color(0x55FFFFFF), RoundedCornerShape(22.dp))
+                                    .padding(12.dp)
+                            } else {
+                                Modifier.padding(4.dp)
+                            },
+                        ),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(if (atalhosLaterais != null) 8.dp else 24.dp, Alignment.CenterVertically),
+                    verticalArrangement = Arrangement.spacedBy(if (atalhosLaterais != null) 10.dp else 24.dp, Alignment.CenterVertically),
                 ) {
                     if (atalhosLaterais != null) {
-                        // Baú vazio na coluna: o próximo presente em destaque, com o nome para os pais lerem.
+                        // Baú vazio na coluna: o próximo presente em destaque, com o nome para os pais lerem
+                        // e a barrinha de quantas coisas a casa já tem.
                         conquista()
                         Text(
                             if (proximo != null) "Próximo presente: ${proximo.nome}" else "Casa completinha!",
@@ -640,6 +655,7 @@ private fun Bau(
                             color = Cores.Texto,
                             textAlign = TextAlign.Center,
                         )
+                        BarraDaCasa(estado.itensGanhos.size.coerceAtMost(ItensDaCasa.total), ItensDaCasa.total)
                     } else {
                         conquista()
                         jogar()
@@ -684,6 +700,36 @@ private fun Bau(
             Spacer(Modifier.height(10.dp))
             atalhosLaterais()
         }
+    }
+}
+
+/** Barrinha de progresso da casa (quantas das coisas a casa já tem), com a casinha na ponta. */
+@Composable
+private fun BarraDaCasa(tem: Int, total: Int) {
+    val fracao = if (total > 0) tem.toFloat() / total else 0f
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) { contentDescription = "A casa tem $tem de $total coisas" },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .weight(1f)
+                .height(18.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color(0x33000000)),
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth(fracao)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(50))
+                    .background(Brush.horizontalGradient(listOf(Cores.Estrela, Color(0xFFFFA000)))),
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        Text("🏠 $tem/$total", style = MaterialTheme.typography.titleMedium, color = Cores.Texto, maxLines = 1)
     }
 }
 

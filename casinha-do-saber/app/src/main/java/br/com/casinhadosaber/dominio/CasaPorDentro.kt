@@ -178,10 +178,11 @@ object PlantaDaCasa {
         daPeca("ursinho", Comodo.QUARTO, 1.6f, 1.2f, 2.15f, 1.7f, 0.5f, z = 0.55f, bloqueia = false),
         Movel("criado", "Criado-mudo", "nightstand", Comodo.QUARTO, 2.65f, 0.1f, 3.2f, 0.65f, 0.5f),
         daPeca("abajur", Comodo.QUARTO, 2.7f, 0.13f, 3.15f, 0.62f, 0.55f, z = 0.5f, bloqueia = false),
-        // O violão fica encostado na parede baixinha do banheiro, longe do abajur (antes o desenho encostava nele).
-        daPeca("violao", Comodo.QUARTO, 3.35f, 1.35f, 3.85f, 1.85f, 0.9f),
+        // O violão fica no canto da frente do quarto: na tela, nada fica atrás dele (nem a cama nem o abajur).
+        daPeca("violao", Comodo.QUARTO, 3.3f, 4.3f, 3.85f, 4.85f, 0.9f),
         Movel("guardaroupa", "Guarda-roupa", "wardrobe", Comodo.QUARTO, 0.1f, 3.0f, 0.72f, 4.85f, 2.2f, frente = Frente.X, acao = Acao.GUARDA_ROUPA),
-        daPeca("planta", Comodo.QUARTO, 3.3f, 4.3f, 3.85f, 4.85f, 0.7f),
+        // A plantinha enfeita o canto da frente do banheiro (como na casa de fora, perto do banheiro).
+        daPeca("planta", Comodo.BANHEIRO, 7.3f, 4.3f, 7.85f, 4.85f, 0.7f),
         // Banheiro: pia com o espelho em cima, vaso e banheira (embaixo da janela redonda).
         Movel("pia", "Pia", "sink", Comodo.BANHEIRO, 4.3f, 0.1f, 5.25f, 0.75f, 0.9f, acao = Acao.TORNEIRA),
         daPeca("espelho", Comodo.BANHEIRO, 4.4f, 0f, 5.15f, 0.04f, 0.8f, z = 1.3f, acao = Acao.ESPELHO, bloqueia = false, naParede = true),

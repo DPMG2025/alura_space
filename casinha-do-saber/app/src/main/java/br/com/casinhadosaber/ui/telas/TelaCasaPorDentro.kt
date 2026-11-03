@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -60,6 +61,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -83,6 +85,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.audio.SonsDaCasa
@@ -114,6 +117,7 @@ import br.com.casinhadosaber.ui.componentes.Crianca
 import br.com.casinhadosaber.ui.componentes.Forma
 import br.com.casinhadosaber.ui.componentes.Humor
 import br.com.casinhadosaber.ui.componentes.MaoGuia
+import br.com.casinhadosaber.ui.componentes.MaoQueArrasta
 import br.com.casinhadosaber.ui.componentes.PROPORCAO_CRIANCA
 import br.com.casinhadosaber.ui.componentes.Projecao
 import br.com.casinhadosaber.ui.componentes.caixa
@@ -125,7 +129,9 @@ import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.componentes.sombrearFormas
 import br.com.casinhadosaber.ui.tema.Cores
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.floor
@@ -194,6 +200,14 @@ fun TelaCasaPorDentro(
     var lojaAberta by remember { mutableStateOf(lojaInicial) }
     var confete by remember { mutableIntStateOf(0) }
     var jaAndou by remember { mutableStateOf(false) }
+    // Dica de arrastar: a mãozinha segura um móvel e leva para o lado (na primeira visita e, enquanto a criança
+    // nunca arrastou nada, de novo depois de um tempo parada).
+    var maoDaDica by remember { mutableStateOf<Offset?>(null) }
+    var maoApertando by remember { mutableStateOf(false) }
+    var ultimoToqueEm by remember { mutableFloatStateOf(0f) }
+    var arrastouAqui by remember { mutableStateOf(false) }
+    var tarefaDaDica by remember { mutableStateOf<Job?>(null) }
+    val estadoAtual by rememberUpdatedState(estado)
 
     // Experimentar antes de comprar (igual à loja de fora): a roupa aparece na criança por alguns segundos.
     var previa by remember { mutableStateOf<Produto?>(null) }
@@ -500,6 +514,7 @@ fun TelaCasaPorDentro(
         cena.arrasteDx = 0
         cena.arrasteDy = 0
         cena.arrastando = m.id
+        cena.arrasteDaDica = false
         jaAndou = true
         sonsCasa.pegar()
         if (segurou) narrador.falar("Arraste para mudar de lugar!")
@@ -543,6 +558,7 @@ fun TelaCasaPorDentro(
             return
         }
         val m = novos.first { it.id == id }
+        arrastouAqui = true
         onAtualizar { it.comMovelEm(id, m.x0, m.y0) }
         sonsCasa.pousar()
         narrador.falar(listOf(pt("${m.nome} mudou de lugar! Em inglês:"), en(m.nomeEn)))
@@ -566,6 +582,104 @@ fun TelaCasaPorDentro(
     val arrastar by rememberUpdatedState<(Offset) -> Unit>({ o -> moverArraste(o) })
     val soltar by rememberUpdatedState<() -> Unit>({ soltarArraste() })
     val cancelar by rememberUpdatedState<() -> Unit>({ cancelarArraste() })
+
+    /** Um móvel do andar da criança e um passo de um ladrilho que cabe (e não cai em cima dela), para a dica. */
+    fun movelParaADica(): Pair<Movel, Pair<Int, Int>>? {
+        val andar = cena.andar
+        val preferidos = listOf("sofa", "mesa", "cama", "tv", "livros", "violao", "planta")
+        val candidatos = moveis
+            .filter { it.andar == andar && PlantaDaCasa.arrastavel(it) }
+            .sortedBy { m -> preferidos.indexOf(m.id).let { if (it < 0) 99 else it } }
+        val crianca = floor(cena.x).toInt() to floor(cena.y).toInt()
+        for (m in candidatos) for ((dx, dy) in listOf(0 to 1, 1 to 0, -1 to 0, 0 to -1, 0 to 2, 2 to 0)) {
+            if (crianca in PlantaDaCasa.ladrilhosDe(m.deslocado(dx, dy))) continue
+            if (PlantaDaCasa.mover(moveis, m.id, dx, dy) != null) return m to (dx to dy)
+        }
+        return null
+    }
+
+    fun limparDica() {
+        if (cena.arrasteDaDica) {
+            cena.arrasteDaDica = false
+            cancelarArraste()
+        }
+        maoDaDica = null
+        maoApertando = false
+    }
+
+    /** A mãozinha segura o móvel, leva um ladrilho para o lado (com o realce verde) e solta; ele volta ao lugar. */
+    suspend fun mostrarDicaDeArrastar() {
+        val (m, passo) = movelParaADica() ?: return
+        val (dx, dy) = passo
+        fun pontoDo(f: Float): Offset? = geometria.g?.geo(m.andar)?.proj?.ponto(m.centroX + dx * f, m.centroY + dy * f, m.z + m.altura * 0.45f)
+        narrador.falar("Psiu! Os móveis mudam de lugar. Segure um e arraste!")
+        try {
+            repeat(2) {
+                maoDaDica = pontoDo(0f) ?: return
+                maoApertando = false
+                delay(800)
+                maoApertando = true
+                sonsCasa.pegar()
+                cena.arrasteDx = 0
+                cena.arrasteDy = 0
+                cena.arrastando = m.id
+                cena.arrasteDaDica = true
+                delay(400)
+                val quadros = 20
+                for (k in 1..quadros) {
+                    val f = k / quadros.toFloat()
+                    maoDaDica = pontoDo(f) ?: return
+                    val ix = (dx * f).roundToInt()
+                    val iy = (dy * f).roundToInt()
+                    if (ix != cena.arrasteDx || iy != cena.arrasteDy) {
+                        cena.arrasteDx = ix
+                        cena.arrasteDy = iy
+                    }
+                    delay(45)
+                }
+                delay(800)
+                // Solta: é só de mentirinha, o móvel volta para o lugar dele.
+                maoApertando = false
+                cena.arrasteDaDica = false
+                cancelarArraste()
+                sonsCasa.pousar()
+                delay(900)
+            }
+        } finally {
+            limparDica()
+        }
+    }
+
+    /** Qualquer toque na cena para a dica na hora (a criança assume) e reinicia a contagem do tempo parada. */
+    fun tocouNaCena() {
+        ultimoToqueEm = cena.tempo
+        tarefaDaDica?.cancel()
+        tarefaDaDica = null
+        limparDica()
+    }
+    val aoTocarNaCena by rememberUpdatedState<() -> Unit>({ tocouNaCena() })
+
+    LaunchedEffect(Unit) {
+        if (abrirInicial != Acao.NENHUMA || lojaInicial) return@LaunchedEffect
+        var ultimaDica = -1f
+        while (true) {
+            delay(1000)
+            if (estadoAtual.moveisDentro.isNotEmpty() || arrastouAqui) return@LaunchedEffect
+            val agora = cena.tempo
+            val parada = agora - ultimoToqueEm
+            val primeira = !estadoAtual.viuDicaDeArrastar && ultimaDica < 0f
+            val hora = if (primeira) agora >= 9f && parada >= 4f else parada >= 30f && (ultimaDica < 0f || agora - ultimaDica >= 60f)
+            val livre = cena.arrastando == null && !cena.andando && !lojaAberta && !cena.geladeiraAberta && !cena.guardaRoupaAberto
+            if (hora && livre) {
+                ultimaDica = agora
+                val tarefa = launch { mostrarDicaDeArrastar() }
+                tarefaDaDica = tarefa
+                tarefa.join()
+                tarefaDaDica = null
+                if (!estadoAtual.viuDicaDeArrastar) onAtualizar { it.copy(viuDicaDeArrastar = true) }
+            }
+        }
+    }
 
     fun comprar(produto: Produto) {
         val jaTinha = produto.id in estado.comprados
@@ -686,6 +800,7 @@ fun TelaCasaPorDentro(
                             // em cima dele, leva o móvel junto, ladrilho por ladrilho.
                             awaitEachGesture {
                                 val down = awaitFirstDown()
+                                aoTocarNaCena()
                                 val alvo = pegarParaArrastar(down.position)
                                 if (alvo == null) {
                                     val up = waitForUpOrCancellation()
@@ -737,7 +852,13 @@ fun TelaCasaPorDentro(
                             }
                         },
                 )
-                if (!jaAndou && abrirInicial == Acao.NENHUMA && !lojaInicial) {
+                val mao = maoDaDica
+                if (mao != null) {
+                    MaoQueArrasta(
+                        maoApertando,
+                        Modifier.offset { IntOffset((mao.x - 20.dp.toPx()).roundToInt(), (mao.y - 20.dp.toPx()).roundToInt()) },
+                    )
+                } else if (!jaAndou && abrirInicial == Acao.NENHUMA && !lojaInicial) {
                     MaoGuia(Modifier.align(Alignment.Center).padding(top = 120.dp), espera = 2500)
                 }
             }
@@ -895,6 +1016,8 @@ private class Cena {
     var arrasteDy by mutableIntStateOf(0)
     /** Onde o dedo pegou o móvel, em ladrilhos do chão (o deslocamento conta a partir daqui). */
     var arrasteDe = Posicao(0f, 0f)
+    /** O arraste em andamento é só a dica da mãozinha (de mentirinha: nada é salvo e o móvel volta). */
+    var arrasteDaDica = false
 }
 
 /** Realce dos ladrilhos de destino enquanto um móvel é arrastado: verde se cabe, vermelho se não. */
@@ -968,6 +1091,8 @@ private class GeoAndar(
 
 private class Geometria(
     val andares: List<GeoAndar>,
+    /** Telhado do andar de cima (visto por dentro, como numa casinha de bonecas aberta), ou vazio. */
+    val telhado: List<Forma>,
     val ladrilho: Float,
     val corDoPadrao: Color,
     val raioLampada: Float,
@@ -1031,7 +1156,6 @@ private fun emojiDe(id: String): String? = when (id) {
     "gato" -> "🐱"
     "bolo" -> "🎂"
     "vaso" -> "🚽"
-    "patinho" -> "🦆"
     "lixeira" -> "🗑️"
     else -> null
 }
@@ -1055,14 +1179,21 @@ private fun montarGeometria(
     val livreA = (tamanho.height - 2 * margemY).coerceAtLeast(1f)
     val enq = PlantaDaCasa.enquadramento()
     val doisAndares = PlantaDaCasa.mostrarDoisAndares(livreL, livreA, enq)
-    val tw = PlantaDaCasa.ladrilhoQueCabe(livreL, livreA, doisAndares, enq)
-    val alturaTotal = tw * (enq.altura + if (doisAndares) enq.entreAndares else 0f)
-    val topo = (tamanho.height - alturaTotal) / 2f
+    val visiveis = if (doisAndares) listOf(Andar.DE_CIMA, Andar.DE_BAIXO) else listOf(andarDaCrianca)
+    val unidades = enq.altura + if (doisAndares) enq.entreAndares else 0f
+    var tw = PlantaDaCasa.ladrilhoQueCabe(livreL, livreA, doisAndares, enq)
+    // Telhado: em pé, a largura manda e sobra céu em cima da casa. Quando o andar de cima está no alto e a casa
+    // já tem telhado, ele ocupa essa faixa (só se couber quase sem diminuir a casa).
+    val acimaDoTelhado = ALTURA_DO_TELHADO_NA_TELA
+    val twComTelhado = min(livreL / enq.largura, livreA / (unidades + acimaDoTelhado))
+    val comTelhado = visiveis.first() == Andar.DE_CIMA && estado.temEstrutura(Estrutura.TELHADO) && twComTelhado >= tw * 0.97f
+    if (comTelhado) tw = twComTelhado
+    val alturaTotal = tw * (unidades + if (comTelhado) acimaDoTelhado else 0f)
+    val topo = (tamanho.height - alturaTotal) / 2f + if (comTelhado) tw * acimaDoTelhado else 0f
     val largura = PlantaDaCasa.LARGURA.toFloat()
     val fundo = PlantaDaCasa.FUNDO.toFloat()
     // O meio da planta na tela fica em x(L/2, F/2): a origem anda para a esquerda o quanto a planta é mais larga que funda.
     val origemX = tamanho.width / 2f - (largura - fundo) * tw / 4f
-    val visiveis = if (doisAndares) listOf(Andar.DE_CIMA, Andar.DE_BAIXO) else listOf(andarDaCrianca)
     val traco = Stroke(max(1f, 1.2f * dp))
     val tracoFino = Stroke(max(1f, 0.8f * dp))
 
@@ -1085,6 +1216,7 @@ private fun montarGeometria(
 
     return Geometria(
         andares = andares,
+        telhado = if (comTelhado) montarTelhado(andares.first().proj, estado) else emptyList(),
         ladrilho = tw,
         corDoPadrao = if (estado.papelDeParede == 3) Color(0x80FFC93C) else Color(0x1F000000),
         raioLampada = max(tw * 0.4f, 26f * dp),
@@ -1096,6 +1228,73 @@ private fun montarGeometria(
         traco = traco,
         tracoFino = tracoFino,
     )
+}
+
+/** Altura do telhado em z, acima do alto das paredes (cumeeira no meio do fundo da casa). */
+private const val SUBIDA_DO_TELHADO = 2.8f
+/** Espessura das telhas em z (a faixa colorida que contorna o telhado aberto). */
+private const val TELHA = 0.3f
+
+/**
+ * Quanto o telhado sobe na tela acima do canto mais alto das paredes, em ladrilhos: a cumeeira (com as telhas)
+ * fica SUBIDA * unidadeZ acima e FUNDO / 2 * 1/4 abaixo (ela está no meio do fundo da casa).
+ */
+private val ALTURA_DO_TELHADO_NA_TELA = (SUBIDA_DO_TELHADO + TELHA) * 0.56f - PlantaDaCasa.FUNDO / 8f + 0.06f
+
+/**
+ * O telhado do andar de cima, como numa casinha de bonecas aberta: a água do fundo vista por dentro (o forro de
+ * madeira com as vigas), a empena da esquerda com uma janelinha redonda, as telhas na cor do telhado de fora
+ * contornando o corte e a chaminé (quando a casa já tem) aparecendo atrás.
+ */
+private fun montarTelhado(proj: Projecao, estado: EstadoJogo): List<Forma> = with(proj) {
+    val l = PlantaDaCasa.LARGURA.toFloat()
+    val f = PlantaDaCasa.FUNDO.toFloat()
+    val h = PlantaDaCasa.ALTURA_PAREDE
+    val r = SUBIDA_DO_TELHADO
+    val yr = f / 2f
+    val zr = h + r
+    val beiral = 0.3f
+    val ye = -0.14f - beiral
+    fun zDa(y: Float) = h + r * (y + 0.14f) / (yr + 0.14f)
+    val ze = zDa(ye)
+    val xd = l + 0.15f
+    val cor = Color(Loja.coresDoTelhado.getOrElse(estado.corTelhado) { Loja.coresDoTelhado[0] })
+    val borda = Color(Loja.coresDoTelhadoEscuras.getOrElse(estado.corTelhado) { Loja.coresDoTelhadoEscuras[0] })
+    val formas = ArrayList<Forma>()
+    // Chaminé atrás da água do fundo: só a ponta aparece acima da cumeeira.
+    if (estado.temEstrutura(Estrutura.CHAMINE)) {
+        formas += caixa(5.7f, 0.35f, 6.35f, 1.0f, h, zr + 0.75f, Color(0xFFB5523B))
+        formas += caixa(5.62f, 0.27f, 6.43f, 1.08f, zr + 0.75f, zr + 0.9f, Color(0xFF8E3B2A))
+    }
+    // Forro de madeira (a água do fundo vista por dentro), com as vigas.
+    formas += Forma(quad(ponto(0f, ye, ze), ponto(xd, ye, ze), ponto(xd, yr, zr), ponto(0f, yr, zr)), Color(0xFFF2D8B0))
+    var x = 1f
+    while (x < xd - 0.2f) {
+        formas += Forma(quad(ponto(x - 0.07f, ye, ze), ponto(x + 0.07f, ye, ze), ponto(x + 0.07f, yr, zr), ponto(x - 0.07f, yr, zr)), Color(0xFFD9AE7E), contorno = false)
+        x += 1.6f
+    }
+    // Empena da esquerda (a parede em triângulo), na cor do quarto, com uma janelinha redonda.
+    val corDaEmpena = escurecer(Color(estado.corDo(Comodo.QUARTO)), 0.95f)
+    formas += Forma(quad(ponto(0f, 0f, h), ponto(0f, f, h), ponto(0f, yr, zr), ponto(0f, yr, zr)), corDaEmpena)
+    fun circuloX(cy: Float, cz: Float, raio: Float): Path = Path().apply {
+        for (k in 0..28) {
+            val a = k * 2.0 * PI / 28
+            val p = ponto(0.002f, cy + raio * kotlin.math.cos(a).toFloat(), cz + raio * sin(a).toFloat())
+            if (k == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+        }
+        close()
+    }
+    formas += Forma(circuloX(yr, h + 1.05f, 0.5f), Color.White)
+    formas += Forma(circuloX(yr, h + 1.05f, 0.38f), Color(0xFFBFE6FF))
+    formas += Forma(quad(ponto(0.003f, yr - 0.03f, h + 0.67f), ponto(0.003f, yr + 0.03f, h + 0.67f), ponto(0.003f, yr + 0.03f, h + 1.43f), ponto(0.003f, yr - 0.03f, h + 1.43f)), Color.White, contorno = false)
+    // Telhas: a faixa colorida no corte da cumeeira, na ponta da direita e por cima da empena.
+    val yf = f + beiral
+    val zf = h + r * (f - yf) / (f - yr)
+    formas += Forma(quad(ponto(-0.15f, yr, zr), ponto(xd, yr, zr), ponto(xd, yr, zr + TELHA), ponto(-0.15f, yr, zr + TELHA)), cor)
+    formas += Forma(quad(ponto(xd, ye, ze), ponto(xd, yr, zr), ponto(xd, yr, zr + TELHA), ponto(xd, ye, ze + TELHA)), borda)
+    formas += Forma(quad(ponto(-0.15f, ye, ze), ponto(-0.15f, yr, zr), ponto(-0.15f, yr, zr + TELHA), ponto(-0.15f, ye, ze + TELHA)), cor)
+    formas += Forma(quad(ponto(-0.15f, yr, zr), ponto(-0.15f, yf, zf), ponto(-0.15f, yf, zf + TELHA), ponto(-0.15f, yr, zr + TELHA)), cor)
+    formas
 }
 
 /** Monta um andar: piso, paredes do fundo com a cor de cada cômodo, janelas, porta, móveis e luzes. */
@@ -1393,6 +1592,7 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
     )
 
     if (m.acao == Acao.ESCADA) return montarEscada(m, proj, medidor, densidade, toque, ancora, caixaDoMovel)
+    if (m.id == "patinho") return montarPatinho(m, proj, caixaDoMovel, minimo)
 
     emojiDe(m.id)?.let { e ->
         val escala = when (m.id) {
@@ -1401,7 +1601,6 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
             "violao" -> 0.8f
             "gato" -> 0.6f
             "ursinho" -> 0.62f
-            "patinho" -> 0.42f
             "lixeira" -> 0.6f
             else -> 0.55f
         }
@@ -1594,6 +1793,59 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
     }
 }
 
+/**
+ * O patinho de borracha amarelo boiando na banheira, desenhado à mão: corpo redondo com o rabinho
+ * levantado, cabeça grande, bico laranja, olho brilhante, asinha e bochecha rosada.
+ */
+private fun montarPatinho(m: Movel, proj: Projecao, caixa: Caixa, minimo: Float): Peca {
+    val tw = proj.ladrilho
+    val base = proj.ponto(m.centroX, m.centroY, m.z)
+    val s = tw * 0.62f
+    val amarelo = Color(0xFFFFD43B)
+    val corpo = Path().apply { addOval(Rect(base.x - s * 0.42f, base.y - s * 0.4f, base.x + s * 0.4f, base.y + s * 0.03f)) }
+    val rabo = Path().apply {
+        moveTo(base.x + s * 0.2f, base.y - s * 0.3f)
+        cubicTo(base.x + s * 0.46f, base.y - s * 0.36f, base.x + s * 0.46f, base.y - s * 0.36f, base.x + s * 0.52f, base.y - s * 0.52f)
+        cubicTo(base.x + s * 0.5f, base.y - s * 0.12f, base.x + s * 0.5f, base.y - s * 0.12f, base.x + s * 0.3f, base.y - s * 0.05f)
+        close()
+    }
+    val centroCabeca = Offset(base.x - s * 0.2f, base.y - s * 0.56f)
+    val raio = s * 0.25f
+    val cabeca = Path().apply { addOval(Rect(centroCabeca, raio)) }
+    val silhueta = Path().apply {
+        val corpoERabo = Path().apply { op(corpo, rabo, PathOperation.Union) }
+        op(corpoERabo, cabeca, PathOperation.Union)
+    }
+    val bico = Path().apply {
+        moveTo(centroCabeca.x - raio * 0.7f, centroCabeca.y - raio * 0.02f)
+        cubicTo(centroCabeca.x - raio * 1.6f, centroCabeca.y - raio * 0.05f, centroCabeca.x - raio * 1.6f, centroCabeca.y - raio * 0.05f, centroCabeca.x - raio * 1.5f, centroCabeca.y + raio * 0.22f)
+        cubicTo(centroCabeca.x - raio * 1.2f, centroCabeca.y + raio * 0.48f, centroCabeca.x - raio * 1.2f, centroCabeca.y + raio * 0.48f, centroCabeca.x - raio * 0.62f, centroCabeca.y + raio * 0.36f)
+        close()
+    }
+    val asa = Path().apply {
+        moveTo(base.x - s * 0.04f, base.y - s * 0.25f)
+        cubicTo(base.x + s * 0.16f, base.y - s * 0.36f, base.x + s * 0.16f, base.y - s * 0.36f, base.x + s * 0.3f, base.y - s * 0.22f)
+        cubicTo(base.x + s * 0.14f, base.y - s * 0.05f, base.x + s * 0.14f, base.y - s * 0.05f, base.x - s * 0.04f, base.y - s * 0.25f)
+        close()
+    }
+    val olho = Offset(centroCabeca.x - raio * 0.22f, centroCabeca.y - raio * 0.18f)
+    val formas = listOf(
+        // ondinhas na água em volta
+        Forma(Path().apply { addOval(Rect(base.x - s * 0.62f, base.y - s * 0.07f, base.x + s * 0.62f, base.y + s * 0.13f)) }, Color(0x66FFFFFF), contorno = false),
+        Forma(silhueta, amarelo),
+        Forma(Path().apply { addOval(Rect(base.x - s * 0.3f, base.y - s * 0.36f, base.x - s * 0.02f, base.y - s * 0.26f)) }, Color(0x88FFFFFF), contorno = false),
+        Forma(asa, Color(0xFFF5B700), contorno = false),
+        Forma(bico, Color(0xFFFF8A1F)),
+        Forma(Path().apply { addOval(Rect(Offset(centroCabeca.x + raio * 0.2f, centroCabeca.y + raio * 0.32f), raio * 0.16f)) }, Color(0x66FF6F91), contorno = false),
+        Forma(Path().apply { addOval(Rect(olho, raio * 0.17f)) }, Color(0xFF2B2B35), contorno = false),
+        Forma(Path().apply { addOval(Rect(Offset(olho.x - raio * 0.05f, olho.y - raio * 0.06f), raio * 0.06f)) }, Color.White, contorno = false),
+    )
+    val c = Offset(base.x, base.y - s * 0.35f)
+    val lado = max(s * 1.2f, minimo)
+    val toque = Rect(c.x - lado / 2, c.y - lado / 2, c.x + lado / 2, c.y + lado / 2)
+    return Peca(m, caixa, m.comodo, formas, toque, base)
+}
+
 /** A escada: embaixo, degraus de madeira subindo para o fundo; em cima, o vão com os degraus descendo e o corrimão. */
 private fun montarEscada(m: Movel, proj: Projecao, medidor: TextMeasurer, densidade: Density, toque: Rect, ancora: Offset, caixaDaPeca: Caixa): Peca {
     val (x0, y0, x1, y1) = listOf(m.x0, m.y0, m.x1, m.y1)
@@ -1653,6 +1905,7 @@ private fun DrawScope.desenharCena(g: Geometria, cena: Cena, perfil: Perfil) {
     val t = cena.tempo
     val apagadas = cena.luzApagada
     // O andar de cima primeiro: o de baixo fica na frente, como na casa de fora.
+    desenharFormas(g.telhado, Contorno, g.tracoFino)
     for (ga in g.andares) {
         val proj = ga.proj
         ga.sombra?.let { drawOval(Color(0x2A2E5A1E), topLeft = it.topLeft, size = it.size) }
@@ -1738,6 +1991,9 @@ private fun DrawScope.desenharPeca(g: Geometria, p: Peca, cena: Cena, apagadas: 
         // pulinho de quem foi tocado
         val s = 1f + 0.14f * sin(idade / 0.45f * PI.toFloat()) * (1f - idade / 0.45f)
         scale(s, s, pivot = p.ancora) { desenharPecaSemPulo(g, p, cena, apagadas) }
+    } else if (m?.id == "patinho") {
+        // O patinho balança devagar na água.
+        translate(top = sin(t * 2.4f) * g.ladrilho * 0.02f) { desenharPecaSemPulo(g, p, cena, apagadas) }
     } else {
         desenharPecaSemPulo(g, p, cena, apagadas)
     }
