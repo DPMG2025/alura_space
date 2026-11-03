@@ -92,6 +92,7 @@ class Repositorio(context: Context) {
                 cabelo = prefs.getInt(CABELO, 0),
                 roupa = prefs.getInt(ROUPA, -1),
                 chapeu = prefs.getString(CHAPEU, "").orEmpty(),
+                estiloCabelo = prefs.getInt(ESTILO, 0),
             )
         } else {
             null
@@ -128,6 +129,7 @@ class Repositorio(context: Context) {
             putInt(CABELO, it.cabelo)
             putInt(ROUPA, it.roupa)
             putString(CHAPEU, it.chapeu)
+            putInt(ESTILO, it.estiloCabelo)
         }
         putString(ESTRELAS, Serializacao.estrelasParaTexto(e.estrelas))
         putString(COLOCADOS, Serializacao.posicoesParaTexto(e.colocados))
@@ -181,6 +183,7 @@ class Repositorio(context: Context) {
         const val HISTORICO = "historico"
         const val DIA_MISSAO = "dia_missao"
         const val CHAPEU = "chapeu"
+        const val ESTILO = "estilo_cabelo"
         const val COR_TELHADO = "cor_telhado"
         const val VISITANTES = "visitantes"
         const val MUSICA = "musica"

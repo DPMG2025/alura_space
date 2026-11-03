@@ -193,7 +193,8 @@ fun CenaDaCasa(
                     val ida = volta < 0.5f
                     val fracao = if (ida) volta * 2f else (1f - volta) * 2f
                     val x = (0.06f + 0.88f * fracao) * larguraPx
-                    val y = topoJardim + alturaJardim * (0.62f + 0.12f * (i % 3)) - tamanho - pulinho * tamanho * 0.08f
+                    // Pista acima do canteiro (que fica entre 30% e 70% da altura do jardim de baixo).
+                    val y = topoJardim + alturaJardim * (0.06f + 0.1f * (i % 2)) + tamanho * 0.2f - pulinho * tamanho * 0.08f
                     Box(
                         Modifier
                             .offset { IntOffset((x - tamanho / 2).roundToInt(), y.roundToInt()) }
@@ -901,7 +902,7 @@ private fun DrawScope.jardimDeBaixo(topo: Float, alto: Float, noite: Boolean, te
         drawCircle(folha, w * r * 0.8f, c + Offset(w * r * 0.8f * (if (cx < 0.5f) 1f else -1f), w * r * 0.2f))
     }
     // canteiro com flores
-    val canteiro = Rect(Offset(w * 0.55f, topo + alto * 0.3f), Size(w * 0.3f, alto * 0.4f))
+    val canteiro = Rect(Offset(w * 0.55f, topo + alto * 0.42f), Size(w * 0.3f, minOf(alto * 0.35f, w * 0.12f)))
     drawRoundRect(if (noite) Color(0xFF5A4232) else Color(0xFF8D5A3B), canteiro.topLeft, canteiro.size, CornerRadius(12f))
     for (i in 0 until 6) {
         val fx = canteiro.left + canteiro.width * (0.12f + i * 0.15f)

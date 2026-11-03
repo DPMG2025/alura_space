@@ -193,7 +193,26 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
     // cabeça
     val centro = p(0.5f, 0.27f)
     val r = w * 0.34f
-    if (menina) for (lado in listOf(-1f, 1f)) drawCircle(cabelo, r * 0.36f, Offset(centro.x + lado * r * 1.05f, centro.y + r * 0.05f))
+    val estilo = perfil.estiloCabelo
+    if (menina && estilo == 0) for (lado in listOf(-1f, 1f)) drawCircle(cabelo, r * 0.36f, Offset(centro.x + lado * r * 1.05f, centro.y + r * 0.05f))
+    if (menina && estilo == 2) {
+        // Tranças: correntinhas de bolinhas descendo dos lados da cabeça.
+        for (lado in listOf(-1f, 1f)) for (k in 0 until 4) {
+            val c = Offset(centro.x + lado * r * (0.95f + k * 0.04f), centro.y + r * (0.15f + k * 0.42f))
+            drawOval(cabelo, Offset(c.x - r * 0.2f, c.y - r * 0.24f), Size(r * 0.4f, r * 0.48f))
+        }
+        for (lado in listOf(-1f, 1f)) drawCircle(Color(0xFFFF4F8B), r * 0.1f, Offset(centro.x + lado * r * 1.07f, centro.y + r * 1.62f))
+    }
+    if (estilo == 1) {
+        // Cacheado: bolinhas em volta da cabeça (mais volume na menina).
+        val volta = if (menina) 1.12f else 1.0f
+        var ang = 160f
+        while (ang <= 380f) {
+            val rad = Math.toRadians(ang.toDouble())
+            drawCircle(cabelo, r * (if (menina) 0.3f else 0.24f), Offset(centro.x + (kotlin.math.cos(rad) * r * volta).toFloat(), centro.y + (kotlin.math.sin(rad) * r * volta).toFloat()))
+            ang += 22f
+        }
+    }
     for (lado in listOf(-1f, 1f)) drawCircle(pele, r * 0.2f, Offset(centro.x + lado * r * 0.98f, centro.y + r * 0.1f))
     drawCircle(pele, r, centro)
 
@@ -208,13 +227,25 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
         close()
     }
     drawPath(franja, cabelo)
-    if (menina && perfil.chapeu.isEmpty()) {
+    if (menina && perfil.chapeu.isEmpty() && estilo != 2) {
         val laco = Color(0xFFFF4F8B)
         val n = Offset(centro.x + r * 0.45f, centro.y - r * 0.85f)
         drawPath(Path().apply { moveTo(n.x, n.y); lineTo(n.x - r * 0.3f, n.y - r * 0.23f); lineTo(n.x - r * 0.25f, n.y + r * 0.23f); close() }, laco)
         drawPath(Path().apply { moveTo(n.x, n.y); lineTo(n.x + r * 0.33f, n.y - r * 0.15f); lineTo(n.x + r * 0.23f, n.y + r * 0.25f); close() }, laco)
         drawCircle(laco, r * 0.1f, n)
-    } else {
+    } else if (!menina && estilo == 2) {
+        // Espetadinho: pontinhas em cima da cabeça.
+        for (k in -2..2) {
+            val x = centro.x + k * r * 0.32f
+            val ponta = Path().apply {
+                moveTo(x - r * 0.2f, centro.y - r * 0.82f)
+                lineTo(x + r * 0.06f * k, centro.y - r * 1.3f)
+                lineTo(x + r * 0.2f, centro.y - r * 0.82f)
+                close()
+            }
+            drawPath(ponta, cabelo)
+        }
+    } else if (!menina && estilo == 0) {
         val topete = Path().apply {
             moveTo(centro.x - r * 0.1f, centro.y - r * 0.95f)
             quadraticTo(centro.x + r * 0.05f, centro.y - r * 1.35f, centro.x + r * 0.3f, centro.y - r * 1.2f)

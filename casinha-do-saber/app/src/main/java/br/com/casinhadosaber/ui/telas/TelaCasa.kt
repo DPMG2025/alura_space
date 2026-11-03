@@ -94,6 +94,15 @@ fun TelaCasa(
     val sons = LocalSons.current
     var pintando by remember { mutableStateOf(false) }
     var noite by remember { mutableStateOf(noiteInicial) }
+    // Experimentar antes de comprar: o enfeite aparece na casa por alguns segundos.
+    var previa by remember { mutableStateOf<Produto?>(null) }
+    LaunchedEffect(previa) {
+        if (previa != null) {
+            delay(6000)
+            previa = null
+        }
+    }
+    val estadoNaCena = previa?.let { p -> estado.copy(moedas = Int.MAX_VALUE / 2).usar(p) } ?: estado
     var novaEstrutura by remember { mutableStateOf<Estrutura?>(null) }
     var destaque by remember { mutableStateOf<String?>(null) }
     var pulo by remember { mutableIntStateOf(0) }
@@ -211,7 +220,7 @@ fun TelaCasa(
                 contentAlignment = Alignment.BottomCenter,
             ) {
                 CenaDaCasa(
-                    estado = estado,
+                    estado = estadoNaCena,
                     modifier = Modifier
                         .fillMaxSize()
                         .shadow(6.dp, RoundedCornerShape(24.dp))
@@ -291,8 +300,24 @@ fun TelaCasa(
                 lojaInicial = lojaInicial,
                 onEscolher = ::colocarDoBau,
                 onJogar = onJogar,
+                previa = previa,
                 onComprar = { produto ->
                     val jaTinha = produto.id in estado.comprados
+                    val preco = Loja.preco(produto, estado)
+                    if (!jaTinha && previa?.id != produto.id) {
+                        // Primeiro toque: só mostra como fica na casa.
+                        previa = produto
+                        sons.toque()
+                        narrador.falar(
+                            if (estado.moedas >= preco) {
+                                "Olha como fica! Custa $preco moedinhas. Toque de novo para comprar."
+                            } else {
+                                "Olha como fica! Faltam ${preco - estado.moedas} moedinhas."
+                            },
+                        )
+                        return@Bau
+                    }
+                    previa = null
                     val novo = estado.usar(produto)
                     if (novo == null) {
                         sons.erro()
@@ -331,6 +356,7 @@ private fun Bau(
     itens: List<ItemCasa>,
     estado: EstadoJogo,
     lojaInicial: Boolean = false,
+    previa: Produto? = null,
     onEscolher: (ItemCasa) -> Unit,
     onJogar: () -> Unit,
     onComprar: (Produto) -> Unit,
@@ -353,6 +379,7 @@ private fun Bau(
         }
         Spacer(Modifier.height(8.dp))
         if (naLoja) {
+            Box {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 14.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -375,6 +402,7 @@ private fun Bau(
                                 when {
                                     usando -> "✔ usando"
                                     tem -> "✔ é seu"
+                                    previa?.id == produto.id -> "👆 🪙 $preco"
                                     else -> "🪙 $preco"
                                 },
                                 style = MaterialTheme.typography.titleMedium,
@@ -383,6 +411,15 @@ private fun Bau(
                         }
                     }
                 }
+            }
+            // Esmaecido na borda direita: mostra que dá para arrastar e ver mais.
+            Box(
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .width(36.dp)
+                    .height(110.dp)
+                    .background(Brush.horizontalGradient(listOf(Color.Transparent, Cores.Madeira))),
+            )
             }
         } else if (itens.isEmpty()) {
             val proximo = ItensDaCasa.ordem.getOrNull(estado.itensGanhos.size)

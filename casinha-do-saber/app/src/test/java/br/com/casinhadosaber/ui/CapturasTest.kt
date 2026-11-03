@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -78,6 +79,22 @@ class CapturasTest {
     }
 
     @Test fun perfil() = capturar("01_perfil") { TelaPerfil(null) {} }
+
+    @Test fun perfilEscolhendo() = capturar("01b_perfil_escolhendo") {
+        TelaPerfil(menina.copy(estiloCabelo = 2)) {}
+    }
+
+    @Config(qualifiers = "w800dp-h1280dp-mdpi")
+    @Test fun tablet() = capturar("22_tablet_inicio") {
+        androidx.compose.foundation.layout.Box(
+            Modifier.fillMaxSize(),
+            contentAlignment = androidx.compose.ui.Alignment.TopCenter,
+        ) {
+            androidx.compose.foundation.layout.Box(Modifier.widthIn(max = 640.dp).fillMaxSize()) {
+                TelaInicio(estado(20, 20), true, {}, {}, {}, {})
+            }
+        }
+    }
 
     @Test fun inicioVazio() = capturar("02_inicio_comeco") {
         TelaInicio(estado(0, 0), true, {}, {}, {}, {})

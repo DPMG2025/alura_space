@@ -43,6 +43,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Fase
@@ -54,6 +56,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Crianca
+import br.com.casinhadosaber.ui.componentes.FileiraDeEstrelas
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import kotlinx.coroutines.launch
@@ -99,26 +102,21 @@ fun TelaTrilha(
             Text(trilha.emoji, style = MaterialTheme.typography.headlineLarge)
             Spacer(Modifier.width(8.dp))
             Text(trilha.titulo, style = MaterialTheme.typography.headlineLarge, color = Color.White, modifier = Modifier.weight(1f))
-            Text(
-                "${estado.vencidasNa(trilha)}/${fases.size}",
-                style = MaterialTheme.typography.titleLarge,
-                color = Color.White,
-            )
-        }
-
-        if (proximoPremio != null) {
-            Row(
-                Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-                    .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(20.dp))
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Text("Próximo prêmio para a casa:", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.width(8.dp))
-                Text(proximoPremio.icone, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.pulsando())
+            if (proximoPremio != null) {
+                // Próximo prêmio da casa, como um chip na barra (nada passa por baixo dele).
+                Row(
+                    Modifier
+                        .background(Color.White, RoundedCornerShape(50))
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .semantics(mergeDescendants = true) { contentDescription = "Próximo prêmio: ${proximoPremio.nome}" },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("🎁", style = MaterialTheme.typography.titleLarge)
+                    Spacer(Modifier.width(4.dp))
+                    Text(proximoPremio.icone, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.pulsando())
+                }
+            } else {
+                Text("${estado.vencidasNa(trilha)}/${fases.size}", style = MaterialTheme.typography.titleLarge, color = Color.White)
             }
         }
 
@@ -180,7 +178,7 @@ fun TelaTrilha(
                         Crianca(
                             perfil,
                             Modifier
-                                .offset(x = cx + (TAMANHO_BOLINHA / 2 + 40.dp) * ladoCrianca - 32.dp, y = topo - 12.dp)
+                                .offset(x = cx + (TAMANHO_BOLINHA / 2 + 52.dp) * ladoCrianca - 32.dp, y = topo - 16.dp)
                                 .height(104.dp),
                             acenando = true,
                         )
@@ -258,19 +256,26 @@ private fun BolinhaDaFase(
             }
         }
         // Nome da fase numa plaquinha (não se mistura com o caminho pontilhado), e as estrelas embaixo.
-        Text(
-            fase.titulo + if (estrelas > 0) "  " + "★".repeat(estrelas) + "☆".repeat(3 - estrelas) else "",
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            color = if (liberada) Cores.Texto else Cores.TextoSuave,
-            softWrap = false,
-            modifier = Modifier
+        Row(
+            Modifier
                 .padding(top = 2.dp)
                 .wrapContentWidth(unbounded = true)
                 .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(50))
                 .padding(horizontal = 10.dp, vertical = 2.dp),
-        )
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                fase.titulo,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                softWrap = false,
+                color = if (liberada) Cores.Texto else Cores.TextoSuave,
+            )
+            if (estrelas > 0) {
+                Spacer(Modifier.width(6.dp))
+                FileiraDeEstrelas(estrelas, tamanho = 14.dp)
+            }
+        }
 
     }
 }

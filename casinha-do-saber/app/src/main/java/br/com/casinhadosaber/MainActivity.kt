@@ -12,6 +12,9 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -158,12 +161,16 @@ class MainActivity : ComponentActivity() {
             )
         }
 
+        // Em tablets, o app fica centralizado com largura de celular grande (botões e textos no tamanho certo
+        // para a mão da criança), e o fundo de céu ocupa as laterais.
         Box(
             Modifier
                 .fillMaxSize()
-                .background(Cores.Fundo),
+                .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Cores.Ceu, Cores.Fundo))),
+            contentAlignment = androidx.compose.ui.Alignment.TopCenter,
         ) {
             AnimatedContent(
+                modifier = Modifier.widthIn(max = 640.dp).fillMaxHeight(),
                 targetState = tela,
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
                 label = "telas",

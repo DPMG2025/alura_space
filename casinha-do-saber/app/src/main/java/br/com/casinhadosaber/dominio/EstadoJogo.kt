@@ -12,6 +12,8 @@ data class Perfil(
     val roupa: Int = -1,
     /** Chapéu comprado na loja (emoji), ou vazio. */
     val chapeu: String = "",
+    /** 0 = liso, 1 = cacheado, 2 = tranças (menina) ou espetadinho (menino). */
+    val estiloCabelo: Int = 0,
 ) {
     val corDaRoupa: Long
         get() = Aparencia.roupas.getOrNull(roupa) ?: if (genero == Genero.MENINA) Aparencia.roupas[1] else Aparencia.roupas[0]

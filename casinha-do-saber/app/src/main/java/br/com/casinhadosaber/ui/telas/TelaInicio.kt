@@ -140,7 +140,7 @@ fun TelaInicio(
                         corBase = Color(0xFFE0A800),
                         descricao = "Missão do dia, vale moedinhas",
                         modifier = Modifier
-                            .align(Alignment.BottomStart)
+                            .align(Alignment.TopEnd)
                             .padding(10.dp)
                             .pulsando(),
                     ) {
