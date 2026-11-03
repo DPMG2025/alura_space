@@ -1,6 +1,7 @@
 package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.withInfiniteAnimationFrameNanos
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -46,6 +47,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -137,6 +139,7 @@ import br.com.casinhadosaber.ui.componentes.sombrearFormas
 import br.com.casinhadosaber.ui.tema.Cores
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.abs
@@ -157,6 +160,17 @@ private const val ALTURA_CRIANCA = 2.15f
 private suspend fun esperarQuadros(ms: Long) {
     val inicio = withFrameNanos { it }
     while (withFrameNanos { it } - inicio < ms * 1_000_000L) {
+        // só espera o próximo quadro
+    }
+}
+
+/**
+ * Como [esperarQuadros], para laços sem fim (a dica que volta de tempos em tempos): nos testes com relógio
+ * automático (emulador) o laço para aqui e a tela consegue ficar ociosa; no app e nas capturas conta normal.
+ */
+private suspend fun esperarQuadrosSemFim(ms: Long) {
+    val inicio = withInfiniteAnimationFrameNanos { it }
+    while (withInfiniteAnimationFrameNanos { it } - inicio < ms * 1_000_000L) {
         // só espera o próximo quadro
     }
 }
@@ -269,44 +283,58 @@ fun TelaCasaPorDentro(
         }
     }
 
-    // Laço de quadros: anda pelo caminho e passa o tempo das animações.
+    // Relógio das animações: laço sem fim, então usa o quadro de "animação infinita". Nos testes com relógio
+    // automático (emulador) ele fica parado e a tela consegue ficar ociosa; no app e nas capturas anda normal.
     // Só mexe em estados lidos no desenho: não recompõe a tela a cada quadro.
     LaunchedEffect(Unit) {
         var ultimo = -1L
-        var distancia = 0f
         while (true) {
-            withFrameNanos { agora ->
+            withInfiniteAnimationFrameNanos { agora ->
                 val dt = if (ultimo < 0) 0f else ((agora - ultimo) / 1e9f).coerceAtMost(0.05f)
                 ultimo = agora
                 cena.tempo += dt
-                val caminho = cena.caminho
-                if (cena.indice < caminho.size) {
-                    val alvo = caminho[cena.indice]
-                    val dx = alvo.x - cena.x
-                    val dy = alvo.y - cena.y
-                    val d = hypot(dx, dy)
-                    val passo = VELOCIDADE * dt
-                    if (abs(dx - dy) > 0.02f) cena.virado = dx - dy < 0
-                    if (d <= passo) {
-                        cena.x = alvo.x
-                        cena.y = alvo.y
-                        cena.indice++
-                        if (cena.indice >= caminho.size) {
-                            cena.andando = false
-                            val chegar = cena.aoChegar
-                            cena.aoChegar = null
-                            chegar?.invoke()
+            }
+        }
+    }
+
+    // Caminhada: só pede quadros enquanto há caminho para andar (cada novo caminho recomeça o laço).
+    LaunchedEffect(Unit) {
+        snapshotFlow { cena.trocasDeCaminho }.collectLatest {
+            var ultimo = -1L
+            var distancia = 0f
+            while (cena.indice < cena.caminho.size) {
+                withFrameNanos { agora ->
+                    val dt = if (ultimo < 0) 0f else ((agora - ultimo) / 1e9f).coerceAtMost(0.05f)
+                    ultimo = agora
+                    val caminho = cena.caminho
+                    if (cena.indice < caminho.size) {
+                        val alvo = caminho[cena.indice]
+                        val dx = alvo.x - cena.x
+                        val dy = alvo.y - cena.y
+                        val d = hypot(dx, dy)
+                        val passo = VELOCIDADE * dt
+                        if (abs(dx - dy) > 0.02f) cena.virado = dx - dy < 0
+                        if (d <= passo) {
+                            cena.x = alvo.x
+                            cena.y = alvo.y
+                            cena.indice++
+                            if (cena.indice >= caminho.size) {
+                                cena.andando = false
+                                val chegar = cena.aoChegar
+                                cena.aoChegar = null
+                                chegar?.invoke()
+                            }
+                        } else {
+                            cena.x += dx / d * passo
+                            cena.y += dy / d * passo
+                            cena.andando = true
                         }
-                    } else {
-                        cena.x += dx / d * passo
-                        cena.y += dy / d * passo
-                        cena.andando = true
-                    }
-                    cena.passada += passo
-                    distancia += passo
-                    if (distancia > 0.75f) {
-                        distancia = 0f
-                        sonsCasa.passo()
+                        cena.passada += passo
+                        distancia += passo
+                        if (distancia > 0.75f) {
+                            distancia = 0f
+                            sonsCasa.passo()
+                        }
                     }
                 }
             }
@@ -676,7 +704,7 @@ fun TelaCasaPorDentro(
         var segundos = 0
         var ultimaDica = -1
         while (true) {
-            esperarQuadros(1000)
+            esperarQuadrosSemFim(1000)
             segundos++
             segundosParada++
             if (estadoAtual.moveisDentro.isNotEmpty() || arrastouAqui) return@LaunchedEffect
@@ -1020,7 +1048,13 @@ private class Cena {
     var passada by mutableFloatStateOf(0f)
     var andando by mutableStateOf(false)
     var virado by mutableStateOf(false)
+    /** Quantas vezes o caminho mudou: acorda o laço da caminhada. */
+    var trocasDeCaminho by mutableIntStateOf(0)
     var caminho: List<Posicao> = emptyList()
+        set(v) {
+            field = v
+            trocasDeCaminho++
+        }
     var indice = 0
     var aoChegar: (() -> Unit)? = null
     var marca by mutableStateOf<Posicao?>(null)

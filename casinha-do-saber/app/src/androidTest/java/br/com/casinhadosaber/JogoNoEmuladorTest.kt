@@ -716,8 +716,54 @@ class JogoNoEmuladorTest {
         regra.onAllNodes(hasContentDescription("Voltar")).onFirst().performClick()
         esperar("Voltar para o caminho")
         avancar(500)
-        // A casa por dentro (onde ficam o ateliê e o piano) tem um laço de quadros sem fim e não fica ociosa para
-        // este teste; o ateliê e o piano são conferidos nas capturas (CapturasCriativoTest).
+    }
+
+    /** Modo criativo: entrar na casa, pintar no ateliê (o desenho fica guardado) e tocar o piano. */
+    @Test
+    fun pintarNoAtelieETocarOPiano() {
+        prefs.edit()
+            .putString("genero", "MENINA").putString("nome", "Ana")
+            .putString("mascote", "GATINHO||")
+            .putString("estrelas", (0 until 6).joinToString(";") { "MATEMATICA:$it=3" })
+            .putString("colocados", "terreno,0.5,0.5;paredes,0.5,0.5;telhado,0.5,0.5;porta,0.5,0.5;cama,0.27,0.528;janelas,0.5,0.5")
+            .commit()
+        cenario = ActivityScenario.launch(MainActivity::class.java)
+
+        esperar("Minha casinha", 15_000)
+        regra.onAllNodes(hasContentDescription("Minha casinha", substring = true)).onFirst().performClick()
+        esperar("Entrar na casa")
+        regra.onAllNodes(hasContentDescription("Entrar na casa")).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("abrir_atelie"), 10_000)
+        avancar(1_000)
+        capturar("e32_casa_por_dentro_cantinho")
+
+        // Ateliê: escolhe uma cor e pinta um risco no quadro
+        regra.onAllNodes(hasTestTag("abrir_atelie")).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("quadro_de_pintar"), 10_000)
+        if (existe("cor_2")) regra.onAllNodes(hasTestTag("cor_2")).onFirst().performClick()
+        regra.onAllNodes(hasTestTag("quadro_de_pintar")).onFirst().performTouchInput {
+            swipe(Offset(width * 0.2f, height * 0.3f), Offset(width * 0.8f, height * 0.7f), durationMillis = 500)
+        }
+        avancar(600)
+        capturar("e33_atelie_pintando")
+        regra.onAllNodes(hasContentDescription("Voltar para a casa")).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("abrir_piano"), 10_000)
+        // Voltar guarda o desenho
+        regra.waitUntil(5_000) { prefs.getString("desenhos", "").orEmpty().isNotEmpty() }
+
+        // Piano: toca três teclas
+        regra.onAllNodes(hasTestTag("abrir_piano")).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("tecla_do"), 10_000)
+        for (t in listOf("tecla_do", "tecla_mi", "tecla_sol")) {
+            if (existe(t)) {
+                regra.onAllNodes(hasTestTag(t)).onFirst().performClick()
+                avancar(300)
+            }
+        }
+        avancar(500)
+        capturar("e34_piano")
+        regra.onAllNodes(hasContentDescription("Voltar para a casa")).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("abrir_atelie"), 10_000)
     }
 
     @Test

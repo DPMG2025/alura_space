@@ -122,7 +122,7 @@ android {
                 it.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
                 it.maxHeapSize = "2g"
                 it.testLogging {
-                    events("failed")
+                    events("started", "failed")
                     exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
                 }
             }
