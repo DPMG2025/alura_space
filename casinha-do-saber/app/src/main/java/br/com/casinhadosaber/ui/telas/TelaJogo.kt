@@ -1,5 +1,6 @@
 package br.com.casinhadosaber.ui.telas
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.animateColorAsState
@@ -196,6 +197,16 @@ fun TelaJogo(
         }
     }
 
+    // Treino: o ✖ e o voltar do Android terminam do mesmo jeito (guardam moedinhas e histórico), uma vez só
+    // (durante a troca de tela esta tela ainda está composta e um segundo toque não pode registrar de novo).
+    var treinoTerminado by remember { mutableStateOf(false) }
+    fun terminarTreino() {
+        if (treinoTerminado) return
+        treinoTerminado = true
+        onConcluir(resultados)
+    }
+    if (treino != null) BackHandler { terminarTreino() }
+
     Box(
         Modifier
             .fillMaxSize()
@@ -206,7 +217,7 @@ fun TelaJogo(
             // barra de cima
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (treino != null) {
-                    BotaoRedondo("✖️", "Terminar o treino", { onConcluir(resultados) }, tamanho = 48.dp)
+                    BotaoRedondo("✖️", "Terminar o treino", { terminarTreino() }, tamanho = 48.dp)
                 } else {
                     BotaoRedondo("✖️", "Sair da fase", onSair, tamanho = 48.dp)
                 }

@@ -739,4 +739,57 @@ class CapturasTest {
             TelaPremio(gerador.fases(Trilha.INGLES)[2], 3, ItensDaCasa.porId.getValue("cama"), menina, 5, true, {}, {}, {})
         }
     }
+
+    /** Caminho com fases vencidas até o mundo 3 (Praia): plaquinhas de mundo e o botão Treinar embaixo. */
+    @Test fun trilhaComTreinoEMundos() = capturar("61_trilha_treinar_mundos") {
+        TelaTrilha(Trilha.MATEMATICA, trilhaVencida(Trilha.MATEMATICA, 24), {}, {}, onTreinar = {})
+    }
+
+    /** Fases novas dos mundos 4 e 5, uma de cada caminho, e o labirinto. */
+    @Test fun faseDezenasEUnidades() = capturar("62_fase_dezenas_e_unidades") {
+        TelaJogo(gerador.fases(Trilha.MATEMATICA)[31], menina, {}, { })
+    }
+
+    @Test fun faseLerFrases() = capturar("63_fase_ler_frases") {
+        TelaJogo(gerador.fases(Trilha.PORTUGUES)[35], menino, {}, { })
+    }
+
+    @Test fun faseILike() = capturar("64_fase_i_like") {
+        TelaJogo(gerador.fases(Trilha.INGLES)[33], menina, {}, { })
+    }
+
+    @Test fun faseSudoku() = capturar("65_fase_sudoku") {
+        TelaJogo(gerador.fases(Trilha.LOGICA)[36], menino, {}, { })
+    }
+
+    @Test fun faseLabirinto() = capturar("66_fase_labirinto") {
+        TelaJogo(gerador.fases(Trilha.LOGICA)[41], menina, {}, { })
+    }
+
+    /** No treino, o voltar do Android termina como o ✖: entrega os resultados (moedinhas e histórico) e não só sai. */
+    @Test fun voltarNoTreinoTerminaComoOX() {
+        val fase = gerador.fases(Trilha.MATEMATICA)[1]
+        var concluiu: List<Boolean>? = null
+        var vezes = 0
+        var saiu = false
+        var dono: androidx.activity.OnBackPressedDispatcherOwner? = null
+        montar {
+            dono = androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current
+            TelaJogo(
+                fase, menina,
+                onSair = { saiu = true },
+                onConcluir = { concluiu = it; vezes++ },
+                treino = { gerador.perguntas(fase, 1).first() },
+            )
+        }
+        regra.mainClock.advanceTimeBy(1000)
+        regra.runOnIdle {
+            dono!!.onBackPressedDispatcher.onBackPressed()
+            dono!!.onBackPressedDispatcher.onBackPressed()
+        }
+        regra.mainClock.advanceTimeBy(500)
+        org.junit.Assert.assertEquals("o voltar no treino deveria entregar os resultados", emptyList<Boolean>(), concluiu)
+        org.junit.Assert.assertEquals("o treino deve terminar uma vez só", 1, vezes)
+        org.junit.Assert.assertFalse("o voltar no treino não pode só sair", saiu)
+    }
 }
