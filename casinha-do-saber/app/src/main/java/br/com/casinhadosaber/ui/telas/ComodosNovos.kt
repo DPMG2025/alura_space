@@ -110,7 +110,7 @@ fun BoxScope.ComodosNovosDaCasa(
         Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             BotaoRedondo("⬅️", "Voltar para a casa", { sons.toque(); aberto = null }, tamanho = 52.dp)
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(area.nome, style = MaterialTheme.typography.headlineSmall, color = Cores.Texto, maxLines = 1, textAlign = TextAlign.Center)
+                Text(area.nome, style = MaterialTheme.typography.headlineMedium, color = Cores.Texto, maxLines = 1, textAlign = TextAlign.Center)
                 Text(CasaQueCresce.progresso(estado, area).let { "${it.colocadas} de ${it.total} coisas" }, style = MaterialTheme.typography.titleMedium, color = Cores.Texto)
             }
             Spacer(Modifier.size(52.dp))

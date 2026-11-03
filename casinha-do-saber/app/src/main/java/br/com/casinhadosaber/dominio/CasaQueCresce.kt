@@ -357,13 +357,29 @@ object CasaQueCresce {
             .filter { it.x <= 0.94f }
             // Em volta do miolo: só os lugares que não encostam nele.
             .filter { p -> !(noMiolo(y) && p.x > MIOLO_ESQ - 0.07f && p.x < MIOLO_DIR + 0.07f) }
+            // O canto de baixo à esquerda é do mascote (ele fica por cima e pegaria o toque).
+            .filter { p -> !(p.x < 0.25f && y > 0.86f) }
     }
+
+    /**
+     * Os lugares numa ordem que espalha: pula de [passo] em [passo] pela lista, então as primeiras coisas
+     * ganhas já ficam por toda a área (e não todas na primeira fileira).
+     */
+    private fun espalhar(lugares: List<Posicao>): List<Posicao> {
+        val n = lugares.size
+        if (n < 3) return lugares
+        var passo = maxOf(2, (n * 0.38f).toInt())
+        while (mdc(passo, n) != 1) passo++
+        return List(n) { i -> lugares[(i * passo) % n] }
+    }
+
+    private tailrec fun mdc(a: Int, b: Int): Int = if (b == 0) a else mdc(b, a % b)
 
     private fun montarCoisas(a: AreaDaCasa): List<ItemCasa> {
         val livres = mutableMapOf(
-            Zona.ALTO to lugaresAlto.toMutableList(),
-            Zona.CENTRO to lugaresCentro.toMutableList(),
-            Zona.CHAO to lugaresChao.toMutableList(),
+            Zona.ALTO to espalhar(lugaresAlto).toMutableList(),
+            Zona.CENTRO to espalhar(lugaresCentro).toMutableList(),
+            Zona.CHAO to espalhar(lugaresChao).toMutableList(),
         )
         val ordemDeTroca = listOf(Zona.CHAO, Zona.ALTO, Zona.CENTRO)
         val quantas = a.tamanho - 1

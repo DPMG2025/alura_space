@@ -383,11 +383,19 @@ private fun CenaPlana(
             val bicho = bichoDesenhadoDe(item.id)
             val semente = item.id.hashCode()
             val alcance = if (bicho == null) 0f else Passeio.alcance(pos.x, if (dentroDaCasa(pos, estado)) 0.035f else 0.08f)
+            // Os bichos desenhados (corpo inteiro) ficam bem maiores que os emojis: lá fora quase o dobro,
+            // dentro de casa um pouco menos, para caber ao lado do sofá.
+            val escalaDoBicho = when {
+                bicho == null -> 1f
+                dentroDaCasa(pos, estado) -> 1.4f
+                else -> 1.9f
+            }
             key(item.id) { ObjetoNaCena(
                 item = item,
                 pos = pos,
                 larguraCena = larguraPx,
                 alturaCena = alturaPx,
+                larguraRelativa = item.tamanho * escalaDoBicho,
                 interativo = interativa && !pintando,
                 aparecer = item.id == destaqueId,
                 recusas = recusa?.takeIf { it.item.id == item.id }?.vez ?: 0,

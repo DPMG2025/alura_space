@@ -96,7 +96,7 @@ fun CenaDaArea(
                     pos = pos,
                     larguraCena = larguraPx,
                     alturaCena = alturaPx,
-                    larguraRelativa = item.tamanho * unidade / larguraPx,
+                    larguraRelativa = item.tamanho * unidade / larguraPx * (if (bichoDesenhado != null) 1.7f else 1f),
                     interativo = interativa,
                     aparecer = item.id == destaqueId,
                     vida = if (passeia) Vida.PARADO else vidaDo(CasaQueCresce.tipoDe(item.id)),

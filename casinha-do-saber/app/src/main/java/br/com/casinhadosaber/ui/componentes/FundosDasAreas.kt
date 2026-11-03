@@ -56,6 +56,8 @@ fun DrawScope.desenharFundoDaArea(area: AreaDaCasa, progresso: Float, t: Float, 
             nuvem(0.18f + 0.04f * sin(t * 2f * PI.toFloat()), 0.10f, 0.05f)
             nuvem(0.74f - 0.03f * sin(t * 2f * PI.toFloat()), 0.18f, 0.04f)
         }
+        // Paisagem do fundo: morros e arvorezinhas no horizonte, para o céu não ficar vazio.
+        if (area.id != "observatorio") paisagemDoFundo(noite)
         val chao = when (area.id) {
             "observatorio" -> listOf(Color(0xFFB5654A), Color(0xFF8E4A35))
             "gourmet" -> listOf(Color(0xFFD9A46C), Color(0xFFB98552))
@@ -95,6 +97,21 @@ fun DrawScope.desenharFundoDaArea(area: AreaDaCasa, progresso: Float, t: Float, 
     scale(progresso.coerceIn(0f, 1.2f), progresso.coerceIn(0f, 1.2f), pivo) {
         miolo(area.id, t, noite)
     }
+}
+
+private fun DrawScope.paisagemDoFundo(noite: Boolean) {
+    val longe = if (noite) Color(0xFF2E5A3A) else Color(0xFFA8DC94)
+    val perto = if (noite) Color(0xFF346B40) else Color(0xFF8CCB78)
+    drawOval(longe, p(-0.25f, H - 0.10f), s(0.85f, 0.22f))
+    drawOval(longe, p(0.45f, H - 0.12f), s(0.85f, 0.26f))
+    drawOval(perto, p(0.15f, H - 0.06f), s(0.75f, 0.16f))
+    // Arvorezinhas no horizonte.
+    for ((x, alto) in listOf(0.06f to 0.07f, 0.13f to 0.05f, 0.83f to 0.08f, 0.91f to 0.06f, 0.56f to 0.05f)) {
+        drawRect(Color(0xFF8B5E3C), p(x - 0.006f, H - alto * 0.55f), s(0.012f, alto * 0.6f))
+        drawCircle(if (noite) Color(0xFF2B5534) else Color(0xFF4FA35B), size.width * alto * 0.55f, p(x, H - alto * 0.75f))
+    }
+    // Sebe baixa na linha do horizonte.
+    for (i in 0 until 16) drawCircle(perto.copy(alpha = 0.9f), size.width * 0.04f, p(i / 15f, H + 0.005f))
 }
 
 private fun DrawScope.nuvem(x: Float, y: Float, r: Float) {
@@ -155,6 +172,24 @@ private fun DrawScope.miolo(id: String, t: Float, noite: Boolean) {
             for (i in 0 until 6) drawCircle(Color(0x338E5A34), size.width * 0.012f, p(0.28f + i * 0.09f, 0.70f + (i % 2) * 0.04f))
         }
         "piscina" -> {
+            // Deque de madeira em volta da piscina, com tábuas.
+            retMiolo(Color(0xFFD9A46C), folga = 0.11f, raio = 0.03f)
+            for (i in 0 until 14) {
+                val y = MT - 0.11f + i * (MB - MT + 0.22f) / 14f
+                drawLine(Color(0x338A5A2B), p(ME - 0.11f, y), p(MD + 0.11f, y), size.width * 0.004f)
+            }
+            // Guarda-sol e plantas nos cantos do deque (desenhados, não são prêmios).
+            drawLine(Color(0xFF8A5A2B), p(ME - 0.07f, MT - 0.16f), p(ME - 0.07f, MT - 0.04f), size.width * 0.008f)
+            val guardaSol = Path().apply {
+                moveTo(p(ME - 0.17f, MT - 0.13f).x, p(ME - 0.17f, MT - 0.13f).y)
+                quadraticTo(p(ME - 0.07f, MT - 0.24f).x, p(ME - 0.07f, MT - 0.24f).y, p(ME + 0.03f, MT - 0.13f).x, p(ME + 0.03f, MT - 0.13f).y)
+                close()
+            }
+            drawPath(guardaSol, Color(0xFFFF7A7A))
+            for ((x, y) in listOf(MD + 0.08f to MT - 0.08f, ME - 0.08f to MB + 0.08f, MD + 0.08f to MB + 0.08f)) {
+                drawRoundRect(Color(0xFFC0673A), p(x - 0.025f, y - 0.01f), s(0.05f, 0.04f), CornerRadius(size.width * 0.008f))
+                for (k in -1..1) drawOval(Color(0xFF3FA34D), p(x - 0.012f + k * 0.022f, y - 0.07f), s(0.024f, 0.065f))
+            }
             retMiolo(Color.White, folga = 0.05f)
             drawRoundRect(
                 Brush.verticalGradient(listOf(Color(0xFF7FD8FF), Color(0xFF2D9CDB)), startY = size.height * (MT - 0.02f), endY = size.height * (MB + 0.02f)),
@@ -171,8 +206,8 @@ private fun DrawScope.miolo(id: String, t: Float, noite: Boolean) {
                 }
                 drawPath(pth, Color.White.copy(alpha = 0.45f), style = Stroke(width = size.width * 0.006f, cap = StrokeCap.Round))
             }
-            // Escadinha de metal na borda.
-            for (dx in listOf(0f, 0.05f)) drawLine(Color(0xFFB0BEC5), p(MD - 0.08f + dx, MT - 0.08f), p(MD - 0.08f + dx, MT + 0.06f), size.width * 0.01f, StrokeCap.Round)
+            // Escadinha de metal no canto da borda, fora das boias da primeira fileira.
+            for (dx in listOf(0f, 0.04f)) drawLine(Color(0xFFB0BEC5), p(MD - 0.015f + dx, MT - 0.08f), p(MD - 0.015f + dx, MT + 0.06f), size.width * 0.01f, StrokeCap.Round)
         }
         "parquinho" -> {
             // Balanço no fundo (balança devagar) e o tanque de areia no miolo.
