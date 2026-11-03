@@ -181,7 +181,7 @@ class RepositorioFamiliaTest {
                 revisoes = listOf(RegistroDeRevisao(20_000L, trilha, 3, true)),
                 liberadaAte = mapOf(trilha to 20),
                 nivelFeito = setOf(trilha),
-                livrinhosLidos = setOf("um_livrinho"),
+                livrinhosLidos = setOf(br.com.casinhadosaber.dominio.Livrinhos.porId.keys.first()),
             )
         }
         val estadoDe1 = repo.estado
@@ -201,7 +201,7 @@ class RepositorioFamiliaTest {
         val novo = Repositorio(contexto)
         novo.restaurar((Copia.deTexto(texto) as ResultadoDaCopia.Valida).copia)
         assertEquals(estadoDe1, novo.estado)
-        assertEquals(setOf("um_livrinho"), novo.estado.livrinhosLidos)
+        assertEquals(setOf(br.com.casinhadosaber.dominio.Livrinhos.porId.keys.first()), novo.estado.livrinhosLidos)
         assertEquals(20, novo.estado.liberadaAte[trilha])
     }
 
