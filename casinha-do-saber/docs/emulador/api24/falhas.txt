@@ -1,9 +1,0 @@
-    <failure>java.lang.RuntimeException: android.os.DeadSystemException
-at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:144)
-at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:132)
-at androidx.profileinstaller.ProfileInstaller.writeProfile(ProfileInstaller.java:562)
-at androidx.profileinstaller.ProfileInstaller.writeProfile(ProfileInstaller.java:515)
-at androidx.profileinstaller.ProfileInstaller.writeProfile(ProfileInstaller.java:479)
-at androidx.profileinstaller.ProfileInstallerInitializer.lambda$writeInBackground$2(ProfileInstallerInitializer.java:145)
-at androidx.profileinstaller.ProfileInstallerInitializer$$ExternalSyntheticLambda2.run(D8$$SyntheticClass:0)
-at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1133)
