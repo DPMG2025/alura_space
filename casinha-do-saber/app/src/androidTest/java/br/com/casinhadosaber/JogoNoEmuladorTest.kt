@@ -16,12 +16,35 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.services.storage.TestStorage
+import br.com.casinhadosaber.dominio.Atividade
+import br.com.casinhadosaber.dominio.Balanca
+import br.com.casinhadosaber.dominio.CacaNaCena
+import br.com.casinhadosaber.dominio.CartasViradas
+import br.com.casinhadosaber.dominio.DirecaoDaSeta
+import br.com.casinhadosaber.dominio.Ditado
+import br.com.casinhadosaber.dominio.Domino
+import br.com.casinhadosaber.dominio.EscondeEsconde
+import br.com.casinhadosaber.dominio.EstourarBaloes
+import br.com.casinhadosaber.dominio.LigarPares
+import br.com.casinhadosaber.dominio.Mercadinho
+import br.com.casinhadosaber.dominio.MontarFrase
+import br.com.casinhadosaber.dominio.Pescaria
+import br.com.casinhadosaber.dominio.PintarPorCodigo
+import br.com.casinhadosaber.dominio.ProgramarRobo
+import br.com.casinhadosaber.dominio.QuebraCabeca
+import br.com.casinhadosaber.dominio.Relogio
+import br.com.casinhadosaber.dominio.SigaASequencia
+import br.com.casinhadosaber.dominio.Trem
+import br.com.casinhadosaber.ui.telas.PartidaNaTela
 import br.com.casinhadosaber.ui.telas.atividades.TracosDasLetras
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -34,6 +57,9 @@ import org.junit.runner.RunWith
 import java.util.Locale
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Testes de ponta a ponta num Android de verdade (emulador do CI):
@@ -55,6 +81,7 @@ class JogoNoEmuladorTest {
     @Before
     fun limpar() {
         prefs.edit().clear().commit()
+        PartidaNaTela.limpar()
     }
 
     @After
@@ -219,6 +246,254 @@ class JogoNoEmuladorTest {
             avancar(300)
         }
         avancar(900)
+    }
+
+
+    // ------------------------------------------------------------------ desafios novos (fases 51 a 250)
+
+    private fun no(tag: String): SemanticsNodeInteraction = regra.onAllNodes(hasTestTag(tag)).onFirst()
+
+    private fun tocarNo(tag: String, depois: Long = 500) {
+        no(tag).performClick()
+        avancar(depois)
+    }
+
+    /** Toque pela ação de acessibilidade (o alvo se mexe: peixe, balão, esconderijo). */
+    private fun tocarPorSemantica(tag: String, depois: Long = 700) {
+        no(tag).performSemanticsAction(SemanticsActions.OnClick)
+        avancar(depois)
+    }
+
+    /** Arrasta com o dedo o centro da marca [de] até o centro da marca [para]. */
+    private fun arrastarAte(de: String, para: String) {
+        val destino = no(para).fetchSemanticsNode().boundsInRoot
+        val origemNo = no(de)
+        val origem = origemNo.fetchSemanticsNode().boundsInRoot
+        origemNo.performTouchInput { swipe(center, destino.center - origem.topLeft, durationMillis = 500) }
+        avancar(900)
+    }
+
+    /** Índices de [valores] (cada um uma vez) que somam [alvo]. */
+    private fun somaExata(valores: List<Int>, alvo: Int, de: Int = 0): List<Int>? {
+        if (alvo == 0) return emptyList()
+        for (i in de until valores.size) {
+            if (valores[i] <= alvo) somaExata(valores, alvo - valores[i], i + 1)?.let { return listOf(i) + it }
+        }
+        return null
+    }
+
+    /** Leva a bolinha do ponteiro [tag] até [graus] (a partir do 12), a [fracao] do raio, dando a volta por fora. */
+    private fun girarPonteiro(tag: String, graus: Float, fracao: Float) {
+        val mostrador = no("relogio_mostrador")
+        val caixa = mostrador.fetchSemanticsNode().boundsInRoot
+        val bolinha = no(tag).fetchSemanticsNode().boundsInRoot
+        val raio = caixa.width / 2f
+        val r = graus * PI.toFloat() / 180f
+        val alvo = Offset(raio + raio * fracao * sin(r), raio - raio * fracao * cos(r))
+        val inicio = bolinha.center - caixa.topLeft
+        val meio = Offset(raio, raio) + ((inicio + alvo) / 2f - Offset(raio, raio)).let { v ->
+            val d = v.getDistance()
+            if (d < raio * 0.3f) Offset(raio * 0.6f, 0f) else v * (raio * 0.6f / d)
+        }
+        mostrador.performTouchInput {
+            down(inicio)
+            for (k in 1..10) moveTo(inicio + (meio - inicio) * (k / 10f), delayMillis = 30)
+            for (k in 1..10) moveTo(meio + (alvo - meio) * (k / 10f), delayMillis = 30)
+            up()
+        }
+        avancar(900)
+    }
+
+    /** Menor caminho do robô (sem pedras nem borda), em setas. */
+    private fun caminhoDoRobo(r: ProgramarRobo): List<DirecaoDaSeta> {
+        val passos = mapOf(DirecaoDaSeta.CIMA to (-1 to 0), DirecaoDaSeta.BAIXO to (1 to 0), DirecaoDaSeta.ESQUERDA to (0 to -1), DirecaoDaSeta.DIREITA to (0 to 1))
+        val veio = HashMap<Int, Pair<Int, DirecaoDaSeta>>()
+        val fila = ArrayDeque(listOf(r.inicio))
+        val vistos = mutableSetOf(r.inicio)
+        while (fila.isNotEmpty()) {
+            val c = fila.removeFirst()
+            if (c == r.chegada) break
+            for ((d, p) in passos) {
+                val l = c / r.colunas + p.first
+                val k = c % r.colunas + p.second
+                if (l !in 0 until r.linhas || k !in 0 until r.colunas) continue
+                val n = l * r.colunas + k
+                if (n in r.obstaculos || !vistos.add(n)) continue
+                veio[n] = c to d
+                fila.addLast(n)
+            }
+        }
+        val setas = mutableListOf<DirecaoDaSeta>()
+        var c = r.chegada
+        while (c != r.inicio) {
+            val (antes, d) = veio.getValue(c)
+            setas.add(0, d)
+            c = antes
+        }
+        return setas
+    }
+
+    private fun habilitado(tag: String) = regra.onAllNodes(hasTestTag(tag)).fetchSemanticsNodes()
+        .firstOrNull()?.config?.contains(SemanticsProperties.Disabled) == false
+
+    /** Joga a atividade [a] sem errar, pelas marcas de teste de cada tela. Devolve o nome do tipo. */
+    private fun jogarDesafioNovo(a: Atividade): String {
+        when (a) {
+            is Pescaria -> repeat(a.certos.size) { tocarPorSemantica("peixe_certo", 1_000) }
+            is EstourarBaloes -> for (k in a.certos.indices) tocarPorSemantica("balao_certo_$k", 700)
+            is CacaNaCena -> repeat(a.certos.size) { tocarPorSemantica("cena_certo", 1_000) }
+            is EscondeEsconde -> {
+                // Só aceita toque depois de acenar, esconder e trocar de lugar (toque antes é ignorado).
+                avancar(5_000L + a.trocas * 1_600L)
+                var tentativas = 0
+                while (!PartidaNaTela.acertou && tentativas++ < 8) tocarPorSemantica("esconderijo_certo", 1_500)
+            }
+            is LigarPares -> for ((i, j) in a.pares) arrastarAte("ligar_esquerda_$i", "ligar_direita_$j")
+            is QuebraCabeca -> for (i in 0 until a.pecas) if (i !in a.fixas) arrastarAte("quebra_peca_$i", "quebra_lugar_$i")
+            is Trem -> for (i in a.vagoes.indices) if (i !in a.fixos) arrastarAte("trem_vagao_$i", "trem_engate_$i")
+            is Domino -> for (i in a.ordem) arrastarAte("domino_peca_$i", "domino_alvo")
+            is Balanca -> {
+                val certos = somaExata(a.pesos, a.alvo) ?: throw AssertionError("balança sem solução: $a")
+                for (i in certos) arrastarAte("balanca_peso_$i", "balanca_prato")
+            }
+            is Mercadinho -> {
+                val certos = somaExata(a.dinheiro, a.alvo) ?: throw AssertionError("mercadinho sem solução: $a")
+                for (i in certos) arrastarAte("mercado_dinheiro_$i", "mercado_balcao")
+            }
+            is Relogio -> {
+                if (a.minuto != 0) girarPonteiro("relogio_ponteiro_minutos", a.minuto * 6f, 0.78f)
+                girarPonteiro("relogio_ponteiro_horas", ((a.hora % 12) + a.minuto / 60f) * 30f, 0.5f)
+            }
+            is PintarPorCodigo -> {
+                var pote: String? = null
+                for ((i, c) in a.casas.withIndex()) {
+                    val codigo = c.codigo ?: continue
+                    if (codigo != pote) {
+                        tocarNo("pintar_pote_$codigo", 150)
+                        pote = codigo
+                    }
+                    tocarNo("pintar_casa_$i", 80)
+                }
+            }
+            is SigaASequencia -> {
+                // Espera a sequência terminar de ser mostrada (o 👀 só fica ativo na vez da criança).
+                regra.waitUntil(40_000) { habilitado("seq_repetir") }
+                for (i in a.sequencia) tocarNo("seq_botao_$i", 450)
+            }
+            is Ditado -> for (k in a.partes.indices) tocarNo("ditado_certa_$k", 700)
+            is CartasViradas -> {
+                avancar(5_000)
+                for (k in a.ordem.indices) tocarNo("virada_ordem_$k", 1_300)
+            }
+            is ProgramarRobo -> {
+                avancar(1_000)
+                for (d in caminhoDoRobo(a)) tocarNo("robo_seta_${d.name}", 400)
+                tocarNo("robo_play", 1_000)
+            }
+            is MontarFrase -> for (k in a.palavras.indices) arrastarAte("frase_certa_$k", "frase_lugar_$k")
+            else -> return responderSemErrar()
+        }
+        return a::class.simpleName ?: "?"
+    }
+
+    /** Uma fase alta já liberada: todas as anteriores do caminho vencidas com 3 estrelas. */
+    private fun abrirFase(chaveTrilha: String, caminho: String, numero: Int) {
+        prefs.edit().clear()
+            .putString("genero", "MENINO").putString("nome", "Leo")
+            .putString("estrelas", (0 until numero - 1).joinToString(";") { "$chaveTrilha:$it=3" })
+            .putString("colocados", "terreno,0.5,0.5;paredes,0.5,0.5;telhado,0.5,0.5;porta,0.5,0.5;cama,0.27,0.528;janelas,0.5,0.5")
+            .commit()
+        PartidaNaTela.limpar()
+        cenario?.close()
+        cenario = ActivityScenario.launch(MainActivity::class.java)
+        esperar("Caminho $caminho", 15_000)
+        regra.onAllNodes(hasContentDescription("Caminho $caminho", substring = true)).onFirst().performClick()
+        esperar("Fase $numero,", 15_000)
+        avancar(1_500)
+        val fase = regra.onAllNodes(hasContentDescription("Fase $numero,", substring = true)).onFirst()
+        runCatching { fase.performSemanticsAction(SemanticsActions.OnClick) }.onFailure { fase.performClick() }
+    }
+
+    /**
+     * Joga as 5 perguntas da fase sem errar, lendo de [PartidaNaTela] a atividade sorteada; cada pergunta
+     * só termina quando a tela do jogo marca o acerto. Devolve os tipos jogados.
+     */
+    private fun jogarFaseAlta(chaveTrilha: String, caminho: String, numero: Int, captura: String): List<String> {
+        abrirFase(chaveTrilha, caminho, numero)
+        val tipos = mutableListOf<String>()
+        for (i in 0 until 5) {
+            regra.waitUntil(20_000) { PartidaNaTela.indice == i && !PartidaNaTela.acertou && PartidaNaTela.pergunta != null }
+            // Passa a troca de pergunta (as duas telas convivem durante a animação).
+            avancar(1_200)
+            val pergunta = PartidaNaTela.pergunta!!
+            if (i == 0) capturar("${captura}_inicio")
+            val tipo = jogarDesafioNovo(pergunta.atividade)
+            tipos += tipo
+            try {
+                regra.waitUntil(45_000) { PartidaNaTela.indice == i && PartidaNaTela.acertou }
+            } catch (e: Throwable) {
+                capturar("${captura}_falhou_$i")
+                throw AssertionError("fase $numero de $caminho: a pergunta ${i + 1} ($tipo, \"${pergunta.instrucao}\") não terminou", e)
+            }
+        }
+        regra.waitUntil(20_000) {
+            regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).fetchSemanticsNodes().isNotEmpty() ||
+                prefs.getString("estrelas", "").orEmpty().contains("$chaveTrilha:${numero - 1}=")
+        }
+        capturar("${captura}_fim")
+        val estrelas = prefs.getString("estrelas", "").orEmpty().split(";").firstOrNull { it.startsWith("$chaveTrilha:${numero - 1}=") }
+        assertEquals("fase $numero de $caminho jogada sem erro deveria valer 3 estrelas ($tipos)", "$chaveTrilha:${numero - 1}=3", estrelas)
+        return tipos
+    }
+
+    private val relatorioDasFases = StringBuilder()
+
+    private fun registrar(caminho: String, numero: Int, tipos: List<String>) {
+        relatorioDasFases.appendLine("$caminho fase $numero: ${tipos.joinToString(", ")}")
+        armazenamento.openOutputFile("fases_altas_${Thread.currentThread().id}.txt").use { it.write(relatorioDasFases.toString().toByteArray()) }
+    }
+
+    /** Fase 100 (chefão do Circo) de cada caminho: sorteia os desafios novos num Android de verdade. */
+    @Test
+    fun jogarFase100DeCadaCaminho() {
+        val novos = mutableSetOf<String>()
+        for ((chave, caminho, captura) in listOf(
+            Triple("MATEMATICA", "Números", "e20_numeros_100"),
+            Triple("PORTUGUES", "Letras", "e21_letras_100"),
+            Triple("INGLES", "Inglês", "e22_ingles_100"),
+            Triple("LOGICA", "Lógica", "e23_logica_100"),
+        )) {
+            val tipos = jogarFaseAlta(chave, caminho, 100, captura)
+            registrar(caminho, 100, tipos)
+            novos += tipos.filter { it !in TIPOS_ANTIGOS }
+        }
+        assertTrue("as fases 100 deveriam sortear desafios novos: $novos", novos.size >= 3)
+    }
+
+    /** Fases onde os outros desafios novos mais aparecem (relógio, robô, mercadinho, esconde esconde...). */
+    @Test
+    fun jogarFasesAltasComOsOutrosDesafios() {
+        val novos = mutableSetOf<String>()
+        for ((chave, caminho, numero) in listOf(
+            Triple("MATEMATICA", "Números", 54),
+            Triple("MATEMATICA", "Números", 132),
+            Triple("MATEMATICA", "Números", 197),
+            Triple("MATEMATICA", "Números", 222),
+            Triple("LOGICA", "Lógica", 54),
+            Triple("LOGICA", "Lógica", 114),
+            Triple("LOGICA", "Lógica", 204),
+            Triple("LOGICA", "Lógica", 213),
+            Triple("INGLES", "Inglês", 127),
+        )) {
+            val tipos = jogarFaseAlta(chave, caminho, numero, "e24_${chave.lowercase()}_$numero")
+            registrar(caminho, numero, tipos)
+            novos += tipos.filter { it !in TIPOS_ANTIGOS }
+        }
+        assertTrue("as fases altas deveriam sortear vários desafios novos: $novos", novos.size >= 6)
+    }
+
+    private companion object {
+        val TIPOS_ANTIGOS = setOf("escolha", "cesta", "memoria", "montar", "tracar")
     }
 
     @Test

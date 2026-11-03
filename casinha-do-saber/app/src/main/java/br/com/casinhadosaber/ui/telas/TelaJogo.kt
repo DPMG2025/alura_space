@@ -41,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -90,6 +91,31 @@ import kotlinx.coroutines.launch
 
 private val elogios = listOf("Muito bem!", "Isso aí!", "Acertou!", "Você é demais!", "Perfeito!", "Uau, que esperto!")
 
+/**
+ * O que está na tela do jogo agora, para o teste no emulador: as perguntas são sorteadas a cada partida,
+ * então o teste lê aqui a atividade da vez (como a criança vê na tela) para jogar sem errar.
+ */
+object PartidaNaTela {
+    @Volatile var pergunta: Pergunta? = null
+        private set
+    @Volatile var indice: Int = -1
+        private set
+    @Volatile var acertou: Boolean = false
+        private set
+
+    internal fun mostrar(pergunta: Pergunta, indice: Int, acertou: Boolean) {
+        this.pergunta = pergunta
+        this.indice = indice
+        this.acertou = acertou
+    }
+
+    fun limpar() {
+        pergunta = null
+        indice = -1
+        acertou = false
+    }
+}
+
 @Composable
 fun TelaJogo(
     fase: Fase,
@@ -134,6 +160,7 @@ fun TelaJogo(
     val exemplo = facilitada && indice == 0
     val cor = Color(fase.trilha.corArgb)
     val vibracao = LocalHapticFeedback.current
+    SideEffect { PartidaNaTela.mostrar(pergunta, indice, acertou) }
 
     LaunchedEffect(indice) {
         delay(350)
