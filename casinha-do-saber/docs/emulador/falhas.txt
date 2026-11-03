@@ -1,0 +1,9 @@
+    <failure>java.lang.AssertionError: fase 100 de Letras: a pergunta 3 (montar, "Monte: MACACO") não terminou
+at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFaseAlta(JogoNoEmuladorTest.kt:443)
+at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFase100DeCadaCaminho(JogoNoEmuladorTest.kt:473)
+... 54 trimmed
+Caused by: androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 45000 ms
+at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:306)
+at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFaseAlta(JogoNoEmuladorTest.kt:440)
+... 56 more

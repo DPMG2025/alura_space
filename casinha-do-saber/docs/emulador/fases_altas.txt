@@ -1,0 +1,9 @@
+Números fase 54: Pescaria, Pescaria, escolha, Pescaria, escolha
+Números fase 132: escolha, Relogio, escolha, escolha, Relogio
+Números fase 197: escolha, escolha, EstourarBaloes, escolha, escolha
+Números fase 222: CacaNaCena, CacaNaCena, escolha, CacaNaCena, CacaNaCena
+Lógica fase 54: QuebraCabeca, LigarPares, escolha, QuebraCabeca, QuebraCabeca
+Lógica fase 114: ProgramarRobo, ProgramarRobo, EscondeEsconde, ProgramarRobo, ProgramarRobo
+Lógica fase 204: EscondeEsconde, escolha, CartasViradas, EscondeEsconde, escolha
+Lógica fase 213: escolha, escolha, Trem, SigaASequencia, escolha
+Inglês fase 127: MontarFrase, MontarFrase, escolha, MontarFrase, MontarFrase
