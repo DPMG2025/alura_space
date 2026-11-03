@@ -1,9 +1,6 @@
 package br.com.fipeplaca.ui
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import br.com.fipeplaca.FipeApp
 import br.com.fipeplaca.data.ConsultaSalva
 import br.com.fipeplaca.data.FipeRepositorio
 import br.com.fipeplaca.data.FipeResultado
@@ -36,9 +33,12 @@ data class ManualUi(
     val avisoAtualizacao: String? = null,
 )
 
-class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.SavedStateHandle) : AndroidViewModel(app) {
-    private val repo = (app as FipeApp).repositorio
-    private val salvos = (app as FipeApp).salvos
+/** Dependencias recebidas pelo construtor (fabrica em [br.com.fipeplaca.FipeApp]); testes passam simulados. */
+class ManualViewModel(
+    private val repo: FipeRepositorio,
+    private val salvos: br.com.fipeplaca.data.RepositorioSalvos,
+    private val salvo: androidx.lifecycle.SavedStateHandle,
+) : androidx.lifecycle.ViewModel() {
     private val _estado = MutableStateFlow(ManualUi())
     val estado: StateFlow<ManualUi> = _estado
     val itensSalvos: StateFlow<List<ConsultaSalva>> = salvos.itens
@@ -108,7 +108,7 @@ class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.Sa
                 .onSuccess { _estado.update { it.copy(carregando = false) } }
                 .onFailure { e ->
                     if (e is kotlinx.coroutines.CancellationException) throw e
-                    _estado.update { it.copy(carregando = false, erro = FipeRepositorio.mensagemErro(e)) }
+                    _estado.update { it.copy(carregando = false, erro = MensagensErro.de(e)) }
                 }
         }
     }
@@ -238,7 +238,7 @@ class ManualViewModel(app: Application, private val salvo: androidx.lifecycle.Sa
             if (_estado.value.resultado?.codigoFipe != r.codigoFipe) return@launch
             val novo = tentativa.getOrNull()
             if (novo == null) {
-                _estado.update { it.copy(atualizando = false, avisoAtualizacao = FipeRepositorio.mensagemErro(tentativa.exceptionOrNull()!!) + " Mostrando o valor guardado.") }
+                _estado.update { it.copy(atualizando = false, avisoAtualizacao = MensagensErro.de(tentativa.exceptionOrNull()!!) + " Mostrando o valor guardado.") }
                 return@launch
             }
             _estado.update { it.copy(resultado = novo, atualizando = false, avisoAtualizacao = null) }

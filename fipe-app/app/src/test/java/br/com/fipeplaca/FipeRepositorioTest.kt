@@ -1,5 +1,6 @@
 package br.com.fipeplaca
 
+import br.com.fipeplaca.ui.MensagensErro
 import br.com.fipeplaca.data.ConfigConexao
 import br.com.fipeplaca.data.FipeRepositorio
 import br.com.fipeplaca.data.PeriodoHistorico
@@ -207,7 +208,7 @@ class FipeRepositorioTest {
         rotas = { p -> if (p == "/v2/references") json("""[{"code":"1","month":"jan/2026"},{"code":"2","month":"fev/2026"}]""") else json("{}", 402) }
         val alvo = br.com.fipeplaca.data.FipeResultado(TipoVeiculo.CARROS, "", "", "2019", "", "X", "", null, codigoAno = "2019-1")
         val e = runCatching { repo().historico(alvo, PeriodoHistorico.MESES_12) }.exceptionOrNull()!!
-        assertTrue(FipeRepositorio.mensagemErro(e).contains("histórico"))
+        assertTrue(MensagensErro.de(e).contains("histórico"))
     }
 
     @Test fun consultaCanceladaNaoTerminaComSucesso() = kotlinx.coroutines.runBlocking {
@@ -265,12 +266,12 @@ class FipeRepositorioTest {
     @Test fun errosAmigaveis() = runTest {
         rotas = { p -> if (p.startsWith("/placa/")) json("""{"message":"x"}""", 401) else json("{}", 429) }
         val e1 = runCatching { repo().consultarPlaca("ABC1234") }.exceptionOrNull()!!
-        assertTrue(FipeRepositorio.mensagemErro(e1).contains("Token do serviço de placas"))
+        assertTrue(MensagensErro.de(e1).contains("Token do serviço de placas"))
         val e2 = runCatching { repo().marcas(TipoVeiculo.MOTOS) }.exceptionOrNull()!!
-        assertTrue(FipeRepositorio.mensagemErro(e2).contains("Limite"))
+        assertTrue(MensagensErro.de(e2).contains("Limite"))
         servidor.shutdown()
         val e3 = runCatching { repo().marcas(TipoVeiculo.CAMINHOES) }.exceptionOrNull()!!
-        assertTrue(FipeRepositorio.mensagemErro(e3).contains("conexão"))
+        assertTrue(MensagensErro.de(e3).contains("conexão"))
     }
 
     @Test fun placaSemTokenNaoConsulta() {

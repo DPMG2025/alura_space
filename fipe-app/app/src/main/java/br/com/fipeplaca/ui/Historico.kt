@@ -95,7 +95,7 @@ class HistoricoController(
                 val guardados = MesclarHistorico.mesclar(emptyList(), locais(alvo), periodo)
                 _estado.update {
                     if (guardados.size >= 2) it.copy(carregando = false, pontos = guardados, offline = true)
-                    else it.copy(carregando = false, erro = FipeRepositorio.mensagemErro(e))
+                    else it.copy(carregando = false, erro = MensagensErro.de(e))
                 }
             }
         }

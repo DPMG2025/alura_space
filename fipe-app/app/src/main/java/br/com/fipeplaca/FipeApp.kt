@@ -1,5 +1,8 @@
 package br.com.fipeplaca
 
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.initializer
+
 import android.app.Application
 import br.com.fipeplaca.data.FipeRepositorio
 import br.com.fipeplaca.data.Preferencias
@@ -20,6 +23,14 @@ class FipeApp : Application() {
     fun definirTema(valor: String) {
         prefs.tema = valor
         tema.value = valor
+    }
+
+    /** Fabrica dos ViewModels: injeta repositorio, salvos e o estado salvo de cada tela. */
+    val fabricaViewModels: androidx.lifecycle.ViewModelProvider.Factory by lazy {
+        androidx.lifecycle.viewmodel.viewModelFactory {
+            initializer { br.com.fipeplaca.ui.PlacaViewModel(repositorio, salvos, createSavedStateHandle()) }
+            initializer { br.com.fipeplaca.ui.ManualViewModel(repositorio, salvos, createSavedStateHandle()) }
+        }
     }
 
     override fun onCreate() {

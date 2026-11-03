@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit
 class PlacaViewModelTest {
     private lateinit var servidor: MockWebServer
     private lateinit var app: FipeApp
+    private lateinit var repo: FipeRepositorio
     @Volatile private var atrasoPlacaSeg = 0L
 
     private fun json(corpo: String) = MockResponse().setHeader("Content-Type", "application/json").setBody(corpo)
@@ -54,7 +55,7 @@ class PlacaViewModelTest {
         servidor.start()
         app = RuntimeEnvironment.getApplication() as FipeApp
         val url = "http://${servidor.hostName}:${servidor.port}"
-        app.repositorio = FipeRepositorio(
+        repo = FipeRepositorio(
             object : ConfigConexao {
                 override val tokenPlaca = "tok"
                 override val urlPlaca = "$url/placa/{placa}/{token}"
@@ -81,7 +82,7 @@ class PlacaViewModelTest {
     }
 
     @Test fun versaoEscolhidaEMantidaAoConsultarDeNovo() {
-        val vm = PlacaViewModel(app, SavedStateHandle())
+        val vm = PlacaViewModel(repo, app.salvos, SavedStateHandle())
         vm.alterarPlaca("ABC1234")
         vm.consultar()
         esperar("primeira consulta") { vm.estado.value.veiculo != null && !vm.estado.value.carregando }
@@ -103,7 +104,7 @@ class PlacaViewModelTest {
 
     @Test fun limparDuranteAConsultaNaoTrazResultadoAntigo() {
         atrasoPlacaSeg = 2
-        val vm = PlacaViewModel(app, SavedStateHandle())
+        val vm = PlacaViewModel(repo, app.salvos, SavedStateHandle())
         vm.alterarPlaca("ABC1234")
         vm.consultar()
         assertTrue(vm.estado.value.carregando)
@@ -117,8 +118,8 @@ class PlacaViewModelTest {
 
     @Test fun placaDigitadaSobreviveAoEncerramentoDoApp() {
         val estadoSalvo = SavedStateHandle()
-        PlacaViewModel(app, estadoSalvo).alterarPlaca("xyz9a87")
+        PlacaViewModel(repo, app.salvos, estadoSalvo).alterarPlaca("xyz9a87")
         // Novo ViewModel com o mesmo estado salvo (como depois de o sistema encerrar o processo)
-        assertEquals("XYZ9A87", PlacaViewModel(app, estadoSalvo).estado.value.placa)
+        assertEquals("XYZ9A87", PlacaViewModel(repo, app.salvos, estadoSalvo).estado.value.placa)
     }
 }

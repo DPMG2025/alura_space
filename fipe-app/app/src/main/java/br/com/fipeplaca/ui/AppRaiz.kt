@@ -83,8 +83,8 @@ fun AppRaiz() {
     var ajustesSalvos by remember { mutableIntStateOf(0) }
     var confirmarLimpeza by remember { mutableStateOf(false) }
 
-    val placaVm: PlacaViewModel = viewModel()
-    val manualVm: ManualViewModel = viewModel()
+    val placaVm: PlacaViewModel = viewModel(factory = app.fabricaViewModels)
+    val manualVm: ManualViewModel = viewModel(factory = app.fabricaViewModels)
     // Na raiz, so o necessario para o "voltar"; cada aba coleta o proprio estado (o progresso do
     // historico recompoe so a aba aberta, nao o app inteiro)
     val placa by placaVm.estado.collectAsStateWithLifecycle()
