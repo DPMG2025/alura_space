@@ -1,0 +1,9 @@
+    <failure>java.lang.AssertionError: fase 222 de Números: a pergunta 3 (cesta, "Reparta 8 entre 4") não terminou
+at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFaseAlta(JogoNoEmuladorTest.kt:477)
+at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFasesAltasComOsOutrosDesafios(JogoNoEmuladorTest.kt:529)
+... 54 trimmed
+Caused by: androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 45000 ms
+at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:306)
+at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFaseAlta(JogoNoEmuladorTest.kt:474)
+... 56 more
