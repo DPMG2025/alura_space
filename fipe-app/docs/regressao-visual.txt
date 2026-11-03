@@ -1,2 +1,8 @@
 Telas com diferenca visual em relacao a versao anterior (revisar):
+* placaResultado
+* ajustes
+* placaInicial
 * salvosFavoritos
+* historicoReal1Mes
+* placaResultadoEscuro
+Aprovado no commit com [telas]: as novas capturas viram a referencia.
