@@ -54,7 +54,6 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Crianca
-import br.com.casinhadosaber.ui.componentes.FileiraDeEstrelas
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import kotlinx.coroutines.launch
@@ -126,7 +125,8 @@ fun TelaTrilha(
         BoxWithConstraints(
             Modifier
                 .fillMaxSize()
-                .verticalScroll(rolagem),
+                .verticalScroll(rolagem)
+                .padding(top = 12.dp),
         ) {
             val largura = maxWidth
             val alturaTotal = ALTURA_PASSO * fases.size + 40.dp
@@ -174,12 +174,13 @@ fun TelaTrilha(
                 }
                 if (eAtual) {
                     // A criança fica ao lado da fase atual, do lado com mais espaço.
-                    val ladoCrianca = if (zigueZague[fase.numero] >= 0.5f) -1 else 1
+                    val proximo = zigueZague.getOrNull(fase.numero + 1) ?: zigueZague[fase.numero - 1]
+                    val ladoCrianca = if (proximo > zigueZague[fase.numero]) -1 else 1
                     estado.perfil?.let { perfil ->
                         Crianca(
                             perfil,
                             Modifier
-                                .offset(x = cx + (TAMANHO_BOLINHA * 0.85f) * ladoCrianca - 32.dp, y = topo - 12.dp)
+                                .offset(x = cx + (TAMANHO_BOLINHA / 2 + 40.dp) * ladoCrianca - 32.dp, y = topo - 12.dp)
                                 .height(104.dp),
                             acenando = true,
                         )
@@ -258,7 +259,7 @@ private fun BolinhaDaFase(
         }
         // Nome da fase numa plaquinha (não se mistura com o caminho pontilhado), e as estrelas embaixo.
         Text(
-            fase.titulo,
+            fase.titulo + if (estrelas > 0) "  " + "★".repeat(estrelas) + "☆".repeat(3 - estrelas) else "",
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             maxLines = 1,
@@ -270,6 +271,6 @@ private fun BolinhaDaFase(
                 .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(50))
                 .padding(horizontal = 10.dp, vertical = 2.dp),
         )
-        if (estrelas > 0) FileiraDeEstrelas(estrelas, tamanho = 18.dp)
+
     }
 }

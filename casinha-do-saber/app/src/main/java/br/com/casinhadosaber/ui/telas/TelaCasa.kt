@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -369,14 +370,15 @@ private fun Bau(
                         modifier = Modifier.graphicsLayer { alpha = if (podeComprar) 1f else 0.5f },
                     ) {
                         Column(Modifier.width(92.dp).padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(produto.icone, fontSize = 34.sp, maxLines = 1)
+                            MiniaturaDoProduto(produto, Modifier.size(52.dp))
                             Text(
                                 when {
-                                    usando -> "✔"
-                                    tem -> "♻️"
+                                    usando -> "✔ usando"
+                                    tem -> "✔ é seu"
                                     else -> "🪙 $preco"
                                 },
                                 style = MaterialTheme.typography.titleMedium,
+                                color = if (tem) Cores.Certo else Cores.Texto,
                             )
                         }
                     }
@@ -423,6 +425,39 @@ private fun Bau(
     }
 }
 
+/** Desenho pequeno do produto: telhado ou porta na cor certa, amostra do papel de parede, ou o emoji. */
+@Composable
+private fun MiniaturaDoProduto(p: Produto, modifier: Modifier) {
+    when (p.categoria) {
+        Categoria.TELHADO -> androidx.compose.foundation.Canvas(modifier) {
+            val cor = Color(Loja.coresDoTelhado[p.valor.toInt()])
+            drawRect(Color(0xFFFFE9C7), androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height * 0.5f), androidx.compose.ui.geometry.Size(size.width * 0.6f, size.height * 0.45f))
+            val tri = androidx.compose.ui.graphics.Path().apply {
+                moveTo(size.width * 0.05f, size.height * 0.55f); lineTo(size.width * 0.5f, size.height * 0.1f); lineTo(size.width * 0.95f, size.height * 0.55f); close()
+            }
+            drawPath(tri, cor)
+        }
+        Categoria.PORTA -> androidx.compose.foundation.Canvas(modifier) {
+            val cor = Color(Loja.coresDaPorta[p.valor.toInt()])
+            drawRoundRect(cor, androidx.compose.ui.geometry.Offset(size.width * 0.25f, size.height * 0.1f), androidx.compose.ui.geometry.Size(size.width * 0.5f, size.height * 0.85f), androidx.compose.ui.geometry.CornerRadius(size.width * 0.25f))
+            drawCircle(Color(0xFFFFD166), size.width * 0.05f, androidx.compose.ui.geometry.Offset(size.width * 0.65f, size.height * 0.55f))
+        }
+        Categoria.PAREDE -> androidx.compose.foundation.Canvas(modifier) {
+            drawRoundRect(Color(0xFFFFF1C9), cornerRadius = androidx.compose.ui.geometry.CornerRadius(10f))
+            val passo = size.width / 5
+            for (i in 0 until 5) for (j in 0 until 5) {
+                val c = androidx.compose.ui.geometry.Offset(passo * (i + 0.5f), passo * (j + 0.5f))
+                when (p.valor) {
+                    "1" -> if (i % 2 == 0) drawRect(Color(0x33000000), androidx.compose.ui.geometry.Offset(passo * i, 0f), androidx.compose.ui.geometry.Size(passo / 2, size.height))
+                    "2" -> drawCircle(Color(0x33000000), passo * 0.2f, c)
+                    else -> if ((i + j) % 2 == 0) drawPath(br.com.casinhadosaber.ui.componentes.caminhoEstrela(c, passo * 0.35f), Color(0x66FFC93C))
+                }
+            }
+        }
+        else -> Text(p.icone, fontSize = 34.sp, maxLines = 1, modifier = modifier.wrapContentSize())
+    }
+}
+
 @Composable
 private fun Aba(texto: String, descricao: String, selecionada: Boolean, onClick: () -> Unit) {
     Text(
@@ -431,7 +466,8 @@ private fun Aba(texto: String, descricao: String, selecionada: Boolean, onClick:
         color = Cores.Texto,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .background(if (selecionada) Color.White else Color(0xFFFFD27A))
+            .background(if (selecionada) Cores.Estrela else Color.White.copy(alpha = 0.4f))
+            .border(if (selecionada) 3.dp else 0.dp, if (selecionada) Color(0xFFE0A800) else Color.Transparent, RoundedCornerShape(50))
             .semantics { contentDescription = descricao }
             .clickable(onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 6.dp),

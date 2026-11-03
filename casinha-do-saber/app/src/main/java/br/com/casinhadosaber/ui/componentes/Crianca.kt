@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalDensity
@@ -102,16 +104,26 @@ fun Crianca(
         }
         // Chapéu comprado na loja, em cima da cabeça.
         if (perfil.chapeu.isNotEmpty()) {
-            val tamanho = maxWidth * 0.62f
+            // Cabeça: centro em 27% da altura, raio = 34% da largura. O chapéu tem ~90% da largura da cabeça
+            // e a aba fica um pouco acima dos olhos.
+            val raio = maxWidth * 0.34f
+            val largura = raio * 2f * 0.9f
+            val fonte = largura * 0.82f
+            val baseDoChapeu = maxHeight * 0.27f - raio * 0.45f
             val densidade = LocalDensity.current
-            Text(
-                perfil.chapeu,
-                fontSize = with(densidade) { tamanho.toSp() },
-                lineHeight = with(densidade) { (tamanho * 1.1f).toSp() },
-                modifier = Modifier
+            Box(
+                Modifier
                     .align(Alignment.TopCenter)
-                    .offset(y = -tamanho * 0.42f),
-            )
+                    .offset(y = baseDoChapeu - fonte * 1.05f)
+                    .size(largura, fonte * 1.1f),
+                contentAlignment = Alignment.BottomCenter,
+            ) {
+                Text(
+                    perfil.chapeu,
+                    fontSize = with(densidade) { fonte.toSp() },
+                    lineHeight = with(densidade) { (fonte * 1.05f).toSp() },
+                )
+            }
         }
     }
 }
@@ -196,7 +208,7 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
         close()
     }
     drawPath(franja, cabelo)
-    if (menina) {
+    if (menina && perfil.chapeu.isEmpty()) {
         val laco = Color(0xFFFF4F8B)
         val n = Offset(centro.x + r * 0.45f, centro.y - r * 0.85f)
         drawPath(Path().apply { moveTo(n.x, n.y); lineTo(n.x - r * 0.3f, n.y - r * 0.23f); lineTo(n.x - r * 0.25f, n.y + r * 0.23f); close() }, laco)

@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -114,6 +115,8 @@ fun CenaDaCasa(
     noite: Boolean = false,
     /** Uso interno: quem chama já desenhou o céu (modo de preencher a altura). */
     semCeu: Boolean = false,
+    /** Uso interno: os visitantes passeiam no jardim de baixo, desenhados por quem chama. */
+    semVisitantes: Boolean = false,
     /** Ocupa toda a altura dada: a casa fica embaixo e o céu continua para cima (sem faixas vazias). */
     preencherAltura: Boolean = false,
     onTocarItem: (ItemCasa) -> Unit = {},
@@ -171,9 +174,34 @@ fun CenaDaCasa(
                 }
             }
             CenaDaCasa(
-                estado, Modifier.padding(top = ceuExtra).height(alturaCena), interativa, pintando, novaEstrutura, destaqueId, puloDaCrianca, noite, true, false,
+                estado, Modifier.padding(top = ceuExtra).height(alturaCena), interativa, pintando, novaEstrutura, destaqueId, puloDaCrianca, noite, true,
+                sobra * 0.65f > 70.dp, false,
                 onTocarItem, onMoverItem, onGuardarItem, onRecusarItem, onPintar, onTocarCrianca, onMoverCrianca,
             )
+            // Visitantes andam numa "pista" no meio do jardim de baixo, longe dos objetos da casa.
+            if (sobra * 0.65f > 70.dp) {
+                val transicao = rememberInfiniteTransition(label = "visitas")
+                val passo by transicao.animateFloat(0f, 1f, infiniteRepeatable(tween(14000, easing = LinearEasing)), label = "passo")
+                val pulinho by transicao.animateFloat(0f, 1f, infiniteRepeatable(tween(300), androidx.compose.animation.core.RepeatMode.Reverse), label = "pulinho")
+                val densidade = LocalDensity.current
+                val larguraPx = with(densidade) { maxWidth.toPx() }
+                val topoJardim = with(densidade) { (ceuExtra + alturaCena).toPx() }
+                val alturaJardim = with(densidade) { (sobra * 0.65f).toPx() }
+                val tamanho = larguraPx * 0.08f
+                estado.visitantes.forEachIndexed { i, bicho ->
+                    val volta = (passo + i * 0.37f) % 1f
+                    val ida = volta < 0.5f
+                    val fracao = if (ida) volta * 2f else (1f - volta) * 2f
+                    val x = (0.06f + 0.88f * fracao) * larguraPx
+                    val y = topoJardim + alturaJardim * (0.62f + 0.12f * (i % 3)) - tamanho - pulinho * tamanho * 0.08f
+                    Box(
+                        Modifier
+                            .offset { IntOffset((x - tamanho / 2).roundToInt(), y.roundToInt()) }
+                            .size(with(densidade) { tamanho.toDp() })
+                            .graphicsLayer { scaleX = if (ida) -1f else 1f },
+                    ) { EmojiGrande(bicho, tamanho) }
+                }
+            }
         }
         return
     }
@@ -256,7 +284,7 @@ fun CenaDaCasa(
         }
 
         // Visitantes comprados na loja passeiam pelo jardim, cada um no seu ritmo.
-        estado.visitantes.forEachIndexed { i, bicho ->
+        if (!semVisitantes) estado.visitantes.forEachIndexed { i, bicho ->
             val volta = ((t + i * 0.37f) % 1f)
             val ida = volta < 0.5f
             val fracao = if (ida) volta * 2f else (1f - volta) * 2f
@@ -639,8 +667,8 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
     if (!noite) {
         for (k in 0 until 2) {
             // Passeiam só pela metade direita do céu (o sol e o arco-íris ficam à esquerda).
-            val x = 0.38f + ((t * 0.3f + k * 0.5f) % 1f) * 0.62f
-            nuvemDeFundo(X(x), Y(0.04f + k * 0.06f), X(0.06f))
+            val x = 0.64f + ((t * 0.3f + k * 0.5f) % 1f) * 0.30f
+            nuvemDeFundo(X(x), Y(0.11f + k * 0.05f), X(0.05f))
         }
         for (k in 0 until 3) {
             val bx = X(((t + k * 0.31f) % 1f) * 1.1f - 0.05f)
@@ -815,8 +843,28 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
         drawCircle(if (noite) CorLuz else CorVidro, X(0.03f), Offset(X(0.5f), Y(0.215f)))
     }
 
-    // Chuva ou neve compradas na loja.
-    when (e.clima) {
+    // Chuva ou neve compradas na loja, só do lado de fora (nunca dentro dos cômodos).
+    val casa = Path().apply {
+        if (e.temEstrutura(Estrutura.PAREDES)) addRect(Rect(X(Planta.ESQ), Y(Planta.TOPO), X(Planta.DIR), Y(Planta.BASE)))
+        if (e.temEstrutura(Estrutura.TELHADO)) {
+            moveTo(X(0.04f), Y(0.315f)); lineTo(X(0.5f), Y(0.075f)); lineTo(X(0.96f), Y(0.315f)); close()
+        }
+    }
+    if (e.clima != 0) clipPath(casa, clipOp = androidx.compose.ui.graphics.ClipOp.Difference) { desenharClima(e.clima, t, W, H) }
+    // Com neve, o telhado ganha uma camadinha branca.
+    if (e.clima == 2 && e.temEstrutura(Estrutura.TELHADO)) {
+        val neve = Path().apply {
+            moveTo(X(0.04f), Y(0.315f)); lineTo(X(0.5f), Y(0.075f)); lineTo(X(0.96f), Y(0.315f))
+            lineTo(X(0.93f), Y(0.318f)); lineTo(X(0.5f), Y(0.095f)); lineTo(X(0.07f), Y(0.318f)); close()
+        }
+        drawPath(neve, Color.White)
+    }
+}
+
+private fun DrawScope.desenharClima(clima: Int, t: Float, W: Float, H: Float) {
+    fun X(v: Float) = v * W
+    fun Y(v: Float) = v * H
+    when (clima) {
         1 -> for (i in 0 until 55) {
             val x = ((i * 0.173f) % 1f)
             val y = ((i * 0.071f + t * 2f) % 1f)

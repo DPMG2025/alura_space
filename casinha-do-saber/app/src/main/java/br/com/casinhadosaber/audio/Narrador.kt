@@ -63,10 +63,11 @@ class Narrador(context: Context) : TextToSpeech.OnInitListener {
 
     /** A voz offline de maior qualidade para o idioma (e o país, quando der). */
     private fun melhorVoz(local: Locale): Voice? = runCatching {
-        tts.voices.orEmpty()
-            .filter { it.locale.language == local.language && !it.isNetworkConnectionRequired && !it.features.orEmpty().contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) }
-            .sortedWith(compareByDescending<Voice> { it.locale.country == local.country }.thenByDescending { it.quality }.thenBy { it.latency })
-            .firstOrNull()
+        val doIdioma = tts.voices.orEmpty().filter { it.locale.language == local.language && !it.isNetworkConnectionRequired }
+        val ordem = compareByDescending<Voice> { it.locale.country == local.country }.thenByDescending { it.quality }.thenBy { it.latency }
+        // Primeiro só vozes já instaladas; se não houver, qualquer voz offline do idioma.
+        doIdioma.filter { !it.features.orEmpty().contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) }.sortedWith(ordem).firstOrNull()
+            ?: doIdioma.sortedWith(ordem).firstOrNull()
     }.getOrNull()
 
     fun falar(texto: String) = falar(listOf(pt(texto)))

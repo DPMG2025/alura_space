@@ -458,9 +458,15 @@ private fun Opcoes(
     val n = pergunta.opcoes.size
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         when {
-            grupos -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            grupos -> BoxWithConstraints {
+                // Altura do cartão = 3 linhas de figuras + margem; nunca um cartão enorme e vazio.
+                val larguraCartao = (maxWidth - 20.dp) / 3
+                val celula = minOf(larguraCartao / 2.3f, 64.dp)
+                val alturaCartao = minOf(alturaGrande ?: 150.dp, celula * 3 + 36.dp)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 pergunta.opcoes.forEachIndexed { i, o ->
-                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaGrande ?: 150.dp, mostrarCerta = mostrarCerta, comoGrupo = true)
+                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaCartao, mostrarCerta = mostrarCerta, comoGrupo = true)
+                }
                 }
             }
             n == 4 -> for (linha in 0 until 2) {
@@ -538,7 +544,7 @@ private fun CartaoOpcao(
                 .fillMaxWidth()
                 .heightIn(min = altura)
                 .padding(8.dp),
-            contentAlignment = Alignment.Center,
+            contentAlignment = if (comoGrupo) Alignment.TopCenter else Alignment.Center,
         ) {
             VisualDaOpcao(opcao.visual, certa, altura, comoGrupo)
             if (certa || errada) {
@@ -575,7 +581,7 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui
                 // Todas as quantidades na mesma grade de 2 colunas, com o mesmo tamanho de casinha:
                 // "mais" sempre parece maior, sem a altura enganar.
                 BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-                    val celula = minOf(maxWidth / 2.4f, altura / 3.4f, 72.dp)
+                    val celula = minOf(maxWidth / 2.3f, (altura - 24.dp) / 3f, 64.dp)
                     Column(horizontalAlignment = Alignment.Start) {
                         for (linha in figuras.chunked(2)) {
                             Row {

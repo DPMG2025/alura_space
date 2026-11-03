@@ -155,17 +155,17 @@ class CapturasTest {
     }
 
     @Test fun chapeus() = capturar("19_chapeus") {
-        androidx.compose.foundation.layout.Column(Modifier.fillMaxSize().padding(top = 60.dp)) {
-            for (linha in listOf(listOf("👑", "🧢"), listOf("🎩", "🌸"))) {
+        // Grade 2 x 4: menina e menino com cada chapéu, todos do mesmo tamanho.
+        androidx.compose.foundation.layout.Column(
+            Modifier.fillMaxSize().padding(top = 24.dp),
+            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+        ) {
+            for (chapeu in listOf("👑", "🧢", "🎩", "🌸")) {
                 androidx.compose.foundation.layout.Row {
-                    for ((i, chapeu) in linha.withIndex()) {
+                    for (p in listOf(menina, menino)) {
                         br.com.casinhadosaber.ui.componentes.Crianca(
-                            (if (i == 0) menina else menino).copy(chapeu = chapeu),
-                            Modifier.height(220.dp).padding(24.dp),
-                        )
-                        br.com.casinhadosaber.ui.componentes.Crianca(
-                            (if (i == 0) menino else menina).copy(chapeu = chapeu),
-                            Modifier.height(220.dp).padding(24.dp),
+                            p.copy(chapeu = chapeu),
+                            Modifier.height(170.dp).padding(horizontal = 30.dp, vertical = 14.dp),
                         )
                     }
                 }
