@@ -71,6 +71,7 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -149,9 +150,6 @@ private const val ALTURA_CRIANCA = 2.15f
  * Espera [ms] contando pelos quadros da tela (e não pelo relógio de parede): no app é o mesmo, e nas capturas
  * de tela o tempo anda junto com o relógio do teste.
  */
-/** Temporário: o que a dica de arrastar fez (para o teste de diagnóstico). */
-internal var diagnosticoDaDica = ""
-
 private suspend fun esperarQuadros(ms: Long) {
     val inicio = withFrameNanos { it }
     while (withFrameNanos { it } - inicio < ms * 1_000_000L) {
@@ -616,13 +614,9 @@ fun TelaCasaPorDentro(
 
     /** A mãozinha segura o móvel, leva um ladrilho para o lado (com o realce verde) e solta; ele volta ao lugar. */
     suspend fun mostrarDicaDeArrastar() {
-        diagnosticoDaDica = "inicio"
-        val sugestao = movelParaADica()
-        diagnosticoDaDica = "sug=${sugestao?.first?.id}-${sugestao?.second}-n${moveis.size}-a${cena.andar}-x${cena.x}-y${cena.y}"
-        val (m, passo) = sugestao ?: return
+        val (m, passo) = movelParaADica() ?: return
         val (dx, dy) = passo
         fun pontoDo(f: Float): Offset? = geometria.g?.geo(m.andar)?.proj?.ponto(m.centroX + dx * f, m.centroY + dy * f, m.z + m.altura * 0.45f)
-        diagnosticoDaDica += "-g${geometria.g != null}-p${pontoDo(0f)}"
         narrador.falar("Psiu! Os móveis mudam de lugar. Segure um e arraste!")
         try {
             repeat(2) {
@@ -1139,8 +1133,17 @@ private fun CenaIsometrica(
     destaque: Destaque?,
     modifier: Modifier,
 ) {
+    val densidade = LocalDensity.current
     Box(
-        modifier.drawWithCache {
+        modifier
+            // A geometria já fica pronta no layout (antes do primeiro desenho): a dica da mãozinha e os toques
+            // precisam dela mesmo quando a tela ainda não foi desenhada.
+            .onSizeChanged { s ->
+                if (s.width > 0 && s.height > 0) {
+                    ref.g = montarGeometria(Size(s.width.toFloat(), s.height.toFloat()), densidade, estado, perfil, moveis, andarDaCrianca, medidor, destaque)
+                }
+            }
+            .drawWithCache {
             val g = montarGeometria(size, this, estado, perfil, moveis, andarDaCrianca, medidor, destaque)
             ref.g = g
             onDrawBehind { desenharCena(g, cena, perfil) }
