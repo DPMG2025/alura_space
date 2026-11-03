@@ -46,10 +46,12 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         while (lista.size < quantidade && tentativas < 400) {
             tentativas++
             val p = modelo.criar()
-            val resposta = p.opcoes[p.indiceCorreto].visual
+            // Nas atividades de mexer a "resposta" é sempre o ✔: o que diferencia uma da outra é a própria atividade.
+            fun respostaDe(q: Pergunta): Any = if (q.atividade != Atividade.Escolha) q.atividade else q.opcoes[q.indiceCorreto].visual
+            val resposta = respostaDe(p)
             val chave = p.instrucao + "|" + chaveDaCena(p.cena) + "|" + resposta
             val repetida = chave in chaves
-            val mesmaRespostaSeguida = lista.lastOrNull()?.let { it.opcoes[it.indiceCorreto].visual } == resposta
+            val mesmaRespostaSeguida = lista.lastOrNull()?.let { respostaDe(it) } == resposta
             // Primeiro tenta perguntas inéditas; fases com poucas variações (3 vogais, por exemplo)
             // podem repetir, mas nunca a mesma resposta duas vezes seguidas.
             val aceitar = when {
@@ -940,25 +942,32 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         }
     }
 
-    /** Dezenas (🔟) e unidades (bolinhas): quanto é? Uma das erradas troca os algarismos (34 e 43). */
+    /**
+     * Dezenas e unidades com material dourado (barrinhas de dez cubinhos e cubinhos soltos): quanto é?
+     * Uma das erradas troca os algarismos (34 e 43).
+     */
     private fun dezenasEUnidades(): Pergunta {
         val d = (1..4).random(random)
         val u = (0..9).random(random)
         val n = d * 10 + u
         val trocado = u * 10 + d
         val candidatos = listOfNotNull(trocado.takeIf { u > 0 && it != n }) + erradosDe(n, 10..59)
+        val barrinhas = "${porExtenso(d, true)} ${if (d == 1) "barrinha" else "barrinhas"}"
+        val soltos = if (u == 0) "nenhum cubinho solto" else "${porExtenso(u)} ${if (u == 1) "cubinho solto" else "cubinhos soltos"}"
         return montar(
             instrucao = "Quanto é?",
             fala = listOf(
-                pt(
-                    "Cada dez vale dez, e cada bolinha vale um. Aqui tem ${porExtenso(d, true)} ${if (d == 1) "dezena" else "dezenas"}" +
-                        (if (u == 0) " e nenhuma bolinha" else " e ${porExtenso(u, true)} ${if (u == 1) "unidade" else "unidades"}") + ". Que número é?",
-                ),
+                pt("Cada barrinha tem dez cubinhos: vale dez. Cada cubinho solto vale um. Aqui tem $barrinhas e $soltos. Que número é?"),
             ),
-            cena = Cena.Emojis("🔟".repeat(d) + "🟡".repeat(u)),
+            cena = Cena.MaterialDourado(d, u),
             certa = opcaoNumero(n),
             erradas = candidatos.distinct().filter { it != n }.take(3).map(::opcaoNumero),
-            reforco = listOf(pt("${porExtenso(n)}!")),
+            reforco = listOf(
+                pt(
+                    "${porExtenso(n)}! ${porExtenso(d, true).replaceFirstChar { it.uppercase() }} ${if (d == 1) "dezena" else "dezenas"}" +
+                        (if (u == 0) "." else " e ${porExtenso(u, true)} ${if (u == 1) "unidade" else "unidades"}."),
+                ),
+            ),
         )
     }
 
@@ -1700,9 +1709,10 @@ class GeradorDeFases(private val random: Random = Random.Default) {
     private fun fraseEmIngles(lista: List<VocabularioDosMundos.FraseEn>): Pergunta {
         val f = lista.um()
         val erradas = lista.filter { it.emoji != f.emoji }.distinctBy { it.emoji }.sorteia(3)
+        // A frase aparece só no cartão do meio (é ali que a criança lê); o balão de cima dá a instrução.
         return montar(
-            instrucao = f.en,
-            fala = listOf(pt("Escute:"), en(f.en + "."), pt("Qual figura combina?")),
+            instrucao = "Leia e escolha a figura",
+            fala = listOf(pt("Leia a frase em inglês, ou escute:"), en(f.en + "."), pt("Qual figura combina com a frase?")),
             cena = Cena.Palavra(f.en),
             certa = opcaoFigura(f.emoji),
             erradas = erradas.map { opcaoFigura(it.emoji) },
@@ -1831,65 +1841,74 @@ class GeradorDeFases(private val random: Random = Random.Default) {
     }
 
     /**
-     * Caminho do labirinto: casinhas vizinhas, sem encostar em si mesmo (sem atalhos), do ratinho ao queijo.
-     * Devolve as casinhas (linha, coluna) na ordem.
+     * Caminho do labirinto: casinhas vizinhas, sem encostar em si mesmo (sem atalhos), da criança até a casinha.
+     * O quadro é recortado em volta do caminho e, entre muitos sorteios, fica o mais cheio: o caminho ocupa
+     * o quadro inteiro, sem fileiras só de árvores. Devolve (linhas, colunas, caminho em casinhas (linha, coluna)).
      */
-    private fun caminhoDoLabirinto(linhas: Int, colunas: Int, passos: Int): List<Pair<Int, Int>> {
-        repeat(300) {
-            val caminho = mutableListOf(random.nextInt(linhas) to 0)
+    private fun caminhoDoLabirinto(maxLinhas: Int, maxColunas: Int, passos: Int): Triple<Int, Int, List<Pair<Int, Int>>> {
+        var melhor: Triple<Int, Int, List<Pair<Int, Int>>>? = null
+        var melhorNota = -1f
+        repeat(400) {
+            val caminho = mutableListOf(random.nextInt(maxLinhas) to random.nextInt(maxColunas))
             while (caminho.size <= passos) {
                 val (l, c) = caminho.last()
                 val proximas = Direcao.entries.map { (l + it.dl) to (c + it.dc) }.filter { (nl, nc) ->
-                    nl in 0 until linhas && nc in 0 until colunas && (nl to nc) !in caminho &&
+                    nl in 0 until maxLinhas && nc in 0 until maxColunas && (nl to nc) !in caminho &&
                         // A casinha nova só pode encostar na de antes (assim o caminho é um só, sem atalho).
                         Direcao.entries.count { d -> (nl + d.dl to nc + d.dc) in caminho } == 1
                 }
                 if (proximas.isEmpty()) break
                 caminho += proximas.um()
             }
-            if (caminho.size == passos + 1) return caminho
+            if (caminho.size != passos + 1) return@repeat
+            val l0 = caminho.minOf { it.first }
+            val c0 = caminho.minOf { it.second }
+            val linhas = caminho.maxOf { it.first } - l0 + 1
+            val colunas = caminho.maxOf { it.second } - c0 + 1
+            if (linhas < 3 || colunas < 3) return@repeat
+            // Nota: quanto mais cheio de caminho, melhor; e um pouco de preferência por quadros "deitados" ou quadrados.
+            val nota = caminho.size.toFloat() / (linhas * colunas) - (if (linhas > colunas) 0.05f else 0f)
+            if (nota > melhorNota) {
+                melhorNota = nota
+                melhor = Triple(linhas, colunas, caminho.map { (l, c) -> (l - l0) to (c - c0) })
+            }
         }
-        // Reserva (nunca deve acontecer): reto pela linha de cima.
-        return List(minOf(passos, colunas - 1) + 1) { 0 to it }
+        // Reserva (nunca deve acontecer): um zigue-zague de 3 por 3.
+        return melhor ?: Triple(3, 3, listOf(0 to 0, 0 to 1, 0 to 2, 1 to 2, 2 to 2, 2 to 1, 2 to 0))
     }
 
     private fun direcaoEntre(a: Pair<Int, Int>, b: Pair<Int, Int>) =
         Direcao.entries.first { a.first + it.dl == b.first && a.second + it.dc == b.second }
 
-    /** Labirinto: para que lado o ratinho vai, ou quantos passos até o queijo. */
+    /** Labirinto: para que lado a criança vai, ou quantos passos até a casinha. */
     private fun labirinto(grande: Boolean): Pergunta {
-        val linhas = if (grande) 5 else 4
-        val colunas = 5
-        val passos = if (grande) (6..9).random(random) else (4..6).random(random)
-        val caminho = caminhoDoLabirinto(linhas, colunas, passos)
-        val itens = List(linhas * colunas) { i ->
-            val casa = i / colunas to i % colunas
-            when (casa) {
-                caminho.first() -> "🐭"
-                caminho.last() -> "🧀"
-                in caminho -> ""
-                else -> "🌳"
-            }
-        }
-        val cena = Cena.Grade(colunas, itens)
+        val passos = if (grande) (8..11).random(random) else (5..7).random(random)
+        val (linhas, colunas, caminho) = caminhoDoLabirinto(if (grande) 5 else 4, if (grande) 5 else 4, passos)
+        val cena = Cena.Labirinto(linhas, colunas, caminho.map { (l, c) -> l * colunas + c })
         val tipo = random.nextInt(if (grande) 3 else 2)
         if (tipo == 1) {
-            val n = caminho.size - 1
+            // Uma pedrinha em cada casinha do caminho, entre o começo e a chegada.
+            val n = caminho.size - 2
             return montar(
-                instrucao = "Quantos passos até o queijo?",
-                fala = listOf(pt("O ratinho anda pelas casinhas brancas, uma de cada vez. Quantos passos ele dá até o queijo?")),
+                instrucao = "Quantas pedrinhas tem no caminho?",
+                fala = listOf(pt("Você vai andar até a casinha pisando nas pedrinhas. Conte as pedrinhas do caminho, uma por uma. Quantas são?")),
                 cena = cena,
                 certa = opcaoNumero(n),
                 erradas = erradosDe(n, 2..12).map(::opcaoNumero),
-                reforco = listOf(pt("${porExtenso(n)} passos até o queijo!")),
+                reforco = listOf(pt("${porExtenso(n, true)} pedrinhas até a casinha!")),
             )
         }
         val primeiro = tipo == 0
         val d = if (primeiro) direcaoEntre(caminho[0], caminho[1]) else direcaoEntre(caminho[caminho.size - 2], caminho.last())
         val op = { x: Direcao -> opcaoFigura(x.seta, x.nome) }
         return montar(
-            instrucao = if (primeiro) "Para que lado ele vai primeiro?" else "Qual é o último passo?",
-            fala = listOf(pt(if (primeiro) "O ratinho quer o queijo! Ele anda pelas casinhas brancas. Para que lado ele vai primeiro?" else "O ratinho está quase chegando. Para que lado é o último passo até o queijo?")),
+            instrucao = if (primeiro) "Para que lado você vai primeiro?" else "Qual é o último passo?",
+            fala = listOf(
+                pt(
+                    if (primeiro) "Você quer chegar na casinha pelo caminho de pedrinhas. Para que lado você vai primeiro?"
+                    else "Você está quase chegando na casinha. Para que lado é o último passo?",
+                ),
+            ),
             cena = cena,
             certa = op(d),
             erradas = Direcao.entries.filter { it != d }.map(op),
@@ -1923,10 +1942,17 @@ class GeradorDeFases(private val random: Random = Random.Default) {
             }
         }
         val resposta = quadro[pergunta / 4][pergunta % 4]
-        val itens = celulas.map { i -> if (i == pergunta) "?" else if (i in vazias) "" else quadro[i / 4][i % 4] }
+        // Só a casinha da pergunta fica para descobrir; as outras escondidas viram tampinhas fechadas.
+        val itens = celulas.map { i -> if (i == pergunta) "?" else if (i in vazias) Cena.Grade.TAMPADA else quadro[i / 4][i % 4] }
+        val tampas = if (vazias.isEmpty()) "" else " As tampinhas fechadas guardam um segredo: não precisa delas."
         return montar(
-            instrucao = "Qual figura falta?",
-            fala = listOf(pt("Em cada linha, em cada coluna e em cada quadradinho tem uma figura de cada. Qual figura vai no lugar da interrogação?")),
+            instrucao = "Qual figura vai na casinha amarela?",
+            fala = listOf(
+                pt(
+                    "Olhe a casinha amarela. Na linha dela, na coluna dela e no quadrado dela, cada figura aparece uma vez só.$tampas" +
+                        " Qual figura vai na casinha amarela?",
+                ),
+            ),
             cena = Cena.Grade(4, itens, blocos = 2),
             certa = opEmoji(resposta),
             erradas = figuras.filter { it != resposta }.map { opEmoji(it) },
@@ -1948,21 +1974,21 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         Modelo("Cesta esperta", "🧺") { cestaDupla() },
         Modelo("Intrusos espertos", "🔎") { intrusoEsperto() },
         Modelo("Labirinto dos passos", "👣") { labirinto(grande = random.nextBoolean()) },
-        Modelo("Sudoku", "🧩") { sudoku(escondidas = 3) },
+        Modelo("Sudoku", "🧩") { sudoku(escondidas = 2) },
         Modelo("Cor e forma difícil", "🎨") { corEForma(dificil = true) },
         Modelo("Combina e sombras", "🔦") { when (random.nextInt(3)) { 0 -> combina(); 1 -> sombra(); else -> intruso() } },
-        Modelo("Desafio da montanha", "🏆") { when (random.nextInt(5)) { 0 -> labirinto(false); 1 -> sudoku(2); 2 -> cestaDupla(); 3 -> intrusoEsperto(); else -> filaComPadrao("AABB") } },
+        Modelo("Desafio da montanha", "🏆") { when (random.nextInt(5)) { 0 -> labirinto(false); 1 -> sudoku(1); 2 -> cestaDupla(); 3 -> intrusoEsperto(); else -> filaComPadrao("AABB") } },
         // Mundo 5 (Espaço), fases 41 a 50
         Modelo("Filas gigantes", "🎨") { filaComPadrao(listOf("ABCD", "AABC", "ABBC", "AABBC").um()) },
         Modelo("Labirinto grande", "🌀") { labirinto(grande = true) },
-        Modelo("Sudoku difícil", "🧠") { sudoku(escondidas = 6) },
+        Modelo("Sudoku difícil", "🧠") { sudoku(escondidas = 4) },
         Modelo("Memória gigante de 6", "🃏") { memoria(6, Vocabulario.animais + V.animaisSelvagens) },
         Modelo("Cesta dupla", "🧺") { if (random.nextBoolean()) cestaDupla() else cestaDoGrupo() },
         Modelo("Detetive do espaço", "🔭") { when (random.nextInt(3)) { 0 -> intrusoEsperto(); 1 -> sombra(); else -> corEForma(true) } },
         Modelo("Números e figuras", "🔢") { if (random.nextBoolean()) sequenciaNumerica(50) else filaComPadrao("ABCD") },
         Modelo("Pensa rápido 2", "⚡") { when (random.nextInt(4)) { 0 -> intruso(); 1 -> corEForma(true); 2 -> labirinto(false); else -> numerosEmOrdem() } },
-        Modelo("Grande desafio", "🏅") { when (random.nextInt(4)) { 0 -> sudoku(5); 1 -> labirinto(true); 2 -> filaComPadrao("AABBC"); else -> intrusoEsperto() } },
-        Modelo("Mestre da lógica", "🌟") { when (random.nextInt(6)) { 0 -> sudoku(6); 1 -> labirinto(true); 2 -> memoria(6); 3 -> cestaDupla(); 4 -> corEForma(true); else -> filaComPadrao(listOf("ABCD", "AABBC").um()) } },
+        Modelo("Grande desafio", "🏅") { when (random.nextInt(4)) { 0 -> sudoku(3); 1 -> labirinto(true); 2 -> filaComPadrao("AABBC"); else -> intrusoEsperto() } },
+        Modelo("Mestre da lógica", "🌟") { when (random.nextInt(6)) { 0 -> sudoku(4); 1 -> labirinto(true); 2 -> memoria(6); 3 -> cestaDupla(); 4 -> corEForma(true); else -> filaComPadrao(listOf("ABCD", "AABBC").um()) } },
     )
 
     companion object {

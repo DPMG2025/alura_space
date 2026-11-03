@@ -339,7 +339,7 @@ fun TelaJogo(
                                     .padding(vertical = 12.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                CenaDaPergunta(p.cena)
+                                CenaDaPergunta(p.cena, perfil)
                             }
                             opcoes(null)
                         }
@@ -406,7 +406,7 @@ private fun tamanhoParaFiguras(n: Int): TextUnit = when {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CenaDaPergunta(cena: Cena) {
+private fun CenaDaPergunta(cena: Cena, perfil: Perfil?) {
     when (cena) {
         Cena.Nenhuma -> Unit
         is Cena.Emojis -> BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -444,6 +444,8 @@ private fun CenaDaPergunta(cena: Cena) {
         )
         is Cena.Conta -> Conta(cena)
         is Cena.Grade -> Grade(cena)
+        is Cena.MaterialDourado -> MaterialDourado(cena)
+        is Cena.Labirinto -> Labirinto(cena, perfil)
         is Cena.Sequencia -> BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             // Todas as figuras numa linha só, para a fila ficar clara.
             val n = cena.itens.size
@@ -503,12 +505,16 @@ private fun Grade(g: Cena.Grade) {
                         if (c > 0) Spacer(Modifier.width(if (g.blocos > 0 && c % g.blocos == 0) vao + vaoDoBloco else vao))
                         val item = g.itens[l * g.colunas + c]
                         val pergunta = item == "?"
+                        if (item == Cena.Grade.TAMPADA) {
+                            Tampinha(lado)
+                            continue
+                        }
                         Box(
                             Modifier
                                 .size(lado)
                                 .then(if (pergunta) Modifier.pulsando() else Modifier)
                                 .background(if (pergunta) Cores.Estrela else Color.White, RoundedCornerShape(12.dp))
-                                .border(2.dp, if (pergunta) Color(0xFFE0A800) else Color(0xFFEDE6FF), RoundedCornerShape(12.dp)),
+                                .border(if (pergunta) 4.dp else 2.dp, if (pergunta) Color(0xFFE0A800) else Color(0xFFEDE6FF), RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center,
                         ) {
                             if (item.isNotEmpty()) {

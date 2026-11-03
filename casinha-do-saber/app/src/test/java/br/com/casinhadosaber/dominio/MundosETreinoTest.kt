@@ -95,29 +95,40 @@ class CinquentaFasesTest {
     }
 
     @Test
-    fun `dezenas e unidades contam certinho`() {
+    fun `dezenas e unidades usam material dourado e contam certinho`() {
         val g = GeradorDeFases(Random(4))
         val fase = g.fases(Trilha.MATEMATICA)[31]
+        var vistos = 0
         repeat(30) {
             for (p in g.perguntas(fase).filter { it.instrucao == "Quanto é?" }) {
-                val cena = (p.cena as Cena.Emojis).texto
-                val dezenas = cena.split("🔟").size - 1
-                val unidades = cena.split("🟡").size - 1
-                assertEquals(dezenas * 10 + unidades, (p.opcoes[p.indiceCorreto].visual as Visual.Texto).texto.toInt())
+                val cena = p.cena as Cena.MaterialDourado
+                vistos++
+                assertTrue(cena.dezenas in 1..4 && cena.unidades in 0..9)
+                assertEquals(cena.valor, (p.opcoes[p.indiceCorreto].visual as Visual.Texto).texto.toInt())
+                val fala = p.fala.joinToString(" ") { it.texto }
+                assertTrue("a fala explica a barrinha: $fala", "barrinha" in fala && "cubinho" in fala)
             }
         }
+        assertTrue("nenhuma pergunta de dezenas", vistos > 20)
     }
 
     @Test
-    fun `sudoku tem resposta unica e quadro valido`() {
+    fun `sudoku tem uma casinha so a descobrir, resposta unica e quadro valido`() {
         val g = GeradorDeFases(Random(8))
         val fases = listOf(31, 36, 42, 48, 49).map { g.fases(Trilha.LOGICA)[it] }
         var vistos = 0
+        var comTampa = 0
         repeat(40) {
             for (f in fases) for (p in g.perguntas(f)) {
                 val grade = p.cena as? Cena.Grade ?: continue
                 if (grade.colunas != 4) continue
                 vistos++
+                assertEquals("uma casinha só com interrogação", 1, grade.itens.count { it == "?" })
+                assertTrue("casinha sem figura e sem tampa", grade.itens.none { it.isEmpty() })
+                val tampas = grade.itens.count { it == Cena.Grade.TAMPADA }
+                assertTrue("tampas demais: $tampas", tampas <= 4)
+                if (tampas > 0) comTampa++
+                assertFalse("o enunciado não pode ficar vago", p.instrucao == "Qual figura falta?")
                 val resposta = (p.opcoes[p.indiceCorreto].visual as Visual.Emoji).emoji
                 val i = grade.itens.indexOf("?")
                 val completo = grade.itens.toMutableList().also { it[i] = resposta }
@@ -125,43 +136,41 @@ class CinquentaFasesTest {
                 val vizinhas = (0 until 16).filter { j -> j != i && (j / 4 == l || j % 4 == c || (j / 8 == i / 8 && j % 4 / 2 == c / 2)) }
                 // A resposta não repete em nenhuma vizinha mostrada, e as mostradas deixam só ela de fora.
                 assertTrue("resposta repetida", vizinhas.none { completo[it] == resposta })
-                assertEquals("mais de uma resposta possível", 3, vizinhas.map { grade.itens[it] }.filter { it.isNotEmpty() }.toSet().size)
-                // Linhas cheias têm uma figura de cada.
-                for (linha in completo.chunked(4).filter { r -> r.none { it.isEmpty() } }) assertEquals(4, linha.toSet().size)
+                assertEquals("mais de uma resposta possível", 3, vizinhas.map { grade.itens[it] }.filter { it != Cena.Grade.TAMPADA }.toSet().size)
+                // Linhas sem tampa têm uma figura de cada.
+                for (linha in completo.chunked(4).filter { r -> r.none { it == Cena.Grade.TAMPADA } }) assertEquals(4, linha.toSet().size)
             }
         }
         assertTrue("nenhum sudoku sorteado", vistos > 20)
+        assertTrue("os difíceis deveriam ter tampas", comTampa > 0)
     }
 
     @Test
-    fun `labirinto tem um caminho do ratinho ao queijo e a seta certa`() {
+    fun `labirinto e compacto, tem um caminho so e a seta certa`() {
         val g = GeradorDeFases(Random(12))
         val fases = listOf(30, 35, 41).map { g.fases(Trilha.LOGICA)[it] }
         val setas = mapOf("⬆️" to (-1 to 0), "⬇️" to (1 to 0), "⬅️" to (0 to -1), "➡️" to (0 to 1))
         var vistos = 0
         repeat(40) {
             for (f in fases) for (p in g.perguntas(f)) {
-                val grade = p.cena as? Cena.Grade ?: continue
-                if (grade.colunas != 5) continue
+                val lab = p.cena as? Cena.Labirinto ?: continue
                 vistos++
-                val livre = { l: Int, c: Int -> l in 0 until grade.linhas && c in 0 until 5 && grade.itens[l * 5 + c] != "🌳" }
-                // Segue o caminho: sem atalhos, cada casinha livre tem no máximo 2 vizinhas livres.
-                val inicio = grade.itens.indexOf("🐭")
-                val fim = grade.itens.indexOf("🧀")
-                assertTrue(inicio >= 0 && fim >= 0)
-                val caminho = mutableListOf(inicio / 5 to inicio % 5)
-                while (caminho.last() != (fim / 5 to fim % 5)) {
-                    val (l, c) = caminho.last()
-                    val proximas = setas.values.map { (dl, dc) -> (l + dl) to (c + dc) }
-                        .filter { (nl, nc) -> livre(nl, nc) && (nl to nc) !in caminho }
-                    assertEquals("caminho com atalho ou sem saída", 1, proximas.size)
-                    caminho += proximas.first()
+                val caminho = lab.caminho.map { it / lab.colunas to it % lab.colunas }
+                assertEquals("casinha repetida", caminho.size, caminho.toSet().size)
+                // Cada passo vai para uma vizinha; casinhas que não são seguidas no caminho nunca se encostam (sem atalho).
+                for (i in caminho.indices) for (j in i + 1 until caminho.size) {
+                    val dist = kotlin.math.abs(caminho[i].first - caminho[j].first) + kotlin.math.abs(caminho[i].second - caminho[j].second)
+                    if (j == i + 1) assertEquals("passo comprido", 1, dist) else assertTrue("atalho no caminho", dist > 1)
                 }
-                assertEquals("casinhas livres fora do caminho", grade.itens.count { it != "🌳" }, caminho.size)
+                // Compacto: toda linha e toda coluna têm caminho, e o caminho ocupa boa parte do quadro.
+                assertTrue("quadro pequeno demais", lab.linhas >= 3 && lab.colunas >= 3)
+                assertTrue("linha só de árvores", (0 until lab.linhas).all { l -> caminho.any { it.first == l } })
+                assertTrue("coluna só de árvores", (0 until lab.colunas).all { c -> caminho.any { it.second == c } })
+                assertTrue("árvores demais: ${caminho.size} de ${lab.linhas * lab.colunas}", caminho.size * 2 >= lab.linhas * lab.colunas)
                 val certa = p.opcoes[p.indiceCorreto].visual
                 when (p.instrucao) {
-                    "Quantos passos até o queijo?" -> assertEquals((caminho.size - 1).toString(), (certa as Visual.Texto).texto)
-                    "Para que lado ele vai primeiro?" -> {
+                    "Quantas pedrinhas tem no caminho?" -> assertEquals((caminho.size - 2).toString(), (certa as Visual.Texto).texto)
+                    "Para que lado você vai primeiro?" -> {
                         val (dl, dc) = setas.getValue((certa as Visual.Emoji).emoji)
                         assertEquals(caminho[1], caminho[0].first + dl to caminho[0].second + dc)
                     }
@@ -174,6 +183,18 @@ class CinquentaFasesTest {
             }
         }
         assertTrue("nenhum labirinto sorteado", vistos > 20)
+    }
+
+    @Test
+    fun `o balao de cima nunca entrega a frase que a crianca deve ler`() {
+        for (semente in 0 until 10) {
+            val g = GeradorDeFases(Random(500 + semente))
+            for (t in Trilha.entries) for (f in g.fases(t)) for (p in g.perguntas(f)) {
+                val frase = (p.cena as? Cena.Palavra)?.texto ?: continue
+                if (frase.trim().split(' ').size < 3) continue // frases, não palavras como "ice cream"
+                assertFalse("${f.titulo}: \"${p.instrucao}\" mostra a frase \"$frase\"", p.instrucao.contains(frase, ignoreCase = true))
+            }
+        }
     }
 
     @Test

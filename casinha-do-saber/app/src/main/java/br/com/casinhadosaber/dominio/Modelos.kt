@@ -43,7 +43,7 @@ sealed interface Cena {
     data class Sequencia(val itens: List<String>) : Cena
 
     /**
-     * Quadro em linhas e colunas (labirinto, sudoku de figuras, gráfico de figuras).
+     * Quadro em linhas e colunas (sudoku de figuras, gráfico de figuras).
      * "" é uma casinha vazia e "?" é a casinha da pergunta. [blocos] > 0 separa o quadro em
      * blocos daquele tamanho (no sudoku 4 por 4, blocos de 2 por 2).
      */
@@ -52,6 +52,29 @@ sealed interface Cena {
             require(colunas > 0 && itens.size % colunas == 0) { "Quadro incompleto" }
         }
         val linhas: Int get() = itens.size / colunas
+
+        companion object {
+            /** Casinha tampada (sudoku): desenhada como uma tampinha fechada, nunca como uma casa sem figura. */
+            const val TAMPADA = "#"
+        }
+    }
+
+    /** Material dourado: [dezenas] barrinhas de dez cubinhos e [unidades] cubinhos soltos. */
+    data class MaterialDourado(val dezenas: Int, val unidades: Int) : Cena {
+        init {
+            require(dezenas in 0..9 && unidades in 0..9) { "Material dourado só até 99" }
+        }
+        val valor: Int get() = dezenas * 10 + unidades
+    }
+
+    /**
+     * Labirinto de [linhas] por [colunas] casinhas: [caminho] são as casinhas (linha * colunas + coluna), na ordem,
+     * da criança (primeira) até a casinha de chegada (última). O resto é mato com árvores.
+     */
+    data class Labirinto(val linhas: Int, val colunas: Int, val caminho: List<Int>) : Cena {
+        init {
+            require(caminho.size >= 2 && caminho.all { it in 0 until linhas * colunas }) { "Caminho fora do labirinto" }
+        }
     }
 }
 

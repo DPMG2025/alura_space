@@ -112,6 +112,7 @@ import br.com.casinhadosaber.dominio.en
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.enfeiteDesenhado
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Confete
@@ -1178,18 +1179,6 @@ private fun pisoDo(c: Comodo): Piso = when (c) {
     Comodo.COZINHA -> Piso(Color(0xFFFFF4E3), Color(0xFFEBD5B8), madeira = false)
 }
 
-private fun emojiDe(id: String): String? = when (id) {
-    "ursinho" -> "🧸"
-    "violao" -> "🎸"
-    "livros" -> "📚"
-    "planta" -> "🪴"
-    "gato" -> "🐱"
-    "bolo" -> "🎂"
-    "vaso" -> "🚽"
-    "lixeira" -> "🗑️"
-    else -> null
-}
-
 private fun montarGeometria(
     tamanho: Size,
     densidade: Density,
@@ -1625,28 +1614,7 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
 
     if (m.acao == Acao.ESCADA) return montarEscada(m, proj, medidor, densidade, toque, ancora, caixaDoMovel)
     if (m.id == "patinho") return montarPatinho(m, proj, caixaDoMovel, minimo)
-
-    emojiDe(m.id)?.let { e ->
-        val escala = when (m.id) {
-            "planta" -> 0.85f
-            "vaso" -> 0.8f
-            "violao" -> 0.8f
-            "gato" -> 0.6f
-            "ursinho" -> 0.62f
-            "lixeira" -> 0.6f
-            else -> 0.55f
-        }
-        val layout = medirEmoji(medidor, densidade, e, tw * escala)
-        val base = proj.ponto(cx, cy, z0)
-        val sombra = Path().apply {
-            addOval(Rect(base.x - tw * escala * 0.42f, base.y - tw * 0.07f, base.x + tw * escala * 0.42f, base.y + tw * 0.07f))
-        }
-        val em = Offset(base.x - layout.size.width / 2f, base.y - layout.size.height * 0.9f)
-        val t = Rect(em, Size(layout.size.width.toFloat(), layout.size.height.toFloat()))
-        val c = t.center
-        val tq = Rect(c.x - max(t.width, minimo) / 2, c.y - max(t.height, minimo) / 2, c.x + max(t.width, minimo) / 2, c.y + max(t.height, minimo) / 2)
-        return Peca(m, caixaDoMovel, m.comodo, listOf(Forma(sombra, Color(0x26000000), contorno = false)), tq, base, emoji = layout, emojiEm = em)
-    }
+    montarEnfeite(m, proj, caixaDoMovel, minimo)?.let { return it }
 
     return with(proj) {
         when (m.id) {
@@ -1877,6 +1845,23 @@ private fun montarPatinho(m: Movel, proj: Projecao, caixa: Caixa, minimo: Float)
     val toque = Rect(c.x - lado / 2, c.y - lado / 2, c.x + lado / 2, c.y + lado / 2)
     return Peca(m, caixa, m.comodo, formas, toque, base)
 }
+
+/** Um enfeite desenhado à mão (gato, ursinho, violão...) vira uma peça tocável, com área de toque de dedo de criança. */
+private fun montarEnfeite(m: Movel, proj: Projecao, caixa: Caixa, minimo: Float): Peca? {
+    val f = enfeiteDesenhado(m, proj) ?: return null
+    val b = proj.ponto(m.centroX, m.centroY, m.z)
+    val caixaDeToque = f.fold(Rect(b.x, b.y, b.x, b.y)) { acc, forma ->
+        val r = forma.caminho.getBounds()
+        Rect(min(acc.left, r.left), min(acc.top, r.top), max(acc.right, r.right), max(acc.bottom, r.bottom))
+    }
+    val c = caixaDeToque.center
+    val toque = Rect(
+        c.x - max(caixaDeToque.width, minimo) / 2, c.y - max(caixaDeToque.height, minimo) / 2,
+        c.x + max(caixaDeToque.width, minimo) / 2, c.y + max(caixaDeToque.height, minimo) / 2,
+    )
+    return Peca(m, caixa, m.comodo, f, toque, b)
+}
+
 
 /** A escada: embaixo, degraus de madeira subindo para o fundo; em cima, o vão com os degraus descendo e o corrimão. */
 private fun montarEscada(m: Movel, proj: Projecao, medidor: TextMeasurer, densidade: Density, toque: Rect, ancora: Offset, caixaDaPeca: Caixa): Peca {
