@@ -863,6 +863,22 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
         )
     }
 
+    /**
+     * Escrever a palavra com o dedo, letra por letra, em letra de forma maiúscula (só palavras de 3 a 5
+     * letras sem acento nem cedilha; sem nenhuma na [lista], as da fazenda). A instrução não entrega a palavra.
+     */
+    private fun escreverPalavra(lista: List<Palavra>, figura: Boolean = true): Pergunta {
+        val boas = Escrita.palavrasParaEscrever(lista).ifEmpty { Escrita.palavrasParaEscrever(L.cv2) }
+        val p = boas.umDoTema { it.emoji }
+        val palavra = fpal(p)
+        return Pergunta.deAtividade(
+            instrucao = "Escreva a palavra com o dedo",
+            fala = listOf(pt("Vamos escrever! Escreva $palavra com o dedo, uma letra de cada vez.")),
+            atividade = EscreverPalavra(p.texto, if (figura) p.emoji else null),
+            reforco = listOf(pt("$palavra: ${soletrar(p.texto)}!")),
+        )
+    }
+
     // ------------------------------------------------------------------ pescar, estourar, ligar, achar
 
     private fun pescar(instrucao: String, fala: String, certas: List<Opcao>, erradas: List<Opcao>, reforco: String, total: Int = 6): Pergunta {
@@ -1762,10 +1778,10 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
             nova("Famílias da fazenda", "🐄", ::tocarSilabaFamilia, { lerFigura(L.fazenda) }, ::pescariaFamilia),
             nova("Pescaria de sílabas", "🎣", ::pescariaFamilia, ::tocarSilabaFamilia),
             nova("Sílabas parecidas", "🧐", { silabaFaltaL(cvTodas) }, { completarFamilia() }, ::pescariaFamilia),
-            nova("Ditado de sílabas", "👂", { ditadoSilabas(L.cv2, figura = true) }, { lerFigura(L.cv2) }),
+            nova("Ditado de sílabas", "👂", { ditadoSilabas(L.cv2, figura = true) }, { lerFigura(L.cv2) }, { escreverPalavra(L.cv2) }),
             nova("Marco da fazenda", "🚩", ::pescariaFamilia, ::tocarSilabaFamilia, { silabaFaltaL(cvTodas) }, { ditadoSilabas(L.cv2, true) }),
             nova("Palavras de três pedacinhos", "📖", { lerFigura(L.cv3) }, { quantosPedacinhos(cvTodas) }, { montarPalavraL(L.cv3) }),
-            nova("Montar na fazenda", "🧱", { montarPalavraL(juntar(L.cv3, L.fazenda)) }, { lerFigura(L.cv3) }),
+            nova("Montar na fazenda", "🧱", { montarPalavraL(juntar(L.cv3, L.fazenda)) }, { lerFigura(L.cv3) }, { escreverPalavra(L.fazenda) }),
             nova("Fazenda e espaço", "🔁", { ditadoSilabas(L.cv3, true) }, { revisao(5) }, { palavraDaFigura(cvTodas, parecidas = true) }),
             nova("Leitura caprichada", "🔍", { lerFigura(juntar(L.cv3, L.cv4), parecidas = true) }, ::trocaLetra, { ditadoSilabas(L.cv3, false) }),
             nova("Chefão: a vaca gigante", "👑", { ditadoSilabas(juntar(L.cv3, L.cv4), false) }, ::pescariaFamilia, { lerFigura(juntar(L.cv3, L.cv4), true) }),
@@ -1782,7 +1798,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
             nova("Ligar no mar", "🔗", { ligarFiguras(nasais) }, { lerFigura(nasais) }),
             nova("Marco do mar", "🚩", ::baloesAo, somAo, { comoSeEscreveL(L.nasaisAo, true) }, { ligarFiguras(nasais) }),
             nova("AN, EN, IN, ON, UN", "🐬", { silabaFaltaL(L.nasaisN) { s -> s.length >= 2 && s.last() == 'N' } }, { montarPalavraL(L.nasaisN) }),
-            nova("Montar com som nasal", "🧱", { montarPalavraL(nasais) }, { lerFigura(L.nasaisN, parecidas = true) }),
+            nova("Montar com som nasal", "🧱", { montarPalavraL(nasais) }, { lerFigura(L.nasaisN, parecidas = true) }, { escreverPalavra(L.nasaisN) }),
             nova("Mar e fazenda", "🔁", { ligarFiguras(nasais) }, { revisao(6) }, { palavraDaFigura(nasais, parecidas = true) }),
             nova("Til caprichado", "🔍", { comoSeEscreveL(nasais, figura = false) }, { baloesOrdem(nasais) }),
             nova("Chefão: o polvo", "👑", { baloesOrdem(nasais) }, { ligarFiguras(nasais) }, { ditadoSilabas(nasais, false) }),
@@ -1811,9 +1827,10 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
         val curtas = { trav.filter { it.texto.length <= 6 } }
         listOf(
             nova("R, S e L no fim", "🐧", { lerFigura(trav) }, { ditadoLetras(curtas(), true) }),
-            nova("Ditado de letras", "✏️", { ditadoLetras(curtas(), true) }, { lerFigura(trav) }),
+            // Escrever com o dedo é a atividade principal desta fase (a palavra inteira, letra por letra).
+            nova("Ditado de letras", "✏️", { escreverPalavra(trav) }, { ditadoLetras(curtas(), true) }, { lerFigura(trav) }),
             nova("Parecidas no gelo", "🧊", { silabaFaltaL(trav, ::travada) }, ::pescariaTravada),
-            nova("Pescaria no gelo", "🎣", ::pescariaTravada, { comoSeEscreveL(trav, true) }),
+            nova("Pescaria no gelo", "🎣", ::pescariaTravada, { comoSeEscreveL(trav, true) }, { escreverPalavra(trav) }),
             nova("Marco do gelo", "🚩", { ditadoLetras(curtas(), true) }, { lerFigura(trav) }, { silabaFaltaL(trav, ::travada) }, ::pescariaTravada),
             nova("O S e o L no fim", "🎿", { comoSeEscreveL(juntar(L.travadasS, L.travadasL), true) }, { quebraSilabas(trav) }),
             nova("Quebra cabeça de sílabas", "🧩", { quebraSilabas(trav) }, { quantosPedacinhos(trav) }),
@@ -1849,7 +1866,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
             nova("Dominó do deserto", "🎴", { dominoFiguras(juntar(cc, sz)) }, { palavraDaFigura(cc, true) }),
             nova("Marco do deserto", "🚩", ::pescariaCedilha, { comoSeEscreveL(cc, true) }, { silabaFaltaL(cc) { s -> 'Ç' in s } }, { dominoFiguras(cc) }),
             nova("GE, GI, JE, JI", "🌵", { silabaFaltaL(gj) { s -> s.startsWith("G") || s.startsWith("J") } }, { ditadoLetras(gjCurtas(), true) }),
-            nova("Ditado do deserto", "👂", { ditadoLetras(gjCurtas(), true) }, { lerFigura(gj) }),
+            nova("Ditado do deserto", "👂", { ditadoLetras(gjCurtas(), true) }, { lerFigura(gj) }, { escreverPalavra(gjCurtas()) }),
             nova("Deserto e circo", "🔁", { dominoFiguras(juntar(gj, sz)) }, { revisao(10) }, { comoSeEscreveL(gj, true) }),
             nova("S com som de Z", "🏜️", { comoSeEscreveL(sz, figura = false) }, ::pescariaSZ),
             nova("Chefão: o camelo", "👑", ::pescariaCedilha, { dominoFiguras(juntar(cc, gj, sz)) }, { ditadoLetras(gjCurtas(), false) }),
@@ -1882,7 +1899,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
             nova("Ligar no castelo", "🔗", { ligarFiguras(juntar(L.aga, L.xis)) }, { palavraDaFigura(xch, true) }),
             nova("Marco do castelo", "🚩", ::baloesXCH, { silabaFaltaL(xch) { s -> 'X' in s || "CH" in s } }, { comoSeEscreveL(xch, true) }, { ligarFiguras(xch) }),
             nova("O H que não tem som", "🤫", { comoSeEscreveL(L.aga, figura = true) }, { ditadoLetras(L.aga.filter { it.texto.length <= 7 }, true) }),
-            nova("Ditado do castelo", "👂", { ditadoLetras(curtas(), true) }, ::comecaComH),
+            nova("Ditado do castelo", "👂", { ditadoLetras(curtas(), true) }, ::comecaComH, { escreverPalavra(curtas()) }),
             nova("Castelo e cidade", "🔁", { ligarFiguras(juntar(L.zeta, L.sComSomDeZ)) }, { revisao(12) }, { comoSeEscreveL(L.zeta, true) }),
             nova("Z ou S?", "🔍", { comoSeEscreveL(juntar(L.zeta, L.sComSomDeZ, xch, L.aga), figura = false) }, ::baloesXCH),
             nova("Chefão: o dragão", "👑", { ligarFiguras(juntar(xch, L.aga)) }, ::baloesXCH, { ditadoLetras(curtas(), false) }),
@@ -2034,7 +2051,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
         val rs = juntar(L.rr, L.rFraco)
         listOf(
             nova("Escute e escolha", "🤖", { comoSeEscreveL(rs, figura = false) }, { ditadoLetras(rs, false) }),
-            nova("Ditado do R", "👂", { ditadoLetras(rs, false) }, { comoSeEscreveL(rs, false) }),
+            nova("Ditado do R", "👂", { ditadoLetras(rs, false) }, { comoSeEscreveL(rs, false) }, { escreverPalavra(rs, figura = false) }),
             nova("S ou SS?", "🧐", { comoSeEscreveL(juntar(L.ss, L.sComSomDeZ), figura = false) }, { baloesCertinhas(dificeis) }),
             nova("Balões escritos certinho", "🎈", { baloesCertinhas(dificeis) }, { comoSeEscreveL(dificeis, false) }),
             nova("Marco dos robôs", "🚩", { ditadoLetras(dificeis, false) }, { comoSeEscreveL(rs, false) }, { comoSeEscreveL(L.ss, false) }, { baloesCertinhas(dificeis) }),
@@ -2087,7 +2104,7 @@ class FasesLetras(random: Random = Random.Default) : FasesDoCaminho(random) {
         val dificeisTodas = { revisaoGeral.filter { it.texto.length in 4..8 } }
         listOf(
             nova("Leitura fluente", "🌟", { fraseFigura(longas) }, { ditadoLetras(dificeisTodas(), false) }),
-            nova("Ditado das estrelas", "👂", { ditadoLetras(dificeisTodas(), false) }, { fraseFigura(longas) }),
+            nova("Ditado das estrelas", "👂", { ditadoLetras(dificeisTodas(), false) }, { fraseFigura(longas) }, { escreverPalavra(revisaoGeral, figura = false) }),
             nova("Texto das estrelas", "📜", { textoPergunta(textos, narrar = false) }, { montarFraseL(longas, 1) }),
             nova("Frases das estrelas", "🧩", { montarFraseL(longas, 2) }, { textoPergunta(textos, false) }),
             nova("Marco das estrelas", "🚩", { ditadoSilabas(revisaoGeral.filter { it.silabas.size >= 3 }, false) }, { fraseFigura(longas) }, { textoPergunta(textos, false) }, { montarFraseL(longas, 2) }),

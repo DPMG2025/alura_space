@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import android.content.Intent
 import android.speech.tts.TextToSpeech
 import androidx.compose.ui.platform.LocalContext
+import br.com.casinhadosaber.dominio.CadernoEmArquivo
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Fase
 import androidx.compose.animation.AnimatedVisibility
@@ -88,6 +89,13 @@ fun TelaPais(
     onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit = {},
 ) {
     var liberado by rememberSaveable { mutableStateOf(false) }
+    // "Meu caderno" (palavras escritas com o dedo) abre por cima da área dos pais, depois do portão.
+    var verCaderno by rememberSaveable { mutableStateOf(false) }
+    if (liberado && verCaderno) {
+        androidx.activity.compose.BackHandler { verCaderno = false }
+        TelaCaderno(lembrarCaderno(), onVoltar = { verCaderno = false })
+        return
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -105,7 +113,7 @@ fun TelaPais(
         if (!liberado) {
             PortaoDeAdulto(onLiberar = { liberado = true })
         } else {
-            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite, hoje, onAtualizar)
+            Painel(estado, somLigado, onAlternarSom, musicaLigada, onAlternarMusica, onEditarPersonagem, onApagarTudo, limiteMinutos, onAlternarLimite, hoje, onAtualizar, onAbrirCaderno = { verCaderno = true })
         }
     }
 }
@@ -123,8 +131,10 @@ private fun Painel(
     onAlternarLimite: () -> Unit,
     hoje: Long,
     onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit,
+    onAbrirCaderno: () -> Unit = {},
 ) {
     var confirmar by remember { mutableStateOf(false) }
+    val contextoDoPainel = LocalContext.current
     val gerador = remember { GeradorDeFases() }
     // Caminhos abertos na lista de fases (nomes separados por vírgula, para sobreviver a girar a tela).
     // Começa com o caminho da fase que está sendo praticada, se houver.
@@ -238,6 +248,9 @@ private fun Painel(
         onAlternar = { t -> onAtualizar { it.alternarTema(t) } },
         habilitado = estado.perfil != null,
     )
+    // Vozes da família e "Meu caderno" (docs/PRD.md, "Vozes da família e escrever com o dedo").
+    CartaoVozesDaFamilia(nome = estado.perfil?.nome)
+    CartaoMeuCaderno(lembrarCaderno(), onAbrir = onAbrirCaderno)
 
     Cartao {
         Text("Configurações", style = MaterialTheme.typography.titleLarge)
@@ -318,8 +331,14 @@ private fun Painel(
         AlertDialog(
             onDismissRequest = { confirmar = false },
             title = { Text("Apagar tudo?") },
-            text = { Text("A casa, as estrelas e o personagem serão apagados. Isso não pode ser desfeito.") },
-            confirmButton = { TextButton(onClick = { confirmar = false; onApagarTudo() }) { Text("Apagar", color = Cores.Errado) } },
+            text = { Text("A casa, as estrelas, o personagem e o caderno serão apagados. Isso não pode ser desfeito. As vozes gravadas da família continuam (apague cada uma no cartão Vozes da família).") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmar = false
+                    CadernoEmArquivo.em(contextoDoPainel.filesDir).apagarTudo()
+                    onApagarTudo()
+                }) { Text("Apagar", color = Cores.Errado) }
+            },
             dismissButton = { TextButton(onClick = { confirmar = false }) { Text("Cancelar") } },
         )
     }

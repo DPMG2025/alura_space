@@ -520,6 +520,17 @@ class FasesIngles(random: Random = Random.Default) : FasesDoCaminho(random) {
         )
     }
 
+    /** Escrever a palavra em inglês com o dedo, em letra de forma maiúscula (como no caminho Letras). */
+    private fun escreverIngles(m: Int, lista: List<PalavraEn>): Pergunta {
+        val p = lista.filter { it.en.length in Escrita.TAMANHOS && Escrita.podeEscrever(it.en.uppercase()) }.um()
+        return Pergunta.deAtividade(
+            instrucao = rotulo(m, "Escreva a palavra com o dedo", "Write the word"),
+            fala = pedir(m, "Escute e escreva a palavra em inglês com o dedo:", "Listen and write:") + en(p.en),
+            atividade = EscreverPalavra(p.en.uppercase(), p.emoji.ifBlank { null }, Idioma.EN),
+            reforco = listOf(en(p.en.uppercase().toList().joinToString(", ") + ". " + maiuscula(p.en) + "!")),
+        )
+    }
+
     /**
      * Dominó da palavra e da figura: a ponta mostra uma figura; cada peça tem a palavra dessa figura de
      * um lado e a próxima figura do outro. As peças que sobram não combinam com nenhuma ponta.
@@ -1422,9 +1433,9 @@ class FasesIngles(random: Random = Random.Default) : FasesDoCaminho(random) {
             ModeloDeFase("Spell cat", "🐱") { ou({ ditado(m, cvc, comFigura = true) }, { ditado(m, cvc, comFigura = true) }, { letraOuvida(m) }) },
             ModeloDeFase("C is for cat", "🔡") { ou({ comecaCom(m) }, { comecaCom(m) }, { baloesSoletrar(m) }) },
             ModeloDeFase("Letter balloons", "🎈") { ou({ baloesSoletrar(m) }, { baloesSoletrar(m) }, { comecaCom(m) }) },
-            ModeloDeFase("Crystal party", "🚩") { ou({ letraOuvida(m) }, { ditado(m, cvc, comFigura = true) }, { comecaCom(m) }, { baloesSoletrar(m) }) },
+            ModeloDeFase("Crystal party", "🚩") { ou({ letraOuvida(m) }, { ditado(m, cvc, comFigura = true) }, { comecaCom(m) }, { baloesSoletrar(m) }, { escreverIngles(m, cvc) }) },
             ModeloDeFase("Letter cards", "🃏") { ou({ cartasAlfabeto(m) }, { cartasAlfabeto(m) }, { sightWord(m) }) },
-            ModeloDeFase("Sight words", "👀") { ou({ sightWord(m) }, { sightWord(m) }, { ditado(m, cvc, comFigura = true) }) },
+            ModeloDeFase("Sight words", "👀") { ou({ sightWord(m) }, { sightWord(m) }, { ditado(m, cvc, comFigura = true) }, { escreverIngles(m, cvc) }) },
             ModeloDeFase("Crystal and clouds", "💎") { ou({ fraseFigura(m, itIsTempo) }, { cacaPalavra(m, I.ceu) }, { comecaCom(m) }, { cartasAlfabeto(m) }) },
             ModeloDeFase("Spelling expert", "⭐") { ou({ ditado(m, cvc, comFigura = false) }, { ditado(m, I.palavrasDeQuatro, comFigura = false) }, { sightWord(m) }, { comecaCom(m) }) },
             ModeloDeFase("Boss: Crystal Bat", "👑") { ou({ ditado(m, cvc + I.palavrasDeQuatro, comFigura = false) }, { baloesSoletrar(m) }, { cartasAlfabeto(m) }, { comecaCom(m) }) },

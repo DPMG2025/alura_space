@@ -17,7 +17,7 @@ import kotlin.random.Random
 class MilFasesTest {
 
     private val tiposConhecidos = setOf("Cesta", "Memoria", "MontarPalavra", "Tracar",
-        "Pescaria", "EstourarBaloes", "LigarPares", "QuebraCabeca", "Trem", "Balanca", "CacaNaCena", "SigaASequencia", "PintarPorCodigo", "Ditado", "Domino", "EscondeEsconde", "CartasViradas", "Mercadinho", "Relogio", "ProgramarRobo", "MontarFrase")
+        "Pescaria", "EstourarBaloes", "LigarPares", "QuebraCabeca", "Trem", "Balanca", "CacaNaCena", "SigaASequencia", "PintarPorCodigo", "Ditado", "Domino", "EscondeEsconde", "CartasViradas", "Mercadinho", "Relogio", "ProgramarRobo", "MontarFrase", "EscreverPalavra")
 
     private fun caminhos(r: Random): List<FasesDoCaminho> = listOf(FasesNumeros(r), FasesLetras(r), FasesIngles(r), FasesLogica(r))
 
