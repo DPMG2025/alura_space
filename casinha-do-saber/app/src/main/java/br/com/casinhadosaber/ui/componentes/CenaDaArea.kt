@@ -1,6 +1,7 @@
 package br.com.casinhadosaber.ui.componentes
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
@@ -35,6 +36,7 @@ import br.com.casinhadosaber.dominio.ItemCasa
 import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Passeio
 import br.com.casinhadosaber.dominio.Posicao
+import br.com.casinhadosaber.dominio.TipoDeEvento
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
@@ -58,6 +60,8 @@ fun CenaDaArea(
     noite: Boolean = false,
     construindo: Boolean = false,
     destaqueId: String? = null,
+    /** Evento do dia (Natal, Festa Junina...): os enfeites ficam no fundo, atrás das coisas e dos botões. */
+    evento: TipoDeEvento? = null,
     onTocarItem: (ItemCasa) -> Unit = {},
     onMoverItem: (ItemCasa, Posicao) -> Unit = { _, _ -> },
     onGuardarItem: (ItemCasa) -> Unit = {},
@@ -81,22 +85,40 @@ fun CenaDaArea(
         val larguraPx = constraints.maxWidth.toFloat()
         val alturaPx = constraints.maxHeight.toFloat()
         val unidade = minOf(larguraPx, alturaPx / ItensDaCasa.PROPORCAO_DA_CENA)
-        Canvas(Modifier.fillMaxSize()) { desenharFundoDaArea(area, obra.value, t, noite) }
+        // O fundo parado fica numa camada própria (só redesenha quando a área, a obra ou a noite mudam);
+        // por cima, só o que mexe (estrelas, água, luzes da pista).
+        FundoParadoDaArea(area, obra, noite)
+        Canvas(Modifier.fillMaxSize()) { desenharFundoAnimado(area, obra.value, t, noite) }
+        if (evento != null) EnfeitesDoEvento(evento, Modifier.fillMaxSize())
 
-        for (item in area.coisas) {
-            val guardada = estado.colocados[item.id] ?: continue
-            val pos = Posicao(guardada.x.coerceIn(0.03f, 0.97f), guardada.y.coerceIn(0.08f, 1f))
+        // Do fundo para a frente: quem está mais embaixo (mais perto) é desenhado por último.
+        val presentes = area.coisas.mapNotNull { item ->
+            estado.colocados[item.id]?.let { g -> item to Posicao(g.x.coerceIn(0.03f, 0.97f), g.y.coerceIn(0.08f, 1f)) }
+        }.sortedBy { it.second.y }
+        for ((item, pos) in presentes) {
             val bichoDesenhado = bichoDesenhadoDe(item.id)
             val passeia = CasaQueCresce.passeia(item.id)
             val semente = item.id.hashCode()
             val alcance = if (passeia) Passeio.alcance(pos.x, 0.1f) else 0f
+            // Profundidade: lá no fundo as coisas ficam menores (0,8x) e aqui na frente, maiores (1,1x).
+            val profundidade = 0.8f + 0.3f * ((pos.y - 0.08f) / 0.92f).coerceIn(0f, 1f)
+            val larguraRelativa = item.tamanho * unidade / larguraPx * (if (bichoDesenhado != null) 1.7f else 1f) * profundidade
+            // Jeitinho de cada coisa (fixo, vem do id): um tico torta e um tico para o lado, para não parecer grade.
+            val jeito = (semente xor (semente ushr 16)) and 0x7FFFFFFF
+            val inclinacao = if (passeia || bichoDesenhado != null) 0f else ((jeito % 9) - 4) * 0.9f
+            val desvio = if (passeia) 0f else (((jeito / 9) % 7) - 3) / 3f * larguraRelativa * larguraPx * 0.06f
+            // Sombra de contato só no chão (o que está no céu ou na parede não tem chão embaixo).
+            val noChao = pos.y > CasaQueCresce.HORIZONTE + 0.03f && bichoDesenhado == null
             key(item.id) {
                 ObjetoNaCena(
                     item = item,
                     pos = pos,
                     larguraCena = larguraPx,
                     alturaCena = alturaPx,
-                    larguraRelativa = item.tamanho * unidade / larguraPx * (if (bichoDesenhado != null) 1.7f else 1f),
+                    larguraRelativa = larguraRelativa,
+                    sombra = noChao,
+                    inclinacao = inclinacao,
+                    desvioX = desvio,
                     interativo = interativa,
                     aparecer = item.id == destaqueId,
                     vida = if (passeia) Vida.PARADO else vidaDo(CasaQueCresce.tipoDe(item.id)),
@@ -156,4 +178,10 @@ fun CenaDaArea(
             }
         }
     }
+}
+
+/** O fundo parado da área, numa camada própria: a cena mexe a cada quadro, mas esta camada só é refeita quando muda. */
+@Composable
+private fun FundoParadoDaArea(area: AreaDaCasa, obra: Animatable<Float, AnimationVector1D>, noite: Boolean) {
+    Canvas(Modifier.fillMaxSize().graphicsLayer()) { desenharFundoParado(area, obra.value, noite) }
 }

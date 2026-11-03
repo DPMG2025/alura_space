@@ -41,11 +41,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import br.com.casinhadosaber.ui.componentes.caminhoEstrela
 import androidx.compose.ui.unit.dp
 import br.com.casinhadosaber.dominio.Aparencia
 import br.com.casinhadosaber.dominio.Genero
@@ -163,21 +181,39 @@ fun TelaPerfil(
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     for (opcao in Genero.entries) {
                         val rotulo = if (opcao == Genero.MENINO) "Menino" else "Menina"
+                        // O cartão afunda um pouquinho ao tocar e volta com mola.
+                        val toque = remember { MutableInteractionSource() }
+                        val apertado by toque.collectIsPressedAsState()
+                        val escala by animateFloatAsState(if (apertado) 0.94f else 1f, spring(dampingRatio = 0.4f), label = "cartao")
                         Column(
                             Modifier
                                 .weight(1f)
+                                .graphicsLayer { scaleX = escala; scaleY = escala }
+                                .shadow(6.dp, RoundedCornerShape(28.dp))
                                 .background(Color.White, RoundedCornerShape(28.dp))
-                                .clickable(role = Role.RadioButton) { escolher("$rotulo!") { genero = opcao } }
+                                .clickable(interactionSource = toque, indication = null, role = Role.RadioButton) { escolher("$rotulo!") { genero = opcao } }
                                 .padding(12.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Crianca(Perfil("", opcao, pele, cabelo, -1), Modifier.height(260.dp).pulsando(), acenando = true)
+                            // A largura manda no tamanho: o braço que dá tchau fica dentro do cartão.
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 6.dp)
+                                    .background(Brush.radialGradient(listOf(Color(0xFFE3F4FF), Color.White)), RoundedCornerShape(22.dp)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Crianca(Perfil("", opcao, pele, cabelo, -1), Modifier.fillMaxWidth(0.8f).padding(vertical = 8.dp).pulsando(), acenando = true)
+                            }
                             Text(rotulo, style = MaterialTheme.typography.titleLarge)
                         }
                     }
                 }
                 MaoGuia(Modifier.align(Alignment.Center), espera = 2000)
             }
+            // Embaixo, o terreno onde a casinha vai nascer (só desenho, para a tela não ficar vazia).
+            Spacer(Modifier.height(18.dp))
+            TerrenoDaCasinha(Modifier.fillMaxWidth().height(230.dp).clip(RoundedCornerShape(28.dp)))
             return@Column
         }
 
@@ -231,7 +267,7 @@ fun TelaPerfil(
                     contentAlignment = Alignment.TopCenter,
                 ) {
                     // Só a cabeça: o personagem grande, recortado no círculo.
-                    Crianca(perfil.copy(estiloCabelo = i, chapeu = ""), Modifier.height(110.dp).padding(top = 6.dp))
+                    Crianca(perfil.copy(estiloCabelo = i, chapeu = ""), Modifier.height(110.dp).padding(top = 6.dp), animado = false)
                 }
             }
         }
@@ -333,4 +369,114 @@ private fun Bolinha(cor: Color, escolhida: Boolean, descricao: String, onClick: 
             .semantics { contentDescription = descricao }
             .clickable(role = Role.RadioButton, onClick = onClick),
     )
+}
+
+/**
+ * O terreno vazio da primeira tela: morrinhos, um caminho de pedrinhas, flores e a casinha ainda tracejada,
+ * com estrelinhas que piscam (é ali que ela vai nascer).
+ */
+@Composable
+private fun TerrenoDaCasinha(modifier: Modifier) {
+    val brilho = rememberInfiniteTransition(label = "terreno").animateFloat(
+        0.35f, 1f, infiniteRepeatable(androidx.compose.animation.core.tween(1100), RepeatMode.Reverse), label = "brilho",
+    )
+    Box(modifier.semantics { contentDescription = "O terreno onde a casinha vai nascer" }) {
+        // O terreno é montado uma vez por tamanho; só as estrelinhas (numa camada pequena, só delas) piscam.
+        Spacer(Modifier.fillMaxSize().drawWithCache { val desenho = terrenoParado(); onDrawBehind { desenho() } })
+        Spacer(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer()
+                .drawWithCache {
+                    val w = size.width
+                    val h = size.height
+                    val base = Offset(w * 0.5f, h * 0.56f)
+                    // Estrelinhas mágicas em volta da casinha (as formas são feitas uma vez; o brilho só muda a cor).
+                    val estrelas = listOf(-0.36f to 0.18f, 0.34f to 0.12f, -0.2f to 0.02f, 0.22f to 0.36f).map { e ->
+                        caminhoEstrela(Offset(base.x + w * e.first, h * e.second + h * 0.08f), h * 0.04f)
+                    }
+                    onDrawBehind {
+                        val b = brilho.value
+                        for ((k, estrela) in estrelas.withIndex()) {
+                            val a = if (k % 2 == 0) b else 1.35f - b
+                            drawPath(estrela, Color(0xFFFFE27A).copy(alpha = a.coerceIn(0f, 1f)))
+                        }
+                    }
+                },
+        )
+    }
+}
+
+/**
+ * A parte parada do [TerrenoDaCasinha] (morros, casinha tracejada, caminho e flores): as formas e os pincéis são
+ * montados aqui uma vez por tamanho, e o que volta só desenha.
+ */
+private fun androidx.compose.ui.draw.CacheDrawScope.terrenoParado(): DrawScope.() -> Unit {
+    val w = size.width
+    val h = size.height
+    // Morro de trás (mais claro) e o da frente.
+    val tras = Path().apply {
+        moveTo(0f, h * 0.55f)
+        cubicTo(w * 0.25f, h * 0.38f, w * 0.55f, h * 0.5f, w * 0.75f, h * 0.42f)
+        cubicTo(w * 0.88f, h * 0.37f, w, h * 0.45f, w, h * 0.45f)
+        lineTo(w, h); lineTo(0f, h); close()
+    }
+    val frente = Path().apply {
+        moveTo(0f, h * 0.72f)
+        cubicTo(w * 0.3f, h * 0.6f, w * 0.7f, h * 0.62f, w, h * 0.7f)
+        lineTo(w, h); lineTo(0f, h); close()
+    }
+    val gramado = Brush.verticalGradient(listOf(Color(0xFF8ACF6E), Color(0xFF6DB85A)), startY = h * 0.6f, endY = h)
+    // A casinha que ainda vai nascer: só o contorno tracejado, em cima do morro.
+    val base = Offset(w * 0.5f, h * 0.56f)
+    val lw = h * 0.42f
+    val lh = h * 0.26f
+    val casa = Path().apply {
+        moveTo(base.x - lw / 2f, base.y)
+        lineTo(base.x - lw / 2f, base.y - lh)
+        lineTo(base.x, base.y - lh - h * 0.2f)
+        lineTo(base.x + lw / 2f, base.y - lh)
+        lineTo(base.x + lw / 2f, base.y)
+        close()
+    }
+    val tracejado = Stroke(h * 0.018f, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(h * 0.05f, h * 0.035f)))
+    val desenho: DrawScope.() -> Unit = {
+        drawPath(tras, Color(0xFFA9DE8F))
+        drawPath(frente, gramado)
+        drawPath(casa, Color.White.copy(alpha = 0.45f))
+        drawPath(casa, Color.White, style = tracejado)
+        drawRoundRect(
+            Color.White.copy(alpha = 0.8f), Offset(base.x - lw * 0.1f, base.y - lh * 0.55f), Size(lw * 0.2f, lh * 0.55f),
+            androidx.compose.ui.geometry.CornerRadius(h * 0.02f), style = Stroke(h * 0.012f),
+        )
+        drawOval(Color(0x22000000), Offset(base.x - lw * 0.62f, base.y - h * 0.015f), Size(lw * 1.24f, h * 0.05f))
+        // Caminho de pedrinhas até a porta.
+        for (k in 0 until 5) {
+            val t = k / 4f
+            val c = Offset(base.x - w * 0.02f + t * w * 0.06f, base.y + h * 0.06f + t * h * 0.32f)
+            val r = h * (0.025f + t * 0.025f)
+            drawOval(Color(0xFFEFE6D2), Offset(c.x - r * 1.5f, c.y - r * 0.6f), Size(r * 3f, r * 1.2f))
+        }
+        // Florzinhas e moitinhas nos morros.
+        val flores = listOf(0.08f to 0.8f, 0.2f to 0.74f, 0.33f to 0.86f, 0.72f to 0.8f, 0.86f to 0.74f, 0.93f to 0.9f, 0.62f to 0.92f)
+        val cores = listOf(Color(0xFFFF7AA2), Color(0xFFFFD166), Color(0xFFFFFFFF), Color(0xFFB79CFF))
+        for ((i, f) in flores.withIndex()) {
+            val c = Offset(w * f.first, h * f.second)
+            val r = h * 0.022f
+            drawLine(Color(0xFF4E9A3E), c, Offset(c.x, c.y + r * 2.4f), r * 0.45f, StrokeCap.Round)
+            for (k in 0 until 5) {
+                val a = k * 1.2566f
+                drawCircle(cores[i % cores.size], r * 0.7f, Offset(c.x + kotlin.math.cos(a) * r, c.y + kotlin.math.sin(a) * r))
+            }
+            drawCircle(Color(0xFFFFB13C), r * 0.55f, c)
+        }
+        for (u in listOf(0.14f, 0.82f)) {
+            val c = Offset(w * u, h * (if (u < 0.5f) 0.6f else 0.55f))
+            drawCircle(Color(0xFF5FAE4E), h * 0.06f, c)
+            drawCircle(Color(0xFF5FAE4E), h * 0.05f, Offset(c.x - h * 0.06f, c.y + h * 0.02f))
+            drawCircle(Color(0xFF5FAE4E), h * 0.05f, Offset(c.x + h * 0.06f, c.y + h * 0.02f))
+            drawCircle(Color(0x33FFFFFF), h * 0.025f, Offset(c.x - h * 0.02f, c.y - h * 0.025f))
+        }
+    }
+    return desenho
 }

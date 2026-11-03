@@ -343,27 +343,28 @@ internal fun AtividadeMontarPalavra(
                     .graphicsLayer {
                         scaleX = escala
                         scaleY = escala
-                        rotationZ = p.peca.tremida.value
+                        translationX = p.peca.tremida.value * density
                     }
                     .then(if (destacar) Modifier.pulsando() else Modifier)
+                    .festejo(encaixada)
                     .shadow(if (p.peca.arrastando) 10.dp else 3.dp, RoundedCornerShape(18.dp))
-                    .background(
-                        when {
-                            encaixada -> Color(0xFFDFF7E7)
-                            destacar -> Color(0xFFFFF3C4)
-                            else -> Color.White
-                        },
-                        RoundedCornerShape(18.dp),
-                    )
-                    .border(
-                        3.dp,
-                        when {
+                    .ladrilho(
+                        cor = when {
                             encaixada -> Cores.Certo
                             destacar -> Cores.Estrela
                             else -> cor
                         },
-                        RoundedCornerShape(18.dp),
-                    ),
+                        raio = 18.dp,
+                        fundo = when {
+                            encaixada -> Color(0xFFDFF7E7)
+                            destacar -> Color(0xFFFFF3C4)
+                            else -> Color.White
+                        },
+                        labio = 5.dp,
+                        contorno = ContornoDoJogo,
+                        larguraContorno = 2.dp,
+                    )
+                    .padding(bottom = 4.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

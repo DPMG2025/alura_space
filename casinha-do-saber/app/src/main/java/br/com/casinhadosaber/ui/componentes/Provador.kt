@@ -135,7 +135,7 @@ fun Provador(
                 },
             ) {
                 if (aba == Gaveta.ROUPAS) {
-                    Crianca(perfil.copy(traje = "", chapeu = ""), Modifier.height(58.dp))
+                    Crianca(perfil.copy(traje = "", chapeu = ""), Modifier.height(58.dp), animado = false)
                 } else {
                     Text("✖️", fontSize = 30.sp)
                 }
@@ -157,7 +157,7 @@ fun Provador(
                     },
                 ) {
                     if (p.categoria == br.com.casinhadosaber.dominio.Categoria.ROUPA) {
-                        Crianca(perfil.vestindo(p).copy(chapeu = ""), Modifier.height(58.dp))
+                        Crianca(perfil.vestindo(p).copy(chapeu = ""), Modifier.height(58.dp), animado = false)
                     } else {
                         Text(p.icone, fontSize = 38.sp, maxLines = 1)
                     }

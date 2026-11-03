@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -18,6 +17,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -61,6 +61,8 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.telas.atividades.festejo
+import br.com.casinhadosaber.ui.telas.atividades.ladrilho
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import br.com.casinhadosaber.ui.telas.atividades.GestoDeArrastar
@@ -85,6 +87,8 @@ private class PecaNaMaoN2(val id: Int, val domino: PecaDomino) {
 /** Peça já na fileira: [virada] quando entrou com a metade b encostada na ponta (gira ao encaixar). */
 private class EncaixeN2(val id: Int, val esquerda: MeiaPeca, val direita: MeiaPeca, val virada: Boolean) {
     val giro = Animatable(if (virada) 0f else 1f)
+    /** Ainda não festejou: o festejo toca só uma vez, quando a peça é colocada (não ao recompor de novo). */
+    var festejar = true
 }
 
 private fun falaDaMeiaN2(m: MeiaPeca) = falaDoVisualN2(m.visual, m.fala)
@@ -177,6 +181,8 @@ internal fun AtividadeDomino(
             return Offset(x0 + (t % cols) * (peca + vao), maoY + linha * (lado + vao))
         }
         fun posicaoAtual(p: PecaNaMaoN2) = naMao(p) + p.peca.desvio.value + p.peca.arrasto
+        // A fileira cresce para a esquerda: a peça que passa da beira some de mansinho (nunca fica cortada).
+        fun visivelNaFileira(x: Float) = ((x + peca * 0.02f) / (margem * 0.5f + peca * 0.02f)).coerceIn(0f, 1f)
         val molinha = spring<Offset>(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow)
 
         fun voltar(p: PecaNaMaoN2) {
@@ -231,6 +237,22 @@ internal fun AtividadeDomino(
 
         // ---------------------------------------------------------------- mesa e lugar da próxima peça
         Canvas(Modifier.matchParentSize()) {
+            // Balcão da lojinha embaixo das peças da mão: tampo de feltro e frente de tábuas até o pé da tela.
+            val tampo = Rect(margem * 0.5f, maoY - px(16f), w - margem * 0.5f, maoY + linhas * (lado + vao) - vao + px(18f))
+            val frente = Rect(tampo.left + px(8f), tampo.bottom - px(6f), tampo.right - px(8f), h)
+            if (frente.height > px(24f)) {
+                drawRect(Color(0xFFD9A066), frente.topLeft, frente.size)
+                var x = frente.left + px(30f)
+                while (x < frente.right - px(10f)) {
+                    drawLine(Color(0x33000000), Offset(x, frente.top), Offset(x, frente.bottom), px(2f))
+                    x += px(44f)
+                }
+                drawRect(Color(0x26000000), frente.topLeft, Size(frente.width, px(10f)))
+            }
+            drawRoundRect(Color(0x22000000), tampo.topLeft + Offset(0f, px(5f)), tampo.size, CornerRadius(px(20f)))
+            drawRoundRect(Color(0xFFF7E3C4), tampo.topLeft, tampo.size, CornerRadius(px(20f)))
+            drawRoundRect(Color(0xFFFFF4E2), tampo.topLeft + Offset(px(6f), px(6f)), Size(tampo.width - px(12f), tampo.height - px(12f)), CornerRadius(px(15f)))
+            drawRoundRect(Color(0x403D2C5E), tampo.topLeft, tampo.size, CornerRadius(px(20f)), style = Stroke(px(2f)))
             val mesa = Rect(0f, fileiraY - px(16f), w, fileiraY + lado + px(16f))
             drawRoundRect(Color(0x22000000), mesa.topLeft + Offset(0f, px(5f)), mesa.size, CornerRadius(px(18f)))
             drawRoundRect(Brush.verticalGradient(listOf(Color(0xFFE5B27A), Color(0xFFC98B4F)), mesa.top, mesa.bottom), mesa.topLeft, mesa.size, CornerRadius(px(18f)))
@@ -265,20 +287,29 @@ internal fun AtividadeDomino(
             Box(
                 Modifier
                     .offset { IntOffset(xDaFileira(0).roundToInt(), fileiraY.roundToInt()) }
-                    .graphicsLayer { rotationZ = if (primeiraEhPonta) tremidaPonta.value else 0f },
+                    .graphicsLayer {
+                        translationX = if (primeiraEhPonta) tremidaPonta.value * density else 0f
+                        alpha = visivelNaFileira(xDaFileira(0))
+                    },
             ) {
                 DesenhoDoDominoN2(null, domino.ponta, ladoDp, cor, pontaLivre = primeiraEhPonta && !terminou, ajuda = ajuda)
             }
-            for ((k, e) in fileira.withIndex()) {
+            for ((k, e) in fileira.withIndex()) key(e.id) {
                 val ultima = k == fileira.lastIndex
+                // Festeja só na colocação de verdade: depois de aparecer uma vez, a peça não festeja de novo
+                // se sair e voltar para a composição.
+                val festejarAgora = e.festejar
+                SideEffect { e.festejar = false }
                 Box(
                     Modifier
                         .offset { IntOffset(xDaFileira(k + 1).roundToInt(), fileiraY.roundToInt()) }
                         .graphicsLayer {
                             // Gira como uma moeda: na metade do giro as metades trocam de lado.
                             scaleX = abs(cos(PI.toFloat() * e.giro.value)).coerceAtLeast(0.05f)
-                            rotationZ = if (ultima) tremidaPonta.value else 0f
-                        },
+                            translationX = if (ultima) tremidaPonta.value * density else 0f
+                            alpha = visivelNaFileira(xDaFileira(k + 1))
+                        }
+                        .festejo(true, aoAparecer = festejarAgora),
                 ) {
                     val trocou = e.giro.value >= 0.5f
                     val esq = if (trocou) e.esquerda else e.direita
@@ -354,7 +385,7 @@ internal fun AtividadeDomino(
                     .graphicsLayer {
                         scaleX = escala
                         scaleY = escala
-                        rotationZ = p.peca.tremida.value
+                        translationX = p.peca.tremida.value * density
                     }
                     .then(if (destacar) Modifier.pulsando() else Modifier),
             ) {
@@ -409,9 +440,15 @@ private fun DesenhoDoDominoN2(
     Box(
         Modifier
             .size(lado * 2, lado)
-            .shadow(if (erguida) 10.dp else 3.dp, forma)
-            .background(if (destaque) BrilhoN2 else Color(0xFFFFFBF0), forma)
-            .border(if (destaque) 4.dp else 3.dp, if (destaque) Cores.Estrela else Color(0xFF5B4A73), forma),
+            .shadow(if (erguida) 10.dp else 2.dp, forma)
+            .ladrilho(
+                cor = if (destaque) Color(0xFFE0A800) else Color(0xFFD9C7A3),
+                raio = lado * 0.18f,
+                fundo = if (destaque) BrilhoN2 else Color(0xFFFFFBF0),
+                labio = 5.dp,
+                contorno = if (destaque) Cores.Estrela else Color(0xFF5B4A73),
+                larguraContorno = if (destaque) 4.dp else 3.dp,
+            ),
     ) {
         Row {
             Box(Modifier.size(lado), contentAlignment = Alignment.Center) {

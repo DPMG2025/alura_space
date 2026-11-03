@@ -24,7 +24,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -55,6 +54,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
+import br.com.casinhadosaber.ui.telas.atividades.painelDaCena
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.ceil
@@ -146,7 +146,7 @@ internal fun AtividadePescaria(
     val parada = n1Parada(interacoes, ativa, terminou, ajuda, ajudaInicial)
     val relogio = n1Relogio()
 
-    BoxWithConstraints(modifier.fillMaxSize().clipToBounds()) {
+    BoxWithConstraints(modifier.fillMaxSize().painelDaCena()) {
         val w = constraints.maxWidth.toFloat()
         val h = constraints.maxHeight.toFloat()
         val d = densidade.density
@@ -345,7 +345,8 @@ internal fun AtividadePescaria(
                         val escala = 1f - 0.55f * e
                         scaleX = escala
                         scaleY = escala
-                        rotationZ = p.tremida.value + (if (e > 0f) -25f * sin(PI.toFloat() * e) else 0f)
+                        translationX = p.tremida.value * density
+                        rotationZ = if (e > 0f) -25f * sin(PI.toFloat() * e) else 0f
                         alpha = 1f - 0.55f * p.fuga.value
                     }
                     .testTag(
@@ -371,6 +372,16 @@ internal fun AtividadePescaria(
                 ) {
                     desenharPeixe(p.cor)
                 }
+                // Bolhinhas saindo da boca (camada só delas: o peixe não é redesenhado a cada quadro).
+                Canvas(
+                    Modifier
+                        .matchParentSize()
+                        .graphicsLayer {
+                            scaleX = if (p.fuga.value > 0f) p.ladoDaFuga else cardume.virado(p.indice, relogio.floatValue)
+                        },
+                ) {
+                    desenharBolhas(relogio.floatValue + p.indice * 0.7f)
+                }
                 Box(
                     Modifier
                         .align(Alignment.Center)
@@ -384,11 +395,11 @@ internal fun AtividadePescaria(
                     // O anel dourado fica numa camada só dele: o peixe não é redesenhado a cada quadro.
                     if (destacar) {
                         Canvas(Modifier.matchParentSize()) {
-                            n1Brilho(center, altura * 0.38f, relogio.floatValue)
-                            drawCircle(Color.White, altura * 0.36f, center)
+                            n1Brilho(center, altura * 0.31f, relogio.floatValue)
+                            drawCircle(Color.White, altura * 0.29f, center)
                         }
                     }
-                    N1Figura(p.opcao, ladoY * 0.62f)
+                    N1Figura(p.opcao, ladoY * 0.5f)
                 }
             }
         }
@@ -438,19 +449,46 @@ private fun DrawScope.desenharPeixe(cor: Color) {
         val x = w * (0.3f + k * 0.06f)
         drawArc(escura.copy(alpha = 0.6f), -55f, 110f, false, Offset(x - w * 0.06f, h * 0.24f), Size(w * 0.12f, h * 0.52f), style = Stroke(h * 0.05f, cap = StrokeCap.Round))
     }
-    // Barbatana do lado (meio escondida pela plaquinha)
-    drawOval(escura.copy(alpha = 0.7f), Offset(w * 0.3f, h * 0.62f), Size(w * 0.14f, h * 0.2f))
-    // Plaquinha branca da figura
+    // Escamas: arquinhos claros nas costas.
+    for (k in 0 until 4) {
+        val x = w * (0.4f + k * 0.09f)
+        drawArc(Color.White.copy(alpha = 0.4f), 20f, 140f, false, Offset(x, h * 0.1f), Size(w * 0.07f, h * 0.09f), style = Stroke(h * 0.025f, cap = StrokeCap.Round))
+    }
+    // Barbatana do lado, embaixo (fora da plaquinha), com um brilho.
+    val lateral = Path().apply {
+        moveTo(w * 0.42f, h * 0.66f)
+        quadraticTo(w * 0.3f, h * 0.66f, w * 0.27f, h * 0.84f)
+        quadraticTo(w * 0.38f, h * 0.8f, w * 0.44f, h * 0.72f)
+        close()
+    }
+    drawPath(lateral, escura)
+    drawLine(Color.White.copy(alpha = 0.3f), Offset(w * 0.39f, h * 0.69f), Offset(w * 0.31f, h * 0.79f), h * 0.02f, cap = StrokeCap.Round)
+    // Plaquinha branca da figura: uns 60% do corpo (o peixe continua aparecendo em volta).
     val centro = Offset(w * 0.61f, h * 0.5f)
-    val raio = h * 0.36f
+    val raio = h * 0.29f
+    drawCircle(escura.copy(alpha = 0.25f), raio * 1.08f, centro + Offset(0f, h * 0.02f))
     drawCircle(Color.White, raio, centro)
-    drawCircle(escura.copy(alpha = 0.35f), raio, centro, style = Stroke(h * 0.035f))
+    drawCircle(escura.copy(alpha = 0.35f), raio, centro, style = Stroke(h * 0.03f))
     // Olho e sorriso
     val olho = Offset(w * 0.9f, h * 0.38f)
     drawCircle(Color.White, h * 0.085f, olho)
     drawCircle(Color(0xFF2B2140), h * 0.05f, olho + Offset(w * 0.008f, 0f))
     drawCircle(Color.White, h * 0.018f, olho + Offset(w * 0.016f, -h * 0.02f))
     drawArc(Color(0xFF2B2140), 20f, 100f, false, Offset(w * 0.88f, h * 0.5f), Size(w * 0.08f, h * 0.14f), style = Stroke(h * 0.03f, cap = StrokeCap.Round))
+}
+
+/** Três bolhinhas subindo da boca do peixe (virado para a direita); [t] em segundos. */
+private fun DrawScope.desenharBolhas(t: Float) {
+    val w = size.width
+    val h = size.height
+    for (k in 0 until 3) {
+        val f = (t * 0.45f + k / 3f) % 1f
+        val r = h * (0.035f + 0.025f * f)
+        val c = Offset(w * (1.0f + 0.03f * sin(f * 9f + k)), h * (0.42f - 0.55f * f))
+        val a = (1f - f) * 0.8f
+        drawCircle(Color.White.copy(alpha = a * 0.35f), r, c)
+        drawCircle(Color.White.copy(alpha = a), r, c, style = Stroke(h * 0.012f))
+    }
 }
 
 private fun DrawScope.desenharFolhaDeLirio(c: Offset, r: Float) {

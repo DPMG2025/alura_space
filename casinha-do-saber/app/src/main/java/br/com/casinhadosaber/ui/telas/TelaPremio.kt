@@ -89,6 +89,17 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.Confete
+import br.com.casinhadosaber.ui.componentes.EnfeiteDoFundo
+import br.com.casinhadosaber.ui.componentes.ExplosaoDeEstrelas
+import br.com.casinhadosaber.ui.componentes.RaiosDeLuz
+import br.com.casinhadosaber.ui.componentes.FundoDecorado
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import br.com.casinhadosaber.ui.componentes.IconeDoItem
 import br.com.casinhadosaber.ui.componentes.Crianca
 import br.com.casinhadosaber.ui.componentes.Estrela
@@ -196,24 +207,43 @@ fun TelaPremio(
     }
 
     val corDaTrilha = Color(fase.trilha.corArgb)
+    // Onde está o presente (ou as estrelas, sem presente): os raios de luz giram atrás dele.
+    // (centro guardado na conta da janela; vira fração da tela na hora de desenhar, quando as duas medidas já chegaram)
+    var centroNaJanela by remember { mutableStateOf<Offset?>(null) }
+    var origemDaTela by remember { mutableStateOf(Offset.Zero) }
+    var tamanhoDaTela by remember { mutableStateOf(Size.Zero) }
+    fun marcarCentro(c: LayoutCoordinates) {
+        centroNaJanela = c.positionInRoot() + Offset(c.size.width / 2f, c.size.height / 2f)
+    }
+    FundoDecorado(corDaTrilha, Modifier.fillMaxSize(), enfeite = EnfeiteDoFundo.Estrelas) {
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(corDaTrilha, Cores.Fundo)))
-            .windowInsetsPadding(WindowInsets.safeDrawing),
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .onGloballyPositioned {
+                origemDaTela = it.positionInRoot()
+                tamanhoDaTela = Size(it.size.width.toFloat(), it.size.height.toFloat())
+            },
     ) {
         // Tela alta: a criança cresce e fica num "palco" (morrinho) que ocupa o terço de baixo.
         val alta = maxHeight > 720.dp
+        val centro = centroNaJanela
+        val fracao = if (centro != null && tamanhoDaTela.width > 0f && tamanhoDaTela.height > 0f) {
+            Offset((centro.x - origemDaTela.x) / tamanhoDaTela.width, (centro.y - origemDaTela.y) / tamanhoDaTela.height)
+        } else {
+            Offset(0.5f, 0.42f)
+        }
+        RaiosDeLuz(alfa = 0.32f, quantidade = 14, centroX = fracao.x, centroY = fracao.y)
         Canvas(Modifier.fillMaxSize()) {
             val topo = size.height * 0.80f
             drawOval(corDaTrilha.copy(alpha = 0.16f), Offset(-size.width * 0.35f, topo - size.height * 0.04f), Size(size.width * 1.7f, size.height * 0.5f))
             drawOval(corDaTrilha.copy(alpha = 0.22f), Offset(-size.width * 0.15f, topo), Size(size.width * 1.3f, size.height * 0.4f))
-            // Brilhinhos espalhados no céu, para o alto da tela não ficar chapado.
-            for (k in 0 until 9) {
-                val x = ((k * 0.37f + 0.11f) % 1f) * size.width
-                val y = ((k * 0.53f + 0.07f) % 0.7f) * size.height
-                drawPath(caminhoEstrela(Offset(x, y), (5 + (k % 3) * 3).dp.toPx()), Color.White.copy(alpha = 0.35f))
-            }
+            // Brilho do palco: luz no alto do morrinho, onde a criança comemora.
+            drawOval(
+                Brush.radialGradient(listOf(Color.White.copy(alpha = 0.35f), Color.Transparent), Offset(size.width / 2, topo + size.height * 0.04f), size.width * 0.5f),
+                Offset(0f, topo - size.height * 0.08f),
+                Size(size.width, size.height * 0.24f),
+            )
         }
         Column(
             Modifier
@@ -228,12 +258,15 @@ fun TelaPremio(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     if (nome.isBlank()) "Parabéns!" else "Parabéns, $nome!",
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.headlineLarge.copy(shadow = SOMBRA_DO_TITULO),
                     color = Color.White,
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = if (!temPresente) Modifier.onGloballyPositioned(::marcarCentro) else Modifier,
+                ) {
                     for (i in 1..3) {
                         val escala = remember { Animatable(0.6f) }
                         LaunchedEffect(estrelasVisiveis >= i) {
@@ -242,11 +275,22 @@ fun TelaPremio(
                                 escala.animateTo(1f, spring(dampingRatio = 0.4f))
                             }
                         }
-                        Estrela(
-                            estrelasVisiveis >= i,
-                            Modifier.graphicsLayer { scaleX = escala.value; scaleY = escala.value },
-                            tamanho = 64.dp,
-                        )
+                        // Cada estrela que pousa estoura em faíscas (o estouro passa por fora da estrela).
+                        Box(contentAlignment = Alignment.Center) {
+                            Estrela(
+                                estrelasVisiveis >= i,
+                                Modifier.graphicsLayer { scaleX = escala.value; scaleY = escala.value },
+                                tamanho = 64.dp,
+                            )
+                            ExplosaoDeEstrelas(
+                                disparo = if (estrelasVisiveis >= i) i else 0,
+                                // Sem ocupar lugar: do tamanho da estrela (matchParentSize), mas desenhado em 150 dp
+                                // centrado. Antes a caixa crescia para 150 dp durante o estouro e empurrava a tela.
+                                modifier = Modifier.matchParentSize().wrapContentSize(unbounded = true).requiredSize(150.dp),
+                                quantidade = 10,
+                                duracao = 700,
+                            )
+                        }
                     }
                 }
                 if (moedas > 0) {
@@ -265,6 +309,7 @@ fun TelaPremio(
                     )
                     Spacer(Modifier.height(8.dp))
                     Presente(
+                        modifier = Modifier.onGloballyPositioned(::marcarCentro),
                         nomeAberto = item.nome,
                         aberto = aberto,
                         onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
@@ -282,6 +327,7 @@ fun TelaPremio(
                     )
                     Spacer(Modifier.height(8.dp))
                     Presente(
+                        modifier = Modifier.onGloballyPositioned(::marcarCentro),
                         nomeAberto = brindeDaLoja.nome,
                         aberto = aberto,
                         onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
@@ -372,6 +418,7 @@ fun TelaPremio(
             FestaDoMascote(mascote, fasesAntes, fasesDepois) { festaDoMascote = false }
         }
     }
+    }
 }
 
 /** O que o narrador diz ao abrir o brinde: o que ganhou, onde já está e as moedinhas extras. */
@@ -442,7 +489,7 @@ private fun DesenhoDoBrinde(p: Produto, lado: Dp, modifier: Modifier = Modifier,
             // Roupa e acessório: a própria criança vestida, com o ícone do presente no cantinho.
             Categoria.ROUPA, Categoria.ACESSORIO -> if (perfil != null) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Crianca(perfil.vestindo(p), Modifier.height(lado * 0.92f))
+                    Crianca(perfil.vestindo(p), Modifier.height(lado * 0.92f), animado = false)
                     Text(
                         p.icone,
                         style = MaterialTheme.typography.displayLarge.copy(fontSize = (lado.value * 0.26f).sp, lineHeight = (lado.value * 0.3f).sp),
@@ -468,6 +515,7 @@ private fun DesenhoDoBrinde(p: Produto, lado: Dp, modifier: Modifier = Modifier,
 
 @Composable
 private fun Presente(
+    modifier: Modifier = Modifier,
     nomeAberto: String,
     aberto: Boolean,
     onToque: () -> Unit,
@@ -506,7 +554,7 @@ private fun Presente(
     }
 
     Box(
-        Modifier
+        modifier
             .size(230.dp)
             .semantics { contentDescription = if (aberto) nomeAberto else "Presente. Toque para abrir." }
             .clickable(enabled = !aberto, role = Role.Button, onClick = ::tocar),
@@ -537,19 +585,23 @@ private fun Presente(
             Box(
                 Modifier
                     .size(170.dp)
+                    .drawBehind { drawCircle(Cores.Sombra, size.minDimension / 2, center.copy(y = center.y + 5.dp.toPx())) }
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.85f)),
+                    .background(Brush.verticalGradient(listOf(Color.White, Color(0xFFF1ECFF))))
+                    .border(3.dp, Color.White, CircleShape),
             )
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    "🎁",
-                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 96.sp, lineHeight = 108.sp),
-                    modifier = Modifier.graphicsLayer {
-                        rotationZ = giro.value + if (toques == 0) chamar else 0f
-                        scaleX = escala.value
-                        scaleY = escala.value
-                    },
+                // Caixa desenhada (e não o emoji, que ficava borrado ao crescer): nítida em qualquer tamanho.
+                CaixaDePresente(
+                    Modifier
+                        .size(112.dp)
+                        .graphicsLayer {
+                            rotationZ = giro.value + if (toques == 0) chamar else 0f
+                            scaleX = escala.value
+                            scaleY = escala.value
+                        },
                 )
+                Spacer(Modifier.height(6.dp))
                 // Três bolinhas: cada toque acende uma (sem depender de leitura).
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     repeat(3) { k ->
@@ -565,4 +617,65 @@ private fun Presente(
         }
     }
     Spacer(Modifier.fillMaxWidth().height(8.dp))
+}
+
+/** Sombra ameixa suave do título branco. */
+private val SOMBRA_DO_TITULO = Shadow(Color(0x553D2C5E), Offset(0f, 4f), 8f)
+
+/**
+ * A caixa de presente desenhada: corpo rosa com fita dourada, tampa mais larga, laço de duas alças,
+ * brilho no alto e contorno ameixa (mesmo traço dos botões). Vetorial, então não borra ao crescer.
+ */
+@Composable
+private fun CaixaDePresente(modifier: Modifier = Modifier) {
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        val contorno = Cores.Texto.copy(alpha = 0.45f)
+        val traco = Stroke(w * 0.022f)
+        val rosa = Color(0xFFFF5D8F)
+        val rosaEscuro = Color(0xFFE0447A)
+        val fita = Color(0xFFFFC93C)
+        val fitaEscura = Color(0xFFE8A817)
+        // Sombra no chão
+        drawOval(Cores.Sombra, Offset(w * 0.14f, h * 0.86f), Size(w * 0.72f, h * 0.1f))
+        // Corpo
+        val corpoTopo = h * 0.42f
+        val corpo = Size(w * 0.68f, h * 0.48f)
+        val corpoEsq = Offset(w * 0.16f, corpoTopo)
+        drawRoundRect(Brush.verticalGradient(listOf(rosa, rosaEscuro), corpoTopo, corpoTopo + corpo.height), corpoEsq, corpo, CornerRadius(w * 0.06f))
+        drawRect(Color.Black.copy(alpha = 0.08f), Offset(corpoEsq.x, corpoTopo), Size(corpo.width, h * 0.06f))
+        drawRect(Brush.horizontalGradient(listOf(fitaEscura, fita, fitaEscura), w * 0.42f, w * 0.58f), Offset(w * 0.42f, corpoTopo), Size(w * 0.16f, corpo.height))
+        drawRoundRect(contorno, corpoEsq, corpo, CornerRadius(w * 0.06f), style = traco)
+        // Tampa
+        val tampaTopo = h * 0.30f
+        val tampa = Size(w * 0.80f, h * 0.15f)
+        val tampaEsq = Offset(w * 0.10f, tampaTopo)
+        drawRoundRect(Brush.verticalGradient(listOf(Color(0xFFFF7FA6), rosa), tampaTopo, tampaTopo + tampa.height), tampaEsq, tampa, CornerRadius(w * 0.05f))
+        drawRect(fita, Offset(w * 0.42f, tampaTopo), Size(w * 0.16f, tampa.height))
+        // Brilho da tampa
+        drawRoundRect(Color.White.copy(alpha = 0.45f), Offset(w * 0.15f, tampaTopo + tampa.height * 0.18f), Size(w * 0.22f, tampa.height * 0.24f), CornerRadius(tampa.height * 0.12f))
+        drawRoundRect(contorno, tampaEsq, tampa, CornerRadius(w * 0.05f), style = traco)
+        // Laço: duas alças, as pontas da fita e o nó
+        val no = Offset(w * 0.5f, tampaTopo)
+        for (lado in listOf(-1f, 1f)) {
+            val ponta = Path().apply {
+                moveTo(no.x, no.y)
+                lineTo(no.x + lado * w * 0.14f, no.y + h * 0.13f)
+                lineTo(no.x + lado * w * 0.07f, no.y + h * 0.14f)
+                close()
+            }
+            drawPath(ponta, fitaEscura)
+            val alca = Path().apply {
+                moveTo(no.x, no.y)
+                cubicTo(no.x + lado * w * 0.02f, no.y - h * 0.36f, no.x + lado * w * 0.48f, no.y - h * 0.24f, no.x + lado * w * 0.05f, no.y + h * 0.02f)
+                close()
+            }
+            drawPath(alca, fita)
+            drawPath(alca, contorno, style = traco)
+        }
+        drawCircle(fitaEscura, w * 0.06f, no)
+        drawCircle(Color.White.copy(alpha = 0.5f), w * 0.022f, no + Offset(-w * 0.018f, -w * 0.018f))
+        drawCircle(contorno, w * 0.06f, no, style = traco)
+    }
 }

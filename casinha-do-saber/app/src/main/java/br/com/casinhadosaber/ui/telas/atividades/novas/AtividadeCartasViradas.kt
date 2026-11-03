@@ -60,6 +60,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.telas.atividades.festejo
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import kotlinx.coroutines.Job
@@ -309,8 +310,9 @@ private fun CartaN4(carta: CartaVirada, aberta: Boolean, brilhar: Boolean, cor: 
             .brilhoN4(brilhar, 16.dp)
             .graphicsLayer {
                 scaleX = abs(cos(giro * PI.toFloat())).coerceAtLeast(0.02f)
-                rotationZ = carta.tremida.value
+                translationX = carta.tremida.value * density
             }
+            .festejo(carta.achada)
             .shadow(if (carta.achada) 2.dp else 4.dp, forma)
             .background(
                 when {

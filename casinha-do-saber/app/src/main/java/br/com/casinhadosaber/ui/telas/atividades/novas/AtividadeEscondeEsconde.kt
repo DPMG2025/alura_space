@@ -25,7 +25,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -61,6 +60,8 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
+import br.com.casinhadosaber.ui.telas.atividades.painelDaCena
+import kotlin.math.cos
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -161,7 +162,7 @@ internal fun AtividadeEscondeEsconde(
     val parada = n1Parada(interacoes, ativa && podeTocar, terminou, ajuda, ajudaInicial, primeira = 8000L)
     val relogio = n1Relogio()
 
-    BoxWithConstraints(modifier.fillMaxSize().clipToBounds()) {
+    BoxWithConstraints(modifier.fillMaxSize().painelDaCena()) {
         val w = constraints.maxWidth.toFloat()
         val h = constraints.maxHeight.toFloat()
         val d = densidade.density
@@ -280,6 +281,7 @@ internal fun AtividadeEscondeEsconde(
                 narrador.falar(n1Nome(e.opcao) + pt("Aqui não!"))
                 escopo.launch {
                     launch { e.saida.animateTo(1f, tween(1900, easing = LinearEasing)) }
+                    launch { for (x in listOf(9f, -9f, 6f, -6f, 3f, 0f)) e.tremida.animateTo(x, tween(60)) }
                     e.abertura.animateTo(1f, spring(dampingRatio = 0.5f))
                     n1Esperar(900)
                     e.abertura.animateTo(0.2f, tween(400))
@@ -303,6 +305,27 @@ internal fun AtividadeEscondeEsconde(
             }
             drawRect(Color(0xFFD9A066), Offset(0f, h * 0.32f), Size(w, 5f * d))
             drawRect(Color(0xFFD9A066), Offset(0f, h * 0.355f), Size(w, 5f * d))
+            // Chão de verdade: faixas de grama mais escura, tufinhos e florzinhas (a metade de baixo não fica vazia).
+            drawOval(Color(0xFF8FD072), Offset(-w * 0.3f, h * 0.84f), Size(w * 0.9f, h * 0.3f))
+            drawOval(Color(0xFF8FD072), Offset(w * 0.5f, h * 0.88f), Size(w * 0.8f, h * 0.3f))
+            for (k in 0 until 16) {
+                val fx = ((k * 37 + 11) % 100) / 100f
+                val fy = if (k % 2 == 0) 0.45f + ((k * 13) % 10) / 100f else 0.86f + ((k * 7) % 10) / 100f
+                val c = Offset(fx * w, fy * h)
+                val folha = Color(0xFF6DB85A)
+                drawLine(folha, c, c + Offset(-4f * d, -9f * d), 2.5f * d, cap = StrokeCap.Round)
+                drawLine(folha, c, c + Offset(0f, -11f * d), 2.5f * d, cap = StrokeCap.Round)
+                drawLine(folha, c, c + Offset(4f * d, -9f * d), 2.5f * d, cap = StrokeCap.Round)
+                if (k % 3 == 0) {
+                    val flor = c + Offset(9f * d, -6f * d)
+                    val petala = if (k % 2 == 0) Color(0xFFFFFFFF) else Color(0xFFFFB3D1)
+                    for (p in 0 until 5) {
+                        val a = p * 1.2566f
+                        drawCircle(petala, 3.2f * d, flor + Offset(cos(a) * 3.6f * d, sin(a) * 3.6f * d))
+                    }
+                    drawCircle(Color(0xFFFFD54F), 2.4f * d, flor)
+                }
+            }
         }
 
         // ---------------------------------------------------------------- surpresas (atrás dos esconderijos)
@@ -377,7 +400,8 @@ internal fun AtividadeEscondeEsconde(
                     .graphicsLayer {
                         val a = e.abertura.value
                         translationY = -a * lado * 0.42f
-                        rotationZ = -12f * a + e.tremida.value
+                        rotationZ = -12f * a
+                        translationX = e.tremida.value * density
                         transformOrigin = TransformOrigin(0.15f, 1f)
                         alpha = if (e.aberto && !e.certo && e.saida.value >= 1f) 0.55f else 1f
                     }

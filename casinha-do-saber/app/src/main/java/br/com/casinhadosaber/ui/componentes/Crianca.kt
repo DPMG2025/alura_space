@@ -18,7 +18,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.graphics.Canvas as ComposeCanvas
+import kotlin.math.ceil
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -37,6 +44,13 @@ import br.com.casinhadosaber.dominio.ParteDoCorpo
 import br.com.casinhadosaber.dominio.Perfil
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.geometry.Rect
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -58,53 +72,22 @@ fun Crianca(
     humor: Humor = Humor.FELIZ,
     /** Mexe a boca, como se estivesse falando (junto com o narrador). */
     falando: Boolean = false,
+    /**
+     * false = figura parada (miniaturas de listas, do guarda-roupa e da loja): desenhada uma vez numa imagem
+     * guardada, sem respirar, piscar nem acenar. Poupa os aparelhos mais simples.
+     */
+    animado: Boolean = true,
 ) {
-    val transicao = rememberInfiniteTransition(label = "crianca")
-    val balanco by transicao.animateFloat(
-        initialValue = -1f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(450, easing = LinearEasing), RepeatMode.Reverse),
-        label = "balanco",
-    )
-    val piscar by transicao.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(3800, easing = LinearEasing)),
-        label = "piscar",
-    )
-    val respiro by transicao.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.025f,
-        animationSpec = infiniteRepeatable(tween(1400), RepeatMode.Reverse),
-        label = "respiro",
-    )
-    val boca by transicao.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(160), RepeatMode.Reverse),
-        label = "boca",
-    )
     val descricao = if (perfil.genero == Genero.MENINA) "Menina" else "Menino"
     BoxWithConstraints(
         modifier
             .aspectRatio(PROPORCAO_CRIANCA)
             .semantics { contentDescription = perfil.nome.ifBlank { descricao } },
     ) {
-        Canvas(
-            Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    // Respiração: o corpo sobe e desce bem de leve, a partir dos pés.
-                    scaleY = respiro
-                    transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
-                },
-        ) {
-            desenharCrianca(
-                perfil,
-                if (acenando) balanco else null,
-                olhosFechados = piscar > 0.96f,
-                humor = if (falando && boca > 0.5f) Humor.SURPRESO else humor,
-            )
+        if (animado && animacoesLigadas()) {
+            CriancaAnimada(perfil, acenando, humor, falando)
+        } else {
+            CriancaParada(perfil, humor)
         }
         // Chapéu comprado na loja, em cima da cabeça.
         if (perfil.chapeu.isNotEmpty()) {
@@ -132,6 +115,91 @@ fun Crianca(
     }
 }
 
+/**
+ * A criança viva. Só o que muda é lido no desenho: o piscar vira um estado que troca só quando o olho fecha
+ * ou abre (e não a cada quadro), o aceno e a boca só existem enquanto a criança acena ou fala, e a respiração
+ * fica na camada (sem redesenhar a figura). Parada, a criança é redesenhada só na piscada.
+ */
+@Composable
+private fun CriancaAnimada(perfil: Perfil, acenando: Boolean, humor: Humor, falando: Boolean) {
+    val transicao = rememberInfiniteTransition(label = "crianca")
+    val balanco = if (acenando) {
+        transicao.animateFloat(
+            initialValue = -1f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(450, easing = LinearEasing), RepeatMode.Reverse),
+            label = "balanco",
+        )
+    } else {
+        null
+    }
+    val piscar = transicao.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(3800, easing = LinearEasing)),
+        label = "piscar",
+    )
+    val olhosFechados = remember(piscar) { derivedStateOf { piscar.value > 0.96f } }
+    val respiro = transicao.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.025f,
+        animationSpec = infiniteRepeatable(tween(1400), RepeatMode.Reverse),
+        label = "respiro",
+    )
+    val bocaAberta = if (falando) {
+        val boca = transicao.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(160), RepeatMode.Reverse),
+            label = "boca",
+        )
+        remember(boca) { derivedStateOf { boca.value > 0.5f } }
+    } else {
+        null
+    }
+    Canvas(
+        Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                // Respiração: o corpo sobe e desce bem de leve, a partir dos pés.
+                scaleY = respiro.value
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
+            },
+    ) {
+        desenharCrianca(
+            perfil,
+            balanco?.value,
+            olhosFechados = olhosFechados.value,
+            humor = if (bocaAberta?.value == true) Humor.SURPRESO else humor,
+        )
+    }
+}
+
+/**
+ * Criança parada: desenhada uma única vez numa imagem (com folga para o contorno e a sombra) e depois só
+ * copiada. Rolar uma lista de miniaturas não refaz a camada do contorno a cada quadro.
+ */
+@Composable
+private fun CriancaParada(perfil: Perfil, humor: Humor) {
+    Spacer(
+        Modifier
+            .fillMaxSize()
+            .drawWithCache {
+                val w = size.width
+                val h = size.height
+                if (w < 1f || h < 1f) return@drawWithCache onDrawBehind { }
+                val traco = (w * 0.022f).coerceAtLeast(1f)
+                val fx = ceil(w * FOLGA_X + traco)
+                val fy = ceil(h * FOLGA_Y + traco)
+                val imagem = ImageBitmap(ceil(w + fx * 2).toInt(), ceil(h + fy * 2).toInt())
+                CanvasDrawScope().draw(this, layoutDirection, ComposeCanvas(imagem), size) {
+                    translate(fx, fy) { desenharCrianca(perfil, null, olhosFechados = false, humor = humor) }
+                }
+                onDrawBehind { drawImage(imagem, topLeft = Offset(-fx, -fy)) }
+            },
+    )
+}
+
 /** Cor principal da roupa especial (ou a da roupa de sempre). Também pinta os cabides do guarda-roupa. */
 fun corDaRoupaDoTraje(traje: String?, perfil: Perfil): Color = when (traje) {
     "pijama" -> Color(0xFF3B4C8C)
@@ -157,7 +225,41 @@ private fun corpoComprido(traje: String?, menina: Boolean): Boolean = when (traj
     else -> menina
 }
 
+/** Contorno escuro da criança (o mesmo tom ameixa dos traços dos mascotes e da Corujinha). */
+private val ContornoDaCrianca = Color(0xE6533A4E)
+
+/** Quanto o desenho pode passar das bordas (mãos, asinhas, sombra), em fração da largura e da altura. */
+private const val FOLGA_X = 0.1f
+private const val FOLGA_Y = 0.04f
+
+/** Tinta da camada do contorno: criada uma vez só (e não a cada quadro). */
+private val TintaDoContorno = Paint().apply { colorFilter = ColorFilter.tint(ContornoDaCrianca, BlendMode.SrcIn) }
+
+/**
+ * A criança inteira: sombra no chão, um contorno fino em volta da silhueta (o desenho repetido em 8 direções
+ * numa camada pintada de uma cor só, então as juntas de dentro, como braço e corpo, ficam sem linha) e, por
+ * cima, o desenho colorido.
+ */
 fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Boolean, humor: Humor) {
+    val w = size.width
+    val h = size.height
+    // sombra no chão
+    drawOval(Color(0x26000000), topLeft = Offset(w * 0.08f, h * 0.975f), size = Size(w * 0.84f, h * 0.05f))
+    val traco = (w * 0.022f).coerceAtLeast(1f)
+    // A camada só precisa da área da figura (as mãos e as asinhas passam um pouco das bordas) mais a espessura
+    // do contorno: bem menor que antes, então mais leve.
+    val folgaX = w * FOLGA_X + traco
+    val folgaY = h * FOLGA_Y + traco
+    drawIntoCanvas { it.saveLayer(Rect(-folgaX, -folgaY, w + folgaX, h + folgaY), TintaDoContorno) }
+    for (k in 0 until 8) {
+        val a = k * PI.toFloat() / 4f
+        translate(cos(a) * traco, sin(a) * traco) { desenharFiguraDaCrianca(perfil, aceno, olhosFechados, humor) }
+    }
+    drawIntoCanvas { it.restore() }
+    desenharFiguraDaCrianca(perfil, aceno, olhosFechados, humor)
+}
+
+private fun DrawScope.desenharFiguraDaCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Boolean, humor: Humor) {
     val w = size.width
     val h = size.height
     fun p(u: Float, v: Float) = Offset(u * w, v * h)
@@ -197,9 +299,6 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
         "chef" -> { calca = Color(0xFF3A3A3A); meia = null; sapato = Color(0xFF1E1E1E) }
     }
     val comprido = corpoComprido(traje, menina)
-
-    // sombra no chão
-    drawOval(Color(0x26000000), topLeft = Offset(w * 0.08f, h * 0.975f), size = Size(w * 0.84f, h * 0.05f))
 
     // Atrás do corpo: capa de herói, asinhas de fada, rabo de dinossauro e o acessório das costas.
     if (traje == "heroi") {
@@ -285,26 +384,34 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
         }
     }
 
-    // braços (o direito pode acenar)
-    val ombroE = p(0.2f, 0.5f)
+    // braços (o direito pode acenar). Os ombros ficam por dentro do corpo e as manguinhas, desenhadas
+    // depois do corpo, cobrem a junta: o braço sai da roupa, sem ficar solto do lado.
+    val ombroE = p(0.24f, 0.5f)
     val torcendo = humor == Humor.TORCENDO
     val pensando = humor == Humor.PENSANDO
     // Torcendo: os dois punhos para cima. Pensando: a mão no queixo.
-    val maoE = if (torcendo) p(0.0f, 0.3f) else p(0.06f, 0.7f)
-    val ombroD = p(0.8f, 0.5f)
+    val maoE = if (torcendo) p(0.05f, 0.29f) else p(0.07f, 0.7f)
+    val ombroD = p(0.76f, 0.5f)
+    // Tchau: o braço dobra no cotovelo, e só o antebraço balança (a mão não sai da área da criança).
+    val cotoveloD = if (aceno != null && !torcendo && !pensando) Offset(w * 0.9f, ombroD.y - w * 0.1f) else null
     val maoD = if (torcendo) {
-        p(1.0f, 0.3f)
+        p(0.95f, 0.29f)
     } else if (pensando) {
         p(0.62f, 0.42f)
-    } else if (aceno != null) {
-        val ang = (-60f + aceno * 18f) * PI.toFloat() / 180f
-        val comp = h * 0.24f
-        Offset(ombroD.x + cos(ang) * comp, ombroD.y + sin(ang) * comp)
+    } else if (cotoveloD != null && aceno != null) {
+        val ang = (-65f + aceno * 13f) * PI.toFloat() / 180f
+        val comp = w * 0.21f
+        Offset(cotoveloD.x + cos(ang) * comp, cotoveloD.y + sin(ang) * comp)
     } else {
-        p(0.94f, 0.7f)
+        p(0.93f, 0.7f)
     }
     drawLine(pele, ombroE, maoE, strokeWidth = w * 0.13f, cap = StrokeCap.Round)
-    drawLine(pele, ombroD, maoD, strokeWidth = w * 0.13f, cap = StrokeCap.Round)
+    if (cotoveloD != null) {
+        drawLine(pele, ombroD, cotoveloD, strokeWidth = w * 0.13f, cap = StrokeCap.Round)
+        drawLine(pele, cotoveloD, maoD, strokeWidth = w * 0.13f, cap = StrokeCap.Round)
+    } else {
+        drawLine(pele, ombroD, maoD, strokeWidth = w * 0.13f, cap = StrokeCap.Round)
+    }
     drawCircle(pele, w * 0.085f, maoE)
     drawCircle(pele, w * 0.085f, maoD)
 
@@ -324,6 +431,23 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
         if (traje == null) drawPath(caminhoEstrela(p(0.5f, 0.58f), w * 0.1f), Color(0xFFFFD166))
     }
     if (traje != null) desenharTrajeNoCorpo(traje, corpo, if (comprido) h * 0.8f else h * 0.75f)
+    // Volume da roupa: luz do lado esquerdo, sombra do lado direito e embaixo do queixo.
+    clipPath(corpo) {
+        drawRect(
+            Brush.horizontalGradient(
+                0f to Color(0x2EFFFFFF), 0.3f to Color(0x00FFFFFF), 0.68f to Color(0x00000000), 1f to Color(0x2B000000),
+                startX = w * 0.1f, endX = w * 0.9f,
+            ),
+        )
+        drawOval(Color(0x24000000), Offset(w * 0.3f, h * 0.43f), Size(w * 0.4f, h * 0.06f))
+    }
+    // Manguinhas (por cima do corpo, na cor da roupa): o braço nasce de dentro da roupa.
+    val manga = w * 0.155f
+    val pontaE = Offset(ombroE.x + (maoE.x - ombroE.x) * 0.3f, ombroE.y + (maoE.y - ombroE.y) * 0.3f)
+    val alvoD = cotoveloD ?: maoD
+    val pontaD = Offset(ombroD.x + (alvoD.x - ombroD.x) * 0.42f, ombroD.y + (alvoD.y - ombroD.y) * 0.42f)
+    drawLine(roupa, ombroE, pontaE, strokeWidth = manga, cap = StrokeCap.Round)
+    drawLine(roupa, ombroD, pontaD, strokeWidth = manga, cap = StrokeCap.Round)
     if (traje == "bailarina") {
         // Saia de tule por cima do corpo: duas fileiras de babados.
         for (i in 0 until 7) drawCircle(Color(0xCCFFC7DD), w * 0.1f, p(0.13f + i * 0.124f, 0.76f))
@@ -392,6 +516,12 @@ fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Bool
         close()
     }
     drawPath(franja, cabelo)
+    // Brilho no cabelo (uma faixa clarinha do lado da luz).
+    drawArc(
+        Color(0x47FFFFFF), startAngle = 200f, sweepAngle = 52f, useCenter = false,
+        topLeft = Offset(centro.x - r * 0.82f, centro.y - r * 0.82f), size = Size(r * 1.64f, r * 1.64f),
+        style = Stroke(r * 0.1f, cap = StrokeCap.Round),
+    )
     if (menina && semChapeu && estilo != 2 && noCabelo == null) {
         desenharLaco(Offset(centro.x + r * 0.45f, centro.y - r * 0.85f), r, Color(0xFFFF4F8B))
     } else if (!menina && estilo == 2) {

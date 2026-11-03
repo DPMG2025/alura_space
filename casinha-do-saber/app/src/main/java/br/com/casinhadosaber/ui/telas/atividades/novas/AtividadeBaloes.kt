@@ -20,7 +20,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -52,6 +51,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
+import br.com.casinhadosaber.ui.telas.atividades.painelDaCena
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.floor
@@ -133,7 +133,7 @@ internal fun AtividadeBaloes(
     fun vale(b: Balao): Boolean =
         b.ordem >= 0 && !b.estourado && (!emOrdem || b.ordem == achados.value.size)
 
-    BoxWithConstraints(modifier.fillMaxSize().clipToBounds()) {
+    BoxWithConstraints(modifier.fillMaxSize().painelDaCena()) {
         val w = constraints.maxWidth.toFloat()
         val h = constraints.maxHeight.toFloat()
         val d = densidade.density
@@ -239,8 +239,15 @@ internal fun AtividadeBaloes(
                         val p = b.estouro.value
                         scaleX = 1f + 0.4f * p
                         scaleY = 1f + 0.4f * p
-                        alpha = 1f - p
-                        rotationZ = b.tremida.value
+                        // Perto da barra de achados (em cima) o balão some de mansinho: nunca fica
+                        // escondido atrás dela pela metade.
+                        val topo = if (b.estourado) h else yDo(b, relogio.floatValue)
+                        val limite = 6f * d + alturaBarra
+                        val sumindo = ((topo + alturaOval * 0.35f - limite) / (alturaOval * 0.45f)).coerceIn(0f, 1f)
+                        alpha = (1f - p) * sumindo
+                        scaleX *= 0.85f + 0.15f * sumindo
+                        scaleY *= 0.85f + 0.15f * sumindo
+                        translationX = b.tremida.value * density
                         transformOrigin = TransformOrigin(0.5f, alturaOval / alturaCaixa)
                     }
                     .testTag(

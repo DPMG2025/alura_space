@@ -52,6 +52,27 @@ import br.com.casinhadosaber.ui.componentes.CenaDaCasa
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
+import br.com.casinhadosaber.ui.componentes.PROPORCAO_CENA
+import br.com.casinhadosaber.ui.componentes.brilhoDoTopo
+import br.com.casinhadosaber.ui.componentes.FundoDecorado
+import br.com.casinhadosaber.ui.tema.Formas
 
 /** Conta as chegadas ao início (só enquanto o app está aberto) para variar a saudação sem sorteio. */
 private var chegadasNoInicio = 0
@@ -92,10 +113,10 @@ fun TelaInicio(
         narrador.falarPartes(br.com.casinhadosaber.dominio.VozesDaFamilia.saudacao(oi) + br.com.casinhadosaber.dominio.ParteDaFala(pt(resto)))
     }
 
+    FundoDecorado(Cores.Ceu, Modifier.fillMaxSize()) {
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Cores.Ceu, Cores.Fundo, Cores.Fundo)))
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
     // Tela deitada (tablet em paisagem): a casa à esquerda e os quatro caminhos numa coluna à direita.
@@ -111,11 +132,12 @@ fun TelaInicio(
             BotaoAdulto(onAreaDosPais)
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Casinha do Saber", style = MaterialTheme.typography.headlineMedium, color = Color.White)
-                Text(
+                // Título branco com contorno e sombra ameixa: lê bem sobre o céu claro.
+                TextoContornado("Casinha do Saber", MaterialTheme.typography.headlineMedium, contorno = 5.dp)
+                TextoContornado(
                     "🏠 ${estado.itensGanhos.size} de ${br.com.casinhadosaber.dominio.CasaQueCresce.metaAtual(estado.fasesVencidas)} coisas",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
+                    MaterialTheme.typography.titleMedium,
+                    contorno = 4.dp,
                 )
             }
             Spacer(Modifier.width(8.dp))
@@ -137,8 +159,10 @@ fun TelaInicio(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .shadow(8.dp, RoundedCornerShape(28.dp))
-                    .clip(RoundedCornerShape(28.dp))
+                    .shadow(10.dp, Formas.Enorme, ambientColor = Cores.Sombra, spotColor = Cores.Sombra)
+                    .clip(Formas.Enorme)
+                    // Moldura branquinha por cima da cena: um cartão, e não um recorte.
+                    .border(3.dp, Color.White.copy(alpha = 0.85f), Formas.Enorme)
                     .semantics {
                         contentDescription = "Minha casinha. Toque para montar."
                         role = Role.Button
@@ -147,6 +171,7 @@ fun TelaInicio(
                     .clickable { sons.toque(); onAbrirCasa() },
             ) {
                 CenaDaCasa(estado, Modifier.fillMaxSize(), preencherAltura = true)
+                BrumaDoHorizonte(Modifier.fillMaxSize())
                 Column(
                     Modifier
                         .align(Alignment.TopStart)
@@ -253,6 +278,7 @@ fun TelaInicio(
         }
     }
     }
+    }
 }
 
 /** Largura da coluna dos caminhos quando a tela está deitada. */
@@ -305,10 +331,10 @@ private fun BotaoTrilha(trilha: Trilha, vencidas: Int, modifier: Modifier, onCli
 @Composable
 private fun BotaoAdulto(onAbrir: () -> Unit) {
     val narrador = LocalNarrador.current
+    // Disco branco sólido com base lilás, igual aos outros botões redondos (o translúcido parecia desligado).
+    // O toque continua sendo o longo: por isso não é um BotaoFofo (o clique dele comeria o toque).
     Box(
         Modifier
-            .clip(RoundedCornerShape(50))
-            .background(Color(0x33FFFFFF))
             .semantics { contentDescription = "Área dos pais. Toque e segure." }
             .pointerInput(Unit) {
                 detectTapGestures(
@@ -316,8 +342,84 @@ private fun BotaoAdulto(onAbrir: () -> Unit) {
                     onLongPress = { onAbrir() },
                 )
             }
-            .padding(12.dp),
+            .drawBehind {
+                val p = 4.dp.toPx()
+                val r = (size.width) / 2f
+                val c = Offset(size.width / 2f, r)
+                drawCircle(Cores.Sombra, r, c.copy(y = c.y + p + 2.dp.toPx()))
+                drawCircle(BASE_DO_BOTAO, r, c.copy(y = c.y + p))
+                drawCircle(Cores.Contorno, r, c.copy(y = c.y + p), style = Stroke(2.dp.toPx()))
+            }
+            .padding(bottom = 4.dp)
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(Color.White)
+            .brilhoDoTopo()
+            .border(2.dp, Cores.Contorno, CircleShape),
+        contentAlignment = Alignment.Center,
     ) {
-        Text("⚙️", style = MaterialTheme.typography.titleLarge)
+        Text("⚙️", fontSize = 22.sp)
     }
+}
+
+/** Base lilás dos botões brancos (a mesma do `BotaoRedondo`). */
+private val BASE_DO_BOTAO = Color(0xFFD9CFF2)
+
+/**
+ * Texto branco com contorno e sombra ameixa (o título sobre o céu claro). O contorno é uma cópia do texto
+ * desenhada só com o traço, por baixo, e fica fora da acessibilidade (o leitor de tela lê uma vez só).
+ */
+@Composable
+private fun TextoContornado(texto: String, estilo: TextStyle, contorno: Dp) {
+    val ameixa = Cores.Texto
+    Box(contentAlignment = Alignment.Center) {
+        Text(
+            texto,
+            style = estilo.copy(
+                color = ameixa.copy(alpha = 0.8f),
+                drawStyle = Stroke(width = with(LocalDensity.current) { contorno.toPx() }, join = StrokeJoin.Round),
+                shadow = Shadow(ameixa.copy(alpha = 0.35f), Offset(0f, 6f), 6f),
+            ),
+            maxLines = 1,
+            modifier = Modifier.clearAndSetSemantics { },
+        )
+        Text(texto, style = estilo, color = Color.White, maxLines = 1)
+    }
+}
+
+/**
+ * Bruma do horizonte na cena da casa: uma faixa branquinha onde o céu encontra os morros, mais forte nas
+ * pontas (longe) e quase nada no meio (onde fica a casa, para ela não ficar desbotada).
+ * A conta da altura segue a da `CenaDaCasa` com `preencherAltura` (morros a 68% da cena, céu extra a 35% da sobra).
+ */
+@Composable
+private fun BrumaDoHorizonte(modifier: Modifier) {
+    Spacer(
+        modifier
+            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+            .drawWithCache {
+                val alturaCena = minOf(size.width * PROPORCAO_CENA, size.height)
+                val ceuExtra = (size.height - alturaCena) * 0.35f
+                val horizonte = ceuExtra + alturaCena * 0.70f
+                val meia = alturaCena * 0.16f
+                val faixa = Brush.verticalGradient(
+                    0f to Color.Transparent,
+                    0.6f to Color.White.copy(alpha = 0.55f),
+                    1f to Color.Transparent,
+                    startY = horizonte - meia * 1.4f,
+                    endY = horizonte + meia * 0.6f,
+                )
+                val pontas = Brush.horizontalGradient(
+                    0f to Color.Black,
+                    0.3f to Color.Black.copy(alpha = 0.25f),
+                    0.5f to Color.Black.copy(alpha = 0.12f),
+                    0.7f to Color.Black.copy(alpha = 0.25f),
+                    1f to Color.Black,
+                )
+                onDrawBehind {
+                    drawRect(faixa, topLeft = Offset(0f, horizonte - meia * 1.4f), size = Size(size.width, meia * 2f))
+                    drawRect(pontas, blendMode = BlendMode.DstIn)
+                }
+            },
+    )
 }

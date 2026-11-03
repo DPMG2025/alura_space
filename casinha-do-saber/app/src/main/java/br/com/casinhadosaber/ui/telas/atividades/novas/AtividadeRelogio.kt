@@ -53,7 +53,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.IntOffset
@@ -69,6 +68,7 @@ import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import br.com.casinhadosaber.ui.telas.atividades.GestoDeArrastar
+import br.com.casinhadosaber.ui.tema.Fredoka
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -290,7 +290,7 @@ internal fun AtividadeRelogio(
                     fontSize = 36.sp,
                     lineHeight = 40.sp,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = Fredoka,
                     color = Color(0xFF7CF29B),
                 )
             }
@@ -477,7 +477,7 @@ private fun DrawScope.desenharMostrador(c: Offset, raio: Float, medidor: android
         )
     }
     // números das horas
-    val estilo = TextStyle(fontSize = (raio * 0.17f / density).sp, fontWeight = FontWeight.Bold, color = Color(0xFF3D2C5E))
+    val estilo = TextStyle(fontFamily = Fredoka, fontSize = (raio * 0.17f / density).sp, fontWeight = FontWeight.Bold, color = Color(0xFF3D2C5E))
     for (n in 1..12) {
         val texto = medidor.measure("$n", estilo)
         val p = pontoNoAngulo(c, raio * 0.66f, n * 30f)

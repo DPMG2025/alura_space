@@ -18,10 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,6 +66,10 @@ import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.FileiraDeEstrelas
 import br.com.casinhadosaber.ui.componentes.PortaoDeAdulto
 import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.tema.Raios
+import br.com.casinhadosaber.ui.componentes.EnfeiteDoFundo
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
+import br.com.casinhadosaber.ui.componentes.fundoDecorado
 import kotlin.random.Random
 
 /** Área dos adultos: protegida por uma continha que a criança pequena ainda não resolve sozinha. */
@@ -105,7 +107,8 @@ fun TelaPais(
     Column(
         Modifier
             .fillMaxSize()
-            .background(Cores.Fundo)
+            // Área dos adultos: calma, sem bolhas, lilás clarinho que vira creme.
+            .fundoDecorado(FUNDO_DOS_PAIS, EnfeiteDoFundo.Nenhum)
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
@@ -351,14 +354,18 @@ private fun Painel(
     }
 
     if (confirmar) {
-        AlertDialog(
-            onDismissRequest = { confirmar = false },
-            title = { Text(if (variasCriancas) "Apagar o progresso desta criança?" else "Apagar tudo?") },
-            // O caderno da criança é apagado pelo Repositorio junto com o progresso (cada criança tem o seu).
-            text = { Text("A casa, as estrelas, o personagem e o caderno" + (if (variasCriancas) " da criança que está jogando" else "") + " serão apagados. Isso não pode ser desfeito. As vozes gravadas da família continuam (apague cada uma no cartão Vozes da família).") },
-            confirmButton = { TextButton(onClick = { confirmar = false; onApagarTudo() }) { Text("Apagar", color = Cores.Errado) } },
-            dismissButton = { TextButton(onClick = { confirmar = false }) { Text("Cancelar") } },
-        )
+        JanelaDosPais(onFechar = { confirmar = false }, titulo = if (variasCriancas) "Apagar o progresso" else "Apagar tudo") {
+            CaixaDeDialogo(
+                titulo = if (variasCriancas) "Apagar o progresso desta criança?" else "Apagar tudo?",
+                // O caderno da criança é apagado pelo Repositorio junto com o progresso (cada criança tem o seu).
+                texto = "A casa, as estrelas, o personagem e o caderno" + (if (variasCriancas) " da criança que está jogando" else "") + " serão apagados. Isso não pode ser desfeito. As vozes gravadas da família continuam (apague cada uma no cartão Vozes da família).",
+                confirmar = "Apagar",
+                tagConfirmar = "pais_confirmar_apagar",
+                corConfirmar = Cores.Errado,
+                onConfirmar = { confirmar = false; onApagarTudo() },
+                onCancelar = { confirmar = false },
+            )
+        }
     }
 }
 
@@ -506,7 +513,10 @@ private fun Cartao(conteudo: @Composable () -> Unit) {
         Modifier
             .fillMaxWidth()
             .padding(bottom = 16.dp)
-            .background(Color.White, RoundedCornerShape(20.dp))
+            .cartaoFofo(raio = Raios.Grande)
             .padding(16.dp),
     ) { conteudo() }
 }
+
+/** Fundo da área dos pais. */
+internal val FUNDO_DOS_PAIS = Color(0xFFE4DCFF)

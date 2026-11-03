@@ -33,6 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.BlendMode
@@ -45,6 +46,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -73,6 +75,8 @@ import br.com.casinhadosaber.dominio.Passeio
 import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.dominio.Lugar
 import br.com.casinhadosaber.dominio.Posicao
+import br.com.casinhadosaber.dominio.TipoDeEvento
+import br.com.casinhadosaber.ui.tema.Fredoka
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -136,6 +140,8 @@ fun CenaDaCasa(
     onMoverCrianca: (Posicao) -> Unit = {},
     /** Toque num visitante da semana ou da loja (o emoji dele): ele pula, quem chama fala o nome. */
     onTocarVisitante: (String) -> Unit = {},
+    /** Evento do dia: os enfeites ficam no fundo da cena (atrás das coisas), seguindo o beiral do telhado. */
+    evento: TipoDeEvento? = null,
 ) {
     val tempo = rememberInfiniteTransition(label = "cena")
     val t by tempo.animateFloat(
@@ -162,8 +168,7 @@ fun CenaDaCasa(
             val temJardimExtra = jardim > 70.dp
             val corteDoChao = alturaCena * 0.22f + jardim
             Canvas(Modifier.fillMaxSize()) {
-                val ceuInteiro = if (noite) listOf(Color(0xFF16204A), Color(0xFF3B4C8C)) else listOf(Color(0xFF7EC8FF), Color(0xFFCDEBFF))
-                drawRect(Brush.verticalGradient(ceuInteiro, endY = size.height - corteDoChao.toPx()))
+                drawRect(Brush.verticalGradient(coresDoCeu(noite), endY = size.height - corteDoChao.toPx()))
                 // Grama: dos lados da casa e o jardim que continua para baixo, com tufinhos e flores.
                 val chao = if (noite) listOf(Color(0xFF3F7A45), Color(0xFF2F5E35)) else listOf(Color(0xFF7CC56B), Color(0xFF4F9B44))
                 val topoChao = size.height - corteDoChao.toPx()
@@ -207,6 +212,7 @@ fun CenaDaCasa(
                 onTocarCrianca = onTocarCrianca,
                 onMoverCrianca = onMoverCrianca,
                 onTocarVisitante = onTocarVisitante,
+                evento = evento,
             )
             // Visitantes passeiam numa "pista" no alto do jardim de baixo, passando na frente dos objetos.
             if (temJardimExtra) {
@@ -247,6 +253,7 @@ fun CenaDaCasa(
         onTocarCrianca = onTocarCrianca,
         onMoverCrianca = onMoverCrianca,
         onTocarVisitante = onTocarVisitante,
+        evento = evento,
     )
 }
 
@@ -304,6 +311,7 @@ private fun CenaPlana(
     onTocarCrianca: () -> Unit,
     onMoverCrianca: (Posicao) -> Unit,
     onTocarVisitante: (String) -> Unit,
+    evento: TipoDeEvento? = null,
 ) {
     val jardim = remember(jardimExtra) { JardimDeBaixo(jardimExtra) }
     val relogio = rememberRelogioDoPasseio()
@@ -316,6 +324,8 @@ private fun CenaPlana(
     ) {
         val larguraPx = constraints.maxWidth.toFloat()
         val alturaPx = larguraPx * PROPORCAO_CENA
+        // Degradês da cena guardados (só mudam com o tamanho e com a noite), para não criar a cada quadro.
+        val pinceis = remember(larguraPx, noite) { PinceisDaCasa(alturaPx, noite) }
 
         Canvas(
             Modifier
@@ -333,7 +343,16 @@ private fun CenaPlana(
                     },
                 ),
         ) {
-            desenharCasa(estado, t, novaEstrutura, progresso(), noite, semCeu)
+            desenharCasa(estado, t, novaEstrutura, progresso(), noite, pinceis, semCeu)
+        }
+
+        // Enfeites do evento do dia: no fundo (atrás das coisas, da criança e dos botões), no beiral do telhado.
+        if (evento != null) {
+            val temTelhado = estado.temEstrutura(Estrutura.TELHADO)
+            val beiral = remember(temTelhado, jardimExtra) {
+                if (temTelhado) BeiralDaCasa(Offset(0.04f, 0.315f), Offset(0.5f, 0.075f), Offset(0.96f, 0.315f), cerca = 0.80f, alturaDaCena = 1f / (1f + jardimExtra)) else null
+            }
+            EnfeitesDoEvento(evento, Modifier.fillMaxSize(), beiral)
         }
 
         if (!estado.temEstrutura(Estrutura.TERRENO)) {
@@ -346,6 +365,7 @@ private fun CenaPlana(
                 textAlign = TextAlign.Center,
                 color = Color(0xFF6B3E1F),
                 style = TextStyle(
+                    fontFamily = Fredoka,
                     fontSize = with(densidade) { (larguraPx * 0.034f).toSp() },
                     lineHeight = with(densidade) { (larguraPx * 0.04f).toSp() },
                     fontWeight = FontWeight.ExtraBold,
@@ -404,6 +424,7 @@ private fun CenaPlana(
                 noite = noite,
                 deriva = if (bicho == null) null else ({ Passeio.em(relogio.value.toLong(), semente).deslocamento * alcance * larguraPx }),
                 pularAoTocar = bicho != null,
+                sombra = bicho == null && temSombraDeContato(item.id),
                 onTocar = { onTocarItem(item) },
                 onSoltar = { nova ->
                     if (nova.y > jardim.limiteDoBau) {
@@ -525,6 +546,11 @@ private fun androidx.compose.ui.graphics.GraphicsLayerScope.aplicarVida(
 /** Objetos que ficam na parede ou em cima de outro objeto: não caem até o chão. */
 private val objetosDeParede = setOf("abajur", "quadro", "espelho", "livros", "bolo", "ursinho")
 
+/** O que pisa no chão ganha sombra de contato (nada do céu, da parede, nem o que boia ou voa). */
+private fun temSombraDeContato(id: String): Boolean =
+    ItensDaCasa.lugarDe(id) != Lugar.CEU && id !in objetosDeParede &&
+        vidaDo(id).let { it != Vida.BOIAR && it != Vida.VOAR && it != Vida.DERIVAR && it != Vida.DANCAR }
+
 /** Está dentro das paredes da casa? */
 fun dentroDaCasa(p: Posicao, estado: EstadoJogo): Boolean =
     estado.temEstrutura(Estrutura.PAREDES) && p.x in 0.11f..0.89f && p.y in 0.28f..0.80f
@@ -607,6 +633,12 @@ internal fun ObjetoNaCena(
     deriva: (() -> Float)? = null,
     /** Bichinhos dão um pulinho de alegria quando a criança toca neles. */
     pularAoTocar: Boolean = false,
+    /** Sombra de contato (uma elipse suave embaixo do pé), para o objeto não "flutuar" no chão. */
+    sombra: Boolean = false,
+    /** Inclinação fixa do objeto, em graus (escolhida uma vez por objeto, nunca sorteada a cada quadro). */
+    inclinacao: Float = 0f,
+    /** Pequeno desvio para o lado, em pixels, também fixo por objeto (quebra a cara de grade). */
+    desvioX: Float = 0f,
     conteudo: @Composable (larguraPx: Float) -> Unit,
 ) {
     val faisca = remember { Animatable(1f) }
@@ -663,8 +695,29 @@ internal fun ObjetoNaCena(
                 scaleY = s
                 transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
                 if (!arrastando) aplicarVida(vida, (tempo + defasagem) % 1f, larguraCena, alturaCena, densidade.density)
+                if (!arrastando) {
+                    rotationZ += inclinacao
+                    translationX += desvioX
+                }
                 translationX += tremor.value
             }
+            .then(
+                if (sombra) {
+                    Modifier.drawBehind {
+                        // A sombra fica no chão quando o objeto pula (o salto sobe o objeto, não a sombra).
+                        val altura = (-salto.value).coerceAtLeast(0f)
+                        val encolhe = 1f / (1f + altura / (h * 0.6f))
+                        val largura = w * 0.78f * encolhe * (if (arrastando) 0.8f else 1f)
+                        val alto = maxOf(w * 0.13f, 3f) * encolhe
+                        val pe = size.height + altura - alto * 0.18f
+                        val forca = if (arrastando) 0.5f else 1f
+                        drawOval(SombraDeContato.copy(alpha = 0.12f * forca * encolhe), Offset(size.width / 2 - largura * 0.62f, pe - alto * 0.62f), Size(largura * 1.24f, alto * 1.24f))
+                        drawOval(SombraDeContato.copy(alpha = 0.2f * forca * encolhe), Offset(size.width / 2 - largura / 2, pe - alto / 2), Size(largura, alto))
+                    }
+                } else {
+                    Modifier
+                },
+            )
             .semantics {
                 contentDescription = descricao
                 role = Role.Button
@@ -760,6 +813,9 @@ internal fun ObjetoNaCena(
     }
 }
 
+/** Cor das sombras de contato (um roxo bem escuro, mais macio que o preto puro). */
+private val SombraDeContato = Color(0xFF2B1D3A)
+
 fun proporcaoDoItem(item: ItemCasa?): Float = item?.let { ItensDaCasa.proporcaoDe(it) } ?: 1f
 
 /** Desenha o item: emoji ou móvel desenhado. Também é usado no baú. */
@@ -798,6 +854,7 @@ fun EmojiGrande(emoji: String, larguraPx: Float, modifier: Modifier = Modifier) 
         modifier = modifier,
         textAlign = TextAlign.Center,
         style = TextStyle(
+            fontFamily = Fredoka,
             fontSize = tamanho,
             lineHeight = tamanho * 1.05f,
             fontWeight = FontWeight.Normal,
@@ -815,7 +872,25 @@ private val CorMoldura = Color(0xFFE8C9A0)
 private val CorVidro = Color(0xFFA9E1FF)
 private val CorLuz = Color(0xFFFFE08A)
 
-private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, progresso: Float, noite: Boolean, semCeu: Boolean = false) {
+/** Cores do céu (forte no alto, clarinho no horizonte), iguais na cena e na faixa de céu de cima. */
+private fun coresDoCeu(noite: Boolean) =
+    if (noite) listOf(Color(0xFF0E1638), Color(0xFF22306A), Color(0xFF3B4C8C)) else listOf(Color(0xFF5FB2F2), Color(0xFF9AD3FF), Color(0xFFDDF1FF))
+
+/** Degradês da cena da casa, montados uma vez por tamanho (a cena redesenha a cada quadro). */
+private class PinceisDaCasa(H: Float, noite: Boolean) {
+    val ceu = Brush.verticalGradient(coresDoCeu(noite), endY = H * 0.8f)
+    /** Neblina no horizonte, por cima dos morros: dá distância entre o céu e o jardim. */
+    val nevoa = Brush.verticalGradient(
+        listOf(Color.Transparent, if (noite) Color(0x337C8CCF) else Color(0x80FFFFFF), Color.Transparent),
+        startY = H * 0.56f, endY = H * 0.80f,
+    )
+    /** Sombra do telhado na parede, logo abaixo do beiral. */
+    val sombraDoBeiral = Brush.verticalGradient(listOf(Color(0x4D3A2010), Color.Transparent), startY = H * Planta.TOPO, endY = H * (Planta.TOPO + 0.065f))
+    /** Sombra do piso de cima na parede do térreo. */
+    val sombraDoPiso = Brush.verticalGradient(listOf(Color(0x333A2010), Color.Transparent), startY = H * (Planta.MEIO + 0.012f), endY = H * (Planta.MEIO + 0.05f))
+}
+
+private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, progresso: Float, noite: Boolean, pinceis: PinceisDaCasa, semCeu: Boolean = false) {
     val W = size.width
     val H = size.height
     fun X(v: Float) = v * W
@@ -832,8 +907,7 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
     }
 
     // céu
-    val ceu = if (noite) listOf(Color(0xFF16204A), Color(0xFF3B4C8C)) else listOf(Color(0xFF7EC8FF), Color(0xFFCDEBFF))
-    if (!semCeu) drawRect(Brush.verticalGradient(ceu, endY = Y(0.8f)))
+    if (!semCeu) drawRect(pinceis.ceu)
     if (noite) {
         for (i in 0 until 28) {
             val x = ((i * 0.137f + 0.05f) % 1f)
@@ -860,6 +934,8 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
     // morros
     drawOval(if (noite) Color(0xFF4C7F55) else Color(0xFFA8DD8F), topLeft = Offset(X(-0.2f), Y(0.68f)), size = Size(X(0.7f), Y(0.24f)))
     drawOval(if (noite) Color(0xFF447549) else Color(0xFF98D47E), topLeft = Offset(X(0.45f), Y(0.70f)), size = Size(X(0.8f), Y(0.2f)))
+    // neblina do horizonte por cima dos morros
+    drawRect(pinceis.nevoa, topLeft = Offset(0f, Y(0.56f)), size = Size(W, Y(0.24f)))
 
     // chão
     val temTerreno = e.temEstrutura(Estrutura.TERRENO)
@@ -939,6 +1015,8 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
 
     camada(Estrutura.PAREDES) {
         val L = Planta.ESQ; val R = Planta.DIR; val T = Planta.TOPO; val M = Planta.MEIO; val B = Planta.BASE
+        // A casa pousa no chão: sombra macia embaixo dela.
+        drawOval(Color(0x1F1B2A10), Offset(X(L - 0.04f), Y(B - 0.012f)), Size(X(R - L + 0.08f), Y(0.04f)))
         drawRect(Color(e.corDo(Comodo.QUARTO)), Offset(X(L), Y(T)), Size(X(Planta.DIVISAO_CIMA - L), Y(M - T)))
         drawRect(Color(e.corDo(Comodo.BANHEIRO)), Offset(X(Planta.DIVISAO_CIMA), Y(T)), Size(X(R - Planta.DIVISAO_CIMA), Y(M - T)))
         drawRect(Color(e.corDo(Comodo.SALA)), Offset(X(L), Y(M)), Size(X(Planta.DIVISAO_BAIXO - L), Y(B - M)))
@@ -957,6 +1035,10 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
         drawRect(CorMadeira, Offset(X(L), Y(M - 0.012f)), Size(X(R - L), Y(0.024f)))
         drawRect(CorMadeira, Offset(X(L), Y(B - 0.008f)), Size(X(R - L), Y(0.012f)))
         drawRect(Color(0xFFE9D8C4), Offset(X(Planta.DIVISAO_CIMA - 0.005f), Y(T)), Size(X(0.01f), Y(M - T - 0.012f)))
+        // Sombra do piso de cima no térreo e sombrinha nos cantos de cada cômodo (dá fundo às paredes).
+        drawRect(pinceis.sombraDoPiso, Offset(X(L), Y(M + 0.012f)), Size(X(R - L), Y(0.04f)))
+        for (x in listOf(L, Planta.DIVISAO_CIMA + 0.005f)) drawRect(Color(0x0F000000), Offset(X(x), Y(T)), Size(X(0.012f), Y(M - T - 0.012f)))
+        for (x in listOf(L, Planta.DIVISAO_BAIXO)) drawRect(Color(0x0F000000), Offset(X(x), Y(M + 0.012f)), Size(X(0.012f), Y(B - M - 0.02f)))
         if (noite) {
             // Com o abajur, a casa fica mais clarinha por dentro.
             val escuro = if ("abajur" in e.colocados) Color(0x33101A40) else Color(0x66101A40)
@@ -1005,6 +1087,11 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
     }
 
     // (o clima é desenhado por cima de tudo, no fim)
+    if (e.temEstrutura(Estrutura.PAREDES) && e.temEstrutura(Estrutura.TELHADO)) {
+        camada(Estrutura.TELHADO) {
+            drawRect(pinceis.sombraDoBeiral, Offset(X(Planta.ESQ), Y(Planta.TOPO)), Size(X(Planta.DIR - Planta.ESQ), Y(0.065f)))
+        }
+    }
     camada(Estrutura.TELHADO) {
         val telhado = Path().apply {
             moveTo(X(0.04f), Y(0.315f)); lineTo(X(0.5f), Y(0.075f)); lineTo(X(0.96f), Y(0.315f)); close()
@@ -1154,14 +1241,25 @@ private fun DrawScope.papelDeParede(tipo: Int, x0: Float, y0: Float, w: Float, h
 }
 
 private fun DrawScope.janela(x: Float, y: Float, w: Float, h: Float, vidro: Color = CorVidro) {
-    if (vidro == CorLuz) drawCircle(CorLuz.copy(alpha = 0.25f), w * 1.1f, Offset(x + w / 2, y + h / 2))
+    if (vidro == CorLuz) {
+        // Luz de dentro escapando pela janela, num halo macio.
+        drawCircle(CorLuz.copy(alpha = 0.12f), w * 1.5f, Offset(x + w / 2, y + h / 2))
+        drawCircle(CorLuz.copy(alpha = 0.22f), w * 1.05f, Offset(x + w / 2, y + h / 2))
+    }
     val r = CornerRadius(w * 0.08f)
     drawRect(Color(0xFFFF8FAB), Offset(x - w * 0.15f, y - h * 0.15f), Size(w * 0.15f, h * 1.3f))
     drawRect(Color(0xFFFF8FAB), Offset(x + w, y - h * 0.15f), Size(w * 0.15f, h * 1.3f))
     drawRoundRect(vidro, Offset(x, y), Size(w, h), r)
     drawRoundRect(Color.White, Offset(x, y), Size(w, h), r, style = Stroke(w * 0.15f))
+    // Reflexo do céu no vidro (de dia), em dois risquinhos inclinados.
+    if (vidro != CorLuz) {
+        drawLine(Color.White.copy(alpha = 0.6f), Offset(x + w * 0.12f, y + h * 0.38f), Offset(x + w * 0.32f, y + h * 0.12f), w * 0.07f, StrokeCap.Round)
+        drawLine(Color.White.copy(alpha = 0.45f), Offset(x + w * 0.62f, y + h * 0.88f), Offset(x + w * 0.86f, y + h * 0.58f), w * 0.05f, StrokeCap.Round)
+    }
     drawLine(Color.White, Offset(x + w / 2, y), Offset(x + w / 2, y + h), w * 0.075f)
     drawLine(Color.White, Offset(x, y + h / 2), Offset(x + w, y + h / 2), w * 0.075f)
+    // Sombrinha do peitoril embaixo da janela.
+    drawRect(Color(0x1A000000), Offset(x - w * 0.15f, y + h * 1.15f), Size(w * 1.3f, h * 0.08f))
 }
 
 private fun DrawScope.placaDoTerreno(W: Float, H: Float) {

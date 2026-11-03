@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import br.com.casinhadosaber.ui.componentes.FundoDecorado
+import br.com.casinhadosaber.ui.tema.Cores
 
 /** Verdadeiro quando a escala de tablet já foi aplicada mais acima (evita aplicar duas vezes). */
 val LocalEscalaAplicada = staticCompositionLocalOf { false }
@@ -88,25 +90,30 @@ fun EscalaDeTablet(conteudo: @Composable () -> Unit) {
 /**
  * A moldura de cada tela: escala de tablet e conteúdo centralizado com largura máxima.
  * Com [larga] em paisagem, a tela pode usar até [LARGURA_DE_PAISAGEM] (ela se divide em duas colunas).
+ * Com [corDeFundo], a tela inteira (inclusive as sobras dos lados no tablet) ganha o [fundoDecorado] dessa cor.
  */
 @Composable
-fun MolduraDoApp(larga: Boolean = false, conteudo: @Composable () -> Unit) {
+fun MolduraDoApp(larga: Boolean = false, corDeFundo: Color? = null, conteudo: @Composable () -> Unit) {
     val paisagem = emPaisagem()
     EscalaDeTablet {
-        BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-            val maxima: Dp = if (larga && paisagem) LARGURA_DE_PAISAGEM else LARGURA_DE_CELULAR
-            // Quando sobra céu dos lados (tablet deitado), a coluna ganha uma sombra suave nas bordas
-            // de fora: parece uma página em cima do céu, e não um recorte com a borda dura.
-            val sobraLado = maxWidth > maxima + 8.dp
-            val coluna = Modifier.widthIn(max = maxima).fillMaxHeight()
-            Box(if (sobraLado) coluna.drawBehind { sombraDosLados(16.dp.toPx()) } else coluna) { conteudo() }
+        val corpo: @Composable () -> Unit = {
+            BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                val maxima: Dp = if (larga && paisagem) LARGURA_DE_PAISAGEM else LARGURA_DE_CELULAR
+                // Quando sobra céu dos lados (tablet deitado), a coluna ganha uma sombra suave nas bordas
+                // de fora: parece uma página em cima do céu, e não um recorte com a borda dura.
+                val sobraLado = maxWidth > maxima + 8.dp
+                val coluna = Modifier.widthIn(max = maxima).fillMaxHeight()
+                Box(if (sobraLado) coluna.drawBehind { sombraDosLados(16.dp.toPx()) } else coluna) { conteudo() }
+            }
         }
+        // Os enfeites que derivam ficam numa camada só deles (FundoDecorado), sem redesenhar a tela toda.
+        if (corDeFundo != null) FundoDecorado(corDeFundo, Modifier.fillMaxSize()) { corpo() } else corpo()
     }
 }
 
 /** Duas faixas de sombra que somem para fora, à esquerda e à direita da área desenhada. */
 private fun DrawScope.sombraDosLados(largura: Float) {
-    val escura = Color(0x22203050)
+    val escura = Cores.Sombra.copy(alpha = 0.14f)
     drawRect(
         Brush.horizontalGradient(listOf(Color.Transparent, escura), startX = -largura, endX = 0f),
         topLeft = Offset(-largura, 0f),

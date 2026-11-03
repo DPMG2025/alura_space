@@ -137,6 +137,7 @@ import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.componentes.sombrearFormas
 import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.tema.Fredoka
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -778,7 +779,29 @@ fun TelaCasaPorDentro(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFFB9E4FF), Color(0xFFDDF3D0), Color(0xFFBFE3A8))))
+            .background(Brush.verticalGradient(listOf(Color(0xFFA9DCFF), Color(0xFFDDF3D0), Color(0xFFBFE3A8), Color(0xFFA6D58C))))
+            .drawWithCache {
+                // Gramado de fundo: morrinhos suaves no terço de baixo e os cantos um pouco mais escuros
+                // (o verde de baixo não fica vazio). Montado uma vez por tamanho.
+                val morroLonge = Color(0xFFB5DE9C)
+                val morroPerto = Color(0xFFA2D488)
+                val cantos = Brush.radialGradient(
+                    listOf(Color.Transparent, Color.Transparent, Color(0x2A2E5A1E)),
+                    center = Offset(size.width / 2f, size.height * 0.55f),
+                    radius = maxOf(size.width, size.height) * 0.75f,
+                )
+                onDrawBehind {
+                    drawOval(morroLonge, Offset(-size.width * 0.3f, size.height * 0.70f), Size(size.width * 1.0f, size.height * 0.22f))
+                    drawOval(morroLonge, Offset(size.width * 0.35f, size.height * 0.72f), Size(size.width * 1.0f, size.height * 0.2f))
+                    drawOval(morroPerto, Offset(-size.width * 0.1f, size.height * 0.82f), Size(size.width * 1.2f, size.height * 0.3f))
+                    for (i in 0 until 18) {
+                        val x = ((i * 0.137f + 0.05f) % 1f) * size.width
+                        val y = size.height * (0.76f + ((i * 0.29f) % 1f) * 0.22f)
+                        drawOval(Color(0x2A3E7F2E), Offset(x - size.width * 0.03f, y), Size(size.width * 0.06f, size.width * 0.014f))
+                    }
+                    drawRect(cantos)
+                }
+            }
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         Column(Modifier.fillMaxSize()) {
@@ -1215,7 +1238,7 @@ private fun CenaIsometrica(
 private fun medirEmoji(medidor: TextMeasurer, densidade: Density, emoji: String, px: Float): TextLayoutResult =
     medidor.measure(
         AnnotatedString(emoji),
-        style = TextStyle(fontSize = (px / (densidade.density * densidade.fontScale)).sp, textAlign = TextAlign.Center),
+        style = TextStyle(fontFamily = Fredoka, fontSize = (px / (densidade.density * densidade.fontScale)).sp, textAlign = TextAlign.Center),
     )
 
 /** Piso de cada cômodo: tábuas de madeira no quarto e na sala, lajotas lisas no banheiro e na cozinha (sem xadrez). */
@@ -2017,7 +2040,18 @@ private fun DrawScope.desenharCena(g: Geometria, cena: Cena, perfil: Perfil) {
     desenharFormas(g.telhado, Contorno, g.tracoFino)
     for (ga in g.andares) {
         val proj = ga.proj
-        ga.sombra?.let { drawOval(Color(0x2A2E5A1E), topLeft = it.topLeft, size = it.size) }
+        ga.sombra?.let {
+            // Brilho macio no gramado em volta da casa (a casa "acende" o chão) e, por cima, a sombra.
+            for (k in 3 downTo 1) {
+                val f = 1f + k * 0.22f
+                drawOval(
+                    Color(0x1FFFFBE0),
+                    topLeft = Offset(it.center.x - it.width * f / 2f, it.center.y - it.height * f / 2f),
+                    size = Size(it.width * f, it.height * f),
+                )
+            }
+            drawOval(Color(0x2A2E5A1E), topLeft = it.topLeft, size = it.size)
+        }
         // chão e paredes do fundo
         desenharFormas(ga.chao, Contorno, g.tracoFino)
         for (luz in ga.luzes) if (luz.comodo in apagadas) drawPath(luz.chao, Escuro)
@@ -2484,7 +2518,7 @@ private fun Lojinha(estado: EstadoJogo, previa: Produto?, temGeladeira: Boolean,
                 ) {
                     Column(Modifier.width(92.dp).padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         if (produto.categoria == Categoria.ROUPA) {
-                            Crianca((estado.perfil ?: Perfil()).copy(traje = produto.valor, chapeu = ""), Modifier.height(52.dp))
+                            Crianca((estado.perfil ?: Perfil()).copy(traje = produto.valor, chapeu = ""), Modifier.height(52.dp), animado = false)
                         } else {
                             Text(produto.icone, fontSize = 34.sp, maxLines = 1)
                         }

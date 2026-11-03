@@ -474,7 +474,8 @@ internal fun AtividadeMercadinho(
                     .graphicsLayer {
                         scaleX = escala
                         scaleY = escala
-                        rotationZ = d.peca.tremida.value + (if (d.noBalcao && d.cedula) (d.ordem % 3 - 1) * 4f else 0f)
+                        rotationZ = if (d.noBalcao && d.cedula) (d.ordem % 3 - 1) * 4f else 0f
+                        translationX = d.peca.tremida.value * density
                     }
                     .then(if (brilhar || tirar) Modifier.pulsando() else Modifier)
                     .then(

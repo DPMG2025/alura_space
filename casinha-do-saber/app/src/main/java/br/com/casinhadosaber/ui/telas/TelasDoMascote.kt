@@ -1,9 +1,32 @@
 package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.foundation.background
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.graphicsLayer
+import br.com.casinhadosaber.ui.componentes.caminhoEstrela
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -40,6 +65,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +78,7 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.Confete
+import br.com.casinhadosaber.ui.componentes.VeuDoModal
 import br.com.casinhadosaber.ui.componentes.MascoteAnimado
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
@@ -63,13 +90,7 @@ import kotlinx.coroutines.delay
 /** Fundo escurecido que segura os toques (nada atrás dele responde enquanto ele está aberto). */
 @Composable
 private fun FundoDoAviso(conteudo: @Composable () -> Unit) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(Color(0x99231A3A))
-            .clickable(remember { MutableInteractionSource() }, indication = null) { },
-        contentAlignment = Alignment.Center,
-    ) { conteudo() }
+    VeuDoModal { conteudo() }
 }
 
 @Composable
@@ -104,14 +125,17 @@ fun EscolhaDoMascote(onEscolher: (EspecieMascote, String) -> Unit) {
         CartaoDoAviso {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text("Escolha o seu amiguinho!", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (e in EspecieMascote.entries) {
                         val sel = escolhida == e
+                        val escala by animateFloatAsState(if (sel) 1.06f else 1f, spring(dampingRatio = 0.45f), label = "cartao_mascote")
                         Column(
                             Modifier
                                 .weight(1f)
+                                .graphicsLayer { scaleX = escala; scaleY = escala }
+                                .shadow(if (sel) 8.dp else 3.dp, RoundedCornerShape(24.dp))
                                 .clip(RoundedCornerShape(24.dp))
-                                .background(if (sel) Color(0xFFFFF3C4) else Color.White)
+                                .background(if (sel) Brush.verticalGradient(listOf(Color(0xFFFFF8D9), Color(0xFFFFE89A))) else Brush.verticalGradient(listOf(Color.White, Color(0xFFF6F2FF))))
                                 .border(if (sel) 5.dp else 3.dp, if (sel) Cores.Estrela else Color(0xFFEDE6FF), RoundedCornerShape(24.dp))
                                 .clickable(role = Role.Button) {
                                     escolhida = e
@@ -123,7 +147,34 @@ fun EscolhaDoMascote(onEscolher: (EspecieMascote, String) -> Unit) {
                                 .padding(horizontal = 2.dp, vertical = 8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            MascoteAnimado(e, EstagioMascote.BEBE, Modifier.fillMaxWidth(), pulando = sel)
+                            // O bebê é desenhado pequeno dentro do quadrado dele: aqui ele aparece 1,5 vez maior,
+                            // em cima de um tapetinho redondo.
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(0.92f)
+                                    .drawBehind {
+                                        drawOval(
+                                            Color(0x1F6C63FF),
+                                            Offset(size.width * 0.12f, size.height * 0.8f),
+                                            Size(size.width * 0.76f, size.height * 0.16f),
+                                        )
+                                    },
+                                contentAlignment = Alignment.BottomCenter,
+                            ) {
+                                MascoteAnimado(
+                                    e,
+                                    EstagioMascote.BEBE,
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .graphicsLayer {
+                                            scaleX = 1.5f
+                                            scaleY = 1.5f
+                                            transformOrigin = TransformOrigin(0.5f, 0.97f)
+                                        },
+                                    pulando = sel,
+                                )
+                            }
                             Text(e.nome, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, maxLines = 1, softWrap = false, fontSize = 13.sp)
                         }
                     }
@@ -148,7 +199,8 @@ fun EscolhaDoMascote(onEscolher: (EspecieMascote, String) -> Unit) {
                         onEscolher(e, nome)
                     },
                     habilitado = escolhida != null,
-                    cor = if (escolhida != null) Cores.Certo else Color(0xFFBDBDBD),
+                    // Sem escolha ainda o BotaoFofo clareia o próprio verde (e não um cinza que parece quebrado).
+                    cor = Cores.Certo,
                     descricao = "Pronto",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -260,11 +312,12 @@ fun CantinhoDoMascote(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Text(if (livre) a.emoji else "🔒", fontSize = 30.sp)
-                                Text(
+                                // O nome encolhe até caber no cartão ("Cachecol"), sempre com folga dos dois lados.
+                                RotuloQueCabe(
                                     if (livre) a.nome.substringBefore(' ') else "${a.fasesMinimas}",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    maxLines = 1,
-                                    color = if (livre) Cores.Texto else Cores.TextoSuave,
+                                    MaterialTheme.typography.labelLarge,
+                                    if (livre) Cores.Texto else Cores.TextoSuave,
+                                    Modifier.padding(horizontal = 6.dp),
                                 )
                             }
                         }
@@ -322,14 +375,18 @@ fun FestaDoMascote(mascote: Mascote, fasesAntes: Int, fasesDepois: Int, onFechar
                 if (cresceu) {
                     Text("Agora é ${estagio.nome.lowercase()}! 🎉", style = MaterialTheme.typography.titleLarge, color = Cores.Roxo, textAlign = TextAlign.Center)
                 }
-                MascoteAnimado(
-                    especie,
-                    estagio,
-                    Modifier.size(210.dp),
-                    novos.lastOrNull() ?: mascote.acessorioEmUso,
-                    quem,
-                    pulando = true,
-                )
+                // Raios girando e uma explosão de estrelinhas atrás do mascote que cresceu.
+                Box(Modifier.size(230.dp), contentAlignment = Alignment.Center) {
+                    RaiosDeFesta(Modifier.matchParentSize())
+                    MascoteAnimado(
+                        especie,
+                        estagio,
+                        Modifier.size(210.dp),
+                        novos.lastOrNull() ?: mascote.acessorioEmUso,
+                        quem,
+                        pulando = true,
+                    )
+                }
                 if (novos.isNotEmpty()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                         for (a in novos) {
@@ -360,4 +417,82 @@ fun FestaDoMascote(mascote: Mascote, fasesAntes: Int, fasesDepois: Int, onFechar
         }
         Confete(confete)
     }
+}
+
+/** Texto de uma linha que diminui a letra (até 60%) quando não cabe na largura, em vez de ser cortado. */
+@Composable
+private fun RotuloQueCabe(texto: String, estilo: TextStyle, cor: Color, modifier: Modifier = Modifier) {
+    var escala by remember(texto, estilo) { mutableFloatStateOf(1f) }
+    var pronto by remember(texto, estilo) { mutableStateOf(false) }
+    Text(
+        texto,
+        style = estilo.copy(fontSize = estilo.fontSize * escala),
+        color = cor,
+        maxLines = 1,
+        softWrap = false,
+        textAlign = TextAlign.Center,
+        modifier = modifier.drawWithContent { if (pronto) drawContent() },
+        onTextLayout = { r ->
+            if (r.didOverflowWidth && escala > 0.6f) escala *= 0.9f else pronto = true
+        },
+    )
+}
+
+/** Raios dourados que giram devagar, um brilho redondo e estrelinhas que pulsam, atrás do mascote da festa. */
+@Composable
+private fun RaiosDeFesta(modifier: Modifier) {
+    val festa = rememberInfiniteTransition(label = "raios")
+    val giro = festa.animateFloat(0f, 360f, infiniteRepeatable(tween(14_000, easing = LinearEasing)), label = "giro")
+    val pulso = festa.animateFloat(0.85f, 1.1f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "pulso")
+    // Formas e degradês montados uma vez por tamanho; a cada quadro só giram e pulsam (numa camada própria).
+    Spacer(
+        modifier
+            .graphicsLayer()
+            .drawWithCache {
+                val c = Offset(size.width / 2f, size.height / 2f)
+                val r = size.minDimension / 2f
+                val raios = Path()
+                val quantos = 14
+                for (k in 0 until quantos) {
+                    val a0 = (k * 2 * PI / quantos).toFloat()
+                    val a1 = a0 + (PI / quantos).toFloat() * 0.75f
+                    raios.moveTo(c.x, c.y)
+                    raios.lineTo(c.x + cos(a0) * r * 1.1f, c.y + sin(a0) * r * 1.1f)
+                    raios.lineTo(c.x + cos(a1) * r * 1.1f, c.y + sin(a1) * r * 1.1f)
+                    raios.close()
+                }
+                val luzDosRaios = Brush.radialGradient(listOf(Color(0x99FFD54F), Color(0x00FFD54F)), c, r * 1.05f)
+                // Explosão: um brilho redondo com borda de estrela (no tamanho do pulso 1, depois só escala).
+                val burst = Path().apply {
+                    val pontas = 16
+                    for (i in 0 until pontas * 2) {
+                        val a = (i * PI / pontas).toFloat()
+                        val rr = if (i % 2 == 0) r * 0.62f else r * 0.5f
+                        val p = Offset(c.x + cos(a) * rr, c.y + sin(a) * rr)
+                        if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+                    }
+                    close()
+                }
+                val luzDoBurst = Brush.radialGradient(listOf(Color(0xFFFFF6C8), Color(0xFFFFE27A)), c, r * 0.62f)
+                val estrelas = List(6) { k ->
+                    val a = (k * PI / 3).toFloat() + 0.3f
+                    val d = r * (0.78f + 0.06f * (k % 2))
+                    val centro = Offset(c.x + cos(a) * d, c.y + sin(a) * d)
+                    centro to caminhoEstrela(centro, r * (if (k % 2 == 0) 0.07f else 0.05f))
+                }
+                onDrawBehind {
+                    val g = giro.value
+                    val pu = pulso.value
+                    rotate(g, c) { drawPath(raios, luzDosRaios) }
+                    // O burst gira bem devagar no sentido contrário (0,0087 rad por grau de giro).
+                    rotate(-g * 0.0087f * 180f / PI.toFloat(), c) {
+                        scale(pu, c) { drawPath(burst, luzDoBurst) }
+                    }
+                    drawCircle(Color.White.copy(alpha = 0.55f), r * 0.38f, c)
+                    for ((k, estrela) in estrelas.withIndex()) {
+                        scale(if (k % 2 == 0) pu else 1.95f - pu, estrela.first) { drawPath(estrela.second, Color(0xFFFFC93C)) }
+                    }
+                }
+            },
+    )
 }
