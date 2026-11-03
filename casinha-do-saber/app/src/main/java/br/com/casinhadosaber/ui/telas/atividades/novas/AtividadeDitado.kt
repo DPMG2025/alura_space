@@ -177,7 +177,7 @@ internal fun AtividadeDitado(
         val casinhasY = topo + px(14f)
         val casinhasX = (w - (larguraCasinha * k + vaoCasinha * (k - 1))) / 2f
         // Teclado: teclas de pelo menos 64 dp.
-        val colunas = min(m, max(3, ((w + vao) / (px(78f) + vao)).toInt()))
+        val colunas = min(m, max(3, ((w + vao) / (px(70f) + vao)).toInt()))
         val linhas = ceil(m / colunas.toFloat()).toInt()
         val larguraTecla = min((w - vao * (colunas - 1)) / colunas, px(112f)).coerceAtLeast(px(64f))
         val tecladoY0Min = casinhasY + alturaCasinha + px(30f)

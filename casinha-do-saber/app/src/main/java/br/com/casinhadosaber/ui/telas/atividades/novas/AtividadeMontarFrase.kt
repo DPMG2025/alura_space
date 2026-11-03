@@ -115,6 +115,7 @@ private class ArranjoDaFrase(
     val cantosCartoes: List<Offset>,
     val linhasFrase: Int,
     val cartoesY0: Float,
+    val alturaLugar: Float,
 )
 
 /** Mede as palavras e arruma a linha da frase e os cartões, com a maior letra que cabe na altura [h]. */
@@ -131,22 +132,23 @@ private fun arrumarFrase(
     val vao = px(10f)
     val altura = px(64f)
     var ultimo: ArranjoDaFrase? = null
-    for (fonte in listOf(30f, 26f, 22f, 19f)) {
+    // Os lugares da frase podem ficar mais baixos (não são tocados); os cartões ficam sempre com 64 dp.
+    for ((fonte, alturaLugar) in listOf(30f to 64f, 26f to 64f, 22f to 64f, 22f to 50f, 19f to 46f).map { (f, a) -> f to px(a) }) {
         fun largura(s: String) = (medir(s, fonte) + px(30f)).coerceIn(px(64f), w)
         val lp = palavras.map { largura(it) }
         val lc = cartoes.map { largura(it) }
         val fraseY = topo + px(12f)
-        val (lugares, nl) = arrumarEmFileiras(lp, w, px(8f), altura, px(10f), fraseY)
-        val fimFrase = fraseY + nl * altura + (nl - 1) * px(10f)
+        val (lugares, nl) = arrumarEmFileiras(lp, w, px(8f), alturaLugar, px(10f), fraseY)
+        val fimFrase = fraseY + nl * alturaLugar + (nl - 1) * px(10f)
         val y0 = fimFrase + px(34f)
         val (cs, nc) = arrumarEmFileiras(lc, w, vao, altura, vao, y0)
         val fimCartoes = y0 + nc * altura + (nc - 1) * vao
         if (fimCartoes <= h - px(4f)) {
             // Sobra: desce um pouco os cartões para longe da linha (soltar parado não conta).
             val sobra = (h - px(4f) - fimCartoes) * 0.35f
-            return ArranjoDaFrase(fonte, lp, lc, lugares, cs.map { it + Offset(0f, sobra) }, nl, y0 + sobra)
+            return ArranjoDaFrase(fonte, lp, lc, lugares, cs.map { it + Offset(0f, sobra) }, nl, y0 + sobra, alturaLugar)
         }
-        ultimo = ArranjoDaFrase(fonte, lp, lc, lugares, cs, nl, y0)
+        ultimo = ArranjoDaFrase(fonte, lp, lc, lugares, cs, nl, y0, alturaLugar)
     }
     return ultimo!!
 }
@@ -239,7 +241,6 @@ internal fun AtividadeMontarFrase(
         val topo = min(h * 0.22f, px(124f)).coerceAtLeast(px(80f))
         val vao = px(10f)
         val alturaCartao = px(64f)
-        val alturaLugar = px(64f)
         // Escolhe o maior tamanho de letra em que tudo cabe na altura (medido uma vez por tamanho de tela).
         val estiloTexto = MaterialTheme.typography.headlineLarge
         val arranjo = remember(w, h, cartoes, estiloTexto) {
@@ -254,6 +255,7 @@ internal fun AtividadeMontarFrase(
         val cantosCartoes = arranjo.cantosCartoes
         val linhasFrase = arranjo.linhasFrase
         val cartoesY0 = arranjo.cartoesY0
+        val alturaLugar = arranjo.alturaLugar
         val fimDaFrase = topo + px(12f) + linhasFrase * alturaLugar + (linhasFrase - 1) * px(10f)
 
         fun casa(c: CartaoDePalavra) = cantosCartoes[c.id]
@@ -379,7 +381,8 @@ internal fun AtividadeMontarFrase(
                 contentAlignment = Alignment.Center,
             ) {
                 if (proximo && ajuda && esperado != null) {
-                    Text(esperado, fontSize = fonte.sp, fontWeight = FontWeight.Bold, color = Cores.Texto.copy(alpha = 0.22f), style = estiloTexto, maxLines = 1)
+                    Text(esperado, fontSize = fonte.sp,
+                    lineHeight = (fonte * 1.15f).sp, fontWeight = FontWeight.Bold, color = Cores.Texto.copy(alpha = 0.22f), style = estiloTexto, maxLines = 1)
                 }
             }
         }
@@ -401,7 +404,7 @@ internal fun AtividadeMontarFrase(
                         val q = posicaoAtual(c)
                         IntOffset(q.x.roundToInt(), (q.y - onda * px(12f)).roundToInt())
                     }
-                    .size(larguraDe(c).paraDp(), alturaCartao.paraDp())
+                    .size(larguraDe(c).paraDp(), (if (naLinha) alturaLugar else alturaCartao).paraDp())
                     .testTag(if (c.naFrase >= 0) "frase_certa_${c.naFrase}" else "frase_extra")
                     .semantics { contentDescription = c.texto }
                     .pointerInput(c, w, h) {
@@ -462,6 +465,7 @@ internal fun AtividadeMontarFrase(
                 Text(
                     c.texto,
                     fontSize = fonte.sp,
+                    lineHeight = (fonte * 1.15f).sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
@@ -494,7 +498,8 @@ internal fun AtividadeMontarFrase(
                                     .border(3.dp, Cores.Estrela, RoundedCornerShape(16.dp)),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text(exemplo.texto, fontSize = fonte.sp, fontWeight = FontWeight.Bold, color = Cores.Texto, style = estiloTexto, maxLines = 1)
+                                Text(exemplo.texto, fontSize = fonte.sp,
+                    lineHeight = (fonte * 1.15f).sp, fontWeight = FontWeight.Bold, color = Cores.Texto, style = estiloTexto, maxLines = 1)
                             }
                         }
                     }

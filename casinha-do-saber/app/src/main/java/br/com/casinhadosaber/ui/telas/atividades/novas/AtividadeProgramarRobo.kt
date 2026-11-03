@@ -383,7 +383,7 @@ internal fun AtividadeProgramarRobo(
         BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = 10.dp)) {
             val botao = (minOf(maxWidth / 5.6f, maxHeight * 0.12f)).coerceIn(64.dp, 84.dp)
             val vaoFila = 6.dp
-            val ladoFila = minOf((maxWidth - botao - 12.dp - vaoFila * (jogo.maxComandos - 1)) / jogo.maxComandos, 72.dp).coerceAtLeast(40.dp)
+            val ladoFila = minOf((maxWidth - botao - 10.dp - 10.dp - 4.dp - vaoFila * (jogo.maxComandos - 1)) / jogo.maxComandos, 72.dp).coerceAtLeast(30.dp)
             Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
                 // ---------------------------------------------------------------- a grade
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -663,9 +663,9 @@ private fun BotaoDeSeta(
             .graphicsLayer { alpha = if (habilitado) 1f else 0.55f },
         contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.matchParentSize().offset(y = 4.dp).background(escurecer(cor, 0.85f).copy(alpha = 0.5f), RoundedCornerShape(16.dp)))
-        Box(Modifier.matchParentSize().background(if (destacar) Color(0xFFFFF3C4) else Color.White, RoundedCornerShape(16.dp)).border(3.dp, if (destacar) Cores.Estrela else cor, RoundedCornerShape(16.dp)))
-        SetaDesenhada(d, Modifier.size(lado * 0.78f))
+        Box(Modifier.matchParentSize().padding(top = 4.dp).background(escurecer(cor, 0.85f).copy(alpha = 0.5f), RoundedCornerShape(16.dp)))
+        Box(Modifier.matchParentSize().padding(bottom = 4.dp).background(if (destacar) Color(0xFFFFF3C4) else Color.White, RoundedCornerShape(16.dp)).border(3.dp, if (destacar) Cores.Estrela else cor, RoundedCornerShape(16.dp)))
+        SetaDesenhada(d, Modifier.padding(bottom = 4.dp).size(lado * 0.74f))
     }
 }
 
@@ -694,9 +694,10 @@ private fun BotaoDoRobo(
             .graphicsLayer { alpha = if (habilitado) 1f else 0.5f },
         contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.matchParentSize().offset(y = 5.dp).background(escurecer(corBotao), RoundedCornerShape(lado * 0.3f)))
-        Box(Modifier.matchParentSize().background(corBotao, RoundedCornerShape(lado * 0.3f)))
-        conteudo()
+        // Base escura embaixo (efeito 3D) sem sair do tamanho do botão.
+        Box(Modifier.matchParentSize().padding(top = 5.dp).background(escurecer(corBotao), RoundedCornerShape(lado * 0.3f)))
+        Box(Modifier.matchParentSize().padding(bottom = 5.dp).background(corBotao, RoundedCornerShape(lado * 0.3f)))
+        Box(Modifier.padding(bottom = 5.dp)) { conteudo() }
     }
 }
 

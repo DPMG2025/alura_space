@@ -266,7 +266,7 @@ class CapturasNovas4Test {
         assertEquals(1, r.erros)
     }
 
-    @Test fun ditadoConclui() {
+    @Test fun ditadoErroDepoisConclui() {
         val r = Resultado()
         montar { SoAtividade(ditado, r) }
         regra.mainClock.advanceTimeBy(1500)

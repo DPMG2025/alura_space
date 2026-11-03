@@ -209,7 +209,7 @@ internal fun AtividadeSigaASequencia(
                         .border(3.dp, cor, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("👀", fontSize = 30.sp)
+                    Text("🔁", fontSize = 30.sp)
                 }
             }
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
