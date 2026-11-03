@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -73,6 +72,13 @@ import br.com.casinhadosaber.ui.componentes.PROPORCAO_CRIANCA
 import br.com.casinhadosaber.ui.componentes.FileiraDeEstrelas
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.tema.Raios
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
+import br.com.casinhadosaber.ui.componentes.clarear
+import br.com.casinhadosaber.ui.componentes.fundoDecorado
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.translate
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.Density
@@ -152,6 +158,9 @@ private fun disposicaoDoCaminho(largura: Dp, altura: Dp): Disposicao {
     return Disposicao(largura, if (cabem < 3) 1 else cabem.coerceAtMost(6))
 }
 
+/** Sombra ameixa suave do título branco do cabeçalho (lê melhor sobre as cores claras). */
+private val SOMBRA_DO_TITULO = Shadow(Color(0x553D2C5E), Offset(0f, 3f), 6f)
+
 private fun ehMarco(fase: Fase): Boolean = (fase.numero + 1) % FASES_POR_MARCO == 0
 
 @Composable
@@ -207,7 +216,7 @@ fun TelaTrilha(
     Column(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(cor, Cores.Fundo)))
+            .fundoDecorado(cor)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -227,7 +236,7 @@ fun TelaTrilha(
             var escalaDoTitulo by remember(trilha) { mutableFloatStateOf(1f) }
             Text(
                 trilha.titulo,
-                style = estilo.copy(fontSize = estilo.fontSize * escalaDoTitulo),
+                style = estilo.copy(fontSize = estilo.fontSize * escalaDoTitulo, shadow = SOMBRA_DO_TITULO),
                 color = Color.White,
                 maxLines = 1,
                 softWrap = false,
@@ -238,7 +247,7 @@ fun TelaTrilha(
                 // Próximo prêmio da casa, como um chip na barra (nada passa por baixo dele).
                 Row(
                     Modifier
-                        .background(Color.White, RoundedCornerShape(50))
+                        .cartaoFofo(raio = 50.dp)
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                         .semantics(mergeDescendants = true) { contentDescription = "Próximo prêmio: ${proximoPremio.nome}" },
                     verticalAlignment = Alignment.CenterVertically,
@@ -290,7 +299,6 @@ fun TelaTrilha(
                     .padding(top = ESPACO_NO_TOPO),
             ) {
                 val alturaTotal = ALTURA_PASSO * disposicao.linhas(fases.size) + 40.dp + if (temBarra) ESPACO_DO_TREINO else 0.dp
-                val corCaminho = Color.White.copy(alpha = 0.85f)
                 Canvas(Modifier.fillMaxWidth().height(alturaTotal)) {
                     // Cada mundo (10 fases) numa faixa de cor própria, para a criança ver que entrou num lugar novo.
                     for (m in Mundos.todos) {
@@ -298,26 +306,28 @@ fun TelaTrilha(
                         val topo = ALTURA_PASSO.toPx() * disposicao.linha(m.primeiraFase)
                         val fim = ALTURA_PASSO.toPx() * (disposicao.linha(minOf(m.ultimaFase, fases.lastIndex)) + 1)
                         val margem = 6.dp.toPx()
+                        // Faixa do mundo com a borda de cima clarinha (luz) e uma sombra suave por baixo.
+                        val canto = CornerRadius(Raios.Enorme.toPx())
+                        val faixa = Size(size.width - margem * 2, fim - topo - margem)
                         drawRoundRect(
-                            Color(m.corArgb).copy(alpha = 0.45f),
+                            Color(m.corArgb).copy(alpha = 0.40f),
                             topLeft = Offset(margem, topo + margem / 2),
-                            size = Size(size.width - margem * 2, fim - topo - margem),
-                            cornerRadius = CornerRadius(28.dp.toPx()),
+                            size = faixa,
+                            cornerRadius = canto,
+                        )
+                        drawRoundRect(
+                            Color.White.copy(alpha = 0.45f),
+                            topLeft = Offset(margem, topo + margem / 2),
+                            size = faixa,
+                            cornerRadius = canto,
+                            style = Stroke(2.dp.toPx()),
                         )
                     }
                     // Só o caminho pontilhado: os marcos (bandeirinha e troféu) já dividem o caminho em pedacinhos.
                     // O traçado nunca desce em diagonal por baixo da bolinha: as plaquinhas ficam embaixo delas,
                     // então ele sai sempre de lado, na altura do centro da bolinha, e só desce longe da plaquinha.
                     val caminho = caminhoDasFases(disposicao, fases.size, ALTURA_PASSO.toPx(), TOPO_BOLINHA.toPx() + TAMANHO_BOLINHA.toPx() / 2)
-                    drawPath(
-                        caminho,
-                        corCaminho,
-                        style = Stroke(
-                            width = 14.dp.toPx(),
-                            cap = StrokeCap.Round,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.dp.toPx(), 17.dp.toPx())),
-                        ),
-                    )
+                    estradaDasFases(caminho, corEscura)
                 }
                 for (fase in fases) {
                     val liberada = estado.liberada(fase)
@@ -358,10 +368,9 @@ fun TelaTrilha(
                         val larguraMax = if (direita) disposicao.largura - inicioX - 4.dp else cx - TAMANHO_BOLINHA / 2 - 10.dp
                         Row(
                             Modifier
-                                .offset(x = inicioX, y = ALTURA_PASSO * disposicao.linha(fase.numero) + 4.dp)
+                                .offset(x = inicioX, y = ALTURA_PASSO * disposicao.linha(fase.numero) + 8.dp)
                                 .widthIn(max = larguraMax)
-                                .background(Color.White.copy(alpha = 0.92f), RoundedCornerShape(50))
-                                .border(2.dp, Color(mundo.corArgb), RoundedCornerShape(50))
+                                .cartaoFofo(raio = 50.dp, contorno = Color(mundo.corArgb))
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                                 .semantics(mergeDescendants = true) { contentDescription = mundo.titulo },
                             verticalAlignment = Alignment.CenterVertically,
@@ -420,11 +429,13 @@ fun TelaTrilha(
             }
             }
             // Esmaecido no topo, alto o bastante para nada parecer cortado embaixo do cabeçalho.
+            // O esmaecido começa meio transparente (o fundo aqui já é a cor do caminho clareando): sem faixa dura
+            // entre o cabeçalho e o caminho, e o que passa por baixo ainda some macio.
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
-                    .background(Brush.verticalGradient(listOf(cor, cor.copy(alpha = 0f)))),
+                    .height(44.dp)
+                    .background(Brush.verticalGradient(0f to cor.copy(alpha = 0.6f), 0.4f to cor.copy(alpha = 0.3f), 1f to cor.copy(alpha = 0f))),
             )
             if (temBarra) {
                 // Esmaecido embaixo: as bolinhas que passam por trás do botão somem suavemente.
@@ -480,6 +491,28 @@ fun TelaTrilha(
  * Deitada: reto dentro da fileira e, na ponta, uma volta em "U" por fora das plaquinhas.
  * Assim os pontinhos nunca passam por trás dos nomes das fases.
  */
+/**
+ * A estrada entre as fases: sombra suave por baixo, a pista clarinha e a faixa tracejada no meio
+ * (na cor escura do caminho), como uma estradinha de brinquedo.
+ */
+private fun DrawScope.estradaDasFases(caminho: Path, corEscura: Color) {
+    val largura = 20.dp.toPx()
+    translate(top = 3.dp.toPx()) {
+        drawPath(caminho, Cores.Sombra, style = Stroke(largura + 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+    drawPath(caminho, Color.White.copy(alpha = 0.92f), style = Stroke(largura, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    drawPath(caminho, Color.White, style = Stroke(largura * 0.55f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    drawPath(
+        caminho,
+        corEscura.copy(alpha = 0.45f),
+        style = Stroke(
+            width = 4.dp.toPx(),
+            cap = StrokeCap.Round,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10.dp.toPx(), 12.dp.toPx())),
+        ),
+    )
+}
+
 private fun DrawScope.caminhoDasFases(disposicao: Disposicao, total: Int, passo: Float, centroY: Float): Path {
     val caminho = Path()
     if (total <= 0) return caminho
@@ -541,8 +574,9 @@ private fun BolinhaDaFase(
                         }
                     }
                 },
-                cor = if (liberada) Color.White else Color(0xFFE0E0E0),
-                corBase = if (liberada) corEscura else Color(0xFFBDBDBD),
+                // Fechada: versão clarinha das cores do caminho (sem cinza), mas ainda tocável (treme e avisa).
+                cor = if (liberada) Color.White else clarear(cor, 0.82f),
+                corBase = if (liberada) corEscura else clarear(corEscura, 0.45f),
                 forma = CircleShape,
                 descricao = "Fase ${fase.numero + 1}, ${fase.titulo}" + when {
                     !liberada -> ", fechada"
@@ -609,7 +643,8 @@ private fun BolinhaDaFase(
             Modifier
                 .padding(top = 2.dp)
                 .widthIn(max = LARGURA_PLACA)
-                .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(14.dp))
+                // Plaquinha como cartão (corpo branco, contorno e sombra): destaca do caminho e da faixa do mundo.
+                .cartaoFofo(raio = Raios.Medio, contorno = if (liberada) Cores.Contorno else Cores.Contorno.copy(alpha = 0.12f), sombra = liberada)
                 .padding(horizontal = 10.dp, vertical = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {

@@ -56,6 +56,8 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.tema.Raios
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
 import br.com.casinhadosaber.ui.telas.atividades.novas.LetraEscrita
 
 /**
@@ -364,7 +366,7 @@ fun TelaCaderno(paginas: List<PaginaDoCaderno>, onVoltar: () -> Unit) {
         Spacer(Modifier.height(12.dp))
         if (paginas.isEmpty()) {
             Box(
-                Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(20.dp)).padding(24.dp),
+                Modifier.fillMaxWidth().cartaoFofo(raio = Raios.Grande).padding(24.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

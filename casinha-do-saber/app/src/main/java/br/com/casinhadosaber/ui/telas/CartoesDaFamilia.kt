@@ -32,7 +32,16 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.SideEffect
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import br.com.casinhadosaber.ui.componentes.VeuDoModal
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
+import br.com.casinhadosaber.ui.tema.Raios
 import br.com.casinhadosaber.dominio.CopiaDoProgresso
 import br.com.casinhadosaber.dominio.ResumoDaCrianca
 import br.com.casinhadosaber.dominio.CriancaDaCasa
@@ -183,7 +192,7 @@ fun CartaoDasCriancas(familia: AcoesDaFamilia) {
         if (c == null) {
             apagando = null
         } else {
-            Dialog(onDismissRequest = { apagando = null }) {
+            JanelaDosPais(onFechar = { apagando = null }) {
                 CaixaDeDialogo(
                     titulo = "Apagar ${c.nomeParaMostrar()}?",
                     texto = "A casa, as estrelas, o mascote, o álbum e o personagem dessa criança serão apagados. " +
@@ -202,11 +211,11 @@ fun CartaoDasCriancas(familia: AcoesDaFamilia) {
 @Composable
 private fun DialogoRenomear(atual: String, onSalvar: (String) -> Unit, onCancelar: () -> Unit) {
     var nome by rememberSaveable { mutableStateOf(atual) }
-    Dialog(onDismissRequest = onCancelar) {
+    JanelaDosPais(onFechar = onCancelar) {
         Column(
             Modifier
                 .widthIn(max = 420.dp)
-                .background(Color.White, RoundedCornerShape(24.dp))
+                .cartaoFofo(cor = Cores.Creme, raio = Raios.Enorme)
                 .padding(20.dp),
         ) {
             Text("Nome da criança", style = MaterialTheme.typography.titleLarge)
@@ -243,7 +252,7 @@ fun CaixaDeDialogo(
     Column(
         Modifier
             .widthIn(max = 440.dp)
-            .background(Color.White, RoundedCornerShape(24.dp))
+            .cartaoFofo(cor = Cores.Creme, raio = Raios.Enorme)
             // Com muitas crianças (agora e na cópia) a caixa pode passar da tela: rola.
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
@@ -341,12 +350,12 @@ private fun LinhaDoResumo(r: ResumoDaCrianca) {
 @Composable
 fun DialogosDaCopia(copia: AcoesDaCopia) {
     copia.pendente?.let { p ->
-        Dialog(onDismissRequest = copia.onCancelar) {
+        JanelaDosPais(onFechar = copia.onCancelar) {
             ConfirmarRecuperarCopia(p, copia.onConfirmar, copia.onCancelar, copia.atual)
         }
     }
     copia.aviso?.let { texto ->
-        Dialog(onDismissRequest = copia.onFecharAviso) {
+        JanelaDosPais(onFechar = copia.onFecharAviso) {
             CaixaDeDialogo(
                 titulo = "Cópia do progresso",
                 texto = texto,
@@ -355,6 +364,23 @@ fun DialogosDaCopia(copia: AcoesDaCopia) {
                 onConfirmar = copia.onFecharAviso,
                 onCancelar = null,
             )
+        }
+    }
+}
+
+/**
+ * Janela por cima da área dos pais: o véu violeta do sistema de design ([VeuDoModal]) no lugar do
+ * escurecido preto da janela do Android (que ficava marrom), e tocar fora fecha.
+ */
+@Composable
+internal fun JanelaDosPais(onFechar: () -> Unit, conteudo: @Composable () -> Unit) {
+    Dialog(onDismissRequest = onFechar, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        // Tira o escurecido da janela do diálogo: quem escurece é o véu.
+        val vista = LocalView.current
+        SideEffect { (vista.parent as? DialogWindowProvider)?.window?.setDimAmount(0f) }
+        VeuDoModal(onTocarFora = onFechar, descricaoFora = "Fechar") {
+            // Toque dentro do cartão não fecha (o véu atrás é que fecha).
+            Box(Modifier.pointerInput(Unit) { detectTapGestures { } }, contentAlignment = Alignment.Center) { conteudo() }
         }
     }
 }

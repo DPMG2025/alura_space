@@ -54,7 +54,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -79,6 +80,8 @@ import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BalaoDeFala
+import br.com.casinhadosaber.ui.componentes.LadoDaCauda
+import br.com.casinhadosaber.ui.componentes.fundoDecorado
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Confete
@@ -275,12 +278,14 @@ fun TelaJogo(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(cor.copy(alpha = 0.35f), Cores.Fundo)))
+            // Fundo opaco na cor do caminho, clarinha e viva (a cor translúcida de antes ficava cinza-esverdeada
+            // no aparelho, sobre o fundo escuro da janela).
+            .fundoDecorado(lerp(cor, Color.White, 0.45f))
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         Column(Modifier.fillMaxSize().padding(12.dp)) {
-            // barra de cima
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // barra de cima (por cima da criança: o pulo e o braço que acena nunca cobrem o ✖)
+            Row(Modifier.zIndex(1f), verticalAlignment = Alignment.CenterVertically) {
                 if (treino != null) {
                     BotaoRedondo("✖️", "Terminar o treino", { terminarTreino() }, tamanho = 48.dp)
                 } else {
@@ -330,7 +335,9 @@ fun TelaJogo(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 val deMexer = pergunta.atividade != Atividade.Escolha
-                if (pergunta.cena != Cena.Nenhuma || deMexer) {
+                // A ponta do balão só aparece quando a criança está ao lado dele (sem ela, o balão não aponta para o nada).
+                val comCrianca = perfil != null && (pergunta.cena != Cena.Nenhuma || deMexer)
+                if (comCrianca) {
                     perfil?.let { CriancaQuePula(it, pulo, acertou, humor, falando = narrador.falando, altura = if (deMexer) 76.dp else 96.dp) }
                 }
                 Spacer(Modifier.width(8.dp))
@@ -339,6 +346,7 @@ fun TelaJogo(
                     Modifier
                         .weight(1f)
                         .clickable(onClickLabel = "Ouvir de novo") { narrador.falar(pergunta.fala) },
+                    cauda = if (comCrianca) LadoDaCauda.Esquerda else LadoDaCauda.Nenhum,
                 )
             }
 
@@ -428,7 +436,8 @@ private fun CriancaQuePula(
     val salto = remember { Animatable(0f) }
     LaunchedEffect(pulo) {
         if (pulo > 0) {
-            salto.animateTo(-28f, tween(150))
+            // Pulo baixinho (14 dp): com o braço levantado, a criança não chega na barra de cima.
+            salto.animateTo(-14f, tween(130))
             salto.animateTo(0f, spring(dampingRatio = 0.35f))
         }
     }
