@@ -39,6 +39,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Cópia do progresso: entrega o arquivo da pasta temporária ao app que o adulto escolher no "enviar". -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.copias"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/caminhos_da_copia" />
+        </provider>
+
         <!-- Os emojis são iniciados manualmente com a fonte embutida (CasinhaApp). -->
         <provider
             android:name="androidx.startup.InitializationProvider"
