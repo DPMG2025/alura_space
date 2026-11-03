@@ -93,13 +93,15 @@ fun TelaJogo(
     onConcluir: (resultados: List<Boolean>) -> Unit,
     /** Depois de duas tentativas sem vencer, cada pergunta vem com só duas opções. */
     facilitada: Boolean = false,
+    /** Perguntas já escolhidas (missão do dia); se vier vazio, sorteia as da fase. */
+    perguntasProntas: List<Pergunta> = emptyList(),
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     val escopo = rememberCoroutineScope()
     // Na rodada facilitada, a primeira pergunta é um exemplo resolvido junto (a resposta brilha e não conta).
     val perguntas = remember(fase, facilitada) {
-        val normais = GeradorDeFases().perguntas(fase)
+        val normais = perguntasProntas.ifEmpty { GeradorDeFases().perguntas(fase) }
         if (facilitada) listOf(GeradorDeFases().perguntas(fase, 1).first()) + normais else normais
     }
     var indice by remember { mutableIntStateOf(0) }

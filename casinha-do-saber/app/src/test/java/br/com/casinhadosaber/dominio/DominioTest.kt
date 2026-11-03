@@ -173,6 +173,23 @@ class EstadoJogoTest {
     }
 
     @Test
+    fun `missao do dia revisa as fases mais dificeis uma vez por dia`() {
+        val fases = g.fases(Trilha.MATEMATICA)
+        var e = EstadoJogo()
+        assertFalse(e.missaoDisponivel(10))
+        e = e.registrarPartida(fases[0], 5, 5, dia = 10, resultados = List(5) { true }).estado
+        e = e.registrarPartida(fases[1], 4, 5, dia = 10, resultados = listOf(true, false, true, true, true)).estado
+        assertTrue(e.missaoDisponivel(10))
+        val revisar = e.fasesParaRevisar(Trilha.entries.flatMap { g.fases(it) })
+        assertEquals(fases[1], revisar.first())
+        assertEquals(3, g.perguntasDaMissao(revisar).size)
+        val (depois, moedas) = e.concluirMissao(10, acertos = 3)
+        assertEquals(EstadoJogo.MOEDAS_DA_MISSAO, moedas)
+        assertFalse(depois.missaoDisponivel(10))
+        assertTrue(depois.missaoDisponivel(11))
+    }
+
+    @Test
     fun `estrelas nunca pioram`() {
         val fase = g.fases(Trilha.MATEMATICA)[0]
         val (e1, _) = EstadoJogo().registrarVitoria(fase, 3)

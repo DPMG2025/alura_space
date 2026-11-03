@@ -59,6 +59,8 @@ fun TelaInicio(
     onAbrirCasa: () -> Unit,
     onAbrirTrilha: (Trilha) -> Unit,
     onAreaDosPais: () -> Unit,
+    missaoDisponivel: Boolean = false,
+    onMissao: () -> Unit = {},
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -70,6 +72,7 @@ fun TelaInicio(
         narrador.falar(
             when {
                 noBau > 0 -> "$oi Tem presente no baú! Toque na casinha para montar."
+                missaoDisponivel -> "$oi Tem missão do dia! Toque no pergaminho para ganhar moedinhas."
                 estado.fasesVencidas == 0 -> "$oi Vamos construir a sua casinha? Escolha um caminho para jogar."
                 else -> "$oi Escolha um caminho para ganhar mais coisas para a sua casa!"
             },
@@ -129,6 +132,21 @@ fun TelaInicio(
                     .clickable { sons.toque(); onAbrirCasa() },
             ) {
                 CenaDaCasa(estado, Modifier.fillMaxSize(), preencherAltura = true)
+                if (missaoDisponivel) {
+                    // Missão do dia: um pergaminho que pula no canto da casa, valendo moedinhas.
+                    BotaoFofo(
+                        onClick = { sons.toque(); onMissao() },
+                        cor = Color(0xFFFFF3C4),
+                        corBase = Color(0xFFE0A800),
+                        descricao = "Missão do dia, vale moedinhas",
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(10.dp)
+                            .pulsando(),
+                    ) {
+                        Text("📜 +${EstadoJogo.MOEDAS_DA_MISSAO} 🪙", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
+                    }
+                }
                 if (noBau > 0) {
                     // O aviso e a mãozinha ficam juntos: a mão aponta para o aviso.
                     Box(Modifier.align(Alignment.TopCenter).padding(top = 10.dp)) {

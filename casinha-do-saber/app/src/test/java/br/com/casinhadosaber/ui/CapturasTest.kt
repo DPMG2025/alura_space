@@ -87,6 +87,10 @@ class CapturasTest {
         TelaInicio(estado(9, 6), true, {}, {}, {}, {})
     }
 
+    @Test fun inicioComMissao() = capturar("03b_inicio_missao_do_dia") {
+        TelaInicio(estado(12, 12), true, {}, {}, {}, {}, missaoDisponivel = true)
+    }
+
     @Test fun caminho() = capturar("04_caminho_numeros") {
         TelaTrilha(Trilha.MATEMATICA, estado(13, 13), {}, {})
     }

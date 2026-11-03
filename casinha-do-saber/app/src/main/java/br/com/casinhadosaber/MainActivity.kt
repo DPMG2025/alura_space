@@ -52,6 +52,8 @@ sealed interface Tela {
     /** [colocar]: item que acabou de ser ganho e já vai direto para a casa. */
     data class Casa(val colocar: String? = null) : Tela
     data class Quase(val fase: Fase, val acertos: Int) : Tela
+    /** Missão do dia: revisão de fases difíceis, com prêmio em moedinhas. */
+    data class Missao(val fase: Fase, val perguntas: List<br.com.casinhadosaber.dominio.Pergunta>) : Tela
     data object Pais : Tela
 }
 
@@ -150,6 +152,7 @@ class MainActivity : ComponentActivity() {
                     is Tela.Jogo -> Tela.Caminho(t.fase.trilha)
                     is Tela.Premio -> Tela.Caminho(t.fase.trilha)
                     is Tela.Quase -> Tela.Caminho(t.fase.trilha)
+                    is Tela.Missao -> Tela.Inicio
                     else -> Tela.Inicio
                 },
             )
@@ -178,6 +181,11 @@ class MainActivity : ComponentActivity() {
                         onAbrirCasa = { irPara(Tela.Casa()) },
                         onAbrirTrilha = { irPara(Tela.Caminho(it)) },
                         onAreaDosPais = { irPara(Tela.Pais) },
+                        missaoDisponivel = estado.missaoDisponivel(repo.hoje()),
+                        onMissao = {
+                            val revisar = estado.fasesParaRevisar(Trilha.entries.flatMap { gerador.fases(it) })
+                            if (revisar.isNotEmpty()) irPara(Tela.Missao(revisar.first(), gerador.perguntasDaMissao(revisar)))
+                        },
                     )
 
                     is Tela.Caminho -> TelaTrilha(
@@ -203,6 +211,18 @@ class MainActivity : ComponentActivity() {
                                     Tela.Quase(atual.fase, acertos)
                                 },
                             )
+                        },
+                    )
+
+                    is Tela.Missao -> TelaJogo(
+                        fase = atual.fase,
+                        perfil = estado.perfil,
+                        perguntasProntas = atual.perguntas,
+                        onSair = { irPara(Tela.Inicio) },
+                        onConcluir = { resultados ->
+                            val (novo, moedas) = repo.estado.concluirMissao(repo.hoje(), resultados.count { it })
+                            repo.atualizar { novo }
+                            irPara(Tela.Premio(atual.fase, if (resultados.count { it } >= 2) 3 else 1, null, moedas))
                         },
                     )
 

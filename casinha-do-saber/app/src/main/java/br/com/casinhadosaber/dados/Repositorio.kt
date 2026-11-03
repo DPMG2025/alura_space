@@ -116,6 +116,7 @@ class Repositorio(context: Context) {
             clima = prefs.getInt(CLIMA, 0),
             visitantes = prefs.getString(VISITANTES, "").orEmpty().split(",").filter { it.isNotBlank() }.toSet(),
             historico = Serializacao.textoParaMapaDeTexto(prefs.getString(HISTORICO, null)),
+            diaDaMissao = prefs.getLong(DIA_MISSAO, -1),
         )
     }
 
@@ -146,6 +147,7 @@ class Repositorio(context: Context) {
         putInt(PAPEL, e.papelDeParede)
         putInt(CLIMA, e.clima)
         putString(HISTORICO, Serializacao.mapaDeTextoParaTexto(e.historico))
+        putLong(DIA_MISSAO, e.diaDaMissao)
         putString(VISITANTES, e.visitantes.joinToString(","))
     }
 
@@ -177,6 +179,7 @@ class Repositorio(context: Context) {
         const val PAPEL = "papel"
         const val CLIMA = "clima"
         const val HISTORICO = "historico"
+        const val DIA_MISSAO = "dia_missao"
         const val CHAPEU = "chapeu"
         const val COR_TELHADO = "cor_telhado"
         const val VISITANTES = "visitantes"

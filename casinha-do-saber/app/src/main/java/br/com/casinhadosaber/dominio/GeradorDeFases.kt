@@ -27,6 +27,12 @@ class GeradorDeFases(private val random: Random = Random.Default) {
         return lista
     }
 
+    /** Missão do dia: 3 perguntas das fases que a criança mais precisa revisar. */
+    fun perguntasDaMissao(fases: List<Fase>): List<Pergunta> {
+        if (fases.isEmpty()) return emptyList()
+        return List(3) { i -> modelos(fases[i % fases.size].trilha)[fases[i % fases.size].numero].criar() }
+    }
+
     private fun perguntasDoModelo(modelo: Modelo, quantidade: Int): MutableList<Pergunta> {
         val lista = mutableListOf<Pergunta>()
         val chaves = mutableSetOf<String>()

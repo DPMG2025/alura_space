@@ -53,7 +53,24 @@ data class EstadoJogo(
     val visitantes: Set<String> = emptySet(),
     /** Últimos resultados de primeira por fase ("TRILHA:fase" -> "1101..."), no máximo 10. */
     val historico: Map<String, String> = emptyMap(),
+    /** Dia em que a missão do dia já foi feita. */
+    val diaDaMissao: Long = -1,
 ) {
+    /** A missão do dia aparece uma vez por dia, depois que a criança já venceu alguma fase. */
+    fun missaoDisponivel(dia: Long): Boolean = fasesVencidas > 0 && diaDaMissao != dia
+
+    /** As fases vencidas em que a criança mais erra de primeira (para a missão de revisão). */
+    fun fasesParaRevisar(todas: List<Fase>, quantas: Int = 2): List<Fase> =
+        todas.filter { estrelasDa(it) > 0 }
+            .sortedBy { precisaoDaFase(chave(it.trilha, it.numero)) ?: 100 }
+            .take(quantas)
+
+    /** Conclui a missão: com 2 ou mais acertos de primeira, ganha [MOEDAS_DA_MISSAO] (fora do limite diário). */
+    fun concluirMissao(dia: Long, acertos: Int): Pair<EstadoJogo, Int> {
+        val ganhas = if (acertos >= 2) MOEDAS_DA_MISSAO else 2
+        return copy(diaDaMissao = dia, moedas = moedas + ganhas) to ganhas
+    }
+
     val totalDeEstrelas: Int get() = estrelas.values.sum()
 
     /**
@@ -169,6 +186,7 @@ data class EstadoJogo(
         fun chave(trilha: Trilha, fase: Int) = "${trilha.name}:$fase"
 
         const val MOEDAS_POR_DIA = 30
+        const val MOEDAS_DA_MISSAO = 6
 
         /** 4 de 5 de primeira: chutando ao acaso, quase nunca se vence (cerca de 4%). */
         const val MINIMO_PARA_VENCER = 4
