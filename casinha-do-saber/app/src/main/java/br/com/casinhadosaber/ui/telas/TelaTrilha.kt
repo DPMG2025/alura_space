@@ -222,7 +222,7 @@ fun TelaTrilha(
                     rolagem.animateScrollTo(alvo)
                 }
             }
-            BoxWithConstraints(
+            Box(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rolagem)
