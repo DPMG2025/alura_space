@@ -43,7 +43,13 @@ fun TelaDormir(estado: EstadoJogo, onLiberar: () -> Unit) {
     val narrador = LocalNarrador.current
 
     LaunchedEffect(Unit) {
-        narrador.falar(listOf(pt("Que dia divertido! Agora a casinha vai dormir. Até amanhã!"), en("Good night!")))
+        // "Good night!" vira o "Boa noite!" gravado pela família, quando houver (área dos pais).
+        narrador.falarPartes(
+            listOf(
+                br.com.casinhadosaber.dominio.ParteDaFala(pt("Que dia divertido! Agora a casinha vai dormir. Até amanhã!")),
+                br.com.casinhadosaber.dominio.ParteDaFala(en("Good night!"), "boa_noite"),
+            ),
+        )
     }
 
     Column(

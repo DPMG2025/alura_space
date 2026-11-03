@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.edit
 import br.com.casinhadosaber.dominio.Aniversario
 import br.com.casinhadosaber.dominio.Atelie
+import br.com.casinhadosaber.dominio.CadernoEmArquivo
 import br.com.casinhadosaber.dominio.Data
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Mascote
@@ -125,6 +126,7 @@ class Repositorio(private val context: Context) {
      */
     fun apagarTudo() {
         prefs.edit(commit = true) { clear() }
+        cadernoDa(ativa).apagarTudo()
         estado = EstadoJogo()
         if (criancas.size <= 1) {
             aparelho.edit(commit = true) { AJUSTES_DO_APARELHO.forEach { remove(it) } }
@@ -153,6 +155,8 @@ class Repositorio(private val context: Context) {
         if (ids.size >= Familia.MAXIMO) return null
         val id = Familia.proximoId(ids)
         arquivoDa(id).edit(commit = true) { clear() }
+        // Um id pode ser reaproveitado depois de apagar uma criança: a nova começa com o caderno vazio.
+        cadernoDa(id).apagarTudo()
         aparelho.edit(commit = true) { putString(CHAVE_CRIANCAS, Familia.idsParaTexto(ids + id)) }
         criancas = lerCriancas()
         trocarCrianca(id)
@@ -182,6 +186,7 @@ class Repositorio(private val context: Context) {
         val resto = ids - id
         if (id == ativa) trocarCrianca(resto.first())
         arquivoDa(id).edit(commit = true) { clear() }
+        cadernoDa(id).apagarTudo()
         aparelho.edit(commit = true) { putString(CHAVE_CRIANCAS, Familia.idsParaTexto(resto)) }
         criancas = lerCriancas()
     }
@@ -211,7 +216,10 @@ class Repositorio(private val context: Context) {
                 c.dados.filterKeys { it !in AJUSTES_DO_APARELHO }.forEach { (k, v) -> por(k, v) }
             }
         }
-        for (id in antigos - novos.toSet()) arquivoDa(id).edit(commit = true) { clear() }
+        for (id in antigos - novos.toSet()) {
+            arquivoDa(id).edit(commit = true) { clear() }
+            cadernoDa(id).apagarTudo()
+        }
         aparelho.edit(commit = true) {
             copia.aparelho.filterKeys { it in Familia.AJUSTES_QUE_VIAJAM }.forEach { (k, v) -> por(k, v) }
             putString(CHAVE_CRIANCAS, Familia.idsParaTexto(novos))
@@ -246,6 +254,9 @@ class Repositorio(private val context: Context) {
             else -> null
         }
     }.toMap()
+
+    /** O "Meu caderno" da criança [id] (arquivo próprio, fora das preferências, do backup e da cópia). */
+    private fun cadernoDa(id: String): CadernoEmArquivo = CadernoEmArquivo.daCrianca(context.filesDir, id)
 
     private fun arquivoDa(id: String): SharedPreferences =
         context.getSharedPreferences(Familia.arquivo(id), Context.MODE_PRIVATE)

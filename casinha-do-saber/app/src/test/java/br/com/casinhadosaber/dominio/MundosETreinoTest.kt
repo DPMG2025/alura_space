@@ -252,6 +252,11 @@ class CinquentaFasesTest {
             // Tipos novos já sorteados pelo caminho Letras: as regras de cada um são conferidas no init da data class.
             is Pescaria, is EstourarBaloes, is LigarPares, is QuebraCabeca, is Trem, is CacaNaCena, is SigaASequencia,
             is Ditado, is Domino, is CartasViradas, is MontarFrase -> return
+            // Escrever com o dedo: palavra de A a Z conferida no init.
+            is EscreverPalavra -> {
+                assertTrue("$fase: palavra para escrever ${a.palavra}", a.palavra.length in Escrita.TAMANHOS)
+                return
+            }
             Atividade.Escolha -> Unit
             is Pescaria, is EstourarBaloes, is LigarPares, is QuebraCabeca, is Trem, is Balanca, is CacaNaCena, is SigaASequencia,
             is PintarPorCodigo, is Ditado, is Domino, is EscondeEsconde, is CartasViradas, is Mercadinho, is Relogio, is ProgramarRobo,

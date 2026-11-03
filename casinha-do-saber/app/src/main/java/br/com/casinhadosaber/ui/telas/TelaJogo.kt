@@ -200,9 +200,11 @@ fun TelaJogo(
         confete++
         sons.acerto()
         // Um elogio sim, outro não, com o nome da criança (de Perfil.nome; sem nome, a versão sem nome).
-        val elogio = if (indice % 2 == 0) br.com.casinhadosaber.dominio.FrasesComNome.elogio(perfil?.nome, indice / 2) else elogios.random()
-        narrador.falar(listOf(pt(elogio)) + pergunta.reforco)
-        val caracteres = elogio.length + pergunta.reforco.sumOf { it.texto.length }
+        // Com voz da família gravada (área dos pais), o elogio sai com a voz do pai ou da mãe.
+        val elogio = if (indice % 2 == 0) br.com.casinhadosaber.dominio.VozesDaFamilia.elogio(perfil?.nome, indice / 2)
+        else br.com.casinhadosaber.dominio.VozesDaFamilia.parte(elogios.random())
+        narrador.falarPartes(listOf(elogio) + pergunta.reforco.map { br.com.casinhadosaber.dominio.ParteDaFala(it) })
+        val caracteres = elogio.trecho.texto.length + pergunta.reforco.sumOf { it.texto.length }
         escopo.launch {
             delay((1200L + caracteres * 65L).coerceAtMost(5000L))
             if (treino != null) {
@@ -233,8 +235,9 @@ fun TelaJogo(
                 // Ajuda: depois de dois erros, a resposta certa brilha e a pergunta é repetida.
                 narrador.falar(pergunta.opcoes[i].fala + pt("Vamos juntos? Olhe a que está brilhando.") + pergunta.fala)
             } else {
-                val incentivo = if (indice % 2 == 1) br.com.casinhadosaber.dominio.FrasesComNome.incentivo(perfil?.nome, indice / 2) else "Tente outra vez!"
-                narrador.falar(pergunta.opcoes[i].fala + pt(incentivo))
+                val incentivo = if (indice % 2 == 1) br.com.casinhadosaber.dominio.VozesDaFamilia.incentivo(perfil?.nome, indice / 2)
+                else br.com.casinhadosaber.dominio.VozesDaFamilia.parte("Tente outra vez!")
+                narrador.falarPartes(pergunta.opcoes[i].fala.map { br.com.casinhadosaber.dominio.ParteDaFala(it) } + incentivo)
             }
         }
     }

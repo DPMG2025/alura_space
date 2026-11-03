@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.GeradorDeFases
 import br.com.casinhadosaber.dominio.ItensDaCasa
@@ -75,14 +76,14 @@ fun TelaInicio(
 
     LaunchedEffect(Unit) {
         val oi = br.com.casinhadosaber.dominio.FrasesComNome.chegada(nome, chegadasNoInicio++)
-        narrador.falar(
-            when {
-                noBau > 0 -> "$oi Tem presente no baú! Toque na casinha para montar."
-                missaoDisponivel -> "$oi Tem missão do dia! Toque no pergaminho para ganhar moedinhas."
-                estado.fasesVencidas == 0 -> "$oi Vamos construir a sua casinha? Escolha um caminho para jogar."
-                else -> "$oi Escolha um caminho para ganhar mais coisas para a sua casa!"
-            },
-        )
+        val resto = when {
+            noBau > 0 -> "Tem presente no baú! Toque na casinha para montar."
+            missaoDisponivel -> "Tem missão do dia! Toque no pergaminho para ganhar moedinhas."
+            estado.fasesVencidas == 0 -> "Vamos construir a sua casinha? Escolha um caminho para jogar."
+            else -> "Escolha um caminho para ganhar mais coisas para a sua casa!"
+        }
+        // A saudação ("Oi, Ana!") e "Que bom ver você!" podem sair com a voz gravada da família.
+        narrador.falarPartes(br.com.casinhadosaber.dominio.VozesDaFamilia.saudacao(oi) + br.com.casinhadosaber.dominio.ParteDaFala(pt(resto)))
     }
 
     BoxWithConstraints(

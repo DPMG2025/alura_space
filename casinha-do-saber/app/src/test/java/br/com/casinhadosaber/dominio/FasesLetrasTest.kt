@@ -81,6 +81,11 @@ class FasesLetrasTest {
                 assertTrue("$fase: ditado vazio", a.palavra.isNotBlank() && a.extras.distinct().size == a.extras.size)
                 assertTrue("$fase: a instrução entrega a palavra", a.palavra !in p.instrucao.uppercase())
             }
+            is EscreverPalavra -> {
+                assertTrue("$fase: palavra para escrever ${a.palavra}", a.palavra.length in Escrita.TAMANHOS && Escrita.podeEscrever(a.palavra))
+                assertTrue("$fase: a instrução entrega a palavra", a.palavra !in p.instrucao.uppercase())
+                assertTrue("$fase: a fala não diz a palavra", p.fala.any { a.palavra.lowercase() in it.texto })
+            }
             is Domino -> assertEquals(a.jogadas, a.ordem.size)
             is MontarFrase -> {
                 assertEquals("$fase: palavra repetida ${a.palavras}", a.palavras.size, a.palavras.toSet().size)
@@ -137,6 +142,7 @@ class FasesLetrasTest {
         val escritas = opcoes.mapNotNull { (it.visual as? Visual.Texto)?.texto?.length }
         val texto = when (val a = p.atividade) {
             is Ditado -> a.palavra.length
+            is EscreverPalavra -> a.palavra.length
             is Atividade.MontarPalavra -> a.palavra.length
             is MontarFrase -> a.frase.length
             is QuebraCabeca -> a.rotulos.joinToString(" ").length

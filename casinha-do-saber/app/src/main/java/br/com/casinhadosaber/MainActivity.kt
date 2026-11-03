@@ -33,6 +33,7 @@ import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.dominio.Produto
 import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.dominio.registrarTreino
+import br.com.casinhadosaber.ui.LocalCriancaAtiva
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.MolduraDoApp
@@ -135,7 +136,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TemaCasinha {
-                CompositionLocalProvider(LocalNarrador provides narrador, LocalSons provides sons) {
+                CompositionLocalProvider(LocalNarrador provides narrador, LocalSons provides sons, LocalCriancaAtiva provides repositorio.ativa) {
                     App(repositorio)
                 }
             }

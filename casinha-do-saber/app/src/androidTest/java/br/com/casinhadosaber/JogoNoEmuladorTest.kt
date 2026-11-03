@@ -36,6 +36,7 @@ import br.com.casinhadosaber.dominio.DirecaoDaSeta
 import br.com.casinhadosaber.dominio.Ditado
 import br.com.casinhadosaber.dominio.Domino
 import br.com.casinhadosaber.dominio.EscondeEsconde
+import br.com.casinhadosaber.dominio.EscreverPalavra
 import br.com.casinhadosaber.dominio.EstourarBaloes
 import br.com.casinhadosaber.dominio.LigarPares
 import br.com.casinhadosaber.dominio.Mercadinho
@@ -48,6 +49,7 @@ import br.com.casinhadosaber.dominio.Relogio
 import br.com.casinhadosaber.dominio.SigaASequencia
 import br.com.casinhadosaber.dominio.Trem
 import br.com.casinhadosaber.ui.telas.PartidaNaTela
+import br.com.casinhadosaber.ui.telas.PedidoDoMicrofone
 import br.com.casinhadosaber.ui.telas.atividades.TracosDasLetras
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -425,6 +427,14 @@ class JogoNoEmuladorTest {
                 fazerTracar(a.letra)
                 return "tracar"
             }
+            is EscreverPalavra -> {
+                // Cada letra é "escrita" pela ação de teste da tela, que passa o modelo da letra pelo mesmo leitor.
+                avancar(1_000)
+                for (k in a.letras.indices) {
+                    tocarPorSemantica("escrever_letra_certa", 900)
+                    if (k == 1) capturar("e25_escrever_meio_da_palavra")
+                }
+            }
             else -> return responderSemErrar()
         }
         return a::class.simpleName ?: "?"
@@ -531,6 +541,30 @@ class JogoNoEmuladorTest {
             novos += tipos.filter { it !in TIPOS_ANTIGOS }
         }
         assertTrue("as fases altas deveriam sortear vários desafios novos: $novos", novos.size >= 6)
+    }
+
+    /**
+     * Escrever a palavra com o dedo (fase 82 de Letras, "Ditado de letras", onde escrever é a atividade
+     * principal): a fase é vencida com 3 estrelas e jogar nunca pede a permissão do microfone (ela só é
+     * pedida na área dos pais, quando um adulto toca em gravar).
+     */
+    @Test
+    fun escreverAPalavraComODedo() {
+        PedidoDoMicrofone.pedidos = 0
+        var tipos = emptyList<String>()
+        // A atividade é sorteada: no máximo 3 partidas até aparecer (sai em 6 de cada 10 perguntas da fase).
+        for (vez in 1..3) {
+            tipos = jogarFaseAlta("PORTUGUES", "Letras", 82, "e25_letras_82_escrever")
+            if ("EscreverPalavra" in tipos) break
+        }
+        registrar("fases_escrever", "Letras", 82, tipos)
+        assertTrue("a fase 82 de Letras deveria pedir para escrever: $tipos", "EscreverPalavra" in tipos)
+        assertEquals("jogar não pode pedir o microfone", 0, PedidoDoMicrofone.pedidos)
+        assertNotEquals(
+            "o microfone não pode ter sido liberado jogando",
+            android.content.pm.PackageManager.PERMISSION_GRANTED,
+            contexto.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO),
+        )
     }
 
     private companion object {

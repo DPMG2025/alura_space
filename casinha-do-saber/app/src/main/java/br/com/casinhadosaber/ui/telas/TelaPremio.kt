@@ -177,8 +177,12 @@ fun TelaPremio(
         // Espera as cenas da história e do mascote terminarem (o narrador fala uma coisa de cada vez).
         snapshotFlow { cenaDoChefao == null && !festaDoMascote }.first { it }
         sons.acerto()
-        val parabens = mensagem ?: br.com.casinhadosaber.dominio.FrasesComNome.vitoria(nome, estrelas)
-        narrador.falar(if (temPresente) "$parabens Toque no presente três vezes para abrir!" else parabens)
+        // A vitória é uma das frases que a família pode gravar (área dos pais); o resto é a voz do aparelho.
+        val parabens = if (mensagem != null) br.com.casinhadosaber.dominio.ParteDaFala(pt(mensagem))
+        else br.com.casinhadosaber.dominio.VozesDaFamilia.vitoria(nome, estrelas)
+        narrador.falarPartes(
+            if (temPresente) listOf(parabens, br.com.casinhadosaber.dominio.ParteDaFala(pt("Toque no presente três vezes para abrir!"))) else listOf(parabens),
+        )
         for (i in 1..estrelas) {
             delay(380)
             estrelasVisiveis = i
