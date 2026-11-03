@@ -14,6 +14,10 @@ enum class Desenho { GELADEIRA, FOGAO, MESA }
  *
  * Posições normalizadas: [x] é o centro (fração da largura) e [y] é onde fica o "pé"
  * do objeto (fração da altura da cena). [tamanho] é a largura em fração da largura da cena.
+ *
+ * Valores de [y] entre 1 e 2 (só em posições guardadas, nunca aqui) querem dizer "no jardim de baixo",
+ * a faixa extra de grama das telas altas: 1 é o topo desse jardim e 2 é o fundo dele. Assim a posição
+ * vale em qualquer altura de tela, e as posições antigas (de 0 a 1) continuam iguais.
  */
 data class ItemCasa(
     val id: String,
@@ -68,7 +72,7 @@ object ItensDaCasa {
         objeto("cachorro", "Cachorrinho", "o cachorrinho", "dog", "🐶", 0.20f, 0.95f, 0.07f),
         objeto("tv", "Televisão", "a televisão", "TV", "📺", 0.54f, 0.775f, 0.075f),
         movel("mesa", "Mesa", "a mesa", "table", "🍽️", Desenho.MESA, 0.655f, 0.775f, 0.09f),
-        objeto("flores", "Flores", "as flores", "flowers", "🌷", 0.42f, 0.93f, 0.06f),
+        objeto("flores", "Flores", "as flores", "flowers", "🌷", 0.60f, 0.99f, 0.06f),
         objeto("banheira", "Banheira", "a banheira", "bathtub", "🛁", 0.72f, 0.528f, 0.14f),
         estrutura("chamine", "Chaminé", "a chaminé", "chimney", "💨", Estrutura.CHAMINE),
         objeto("abajur", "Abajur", "o abajur", "lamp", "💡", 0.36f, 0.375f, 0.055f),
@@ -78,7 +82,7 @@ object ItensDaCasa {
         estrutura("cerca", "Cerca", "a cerca", "fence", "🪵", Estrutura.CERCA),
         objeto("nuvem", "Nuvem", "a nuvem", "cloud", "☁️", 0.80f, 0.15f, 0.13f),
         objeto("livros", "Livros", "os livros", "books", "📚", 0.52f, 0.665f, 0.06f),
-        objeto("bola", "Bola", "a bola", "ball", "⚽", 0.50f, 0.96f, 0.055f),
+        objeto("bola", "Bola", "a bola", "ball", "⚽", 0.665f, 0.99f, 0.055f),
         objeto("espelho", "Espelho", "o espelho", "mirror", "🪞", 0.60f, 0.45f, 0.06f),
         estrutura("caminho", "Caminho", "o caminho de pedrinhas", "path", "🪨", Estrutura.CAMINHO),
         objeto("bicicleta", "Bicicleta", "a bicicleta", "bike", "🚲", 0.60f, 0.92f, 0.09f),
@@ -95,6 +99,20 @@ object ItensDaCasa {
     )
 
     val porId: Map<String, ItemCasa> = ordem.associateBy { it.id }
+
+    /**
+     * Onde as coisas do jardim ficam quando a tela é alta e tem o jardim de baixo (y de 1 a 2, ver [ItemCasa]).
+     * Vale só para objetos que a criança ainda não arrastou: o resto da cena fica com espaço para respirar.
+     * Os lugares desviam do caminho de pedrinhas (x perto de 0,30), dos arbustos dos cantos e do canteiro.
+     */
+    val noJardimDeBaixo: Map<String, Posicao> = mapOf(
+        "cachorro" to Posicao(0.20f, 1.45f),
+        "bicicleta" to Posicao(0.50f, 1.50f),
+        "bola" to Posicao(0.62f, 1.42f),
+        "escorregador" to Posicao(0.76f, 1.45f),
+        "trem" to Posicao(0.40f, 1.92f),
+        "flores" to Posicao(0.56f, 1.92f),
+    )
 
     fun lugarDe(id: String): Lugar = when (id) {
         "sol", "nuvem", "arcoiris", "pipa", "estrela", "borboleta" -> Lugar.CEU

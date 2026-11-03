@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
@@ -102,6 +103,9 @@ fun comodoEm(x: Float, y: Float): Comodo? {
  *
  * Quando [interativa] é verdadeiro, a criança pode tocar e arrastar os objetos.
  * Arrastar um objeto para baixo da cena devolve o objeto ao baú.
+ *
+ * Com [preencherAltura] numa tela alta, o jardim de baixo também faz parte da cena: as coisas
+ * do jardim podem ser soltas lá, e as que a criança ainda não mexeu já começam lá.
  */
 @Composable
 fun CenaDaCasa(
@@ -149,7 +153,9 @@ fun CenaDaCasa(
             // A sobra de altura vai mais para o jardim (65%) do que para o céu (35%).
             val sobra = maxHeight - alturaCena
             val ceuExtra = sobra * 0.35f
-            val corteDoChao = alturaCena * 0.22f + sobra * 0.65f
+            val jardim = sobra * 0.65f
+            val temJardimExtra = jardim > 70.dp
+            val corteDoChao = alturaCena * 0.22f + jardim
             Canvas(Modifier.fillMaxSize()) {
                 val ceuInteiro = if (noite) listOf(Color(0xFF16204A), Color(0xFF3B4C8C)) else listOf(Color(0xFF7EC8FF), Color(0xFFCDEBFF))
                 drawRect(Brush.verticalGradient(ceuInteiro, endY = size.height - corteDoChao.toPx()))
@@ -173,20 +179,38 @@ fun CenaDaCasa(
                     }
                 }
             }
-            CenaDaCasa(
-                estado, Modifier.padding(top = ceuExtra).height(alturaCena), interativa, pintando, novaEstrutura, destaqueId, puloDaCrianca, noite, true,
-                sobra * 0.65f > 70.dp, false,
-                onTocarItem, onMoverItem, onGuardarItem, onRecusarItem, onPintar, onTocarCrianca, onMoverCrianca,
+            // A cena desce até o fim do jardim de baixo: os objetos podem morar lá também.
+            CenaPlana(
+                estado = estado,
+                modifier = Modifier.padding(top = ceuExtra).height(if (temJardimExtra) alturaCena + jardim else alturaCena),
+                interativa = interativa,
+                pintando = pintando,
+                novaEstrutura = novaEstrutura,
+                destaqueId = destaqueId,
+                puloDaCrianca = puloDaCrianca,
+                noite = noite,
+                semCeu = true,
+                semVisitantes = temJardimExtra,
+                jardimExtra = if (temJardimExtra) jardim / alturaCena else 0f,
+                t = t,
+                progresso = { construcao.value },
+                onTocarItem = onTocarItem,
+                onMoverItem = onMoverItem,
+                onGuardarItem = onGuardarItem,
+                onRecusarItem = onRecusarItem,
+                onPintar = onPintar,
+                onTocarCrianca = onTocarCrianca,
+                onMoverCrianca = onMoverCrianca,
             )
-            // Visitantes andam numa "pista" no meio do jardim de baixo, longe dos objetos da casa.
-            if (sobra * 0.65f > 70.dp) {
+            // Visitantes andam numa "pista" no alto do jardim de baixo, passando na frente dos objetos.
+            if (temJardimExtra) {
                 val transicao = rememberInfiniteTransition(label = "visitas")
                 val passo by transicao.animateFloat(0f, 1f, infiniteRepeatable(tween(14000, easing = LinearEasing)), label = "passo")
                 val pulinho by transicao.animateFloat(0f, 1f, infiniteRepeatable(tween(300), androidx.compose.animation.core.RepeatMode.Reverse), label = "pulinho")
                 val densidade = LocalDensity.current
                 val larguraPx = with(densidade) { maxWidth.toPx() }
                 val topoJardim = with(densidade) { (ceuExtra + alturaCena).toPx() }
-                val alturaJardim = with(densidade) { (sobra * 0.65f).toPx() }
+                val alturaJardim = with(densidade) { jardim.toPx() }
                 val tamanho = larguraPx * 0.08f
                 estado.visitantes.forEachIndexed { i, bicho ->
                     val volta = (passo + i * 0.37f) % 1f
@@ -206,9 +230,90 @@ fun CenaDaCasa(
         }
         return
     }
+    CenaPlana(
+        estado = estado,
+        modifier = modifier,
+        interativa = interativa,
+        pintando = pintando,
+        novaEstrutura = novaEstrutura,
+        destaqueId = destaqueId,
+        puloDaCrianca = puloDaCrianca,
+        noite = noite,
+        semCeu = semCeu,
+        semVisitantes = semVisitantes,
+        jardimExtra = 0f,
+        t = t,
+        progresso = { construcao.value },
+        onTocarItem = onTocarItem,
+        onMoverItem = onMoverItem,
+        onGuardarItem = onGuardarItem,
+        onRecusarItem = onRecusarItem,
+        onPintar = onPintar,
+        onTocarCrianca = onTocarCrianca,
+        onMoverCrianca = onMoverCrianca,
+    )
+}
+
+/**
+ * Converte entre a posição guardada e a posição na tela, por causa do jardim de baixo.
+ *
+ * [extra] é a altura do jardim de baixo em frações da altura da cena (0 quando não há).
+ * Na posição guardada, y de 1 a 2 é a fração do jardim de baixo (ver [ItemCasa]); na tela,
+ * esse pedaço vai de 1 até 1 + [extra]. Sem jardim de baixo, quem estava lá aparece na grama da cena.
+ */
+private class JardimDeBaixo(val extra: Float) {
+    /** Espaço útil (o pé não encosta na borda arredondada do cartão). */
+    private val util = if (extra > 0.03f) extra - 0.015f else 0f
+
+    /** O pé mais baixo que um objeto pode ter na tela. */
+    val fundo get() = 1f + util
+
+    /** Soltar abaixo disto guarda o objeto no baú. */
+    val limiteDoBau get() = if (util > 0f) 1f + extra + 0.03f else 1.04f
+
+    fun naTela(p: Posicao): Posicao {
+        if (p.y <= 1f) return p
+        val f = (p.y - 1f).coerceIn(0f, 1f)
+        return Posicao(p.x, if (util > 0f) 1f + f * util else 0.84f + f * 0.15f)
+    }
+
+    fun paraGuardar(p: Posicao): Posicao =
+        if (p.y <= 1f || util <= 0f) p else Posicao(p.x, 1f + ((p.y - 1f) / util).coerceIn(0f, 1f))
+
+    fun limitar(p: Posicao) = Posicao(p.x.coerceIn(0.03f, 0.97f), p.y.coerceIn(0.08f, fundo))
+}
+
+/** A cena em si (céu, casa, objetos e criança), com o jardim de baixo opcional embaixo dela. */
+@Composable
+private fun CenaPlana(
+    estado: EstadoJogo,
+    modifier: Modifier,
+    interativa: Boolean,
+    pintando: Boolean,
+    novaEstrutura: Estrutura?,
+    destaqueId: String?,
+    puloDaCrianca: Int,
+    noite: Boolean,
+    semCeu: Boolean,
+    semVisitantes: Boolean,
+    /** Altura do jardim de baixo em frações da altura da cena (0 quando não há). */
+    jardimExtra: Float,
+    t: Float,
+    progresso: () -> Float,
+    onTocarItem: (ItemCasa) -> Unit,
+    onMoverItem: (ItemCasa, Posicao) -> Unit,
+    onGuardarItem: (ItemCasa) -> Unit,
+    onRecusarItem: (ItemCasa) -> Unit,
+    onPintar: (Comodo) -> Unit,
+    onTocarCrianca: () -> Unit,
+    onMoverCrianca: (Posicao) -> Unit,
+) {
+    val jardim = remember(jardimExtra) { JardimDeBaixo(jardimExtra) }
+    // Jardim de baixo com pelo menos 20% da largura: as coisas de jardim ainda não arrastadas começam lá.
+    val usarLugaresDoJardim = jardimExtra * PROPORCAO_CENA >= 0.2f
     BoxWithConstraints(
         modifier
-            .aspectRatio(1f / PROPORCAO_CENA)
+            .aspectRatio(1f / (PROPORCAO_CENA * (1f + jardimExtra)))
             .clipToBounds(),
     ) {
         val larguraPx = constraints.maxWidth.toFloat()
@@ -216,7 +321,8 @@ fun CenaDaCasa(
 
         Canvas(
             Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .height(with(LocalDensity.current) { alturaPx.toDp() })
                 .then(
                     if (interativa && pintando) {
                         Modifier.pointerInput(Unit) {
@@ -229,7 +335,7 @@ fun CenaDaCasa(
                     },
                 ),
         ) {
-            desenharCasa(estado, t, novaEstrutura, construcao.value, noite, semCeu)
+            desenharCasa(estado, t, novaEstrutura, progresso(), noite, semCeu)
         }
 
         if (!estado.temEstrutura(Estrutura.TERRENO)) {
@@ -253,7 +359,10 @@ fun CenaDaCasa(
             if (item.ehEstrutura) continue
             // À noite não tem arco-íris, pipa nem borboleta.
             if (noite && item.id in setOf("arcoiris", "pipa", "borboleta")) continue
-            val pos = estado.colocados[item.id] ?: continue
+            val guardada = estado.colocados[item.id] ?: continue
+            val lugarNoJardim = ItensDaCasa.noJardimDeBaixo[item.id]
+            val naoMexido = guardada == Posicao(item.x, item.y)
+            val pos = jardim.naTela(if (usarLugaresDoJardim && lugarNoJardim != null && naoMexido) lugarNoJardim else guardada)
             key(item.id) { ObjetoNaCena(
                 item = item,
                 pos = pos,
@@ -266,16 +375,16 @@ fun CenaDaCasa(
                 noite = noite,
                 onTocar = { onTocarItem(item) },
                 onSoltar = { nova ->
-                    if (nova.y > 1.04f) {
+                    if (nova.y > jardim.limiteDoBau) {
                         onGuardarItem(item)
                         null
                     } else {
-                        val destino = encaixar(item.id, limitar(nova), estado)
+                        val destino = encaixar(item.id, jardim.limitar(nova), estado)
                         if (destino == null) {
                             onRecusarItem(item)
                             pos
                         } else {
-                            destino.also { onMoverItem(item, it) }
+                            destino.also { onMoverItem(item, jardim.paraGuardar(it)) }
                         }
                     }
                 },
@@ -305,9 +414,10 @@ fun CenaDaCasa(
 
         val perfil = estado.perfil
         if (perfil != null) {
+            val posCrianca = jardim.naTela(estado.posicaoCrianca)
             ObjetoNaCena(
                 item = null,
-                pos = estado.posicaoCrianca,
+                pos = posCrianca,
                 larguraCena = larguraPx,
                 alturaCena = alturaPx,
                 larguraRelativa = 0.13f,
@@ -319,7 +429,11 @@ fun CenaDaCasa(
                 tempo = t,
                 descricao = perfil.nome.ifBlank { "Você" },
                 onTocar = onTocarCrianca,
-                onSoltar = { nova -> (encaixar("crianca", limitar(nova), estado) ?: estado.posicaoCrianca).also(onMoverCrianca) },
+                onSoltar = { nova ->
+                    val destino = encaixar("crianca", jardim.limitar(nova), estado) ?: posCrianca
+                    onMoverCrianca(jardim.paraGuardar(destino))
+                    destino
+                },
             ) { _ ->
                 Crianca(perfil, Modifier.fillMaxSize(), acenando = true)
             }
@@ -431,8 +545,6 @@ private fun pousar(p: Posicao, dentro: Boolean): Posicao {
     }
     return Posicao(p.x, y)
 }
-
-private fun limitar(p: Posicao) = Posicao(p.x.coerceIn(0.03f, 0.97f), p.y.coerceIn(0.08f, 1f))
 
 /** Um objeto posicionado pelo pé, que pode ser tocado e arrastado. */
 @Composable
@@ -898,7 +1010,10 @@ private fun DrawScope.nuvemDeFundo(x: Float, y: Float, r: Float) {
     drawPath(nuvem, Color.White.copy(alpha = 0.8f))
 }
 
-/** O pedaço de jardim que aparece em telas altas: canteiro, arbustos, cogumelos e o caminho continuando. */
+/**
+ * O pedaço de jardim que aparece em telas altas: canteiro, arbustos, cogumelos e o caminho continuando.
+ * Os enfeites ficam nas bordas e embaixo, deixando o meio livre para os objetos (ver ItensDaCasa.noJardimDeBaixo).
+ */
 private fun DrawScope.jardimDeBaixo(topo: Float, alto: Float, noite: Boolean, temCaminho: Boolean, temGrama: Boolean) {
     if (!temGrama) return
     val w = size.width
@@ -909,8 +1024,9 @@ private fun DrawScope.jardimDeBaixo(topo: Float, alto: Float, noite: Boolean, te
         drawCircle(folha, w * r, c)
         drawCircle(folha, w * r * 0.8f, c + Offset(w * r * 0.8f * (if (cx < 0.5f) 1f else -1f), w * r * 0.2f))
     }
-    // canteiro com flores
-    val canteiro = Rect(Offset(w * 0.55f, topo + alto * 0.42f), Size(w * 0.3f, minOf(alto * 0.35f, w * 0.12f)))
+    // canteiro com flores, embaixo à direita
+    val alturaCanteiro = minOf(alto * 0.3f, w * 0.11f)
+    val canteiro = Rect(Offset(w * 0.64f, topo + alto * 0.94f - alturaCanteiro), Size(w * 0.26f, alturaCanteiro))
     drawRoundRect(if (noite) Color(0xFF5A4232) else Color(0xFF8D5A3B), canteiro.topLeft, canteiro.size, CornerRadius(12f))
     for (i in 0 until 6) {
         val fx = canteiro.left + canteiro.width * (0.12f + i * 0.15f)
@@ -930,8 +1046,8 @@ private fun DrawScope.jardimDeBaixo(topo: Float, alto: Float, noite: Boolean, te
         }
     }
     // cogumelos
-    for (cx in listOf(0.16f, 0.45f)) {
-        val base = Offset(w * cx, topo + alto * 0.75f)
+    for (cx in listOf(0.14f, 0.48f)) {
+        val base = Offset(w * cx, topo + alto * 0.85f)
         drawRect(Color(0xFFF4E9D8), Offset(base.x - 5f, base.y - 16f), Size(10f, 16f))
         drawArc(Color(0xFFEF476F), 180f, 180f, true, Offset(base.x - 18f, base.y - 30f), Size(36f, 28f))
         drawCircle(Color.White, 3.5f, Offset(base.x - 6f, base.y - 22f))
