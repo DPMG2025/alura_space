@@ -1,0 +1,9 @@
+    <failure>java.lang.AssertionError: instrução de traçar sem a letra: 🔊 🔊 Trace o algarismo das dezenas de 62
+at br.com.casinhadosaber.JogoNoEmuladorTest.fazerTracar(JogoNoEmuladorTest.kt:263)
+at br.com.casinhadosaber.JogoNoEmuladorTest.responderSemErrar(JogoNoEmuladorTest.kt:140)
+at br.com.casinhadosaber.JogoNoEmuladorTest.jogarDesafioNovo(JogoNoEmuladorTest.kt:420)
+at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFaseAlta(JogoNoEmuladorTest.kt:463)
+at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFasesAltasComOsOutrosDesafios(JogoNoEmuladorTest.kt:521)
+</failure>
+  </testcase>
+  <testcase name="pintarNoAtelieETocarOPiano" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="9.71" />
