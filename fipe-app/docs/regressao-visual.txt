@@ -1,1 +1,2 @@
 Telas com diferenca visual em relacao a versao anterior (revisar):
+* salvosFavoritos
