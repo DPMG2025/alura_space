@@ -360,4 +360,18 @@ class CasaPorDentroTest {
         assertTrue(PlantaDaCasa.moveisDe(tudo).any { it.id == "patinho" })
         assertTrue(PlantaDaCasa.moveisDe(EstadoJogo()).any { it.id == "lixeira" })
     }
+
+    @Test
+    fun `a dica de arrastar acha um movel que cabe nos dois andares`() {
+        for (e in listOf(tudo, EstadoJogo())) for (andar in Andar.entries) {
+            val moveis = PlantaDaCasa.moveisDe(e)
+            val temArrastavel = moveis.any { it.andar == andar && PlantaDaCasa.arrastavel(it) }
+            val s = PlantaDaCasa.sugestaoDeArraste(moveis, andar, 0 to 4)
+            if (temArrastavel) {
+                println("dica $andar: ${s?.first?.id} ${s?.second}")
+                val (m, passo) = s!!
+                assertTrue(PlantaDaCasa.mover(moveis, m.id, passo.first, passo.second) != null)
+            }
+        }
+    }
 }

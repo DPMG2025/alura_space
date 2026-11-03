@@ -452,7 +452,7 @@ class CapturasTest {
     }
 
     /** Primeira visita: depois de uns segundos parada, a mãozinha segura um móvel e leva para o lado (realce verde). */
-    @Test fun casaPorDentroDicaDeArrastar() = capturar("32b_casa_por_dentro_dica_arrastar", tempo = 12300) {
+    @Test fun casaPorDentroDicaDeArrastar() = capturar("32b_casa_por_dentro_dica_arrastar", tempo = 10400) {
         TelaCasaPorDentro(estado(40, 40), {}, {})
     }
 

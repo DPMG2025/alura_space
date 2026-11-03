@@ -204,7 +204,8 @@ fun TelaCasaPorDentro(
     // nunca arrastou nada, de novo depois de um tempo parada).
     var maoDaDica by remember { mutableStateOf<Offset?>(null) }
     var maoApertando by remember { mutableStateOf(false) }
-    var ultimoToqueEm by remember { mutableFloatStateOf(0f) }
+    /** Segundos sem tocar na cena (a dica só aparece com a criança parada). */
+    var segundosParada by remember { mutableIntStateOf(0) }
     var arrastouAqui by remember { mutableStateOf(false) }
     var tarefaDaDica by remember { mutableStateOf<Job?>(null) }
     val estadoAtual by rememberUpdatedState(estado)
@@ -583,20 +584,9 @@ fun TelaCasaPorDentro(
     val soltar by rememberUpdatedState<() -> Unit>({ soltarArraste() })
     val cancelar by rememberUpdatedState<() -> Unit>({ cancelarArraste() })
 
-    /** Um móvel do andar da criança e um passo de um ladrilho que cabe (e não cai em cima dela), para a dica. */
-    fun movelParaADica(): Pair<Movel, Pair<Int, Int>>? {
-        val andar = cena.andar
-        val preferidos = listOf("sofa", "mesa", "cama", "tv", "livros", "violao", "planta")
-        val candidatos = moveis
-            .filter { it.andar == andar && PlantaDaCasa.arrastavel(it) }
-            .sortedBy { m -> preferidos.indexOf(m.id).let { if (it < 0) 99 else it } }
-        val crianca = floor(cena.x).toInt() to floor(cena.y).toInt()
-        for (m in candidatos) for ((dx, dy) in listOf(0 to 1, 1 to 0, -1 to 0, 0 to -1, 0 to 2, 2 to 0)) {
-            if (crianca in PlantaDaCasa.ladrilhosDe(m.deslocado(dx, dy))) continue
-            if (PlantaDaCasa.mover(moveis, m.id, dx, dy) != null) return m to (dx to dy)
-        }
-        return null
-    }
+    /** Um móvel do andar da criança e um passo pequeno que cabe (e não cai em cima dela), para a dica. */
+    fun movelParaADica(): Pair<Movel, Pair<Int, Int>>? =
+        PlantaDaCasa.sugestaoDeArraste(moveis, cena.andar, floor(cena.x).toInt() to floor(cena.y).toInt())
 
     fun limparDica() {
         if (cena.arrasteDaDica) {
@@ -652,7 +642,7 @@ fun TelaCasaPorDentro(
 
     /** Qualquer toque na cena para a dica na hora (a criança assume) e reinicia a contagem do tempo parada. */
     fun tocouNaCena() {
-        ultimoToqueEm = cena.tempo
+        segundosParada = 0
         tarefaDaDica?.cancel()
         tarefaDaDica = null
         limparDica()
@@ -661,17 +651,23 @@ fun TelaCasaPorDentro(
 
     LaunchedEffect(Unit) {
         if (abrirInicial != Acao.NENHUMA || lojaInicial) return@LaunchedEffect
-        var ultimaDica = -1f
+        // Contagem em segundos de laço (não depende dos quadros da animação).
+        var segundos = 0
+        var ultimaDica = -1
         while (true) {
             delay(1000)
+            segundos++
+            segundosParada++
             if (estadoAtual.moveisDentro.isNotEmpty() || arrastouAqui) return@LaunchedEffect
-            val agora = cena.tempo
-            val parada = agora - ultimoToqueEm
-            val primeira = !estadoAtual.viuDicaDeArrastar && ultimaDica < 0f
-            val hora = if (primeira) agora >= 9f && parada >= 4f else parada >= 30f && (ultimaDica < 0f || agora - ultimaDica >= 60f)
+            val primeira = !estadoAtual.viuDicaDeArrastar && ultimaDica < 0
+            val hora = if (primeira) {
+                segundos >= 8 && segundosParada >= 4
+            } else {
+                segundosParada >= 30 && (ultimaDica < 0 || segundos - ultimaDica >= 60)
+            }
             val livre = cena.arrastando == null && !cena.andando && !lojaAberta && !cena.geladeiraAberta && !cena.guardaRoupaAberto
             if (hora && livre) {
-                ultimaDica = agora
+                ultimaDica = segundos
                 val tarefa = launch { mostrarDicaDeArrastar() }
                 tarefaDaDica = tarefa
                 tarefa.join()
@@ -1093,6 +1089,9 @@ private class Geometria(
     val andares: List<GeoAndar>,
     /** Telhado do andar de cima (visto por dentro, como numa casinha de bonecas aberta), ou vazio. */
     val telhado: List<Forma>,
+    /** Céu livre acima da casa, em pixels (em pé sobra uma faixa: ganha sol e nuvens), e a largura da cena. */
+    val ceu: Float,
+    val larguraDaCena: Float,
     val ladrilho: Float,
     val corDoPadrao: Color,
     val raioLampada: Float,
@@ -1217,6 +1216,8 @@ private fun montarGeometria(
     return Geometria(
         andares = andares,
         telhado = if (comTelhado) montarTelhado(andares.first().proj, estado) else emptyList(),
+        ceu = ((tamanho.height - alturaTotal) / 2f).coerceAtLeast(0f),
+        larguraDaCena = tamanho.width,
         ladrilho = tw,
         corDoPadrao = if (estado.papelDeParede == 3) Color(0x80FFC93C) else Color(0x1F000000),
         raioLampada = max(tw * 0.4f, 26f * dp),
@@ -1901,10 +1902,43 @@ private fun corDoTraje(traje: String, perfil: Perfil): Color = when (traje) {
 // Desenho de cada quadro (sem montar caminhos novos; só lê a geometria pronta e o estado da cena)
 // ---------------------------------------------------------------------------------------------
 
+/** Sol e nuvenzinhas na faixa de céu acima da casa (só quando sobra céu, como no celular em pé). */
+private fun DrawScope.desenharCeu(g: Geometria, t: Float) {
+    val tw = g.ladrilho
+    val livre = g.ceu
+    if (livre < tw * 0.9f) return
+    val w = g.larguraDaCena
+    // Sol no alto à direita (o telhado desce para a direita: ali sobra mais céu), com raios girando devagar.
+    val sol = Offset(w * 0.86f, livre * 0.5f + tw * 0.55f)
+    val raio = tw * 0.36f
+    drawCircle(Color(0x33FFE066), raio * 1.9f, sol)
+    rotate(t * 12f, pivot = sol) {
+        for (k in 0 until 10) {
+            val a = k * (2 * PI.toFloat() / 10)
+            val de = Offset(sol.x + kotlin.math.cos(a) * raio * 1.25f, sol.y + sin(a) * raio * 1.25f)
+            val ate = Offset(sol.x + kotlin.math.cos(a) * raio * 1.6f, sol.y + sin(a) * raio * 1.6f)
+            drawLine(Color(0xFFFFC93C), de, ate, strokeWidth = tw * 0.07f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        }
+    }
+    drawCircle(Color(0xFFFFD84D), raio, sol)
+    drawCircle(Color(0xFFFFE98A), raio * 0.62f, Offset(sol.x - raio * 0.2f, sol.y - raio * 0.2f))
+    // Nuvens fofas que passeiam um pouquinho para os lados.
+    fun nuvem(c: Offset, tamanho: Float) {
+        val cor = Color(0xF2FFFFFF)
+        drawOval(cor, topLeft = Offset(c.x - tamanho * 0.75f, c.y - tamanho * 0.18f), size = Size(tamanho * 1.5f, tamanho * 0.42f))
+        drawCircle(cor, tamanho * 0.32f, Offset(c.x - tamanho * 0.3f, c.y - tamanho * 0.08f))
+        drawCircle(cor, tamanho * 0.42f, Offset(c.x + tamanho * 0.12f, c.y - tamanho * 0.2f))
+        drawCircle(cor, tamanho * 0.26f, Offset(c.x + tamanho * 0.5f, c.y + tamanho * 0.0f))
+    }
+    nuvem(Offset(w * 0.42f + sin(t * 0.25f) * tw * 0.3f, livre * 0.42f), tw * 1.1f)
+    nuvem(Offset(w * 0.12f + sin(t * 0.2f + 2f) * tw * 0.2f, livre * 0.8f), tw * 0.8f)
+}
+
 private fun DrawScope.desenharCena(g: Geometria, cena: Cena, perfil: Perfil) {
     val t = cena.tempo
     val apagadas = cena.luzApagada
     // O andar de cima primeiro: o de baixo fica na frente, como na casa de fora.
+    desenharCeu(g, t)
     desenharFormas(g.telhado, Contorno, g.tracoFino)
     for (ga in g.andares) {
         val proj = ga.proj

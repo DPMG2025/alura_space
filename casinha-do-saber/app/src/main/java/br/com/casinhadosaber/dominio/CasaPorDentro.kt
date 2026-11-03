@@ -328,6 +328,22 @@ object PlantaDaCasa {
     }
 
     /**
+     * Para a dica da mãozinha: um móvel do [andar] e um passo pequeno que cabe e não cai no ladrilho da
+     * criança ([crianca]). Prefere os móveis grandes e conhecidos (sofá, mesa, cama). Null se nada cabe.
+     */
+    fun sugestaoDeArraste(atuais: List<Movel>, andar: Andar, crianca: Pair<Int, Int>): Pair<Movel, Pair<Int, Int>>? {
+        val preferidos = listOf("sofa", "mesa", "cama", "tv", "livros", "violao", "planta")
+        val candidatos = atuais
+            .filter { it.andar == andar && arrastavel(it) }
+            .sortedBy { m -> preferidos.indexOf(m.id).let { if (it < 0) 99 else it } }
+        for (m in candidatos) for ((dx, dy) in listOf(0 to 1, 1 to 0, -1 to 0, 0 to -1, 0 to 2, 2 to 0)) {
+            if (crianca in ladrilhosDe(m.deslocado(dx, dy))) continue
+            if (mover(atuais, m.id, dx, dy) != null) return m to (dx to dy)
+        }
+        return null
+    }
+
+    /**
      * Põe cada móvel no lugar salvo. Um lugar que não vale mais (por exemplo, uma peça nova chegou
      * onde ele estava) é ignorado e o móvel volta para o lugar de sempre, que fica livre por construção.
      */
