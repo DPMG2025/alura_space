@@ -456,6 +456,20 @@ class CapturasTest {
         TelaCasaPorDentro(estado(40, 40), {}, {}, dicaLogo = true)
     }
 
+    /** Diagnóstico da dica de arrastar: o nome do arquivo diz se a mãozinha apareceu (A) e se a dica terminou (B). */
+    @Test fun diagnosticoDaDica() {
+        var atualizou = 0
+        montar { TelaCasaPorDentro(estado(40, 40), { atualizou++ }, {}, dicaLogo = true) }
+        val marcas = ArrayList<String>()
+        for (passo in 1..12) {
+            regra.mainClock.advanceTimeBy(500)
+            val mao = regra.onAllNodesWithTag("mao_da_dica").fetchSemanticsNodes().size
+            marcas += "${passo * 5}:$mao"
+        }
+        regra.mainClock.advanceTimeBy(4000)
+        regra.onRoot().captureRoboImage("build/outputs/roborazzi/zz_diag_${marcas.joinToString("_")}_B$atualizou.png")
+    }
+
     @Test fun casaPorDentroGeladeira() = capturar("33_casa_por_dentro_geladeira") {
         TelaCasaPorDentro(casaCheia(), {}, {}, abrirInicial = Acao.GELADEIRA)
     }

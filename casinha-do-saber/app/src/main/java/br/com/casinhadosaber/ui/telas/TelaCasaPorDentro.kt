@@ -72,6 +72,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -865,7 +866,7 @@ fun TelaCasaPorDentro(
                 if (mao != null) {
                     MaoQueArrasta(
                         maoApertando,
-                        Modifier.offset { IntOffset((mao.x - 20.dp.toPx()).roundToInt(), (mao.y - 20.dp.toPx()).roundToInt()) },
+                        Modifier.testTag("mao_da_dica").offset { IntOffset((mao.x - 20.dp.toPx()).roundToInt(), (mao.y - 20.dp.toPx()).roundToInt()) },
                     )
                 } else if (!jaAndou && abrirInicial == Acao.NENHUMA && !lojaInicial) {
                     MaoGuia(Modifier.align(Alignment.Center).padding(top = 120.dp), espera = 2500)
