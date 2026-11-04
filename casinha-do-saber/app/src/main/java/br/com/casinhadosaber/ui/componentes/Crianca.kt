@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.Canvas as ComposeCanvas
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -243,8 +244,35 @@ private val TintaDoContorno = Paint().apply { colorFilter = ColorFilter.tint(Con
 fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Boolean, humor: Humor) {
     val w = size.width
     val h = size.height
+    if (w < 1f || h < 1f) return
     // sombra no chão
     drawOval(Color(0x26000000), topLeft = Offset(w * 0.08f, h * 0.975f), size = Size(w * 0.84f, h * 0.05f))
+    val traco = (w * 0.022f).coerceAtLeast(1f)
+    val fx = ceil(w * FOLGA_X + traco)
+    val fy = ceil(h * FOLGA_Y + traco)
+    // O contorno (camada com tinta) é desenhado na CPU, numa imagem guardada: na GPU essa camada derrubava o
+    // emulador do Android 14. Cada pose (aceno em 9 passos, olhos, humor) é desenhada uma vez e só copiada.
+    val acenoEmPassos = aceno?.let { (it.coerceIn(-1f, 1f) * 4f).roundToInt() }
+    val chave = ChaveDaCrianca(perfil, ceil(w).toInt(), ceil(h).toInt(), acenoEmPassos, olhosFechados, humor)
+    val imagem = PosesDaCrianca[chave] ?: ImageBitmap(ceil(w + fx * 2).toInt(), ceil(h + fy * 2).toInt()).also { bmp ->
+        CanvasDrawScope().draw(this, layoutDirection, ComposeCanvas(bmp), Size(w, h)) {
+            translate(fx, fy) { desenharFiguraComContorno(perfil, acenoEmPassos?.let { it / 4f }, olhosFechados, humor) }
+        }
+        PosesDaCrianca[chave] = bmp
+    }
+    drawImage(imagem, topLeft = Offset(-fx, -fy))
+}
+
+private data class ChaveDaCrianca(val perfil: Perfil, val w: Int, val h: Int, val aceno: Int?, val olhos: Boolean, val humor: Humor)
+
+/** As últimas poses desenhadas (poucas: cada uma é uma imagem do tamanho da criança). */
+private object PosesDaCrianca : LinkedHashMap<ChaveDaCrianca, ImageBitmap>(16, 0.75f, true) {
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<ChaveDaCrianca, ImageBitmap>?): Boolean = size > 10
+}
+
+private fun DrawScope.desenharFiguraComContorno(perfil: Perfil, aceno: Float?, olhosFechados: Boolean, humor: Humor) {
+    val w = size.width
+    val h = size.height
     val traco = (w * 0.022f).coerceAtLeast(1f)
     // A camada só precisa da área da figura (as mãos e as asinhas passam um pouco das bordas) mais a espessura
     // do contorno: bem menor que antes, então mais leve.

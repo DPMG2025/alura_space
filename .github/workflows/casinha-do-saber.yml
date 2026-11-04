@@ -161,7 +161,6 @@ jobs:
           script: |
             adb logcat -c || true
             nohup sh -c 'adb logcat -v time "*:W" > logcat-emulador.txt 2>&1' > /dev/null 2>&1 &
-            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.DiagnosticoTelasTest || echo "FALHA_TESTES" > emulador-falhou.txt
             ./gradlew connectedDebugAndroidTest --no-daemon || echo "FALHA_TESTES" > emulador-falhou.txt
 
       - name: Log do emulador (avisos e erros)
