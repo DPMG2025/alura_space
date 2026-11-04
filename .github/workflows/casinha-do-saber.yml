@@ -156,13 +156,12 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_6
-          ram-size: 4096M
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -logcat "*:E" -show-kernel
           disable-animations: false
           working-directory: casinha-do-saber
           script: |
             adb logcat -c || true
             nohup sh -c 'adb logcat -v time "*:W" > logcat-emulador.txt 2>&1' > /dev/null 2>&1 &
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.DiagnosticoTelasTest || echo "FALHA_TESTES" > emulador-falhou.txt
             ./gradlew connectedDebugAndroidTest --no-daemon || echo "FALHA_TESTES" > emulador-falhou.txt
 
       - name: Log do emulador (avisos e erros)
