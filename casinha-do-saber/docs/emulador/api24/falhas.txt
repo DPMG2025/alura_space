@@ -1,5 +1,0 @@
-    <failure></failure>
-  </testcase>
-  <system-err>Test run failed to complete. Expected 1 tests, received 0. System has crashed.
-</system-err>
-</testsuite>
