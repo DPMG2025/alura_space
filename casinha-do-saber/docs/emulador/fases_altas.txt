@@ -1,9 +1,9 @@
 Números fase 54: Pescaria, Pescaria, cesta, escolha, escolha
-Números fase 132: Relogio, Relogio, EstourarBaloes, escolha, escolha
-Números fase 197: Mercadinho, escolha, EstourarBaloes, Mercadinho, escolha
-Números fase 222: CacaNaCena, CacaNaCena, EstourarBaloes, escolha, escolha
-Lógica fase 54: QuebraCabeca, LigarPares, escolha, QuebraCabeca, LigarPares
-Lógica fase 114: ProgramarRobo, ProgramarRobo, SigaASequencia, Trem, Trem
-Lógica fase 204: EscondeEsconde, EscondeEsconde, QuebraCabeca, escolha, escolha
-Lógica fase 213: SigaASequencia, SigaASequencia, QuebraCabeca, escolha, escolha
-Inglês fase 127: MontarFrase, MontarFrase, EstourarBaloes, escolha, escolha
+Números fase 132: escolha, Relogio, Pescaria, escolha, escolha
+Números fase 197: escolha, Mercadinho, EstourarBaloes, Mercadinho, escolha
+Números fase 222: CacaNaCena, escolha, Domino, CacaNaCena, escolha
+Lógica fase 54: QuebraCabeca, QuebraCabeca, memoria, LigarPares, LigarPares
+Lógica fase 114: Trem, ProgramarRobo, Pescaria, ProgramarRobo, Trem
+Lógica fase 204: EscondeEsconde, EscondeEsconde, CacaNaCena, escolha, escolha
+Lógica fase 213: escolha, SigaASequencia, CacaNaCena, SigaASequencia, escolha
+Inglês fase 127: MontarFrase, escolha, Pescaria, escolha, escolha
