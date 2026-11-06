@@ -50,6 +50,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Crianca
+import br.com.casinhadosaber.ui.componentes.Irmaozinho
 import br.com.casinhadosaber.ui.componentes.Humor
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.pulsando
@@ -130,7 +131,13 @@ fun TelaQuase(
             Text("🔒", fontSize = 32.sp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp))
         }
         Spacer(Modifier.height(12.dp))
-        perfil?.let { Crianca(it, Modifier.height(130.dp), humor = Humor.TORCENDO) }
+        perfil?.let {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Crianca(it, Modifier.height(130.dp), humor = Humor.TORCENDO)
+                // O irmãozinho dá tchau, animando para tentar de novo.
+                if (it.irmao.ligado) Irmaozinho(it, Modifier.height(86.dp), acenando = true)
+            }
+        }
         Spacer(Modifier.height(20.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             BotaoRedondo("🗺️", "Voltar para o caminho", onVoltar, tamanho = 60.dp)

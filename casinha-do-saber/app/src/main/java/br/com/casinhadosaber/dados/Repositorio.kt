@@ -15,6 +15,7 @@ import br.com.casinhadosaber.dominio.Mascote
 import br.com.casinhadosaber.dominio.Pais
 import br.com.casinhadosaber.dominio.TemaFavorito
 import br.com.casinhadosaber.dominio.Genero
+import br.com.casinhadosaber.dominio.Irmao
 import br.com.casinhadosaber.dominio.Perfil
 import br.com.casinhadosaber.dominio.Posicao
 import br.com.casinhadosaber.dominio.Serializacao
@@ -378,6 +379,8 @@ class Repositorio(private val context: Context) {
                 // Campos das sugestões 1 a 7: saves antigos não têm as chaves e ficam com o padrão.
                 aniversario = Aniversario.deTexto(prefs.getString(ANIVERSARIO, null)),
                 temasFavoritos = TemaFavorito.deTexto(prefs.getString(TEMAS, null)),
+                // O irmãozinho: saves antigos não têm a chave e ficam com ele ligado, sem nome.
+                irmao = Irmao.deTexto(prefs.getString(IRMAO, null)),
             )
         } else {
             null
@@ -448,6 +451,7 @@ class Repositorio(private val context: Context) {
             putString(ACESSORIOS, Serializacao.acessoriosParaTexto(it.acessorios))
             putString(ANIVERSARIO, Aniversario.paraTexto(it.aniversario))
             putString(TEMAS, TemaFavorito.paraTexto(it.temasFavoritos))
+            putString(IRMAO, Irmao.paraTexto(it.irmao))
         }
         putString(ESTRELAS, Serializacao.estrelasParaTexto(e.estrelas))
         putString(COLOCADOS, Serializacao.posicoesParaTexto(e.colocados))
@@ -525,6 +529,7 @@ class Repositorio(private val context: Context) {
         const val DICA_ARRASTAR = "viu_dica_arrastar"
         const val ANIVERSARIO = "aniversario"
         const val TEMAS = "temas_favoritos"
+        const val IRMAO = "irmao"
         const val MASCOTE = "mascote"
         const val PRESENTES_ESPECIAIS = "presentes_especiais"
         const val EVENTOS_RECEBIDOS = "eventos_recebidos"

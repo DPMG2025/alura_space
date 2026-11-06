@@ -80,8 +80,9 @@ import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BalaoDeFala
+import br.com.casinhadosaber.ui.componentes.Irmaozinho
 import br.com.casinhadosaber.ui.componentes.LadoDaCauda
-import br.com.casinhadosaber.ui.componentes.fundoDecorado
+import br.com.casinhadosaber.ui.componentes.cenarioDoJogo
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Confete
@@ -278,10 +279,9 @@ fun TelaJogo(
     Box(
         Modifier
             .fillMaxSize()
-            // Fundo opaco na cor do caminho, clarinha e viva (a cor translúcida de antes ficava cinza-esverdeada
-            // no aparelho, sobre o fundo escuro da janela).
-            // Enfeites parados: no jogo nada se mexe atrás das atividades (e a tela não é redesenhada à toa).
-            .fundoDecorado(lerp(cor, Color.White, 0.45f))
+            // Cenário ao ar livre (céu na cor do caminho, sol, nuvens, morros e flores), opaco e parado: no jogo
+            // nada se mexe atrás das atividades (e a tela não é redesenhada à toa).
+            .cenarioDoJogo(cor)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         Column(Modifier.fillMaxSize().padding(12.dp)) {
@@ -339,7 +339,7 @@ fun TelaJogo(
                 // A ponta do balão só aparece quando a criança está ao lado dele (sem ela, o balão não aponta para o nada).
                 val comCrianca = perfil != null && (pergunta.cena != Cena.Nenhuma || deMexer)
                 if (comCrianca) {
-                    perfil?.let { CriancaQuePula(it, pulo, acertou, humor, falando = narrador.falando, altura = if (deMexer) 76.dp else 96.dp) }
+                    perfil?.let { CriancaEIrmao(it, pulo, acertou, humor, falando = narrador.falando, altura = if (deMexer) 76.dp else 96.dp) }
                 }
                 Spacer(Modifier.width(8.dp))
                 BalaoDeFala(
@@ -400,7 +400,7 @@ fun TelaJogo(
                                 Column(Modifier.fillMaxSize()) {
                                     // Espaço de cima: a criança "conta" a pergunta, grandona, mexendo a boca.
                                     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                        perfil?.let { CriancaQuePula(it, pulo, acertou, humor, falando = narrador.falando, altura = 150.dp) }
+                                        perfil?.let { CriancaEIrmao(it, pulo, acertou, humor, falando = narrador.falando, altura = 150.dp) }
                                     }
                                     opcoes(alturaRespostas)
                                 }
@@ -422,6 +422,46 @@ fun TelaJogo(
             }
         }
         Confete(confete)
+    }
+}
+
+/**
+ * A criança e, ao lado dela, o irmãozinho (quando está ligado na área dos pais). Os dois torcem juntos no
+ * acerto (o irmão pula um tiquinho depois, para não parecer um boneco só) e o irmão fica pensativo no erro.
+ */
+@Composable
+private fun CriancaEIrmao(
+    perfil: Perfil,
+    pulo: Int,
+    acertou: Boolean,
+    humor: Humor,
+    falando: Boolean,
+    altura: androidx.compose.ui.unit.Dp,
+) {
+    Row(verticalAlignment = Alignment.Bottom) {
+        CriancaQuePula(perfil, pulo, acertou, humor, falando = falando, altura = altura)
+        if (perfil.irmao.ligado) {
+            val salto = remember { Animatable(0f) }
+            LaunchedEffect(pulo) {
+                if (pulo > 0) {
+                    delay(140)
+                    salto.animateTo(-12f, tween(120))
+                    salto.animateTo(0f, spring(dampingRatio = 0.3f))
+                }
+            }
+            val humorDoIrmao = when {
+                acertou -> Humor.TORCENDO
+                humor == Humor.PENSANDO -> Humor.PENSANDO
+                else -> Humor.FELIZ
+            }
+            Irmaozinho(
+                perfil,
+                Modifier
+                    .height(altura * 0.66f)
+                    .graphicsLayer { translationY = salto.value * density },
+                humor = humorDoIrmao,
+            )
+        }
     }
 }
 

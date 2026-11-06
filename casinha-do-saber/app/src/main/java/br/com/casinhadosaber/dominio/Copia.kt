@@ -76,7 +76,7 @@ object Copia {
      */
     val TIPOS_CONHECIDOS: Map<String, Char> = buildMap {
         listOf(
-            "nome", "genero", "chapeu", "traje", "acessorios", "aniversario", "temas_favoritos", "estrelas",
+            "nome", "genero", "chapeu", "traje", "acessorios", "aniversario", "temas_favoritos", "irmao", "estrelas",
             "colocados", "cores", "respondidas", "acertos", "tentativas", "comprados", "historico", "visitantes",
             "moveis_dentro", "mascote", "presentes_especiais", "eventos_recebidos", "desenhos", "quadros_parede",
             "desafios_pais", "sessoes",

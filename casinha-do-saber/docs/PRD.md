@@ -332,3 +332,12 @@ Lições: as funções da tela que rodam dentro dos gestos (`pointerInput`) guar
 * O nível faz uma pergunta por mundo; com 25 mundos e no máximo 10 perguntas, a sugestão pode ficar 1 ou 2 mundos abaixo do que a criança sabe (de propósito: é melhor começar fácil).
 * A leitura das sílabas segue a divisão das listas e das regras; algumas palavras com ditongo (PAI, MEU) já se leem juntando as vogais (PA e I), então podem aparecer em livrinhos antes da fase dos ditongos.
 * Falta jogar os três fluxos no emulador (`JogoNoEmuladorTest`) e ouvir a leitura pedacinho por pedacinho num celular de verdade.
+
+## 14. Visual novo para crianças e o irmãozinho (6 de novembro de 2026)
+
+Pedido do dono do produto: a filha não gostou do jogo, a suspeita é o visual; melhorar os gráficos para crianças e pôr um irmãozinho no jogo. Diagnóstico completo, o que foi feito e os próximos passos em [avaliacao-grafica.md](avaliacao-grafica.md).
+
+* **Rosto novo** (`ui/componentes/RostoDaCrianca.kt`): olhos grandes com brilho, pálpebra e cílio, sobrancelhas que mudam com o humor, boca aberta com linguinha, olhinhos fechados de alegria ao torcer, nariz, bochechas e volume na cabeça; franja com mechas. Olhos e cabeça no mesmo lugar de antes (acessórios e chapéus encaixam igual).
+* **Irmãozinho** (`dominio/Irmao.kt`, `ui/componentes/Irmaozinho.kt`, `ui/telas/CartaoDoIrmao.kt`): `Perfil.irmao` (ligado, gênero, nome), chave `irmao` no Repositorio e na cópia, ligado por padrão. Aparece no jogo (torce no acerto, pensa no erro), no prêmio, no "Quase!", na casa e na tela inicial (ao lado da criança; tocar faz pular e falar). Cartão na área dos pais. Testes: `IrmaoTest`; capturas `70` a `75b` em `CapturasIrmaoTest`.
+* **Cenário do jogo** (`ui/componentes/CenarioDoJogo.kt`): céu na cor do caminho, sol, nuvens, morros, arbustos, flores e a casinha ao longe, no lugar do fundo liso de `TelaJogo`.
+* Conferência local sem o SDK do Android: o mesmo projeto Compose Desktop 1.5.12 da seção 4 (Kotlin 1.9.22, só Maven Central, `--max-workers=1` por causa do limite de pedidos) compila `dominio/`, `Crianca.kt`, `RostoDaCrianca.kt`, `Irmaozinho.kt` e `CenarioDoJogo.kt` e salva PNG.

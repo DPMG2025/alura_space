@@ -41,6 +41,8 @@ As imagens de `docs/capturas/` são geradas automaticamente pelo CI a cada mudan
 * Tocar num objeto fala o nome em português e em inglês. Tocar na criança faz ela pular e falar.
 * A casa tem corte de "casa de bonecas", com dois andares, escada, chaminé com fumaça e jardim.
 
+**O irmãozinho:** um irmão menor (ou irmãzinha) mora na casinha, com a mesma pele e o mesmo cabelo da criança. Ele torce nos acertos, fica pensativo nos erros, comemora no prêmio e fala quando é tocado. Na área dos pais dá para dar o nome do irmão de verdade, trocar para irmãzinha ou tirar. Avaliação gráfica e próximos passos em [docs/avaliacao-grafica.md](docs/avaliacao-grafica.md).
+
 **Área dos pais** (botão ⚙️ com toque longo e uma continha de multiplicação): progresso por fase, ligar e desligar o som, trocar o personagem, apagar o progresso e dicas de uso.
 
 **Privacidade:** sem internet, sem anúncios, sem coleta de dados. O progresso fica salvo só no aparelho.

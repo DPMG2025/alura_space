@@ -25,6 +25,8 @@ data class Perfil(
     val aniversario: Aniversario? = null,
     /** Até 3 temas de que a criança mais gosta ([TemaFavorito]); as perguntas preferem figuras desses temas. */
     val temasFavoritos: List<TemaFavorito> = emptyList(),
+    /** O irmãozinho que mora na casinha ([Irmao]); ligado por padrão, inclusive em saves antigos. */
+    val irmao: Irmao = Irmao(),
 ) {
     val corDaRoupa: Long
         get() = Aparencia.roupas.getOrNull(roupa) ?: if (genero == Genero.MENINA) Aparencia.roupas[1] else Aparencia.roupas[0]

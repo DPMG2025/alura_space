@@ -168,6 +168,8 @@ fun TelaCasa(
     var novaEstrutura by remember { mutableStateOf<Estrutura?>(null) }
     var destaque by remember { mutableStateOf<String?>(null) }
     var pulo by remember { mutableIntStateOf(0) }
+    // Vez da fala do irmãozinho quando a criança toca nele (as falas giram, sem sorteio).
+    var falasDoIrmao by remember { mutableIntStateOf(0) }
     var confete by remember { mutableIntStateOf(0) }
     val nome = estado.perfil?.nome.orEmpty()
     val vibracao = LocalHapticFeedback.current
@@ -563,6 +565,9 @@ fun TelaCasa(
                             narrador.falar(frases.random())
                         },
                         onMoverCrianca = { pos: Posicao -> onAtualizar { it.copy(posicaoCrianca = pos) } },
+                        onTocarIrmao = {
+                            narrador.falar(br.com.casinhadosaber.dominio.Irmao.falaAoTocar(estado.perfil, falasDoIrmao++))
+                        },
                         evento = evento?.tipo,
                     )
                 }

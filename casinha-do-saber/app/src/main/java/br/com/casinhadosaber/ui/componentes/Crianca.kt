@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.geometry.Rect
 import kotlin.math.PI
 import kotlin.math.cos
@@ -532,22 +533,19 @@ private fun DrawScope.desenharFiguraDaCrianca(perfil: Perfil, aceno: Float?, olh
     }
     for (lado in listOf(-1f, 1f)) drawCircle(pele, r * 0.2f, Offset(centro.x + lado * r * 0.98f, centro.y + r * 0.1f))
     drawCircle(pele, r, centro)
+    sombrearCabeca(centro, r)
 
-    // cabelo
-    val franja = Path().apply {
-        arcTo(
-            rect = androidx.compose.ui.geometry.Rect(centro, r * 1.04f),
-            startAngleDegrees = 183.6f, sweepAngleDegrees = 172.8f, forceMoveTo = true,
-        )
-        quadraticTo(centro.x + r * 0.4f, centro.y - r * 0.55f, centro.x - r * 0.1f, centro.y - r * 0.45f)
-        quadraticTo(centro.x - r * 0.6f, centro.y - r * 0.35f, centro.x - r * 1.03f, centro.y - r * 0.05f)
-        close()
+    // cabelo: calota com mechas que descem sobre a testa
+    val franja = franjaComMechas(centro, r, curta = !menina)
+    // Sombrinha do cabelo na testa, logo abaixo das mechas.
+    clipPath(Path().apply { addOval(Rect(centro, r)) }) {
+        translate(0f, r * 0.06f) { drawPath(franja, Color(0x1F5B2A22)) }
     }
     drawPath(franja, cabelo)
     // Brilho no cabelo (uma faixa clarinha do lado da luz).
     drawArc(
-        Color(0x47FFFFFF), startAngle = 200f, sweepAngle = 52f, useCenter = false,
-        topLeft = Offset(centro.x - r * 0.82f, centro.y - r * 0.82f), size = Size(r * 1.64f, r * 1.64f),
+        Color(0x47FFFFFF), startAngle = 218f, sweepAngle = 40f, useCenter = false,
+        topLeft = Offset(centro.x - r * 0.86f, centro.y - r * 0.86f), size = Size(r * 1.72f, r * 1.72f),
         style = Stroke(r * 0.1f, cap = StrokeCap.Round),
     )
     if (menina && semChapeu && estilo != 2 && noCabelo == null) {
@@ -614,7 +612,6 @@ private fun DrawScope.desenharFiguraDaCrianca(perfil: Perfil, aceno: Float?, olh
     }
 
     // rosto
-    val olho = Color(0xFF2B2B2B)
     if (rosto == "mascara") {
         // Máscara de herói: faixa nos olhos com furinhos (os olhos aparecem por cima).
         val y = centro.y + r * 0.12f
@@ -624,25 +621,20 @@ private fun DrawScope.desenharFiguraDaCrianca(perfil: Perfil, aceno: Float?, olh
             drawOval(Color.White, Offset(centro.x + lado * r * 0.36f - r * 0.17f, y - r * 0.18f), Size(r * 0.34f, r * 0.34f))
         }
     }
-    for (lado in listOf(-1f, 1f)) {
-        val c = Offset(centro.x + lado * r * 0.36f, centro.y + r * 0.12f)
-        if (olhosFechados) {
-            drawLine(olho, Offset(c.x - r * 0.1f, c.y), Offset(c.x + r * 0.1f, c.y), strokeWidth = r * 0.06f, cap = StrokeCap.Round)
-        } else {
-            drawOval(olho, topLeft = Offset(c.x - r * 0.11f, c.y - r * 0.14f), size = Size(r * 0.22f, r * 0.28f))
-            drawCircle(Color.White, r * 0.04f, Offset(c.x + r * 0.04f, c.y - r * 0.06f))
-        }
-        drawOval(
-            Color(0x73FF6E82),
-            topLeft = Offset(centro.x + lado * r * 0.62f - r * 0.14f, centro.y + r * 0.33f),
-            size = Size(r * 0.28f, r * 0.18f),
-        )
-    }
+    desenharBochechas(centro, r, humor)
+    desenharNariz(centro, r, pele)
+    desenharOlhos(
+        centro, r, olhosFechados, humor,
+        cilios = menina,
+        corDaSobrancelha = lerp(cabelo, Color(0xFF2B1A14), 0.35f),
+        // Com máscara ou óculos escuros as sobrancelhas ficam escondidas (e não brigam com o acessório).
+        sobrancelhas = rosto != "mascara",
+    )
     // Tapa-olho do pirata (só quando não há nada no rosto).
     if (traje == "pirata" && rosto == null) {
         val c = Offset(centro.x - r * 0.36f, centro.y + r * 0.12f)
         drawLine(Color(0xFF1E1E1E), Offset(centro.x - r * 0.95f, centro.y - r * 0.3f), Offset(centro.x + r * 0.9f, centro.y - r * 0.05f), strokeWidth = r * 0.05f)
-        drawOval(Color(0xFF1E1E1E), Offset(c.x - r * 0.17f, c.y - r * 0.17f), Size(r * 0.34f, r * 0.32f))
+        drawOval(Color(0xFF1E1E1E), Offset(c.x - r * 0.19f, c.y - r * 0.21f), Size(r * 0.38f, r * 0.4f))
     }
     when (rosto) {
         "oculos" -> {
@@ -673,20 +665,7 @@ private fun DrawScope.desenharFiguraDaCrianca(perfil: Perfil, aceno: Float?, olh
             drawCircle(Color(0xFF2B2B2B), r * 0.13f, ponta)
         }
     }
-    val boca = Color(0xFF7A3B2E)
-    val bocaCentro = Offset(centro.x, centro.y + r * 0.38f)
-    when (humor) {
-        Humor.FELIZ, Humor.TORCENDO -> drawArc(
-            boca, startAngle = 27f, sweepAngle = 126f, useCenter = false,
-            topLeft = Offset(bocaCentro.x - r * 0.22f, bocaCentro.y - r * 0.22f), size = Size(r * 0.44f, r * 0.44f),
-            style = Stroke(width = r * 0.08f, cap = StrokeCap.Round),
-        )
-        Humor.SURPRESO -> drawOval(boca, topLeft = Offset(bocaCentro.x - r * 0.09f, bocaCentro.y), size = Size(r * 0.18f, r * 0.22f))
-        Humor.PENSANDO -> drawLine(
-            boca, Offset(bocaCentro.x - r * 0.12f, bocaCentro.y + r * 0.12f), Offset(bocaCentro.x + r * 0.12f, bocaCentro.y + r * 0.06f),
-            strokeWidth = r * 0.08f, cap = StrokeCap.Round,
-        )
-    }
+    desenharBoca(centro, r, humor)
 
     // Acessório do pescoço (embaixo do queixo) e o fecho da capa.
     when (pescoco) {

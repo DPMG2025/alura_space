@@ -138,6 +138,8 @@ fun CenaDaCasa(
     onPintar: (Comodo) -> Unit = {},
     onTocarCrianca: () -> Unit = {},
     onMoverCrianca: (Posicao) -> Unit = {},
+    /** Toque no irmãozinho (ele pula; quem chama faz ele falar). */
+    onTocarIrmao: () -> Unit = {},
     /** Toque num visitante da semana ou da loja (o emoji dele): ele pula, quem chama fala o nome. */
     onTocarVisitante: (String) -> Unit = {},
     /** Evento do dia: os enfeites ficam no fundo da cena (atrás das coisas), seguindo o beiral do telhado. */
@@ -211,6 +213,7 @@ fun CenaDaCasa(
                 onPintar = onPintar,
                 onTocarCrianca = onTocarCrianca,
                 onMoverCrianca = onMoverCrianca,
+                onTocarIrmao = onTocarIrmao,
                 onTocarVisitante = onTocarVisitante,
                 evento = evento,
             )
@@ -252,6 +255,7 @@ fun CenaDaCasa(
         onPintar = onPintar,
         onTocarCrianca = onTocarCrianca,
         onMoverCrianca = onMoverCrianca,
+        onTocarIrmao = onTocarIrmao,
         onTocarVisitante = onTocarVisitante,
         evento = evento,
     )
@@ -311,6 +315,7 @@ private fun CenaPlana(
     onTocarCrianca: () -> Unit,
     onMoverCrianca: (Posicao) -> Unit,
     onTocarVisitante: (String) -> Unit,
+    onTocarIrmao: () -> Unit = {},
     evento: TipoDeEvento? = null,
 ) {
     val jardim = remember(jardimExtra) { JardimDeBaixo(jardimExtra) }
@@ -469,6 +474,33 @@ private fun CenaPlana(
         val perfil = estado.perfil
         if (perfil != null) {
             val posCrianca = jardim.naTela(estado.posicaoCrianca)
+            if (perfil.irmao.ligado) {
+                // O irmãozinho fica sempre ao lado da criança (do lado que tiver espaço) e vai junto quando ela
+                // muda de lugar. Arrastado, ele volta correndo para perto dela. Desenhado antes da criança, fica
+                // um pouquinho atrás dela.
+                val lado = if (posCrianca.x > 0.86f) -1f else 1f
+                val posIrmao = Posicao(posCrianca.x + lado * 0.1f, posCrianca.y - 0.004f)
+                key("irmao") {
+                    ObjetoNaCena(
+                        item = null,
+                        pos = posIrmao,
+                        larguraCena = larguraPx,
+                        alturaCena = alturaPx,
+                        larguraRelativa = LARGURA_DO_IRMAO_NA_CASA,
+                        proporcao = 1f / PROPORCAO_IRMAO,
+                        interativo = interativa && !pintando,
+                        aparecer = false,
+                        noite = noite,
+                        tempo = t,
+                        pularAoTocar = true,
+                        descricao = perfil.irmao.nomeDeFrase,
+                        onTocar = onTocarIrmao,
+                        onSoltar = { posIrmao },
+                    ) { _ ->
+                        Irmaozinho(perfil, Modifier.fillMaxSize(), acenando = true)
+                    }
+                }
+            }
             ObjetoNaCena(
                 item = null,
                 pos = posCrianca,
@@ -494,6 +526,12 @@ private fun CenaPlana(
         }
     }
 }
+
+/**
+ * Largura do irmãozinho na cena da casa (fração da largura): dois terços da altura da criança, que tem 0,13 de
+ * largura e proporção [PROPORCAO_CRIANCA].
+ */
+private const val LARGURA_DO_IRMAO_NA_CASA = 0.13f / PROPORCAO_CRIANCA * 0.66f * PROPORCAO_IRMAO
 
 /** Pequenas animações que deixam a casa viva. */
 enum class Vida { PARADO, BALANCAR, RESPIRAR, BOIAR, VOAR, DERIVAR, BRILHAR, DANCAR }

@@ -269,6 +269,7 @@ private fun Painel(
         onAlternar = { t -> onAtualizar { it.alternarTema(t) } },
         habilitado = estado.perfil != null,
     )
+    CartaoDoIrmao(perfil = estado.perfil, onSalvar = { i -> onAtualizar { it.comIrmao(i) } })
     // Vozes da família e "Meu caderno" (docs/PRD.md, "Vozes da família e escrever com o dedo").
     CartaoVozesDaFamilia(nome = estado.perfil?.nome)
     CartaoMeuCaderno(lembrarCaderno(), onAbrir = onAbrirCaderno)

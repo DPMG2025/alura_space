@@ -102,6 +102,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import br.com.casinhadosaber.ui.componentes.IconeDoItem
 import br.com.casinhadosaber.ui.componentes.Crianca
+import br.com.casinhadosaber.ui.componentes.Humor
+import br.com.casinhadosaber.ui.componentes.Irmaozinho
 import br.com.casinhadosaber.ui.componentes.Estrela
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
@@ -368,14 +370,21 @@ fun TelaPremio(
                         it.usa(brindeDaLoja) -> it.tirando(gaveta)
                         else -> it
                     }
-                    val altura = when {
+                    // Com o irmãozinho e o mascote juntos, os três encolhem um pouco para caber lado a lado.
+                    val fator = if (it.irmao.ligado && mascote?.especie != null) 0.82f else 1f
+                    val alturaCheia = when {
                         !temPresente -> if (alta) 210.dp else 170.dp
                         aberto -> if (alta) 124.dp else 110.dp
                         else -> if (alta) 210.dp else 160.dp
                     }
+                    val altura = alturaCheia * fator
                     Spacer(Modifier.height(12.dp))
                     Row(verticalAlignment = Alignment.Bottom) {
                         Crianca(vestido, Modifier.height(altura), acenando = true)
+                        // O irmãozinho comemora junto, com os bracinhos para cima.
+                        if (it.irmao.ligado) {
+                            Irmaozinho(it, Modifier.height(altura * 0.66f), humor = Humor.TORCENDO)
+                        }
                         // O mascote comemora ao lado da criança, do tamanho do estágio dele.
                         mascote?.especie?.let { e ->
                             MascoteAnimado(e, Crescimento.estagio(fasesDepois), Modifier.size(altura * 0.62f), mascote.acessorioEmUso, mascote.nomeParaMostrar, pulando = true)
