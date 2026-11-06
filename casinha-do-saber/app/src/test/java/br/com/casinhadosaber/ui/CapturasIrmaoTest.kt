@@ -107,7 +107,7 @@ class CapturasIrmaoTest {
     }
 
     @Test fun jogoComIrmaNoCaminhoDasLetras() = capturar("72_jogo_letras_com_irma") {
-        TelaJogo(gerador.fases(Trilha.LETRAS)[4], comIrma, {}, { })
+        TelaJogo(gerador.fases(Trilha.PORTUGUES)[4], comIrma, {}, { })
     }
 
     @Test fun premioComIrmao() = capturar("73_premio_com_irmao") {
