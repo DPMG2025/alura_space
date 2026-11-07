@@ -3,8 +3,8 @@
 Data: 2026-11-07. Commit local, sem push.
 Worktree: `/home/user/alura_space/.claude/worktrees/agent-a0cc6985a4f5a6c58`, branch
 `worktree-agent-a0cc6985a4f5a6c58` (zerada antes em `ccr-162c6a70-urxpmq`, `bdb62d1`, com a arte da 6A já no
-`manifesto.json`). Commit do trabalho: ver `git log` da branch (o hash está no relatório de entrega; este arquivo
-entra no mesmo commit).
+`manifesto.json`). Commit do trabalho: `214e6a6` (este relatório recebeu o hash num commit seguinte, só de
+documentação).
 
 ## O que mudou
 
