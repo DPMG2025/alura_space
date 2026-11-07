@@ -43,6 +43,8 @@ Pendências que não são do código: confirmação da tela cheia no tablet Sams
 
 * 2026-11-07: revisão independente das Fases 2, 3, 5 e 7 (relatorios/revisao-fases-2-3-5-7.md): notas 8, 6, 8, 6; lista de pendências da Fase 9 registrada lá.
 
+* 2026-11-07, revisão independente das Fases 4, 6, 8 e 9 (relatorios/revisao-fases-4-6-8-9.md): notas 7, 4, 4, 4; geral 5. Decisão: segunda rodada da Fase 9 em três frentes de arte em lote (lote 1: figuras do vocabulário das perguntas; lote 2: áreas novas, livros e ateliê; lote 3: ícones de interface) mais Kotlin para os números abstratos, a noite do interior e a integração; refazer a revisão ao fim.
+
 ## Problemas abertos
 
 * Emulador de celular caindo em abrirMapaEAlbum desde a Fase 2B (ver acima). Bloqueia marcar as Fases 0A a 2 como provadas.
