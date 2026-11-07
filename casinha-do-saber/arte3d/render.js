@@ -3,6 +3,11 @@
 //
 //   npm run render              renderiza o catálogo inteiro e apaga imagens órfãs
 //   npm run render -- moeda     renderiza só os ids dados (o resto do manifesto fica como está)
+//   CATALOGO=fase4 npm run render [-- ids]
+//                               renderiza só src/catalogo_fase4.js (catálogo de uma fase feita em paralelo), de
+//                               modo incremental, e grava um manifesto à parte (manifesto_fase4.json), sem apagar
+//                               nada. Quem junta as fases põe o catálogo à parte no src/catalogo.js; aí o render
+//                               completo gera tudo num manifesto.json só e apaga os manifestos à parte.
 //
 // Sobe um servidor local com esta pasta, abre pagina/render.html no Chromium headless (WebGL por
 // SwiftShader), pede cada objeto do catálogo (src/catalogo.js) e grava, em
@@ -45,6 +50,10 @@ function ordenar(obj) {
 
 async function main() {
   const pedidos = process.argv.slice(2);
+  const nomeDoCatalogo = process.env.CATALOGO || '';
+  if (nomeDoCatalogo && !/^[a-z0-9_]+$/.test(nomeDoCatalogo)) throw new Error('CATALOGO inválido: ' + nomeDoCatalogo);
+  // catálogo à parte: sempre incremental (nunca apaga órfãos) e com o seu próprio manifesto
+  const incremental = pedidos.length > 0 || nomeDoCatalogo !== '';
   fs.mkdirSync(DESTINO, { recursive: true });
   fs.mkdirSync(PREVIA, { recursive: true });
   const srv = await servir();
@@ -55,15 +64,15 @@ async function main() {
     const pagina = await navegador.newPage();
     pagina.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log('console:', m.text()); });
     pagina.on('pageerror', (e) => { falhou = true; console.log('erro na página:', e.message); });
-    await pagina.goto(`http://127.0.0.1:${porta}/pagina/render.html`);
+    await pagina.goto(`http://127.0.0.1:${porta}/pagina/render.html` + (nomeDoCatalogo ? `?catalogo=${nomeDoCatalogo}` : ''));
     await pagina.waitForFunction(() => window.PRONTO === true, null, { timeout: 120000 });
     const todos = await pagina.evaluate(() => window.catalogo());
     const ids = pedidos.length ? pedidos : todos;
     const desconhecidos = ids.filter((i) => !todos.includes(i));
     if (desconhecidos.length) throw new Error('fora do catálogo: ' + desconhecidos.join(', '));
 
-    const arqManifesto = path.join(DESTINO, 'manifesto.json');
-    const anterior = pedidos.length && fs.existsSync(arqManifesto) ? JSON.parse(fs.readFileSync(arqManifesto, 'utf8')).imagens : {};
+    const arqManifesto = path.join(DESTINO, nomeDoCatalogo ? `manifesto_${nomeDoCatalogo}.json` : 'manifesto.json');
+    const anterior = incremental && fs.existsSync(arqManifesto) ? JSON.parse(fs.readFileSync(arqManifesto, 'utf8')).imagens : {};
     const imagens = { ...anterior };
 
     for (const id of ids) {
@@ -77,13 +86,19 @@ async function main() {
       fs.writeFileSync(path.join(DESTINO, arquivo), webp);
       imagens[id] = { arquivo, tipo: r.tipo, largura: r.largura, altura: r.altura, uso: r.uso, apoio: r.apoio, ancoras: r.ancoras };
       if (r.grupo !== undefined) Object.assign(imagens[id], { grupo: r.grupo, tingir: r.tingir, ordem: r.ordem, personagem: r.personagem });
+      if (r.esconde) imagens[id].esconde = r.esconde;
+      if (r.dados) Object.assign(imagens[id], r.dados);
       // camadas de câmera fixa não podem encostar na borda: seria parte da figura cortada
       if (r.bordas.length) { falhou = true; console.log(`CORTADO ${id}: encosta em ${r.bordas.join(', ')}`); }
       console.log(`ok ${arquivo} ${r.largura}x${r.altura} ${(webp.length / 1024).toFixed(1)} KB (${Date.now() - t0} ms)`);
     }
 
     // Sem lista explícita, o manifesto é exatamente o catálogo: remove o que saiu dele.
-    if (!pedidos.length) {
+    if (nomeDoCatalogo && !pedidos.length) {
+      // o manifesto à parte é exatamente o catálogo à parte (só tira entradas; arquivos ficam)
+      for (const id of Object.keys(imagens)) if (!todos.includes(id)) delete imagens[id];
+    }
+    if (!incremental) {
       for (const id of Object.keys(imagens)) if (!todos.includes(id)) delete imagens[id];
       const validos = new Set(Object.values(imagens).map((i) => i.arquivo).concat('manifesto.json'));
       for (const f of fs.readdirSync(DESTINO)) {

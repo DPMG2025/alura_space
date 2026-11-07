@@ -3,7 +3,10 @@
 // Quem chama é o render.js, pelo Playwright: window.renderizar(id, escala, superamostra).
 import { THREE, palco, luzes } from './kit.js';
 import { tiposDeCamera, filtroFinal } from './cameras.js';
-import { catalogo } from './catalogo.js';
+// ?catalogo=fase4 carrega src/catalogo_fase4.js (catálogos de fases paralelas, juntados depois ao principal)
+const nomeDoCatalogo = new URLSearchParams(location.search).get('catalogo');
+if (nomeDoCatalogo && !/^[a-z0-9_]+$/.test(nomeDoCatalogo)) throw new Error('catálogo inválido: ' + nomeDoCatalogo);
+const { catalogo } = await import(nomeDoCatalogo ? `./catalogo_${nomeDoCatalogo}.js` : './catalogo.js');
 import { carregarFonte } from './objetos/icones.js';
 import { CENA } from './objetos/cenaDaCasa.js';
 
@@ -104,7 +107,10 @@ function enquadrar(cam, cfg, caixa, pontos, largura, altura, pxPorDp) {
       // recorte do quadro inteiro: centrado na horizontal e alinhado embaixo (mesma escala para todos)
       const cheiaL = Math.round(cfg.quadro.largura * pxPorDp), cheiaA = Math.round(cfg.quadro.altura * pxPorDp);
       cam.aspect = cheiaL / cheiaA;
-      cam.setViewOffset(cheiaL, cheiaA, (cheiaL - largura) / 2, cheiaA - altura, largura, altura);
+      // [recorte]: canto de cima à esquerda do recorte dentro do quadro, em dp (cenas do jogo)
+      const x0 = cfg.recorte ? cfg.recorte.x * pxPorDp : (cheiaL - largura) / 2;
+      const y0 = cfg.recorte ? cfg.recorte.y * pxPorDp : cheiaA - altura;
+      cam.setViewOffset(cheiaL, cheiaA, x0, y0, largura, altura);
     }
     cam.updateProjectionMatrix();
     return;
@@ -160,7 +166,9 @@ window.renderizar = (id, escala, superamostra) => {
 
   const pontos = verticesDoMundo(obj);
   if (item.sombraDeContato ?? cfg.sombraDeContato) {
-    const s = sombraDeContato(caixa);
+    // userData.base: a parte que encosta no chão, quando a caixa do objeto inteiro é maior que ela
+    // (quadros de animação com moldura invisível, tampa voando)
+    const s = sombraDeContato(obj.userData.base ? new THREE.Box3().setFromObject(obj.userData.base) : caixa);
     p.cena.add(s.plano);
     pontos.push(...s.pontos);
   }
@@ -179,7 +187,8 @@ window.renderizar = (id, escala, superamostra) => {
   ctx.filter = filtroFinal;
   ctx.drawImage(canvas, 0, 0);
   if (item.posProcesso === 'brilho') soOBrilho(ctx, L, A);
-  const bordas = cfg.enquadrar === 'fixo' ? bordasTocadas(ctx, L, A) : [];
+  // [cortaNaBorda]: cenários que de propósito passam da borda (a ilha do jogo é mais larga que a tela)
+  const bordas = cfg.enquadrar === 'fixo' && !cfg.cortaNaBorda && !item.cortaNaBorda ? bordasTocadas(ctx, L, A) : [];
   const png = saida.toDataURL('image/png');
 
   // pontos no tamanho final
@@ -195,12 +204,18 @@ window.renderizar = (id, escala, superamostra) => {
   const apoio = { x: Math.min(largura - 1, Math.max(0, apoioBruto.x)), y: Math.min(altura - 1, Math.max(0, apoioBruto.y)) };
   const ancoras = {};
   obj.traverse((o) => {
-    if (o.userData.ancora) ancoras[o.userData.ancora] = reduz(paraPixel(p.cam, o.getWorldPosition(new THREE.Vector3()), L, A));
+    if (!o.userData.ancora) return;
+    // presa à imagem, como o apoio (o 'topo' das figuras pode projetar 1 px fora do recorte)
+    const q = reduz(paraPixel(p.cam, o.getWorldPosition(new THREE.Vector3()), L, A));
+    ancoras[o.userData.ancora] = { x: Math.min(largura - 1, Math.max(0, q.x)), y: Math.min(altura - 1, Math.max(0, q.y)) };
   });
 
   p.r.dispose();
   p.r.forceContextLoss();
   const extra = item.grupo === undefined ? {} : { grupo: item.grupo, tingir: item.tingir, ordem: item.ordem, personagem: item.personagem };
+  if (item.esconde) extra.esconde = item.esconde;
+  // [dados]: campos extras da entrada que vão como estão para o manifesto (figuras: emojis e lugar)
+  if (item.dados) extra.dados = item.dados;
   return { png, largura, altura, tipo: item.tipo, uso: item.uso, apoio, ancoras, bordas, ...extra };
 };
 
