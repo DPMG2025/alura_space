@@ -68,4 +68,5 @@ derrubar o teste. Aí a saída é modelar os mais frequentes (bichos do mar prim
 
 ## Commit
 
-Ver o fim deste arquivo.
+Testes, workflow e relatórios: `6204f85` (branch `worktree-agent-ae25af16c7192bc22`, sem push); este hash entrou
+num commit seguinte, só neste arquivo.
