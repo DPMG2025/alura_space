@@ -175,8 +175,8 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       # O emulador de celular do CI some depois de uns 6 a 7 minutos de uso (execuções 121 a 128), qualquer que seja o teste.
-      # Por isso os testes rodam em cinco emuladores seguidos (o 5º, de voz, é informativo: o motor de voz do emulador antecede quase todas as quedas), cada um abaixo disso (com o orquestrador cada teste leva ~35 s). O DesempenhoTest só roda nos Androids antigos.
-      - name: Testes no emulador (1 de 5)
+      # Por isso os testes rodam em seis emuladores seguidos (o 6º, de voz, é informativo: o motor de voz do emulador antecede quase todas as quedas), cada um abaixo disso (o passo 1 antigo, com três classes, levou 9 min na execução 137 e o emulador sumiu no encerramento, "onAfterAll: device offline"; por isso foi dividido) (com o orquestrador cada teste leva ~35 s). O DesempenhoTest só roda nos Androids antigos.
+      - name: Testes no emulador (1 de 6)
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -191,11 +191,30 @@ jobs:
           script: |
             adb logcat -c || true
             nohup sh -c 'adb logcat -v time "*:W" TestRunner:I > logcat-emulador-a.txt 2>&1' > /dev/null 2>&1 &
-            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.DiagnosticoTelasTest,br.com.casinhadosaber.EmojisNaFonteEmbutidaTest,br.com.casinhadosaber.TelaCheiaTest || echo "FALHA_TESTES" > emulador-falhou.txt
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.DiagnosticoTelasTest || echo "FALHA_TESTES" > emulador-falhou.txt
             mkdir -p saida-emulador/a
             cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/a/ 2>/dev/null || true
 
-      - name: Testes no emulador (2 de 5)
+      - name: Testes no emulador (2 de 6)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          heap-size: 512M
+          cores: 4
+          disable-animations: false
+          working-directory: casinha-do-saber
+          script: |
+            adb logcat -c || true
+            nohup sh -c 'adb logcat -v time "*:W" TestRunner:I > logcat-emulador-a2.txt 2>&1' > /dev/null 2>&1 &
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.EmojisNaFonteEmbutidaTest,br.com.casinhadosaber.TelaCheiaTest || echo "FALHA_TESTES" > emulador-falhou.txt
+            mkdir -p saida-emulador/a2
+            cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/a2/ 2>/dev/null || true
+
+      - name: Testes no emulador (3 de 6)
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -214,7 +233,7 @@ jobs:
             mkdir -p saida-emulador/b
             cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/b/ 2>/dev/null || true
 
-      - name: Testes no emulador (3 de 5)
+      - name: Testes no emulador (4 de 6)
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -233,7 +252,7 @@ jobs:
             mkdir -p saida-emulador/c
             cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/c/ 2>/dev/null || true
 
-      - name: Testes no emulador (4 de 5)
+      - name: Testes no emulador (5 de 6)
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -252,7 +271,7 @@ jobs:
             mkdir -p saida-emulador/d
             cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/d/ 2>/dev/null || true
 
-      - name: Testes de voz no emulador (5 de 5, informativo)
+      - name: Testes de voz no emulador (6 de 6, informativo)
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
