@@ -2517,8 +2517,16 @@ private fun Lojinha(estado: EstadoJogo, previa: Produto?, temGeladeira: Boolean,
                     modifier = Modifier.graphicsLayer { alpha = if (podeComprar) 1f else 0.5f },
                 ) {
                     Column(Modifier.width(92.dp).padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (produto.categoria == Categoria.ROUPA) {
-                            Crianca((estado.perfil ?: Perfil()).copy(traje = produto.valor, chapeu = ""), Modifier.height(52.dp), animado = false)
+                        if (produto.categoria == Categoria.ROUPA || produto.categoria == Categoria.ACESSORIO || produto.categoria == Categoria.CHAPEU) {
+                            // A criança vestindo a peça (camadas 3D, miniatura parada), com o ícone pequeno no canto.
+                            Box(Modifier.height(52.dp)) {
+                                Crianca(
+                                    br.com.casinhadosaber.ui.componentes.miniaturaVestindo(estado.perfil ?: Perfil(), produto),
+                                    Modifier.height(52.dp),
+                                    animado = false,
+                                )
+                                Text(produto.icone, fontSize = 14.sp, maxLines = 1, modifier = Modifier.align(Alignment.TopEnd).offset(x = 22.dp))
+                            }
                         } else {
                             Text(produto.icone, fontSize = 34.sp, maxLines = 1)
                         }

@@ -61,24 +61,29 @@ object ComposicaoDosPersonagens {
     private class Composto(val bitmap: Bitmap, val imagem: ImageBitmap)
 
     /**
-     * Personagens já compostos, medidos em KB: até 1/16 da memória do app (as camadas soltas ficam no cache da
-     * [ArteDoApp], que usa 1/8). Uma criança acenando e piscando usa uns 8 quadros.
+     * Personagens já compostos, medidos em KB: 1/16 da memória do app, entre 4 MB e [TETO_DO_CACHE_KB] (as
+     * camadas soltas ficam no cache da [ArteDoApp], que usa 1/8). Uma criança acenando e piscando usa uns 8
+     * quadros; uma miniatura parada do guarda-roupa (58 dp) usa um só, de uns 35 KB. O teto existe porque o
+     * guarda-roupa cria muitas combinações (cada traje, acessório e chapéu é uma), e num aparelho com muita
+     * memória o 1/16 deixaria dezenas de MB de bitmaps presos que nunca mais voltam à tela.
      */
     private val cache = object : LruCache<Chave, Composto>(
-        (Runtime.getRuntime().maxMemory() / 1024 / 16).toInt().coerceAtLeast(4 * 1024),
+        (Runtime.getRuntime().maxMemory() / 1024 / 16).toInt().coerceIn(4 * 1024, TETO_DO_CACHE_KB),
     ) {
         override fun sizeOf(key: Chave, value: Composto): Int = (value.bitmap.byteCount / 1024).coerceAtLeast(1)
     }
+
+    private const val TETO_DO_CACHE_KB = 24 * 1024
 
     /** null = ainda não testado; depois, se o aparelho consegue ler a arte (WebP com transparência). */
     @Volatile private var leitorFunciona: Boolean? = null
 
     /**
-     * true se este personagem pode ser desenhado em camadas para este perfil: sem traje nem acessório (criança),
-     * com todas as camadas no manifesto e com a arte legível. Senão, fica o desenho antigo.
+     * true se este personagem pode ser desenhado em camadas para este perfil, vestido como está (traje,
+     * acessórios e chapéu têm camadas desde a Fase 7): todas as camadas no manifesto e a arte legível. Senão,
+     * fica o desenho antigo, só como reserva.
      */
     fun podeUsar(contexto: Context, personagem: PersonagemDaArte, perfil: Perfil): Boolean {
-        if (personagem == PersonagemDaArte.CRIANCA && !CamadasDosPersonagens.usaCamadas(perfil)) return false
         val manifesto = ArteDoApp.manifesto(contexto)
         if (!CamadasDosPersonagens.disponivel(manifesto, personagem, perfil)) return false
         val funciona = leitorFunciona ?: run {
@@ -139,7 +144,7 @@ fun DrawScope.desenharPersonagemEmCamadas(
 ): Boolean {
     if (size.width < 1f || size.height < 1f) return true
     val manifesto = ArteDoApp.manifesto(contexto)
-    val camadas = CamadasDosPersonagens.empilhar(manifesto, CamadasDosPersonagens.ids(personagem, perfil, quadro)) ?: return false
+    val camadas = CamadasDosPersonagens.camadas(manifesto, personagem, perfil, quadro) ?: return false
     val ref = camadas.first()
     val caixa = CamadasDosPersonagens.caixaDoQuadro(ref, size.width, size.height, personagem.apoioNaCaixa)
     val larguraNaTela = ref.largura * caixa.escala
@@ -159,8 +164,9 @@ fun DrawScope.desenharPersonagemEmCamadas(
 }
 
 /**
- * O personagem em camadas, vivo ou parado, ocupando a caixa inteira ([largura] x [altura]); com [chapeu], o
- * emoji do chapéu vai na cabeça pela âncora do manifesto. Vivo: respira, pisca, acena em 4 quadros
+ * O personagem em camadas, vivo ou parado, ocupando a caixa inteira ([largura] x [altura]). Roupa, acessórios e
+ * os chapéus da loja já vêm na pilha das camadas (a camada do chapéu está no lugar da cabeça do quadro); só um
+ * [chapeu] sem camada (emoji desconhecido) vai por cima, pela âncora da cabeça do manifesto. Vivo: respira, pisca, acena em 4 quadros
  * ([acenando] e feliz), mexe a boca ([falando]) e comemora pulando com amassar e esticar (torcendo).
  * [reserva] desenha o personagem antigo se, mesmo assim, a composição falhar.
  */
@@ -272,7 +278,7 @@ internal fun PersonagemEmCamadas(
     }
 }
 
-/** O emoji do chapéu na cabeça do personagem em camadas, pela âncora `topoDaCabeca` do manifesto. */
+/** Um chapéu sem camada 3D (emoji) na cabeça do personagem em camadas, pela âncora `topoDaCabeca` do manifesto. */
 @Composable
 private fun ChapeuNaCabeca(personagem: PersonagemDaArte, chapeu: String, largura: Dp, altura: Dp) {
     if (chapeu.isEmpty()) return

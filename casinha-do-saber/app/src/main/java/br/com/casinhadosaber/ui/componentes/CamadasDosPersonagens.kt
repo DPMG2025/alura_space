@@ -13,7 +13,8 @@ import kotlin.math.sin
 /*
  * Escolha das camadas 3D dos personagens (PRD visual 3D, seção 3.2; relatório da Fase 1A) e as contas das
  * animações. Kotlin puro (sem Android nem Compose): o teste de unidade confere tudo contra o manifesto real.
- * A referência de escolha é `arte3d/previa.js` (camadasDaCrianca / camadasDoIrmao).
+ * A referência de escolha é `arte3d/previa.js` (camadasDaCrianca / camadasDoIrmao) e, para o guarda-roupa
+ * (trajes, acessórios e chapéus, Fase 7), `arte3d/previa_fase7.js` (camadasComGuardaRoupa).
  */
 
 enum class Humor { FELIZ, PENSANDO, SURPRESO, TORCENDO }
@@ -71,7 +72,7 @@ data class CaixaDoQuadro(val esquerda: Float, val topo: Float, val escala: Float
     fun y(px: Float): Float = topo + px * escala
 }
 
-/** Chapéu da loja (emoji) em pixels do quadro: centro, base (a aba) e largura. */
+/** Chapéu em emoji (o que não tem camada 3D) em pixels do quadro: centro, base (a aba) e largura. */
 data class LugarDoChapeu(val centroX: Float, val base: Float, val largura: Float)
 
 object CamadasDosPersonagens {
@@ -90,13 +91,31 @@ object CamadasDosPersonagens {
         return estilos[perfil.estiloCabelo.coerceIn(0, estilos.lastIndex)]
     }
 
+    /** Chapéus da loja (o emoji guardado em `Perfil.chapeu`, o `valor` do Produto) e a camada 3D de cada um. */
+    val CAMADAS_DOS_CHAPEUS: Map<String, String> = mapOf(
+        "👑" to "chapeu_coroa",
+        "🧢" to "chapeu_bone",
+        "🎩" to "chapeu_cartola",
+        "🌸" to "chapeu_flor",
+    )
+
+    /** A camada 3D do chapéu, ou nulo (sem chapéu ou um emoji sem camada). */
+    fun camadaDoChapeu(chapeu: String): String? = CAMADAS_DOS_CHAPEUS[chapeu]
+
     /**
-     * A criança usa as camadas 3D quando está com a roupa de sempre e sem acessórios: trajes da loja e
-     * acessórios ainda não têm camadas (Fase 7), então nesses casos fica o desenho antigo. O chapéu (emoji)
-     * funciona com os dois.
+     * true se o perfil tem um chapéu sem camada 3D (emoji desconhecido, de um save estranho): esse vai como emoji
+     * pela âncora da cabeça ([lugarDoChapeu]). Os quatro chapéus da loja entram na pilha das camadas.
      */
-    fun usaCamadas(perfil: Perfil): Boolean =
-        Loja.trajeDe(perfil) == null && ParteDoCorpo.entries.none { Loja.acessorioDe(perfil, it) != null }
+    fun chapeuEmEmoji(perfil: Perfil): Boolean = perfil.chapeu.isNotEmpty() && camadaDoChapeu(perfil.chapeu) == null
+
+    /**
+     * A peça a que uma camada pertence (`crianca`, `irmao`, `roupa_pirata`, `acessorio_capa`, `chapeu_bone`): o
+     * `esconde` de uma camada só vale para as camadas das OUTRAS peças (as de uma mesma peça não se escondem).
+     */
+    fun pecaDe(id: String): String {
+        val partes = id.split('_')
+        return if (partes[0] == "crianca" || partes[0] == "irmao" || partes.size < 2) partes[0] else partes[0] + "_" + partes[1]
+    }
 
     /** Braços para o humor: torcendo e pensando têm pose própria; feliz acenando dá tchau ([quadroDoTchau]). */
     fun bracos(humor: Humor, quadroDoTchau: PoseDosBracos? = null): PoseDosBracos = when (humor) {
@@ -134,8 +153,43 @@ object CamadasDosPersonagens {
     /** Falando, a boca alterna entre a do humor e a aberta (surpreso). */
     private fun boca(q: QuadroDoPersonagem): String = if (q.bocaAberta) "surpreso" else nome(q.humor)
 
-    /** Ids das camadas da criança (sem ordem; [empilhar] ordena pelo manifesto). */
-    fun idsDaCrianca(perfil: Perfil, q: QuadroDoPersonagem): List<String> {
+    /**
+     * Ids das camadas da criança, com o guarda-roupa do perfil (traje, acessórios e chapéu; Fase 7), sem ordem e
+     * antes do `esconde`: [empilhar] tira o que fica escondido e ordena pelo manifesto. A referência é
+     * `camadasComGuardaRoupa` em `arte3d/previa_fase7.js`. O [manifesto] diz quais peças opcionais existem
+     * (variante de gênero do traje, estampa, parte de trás, sapatos, mangas, cabeça, tapa-olho, frente do
+     * acessório das costas). Uma peça obrigatória que faltar fica na lista e [empilhar] dá nulo (desenho antigo).
+     */
+    fun idsDaCrianca(manifesto: ManifestoDaArte, perfil: Perfil, q: QuadroDoPersonagem): List<String> {
+        val ids = idsDoCorpoDaCrianca(perfil, q).toMutableList()
+        val tem = { id: String -> manifesto.imagens.containsKey(id) }
+        val g = if (perfil.genero == Genero.MENINA) "menina" else "menino"
+        Loja.trajeDe(perfil)?.let { traje ->
+            val t = "roupa_${traje.id}"
+            // Só listras, herói e realeza mudam de silhueta com o gênero (`roupa_<traje>_menina|_menino`).
+            val corpo = if (tem(t)) t else "${t}_$g"
+            ids += corpo
+            listOf("${corpo}_estampa", "${t}_tras", "${t}_pes", "${t}_mangas_${q.bracos.sufixo}").filterTo(ids, tem)
+            // A cabeça do traje (capacete, touca, chapéu de chuva...) só sem chapéu da loja.
+            if (perfil.chapeu.isEmpty() && tem("${t}_cabeca")) ids += "${t}_cabeca"
+            if (tem("${t}_tapaolho")) ids += "${t}_tapaolho"
+        }
+        for (parte in ParteDoCorpo.entries) {
+            val a = Loja.acessorioDe(perfil, parte) ?: continue
+            if (parte == ParteDoCorpo.MAO) {
+                // A mão esquerda da tela só tem duas posições: para cima (torcendo) e para baixo.
+                ids += "acessorio_${a.id}_${if (q.bracos == PoseDosBracos.TORCENDO) "cima" else "baixo"}"
+            } else {
+                ids += "acessorio_${a.id}"
+                if (tem("acessorio_${a.id}_frente")) ids += "acessorio_${a.id}_frente"
+            }
+        }
+        camadaDoChapeu(perfil.chapeu)?.let { ids += it }
+        return ids
+    }
+
+    /** As camadas da criança com a roupa de sempre (corpo, rosto, cabelo, braços e o laço). */
+    private fun idsDoCorpoDaCrianca(perfil: Perfil, q: QuadroDoPersonagem): List<String> {
         val menina = perfil.genero == Genero.MENINA
         val g = if (menina) "menina" else "menino"
         val estilo = estiloDoCabelo(perfil)
@@ -183,16 +237,32 @@ object CamadasDosPersonagens {
         return ids
     }
 
-    fun ids(personagem: PersonagemDaArte, perfil: Perfil, q: QuadroDoPersonagem): List<String> = when (personagem) {
-        PersonagemDaArte.CRIANCA -> idsDaCrianca(perfil, q)
-        PersonagemDaArte.IRMAO -> idsDoIrmao(perfil, q)
-    }
+    fun ids(manifesto: ManifestoDaArte, personagem: PersonagemDaArte, perfil: Perfil, q: QuadroDoPersonagem): List<String> =
+        when (personagem) {
+            PersonagemDaArte.CRIANCA -> idsDaCrianca(manifesto, perfil, q)
+            PersonagemDaArte.IRMAO -> idsDoIrmao(perfil, q)
+        }
 
-    /** As camadas na ordem de desenho (de trás para a frente), ou nulo se alguma faltar no manifesto. */
+    /**
+     * As camadas na ordem de desenho (de trás para a frente), ou nulo se alguma faltar no manifesto. Antes,
+     * tira as camadas escondidas: cada camada esconde, nas camadas das outras peças ([pecaDe]), os grupos da
+     * sua lista `esconde` (o traje tira a roupa de sempre; o sapato do traje ou o acessório dos pés tiram o
+     * sapato; o acessório do rosto tira o tapa-olho; o chapéu tira a cabeça do traje e o laço).
+     */
     fun empilhar(manifesto: ManifestoDaArte, ids: List<String>): List<InfoDaArte>? {
         val camadas = ids.map { manifesto.imagens[it] ?: return null }
-        return camadas.sortedBy { it.ordem }
+        val escondidos = camadas.flatMap { c -> c.esconde.map { grupo -> pecaDe(c.id) to grupo } }
+        val visiveis = if (escondidos.isEmpty()) {
+            camadas
+        } else {
+            camadas.filter { c -> escondidos.none { (peca, grupo) -> c.grupo == grupo && pecaDe(c.id) != peca } }
+        }
+        return visiveis.sortedBy { it.ordem }
     }
+
+    /** As camadas deste personagem e quadro, prontas para desenhar (ou nulo se faltar alguma). */
+    fun camadas(manifesto: ManifestoDaArte, personagem: PersonagemDaArte, perfil: Perfil, q: QuadroDoPersonagem): List<InfoDaArte>? =
+        empilhar(manifesto, ids(manifesto, personagem, perfil, q))
 
     /** Todos os quadros que as animações podem pedir (para conferir de uma vez que nada falta). */
     fun todosOsQuadros(): List<QuadroDoPersonagem> =
@@ -202,10 +272,13 @@ object CamadasDosPersonagens {
             }
         }
 
-    /** true se o manifesto tem todas as camadas de que este personagem pode precisar (senão, desenho antigo). */
+    /**
+     * true se o manifesto tem todas as camadas de que este personagem, vestido como no perfil, pode precisar
+     * (todas as poses, humores, piscar e falar); senão, o desenho antigo fica de reserva.
+     */
     fun disponivel(manifesto: ManifestoDaArte, personagem: PersonagemDaArte, perfil: Perfil): Boolean =
         manifesto.imagens.containsKey(cabeca(personagem)) &&
-            todosOsQuadros().all { empilhar(manifesto, ids(personagem, perfil, it)) != null }
+            todosOsQuadros().all { camadas(manifesto, personagem, perfil, it) != null }
 
     /** Id da camada da cabeça (a que tem as âncoras do rosto e do chapéu). */
     fun cabeca(personagem: PersonagemDaArte): String = "${personagem.prefixo}_cabeca"

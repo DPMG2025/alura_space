@@ -604,6 +604,12 @@ class CapturasTest {
      * A diferença entre as duas imagens é o chapéu; a caixa dela tem que encostar na cabeça, centrada, sem
      * cobrir o rosto. A cabeça vem da âncora do manifesto da arte 3D (`crianca_cabeca`: `cabeca` e
      * `topoDaCabeca`), posta na caixa da criança pela mesma conta que o componente usa.
+     *
+     * Fase 7: os chapéus são camadas 3D com sombra macia na cabeça (a aba do boné faz sombra no rosto). Por
+     * isso o "não cobre o rosto" olha só a diferença forte (o corpo do chapéu, não a sombra), que não pode
+     * passar da linha dos olhos; e a flor fica de lado, no cabelo: confere que está dentro da largura da
+     * cabeça, em vez de centrada. A mesma régua cobre um traje (macacão: no corpo, entre a boca e os pés,
+     * centrado) e um acessório (óculos: na altura dos olhos, cobrindo os dois).
      */
     // Tela larga: com a criança 3D (85 dp de largura) a fila de chapéus não cabe nos 393 dp e os nós saem cortados.
     @Config(qualifiers = "w1280dp-h800dp-land-xhdpi")
@@ -613,8 +619,12 @@ class CapturasTest {
         val chapeus = listOf("") + Loja.produtos.filter { it.categoria == br.com.casinhadosaber.dominio.Categoria.CHAPEU }.map { it.valor }
         // Menina com tranças (o laço dos coques some quando há chapéu e entraria na diferença).
         val perfis = listOf(menina.copy(estiloCabelo = 2), menino)
+        // Peças conferidas pela mesma régua (colunas depois dos chapéus): um traje e um acessório.
+        val comTraje = { p: Perfil -> p.copy(traje = "macacao") }
+        val comAcessorio = { p: Perfil -> p.copy(acessorios = mapOf(br.com.casinhadosaber.dominio.ParteDoCorpo.ROSTO to "oculos")) }
         val app = RuntimeEnvironment.getApplication()
-        for (p in perfis) {
+        for (p in perfis.flatMap { p -> chapeus.map { p.copy(chapeu = it) } + comTraje(p) + comAcessorio(p) }) {
+            // Vestida (chapéu, traje ou acessório), a criança continua nas camadas 3D (e não no desenho antigo).
             org.junit.Assert.assertTrue(
                 "a criança $p devia usar as camadas 3D",
                 br.com.casinhadosaber.ui.componentes.ComposicaoDosPersonagens.podeUsar(app, br.com.casinhadosaber.ui.componentes.PersonagemDaArte.CRIANCA, p),
@@ -624,6 +634,9 @@ class CapturasTest {
             ?: throw AssertionError("crianca_cabeca fora do manifesto")
         val centroDaCabeca = cabeca.ancoras["cabeca"] ?: throw AssertionError("sem a âncora 'cabeca'")
         val topoDaCabeca = cabeca.ancoras["topoDaCabeca"] ?: throw AssertionError("sem a âncora 'topoDaCabeca'")
+        val olhoEsquerdo = cabeca.ancoras["olhoEsquerdo"] ?: throw AssertionError("sem a âncora 'olhoEsquerdo'")
+        val olhoDireito = cabeca.ancoras["olhoDireito"] ?: throw AssertionError("sem a âncora 'olhoDireito'")
+        val boca = cabeca.ancoras["boca"] ?: throw AssertionError("sem a âncora 'boca'")
         regra.mainClock.autoAdvance = false
         regra.setContent {
             TemaCasinha {
@@ -637,6 +650,12 @@ class CapturasTest {
                                         br.com.casinhadosaber.ui.componentes.Crianca(p.copy(chapeu = c), Modifier.height(130.dp), animado = false)
                                     }
                                 }
+                                Box(Modifier.testTag("traje_$i").padding(top = 60.dp)) {
+                                    br.com.casinhadosaber.ui.componentes.Crianca(comTraje(p), Modifier.height(130.dp), animado = false)
+                                }
+                                Box(Modifier.testTag("acessorio_$i").padding(top = 60.dp)) {
+                                    br.com.casinhadosaber.ui.componentes.Crianca(comAcessorio(p), Modifier.height(130.dp), animado = false)
+                                }
                             }
                         }
                     }
@@ -646,22 +665,40 @@ class CapturasTest {
         regra.mainClock.advanceTimeBy(300)
         regra.onRoot().captureRoboImage("build/outputs/roborazzi/56_teste_chapeus_na_cabeca.png")
         val topoDaCrianca = with(regra.density) { 60.dp.toPx() }
-        fun imagem(i: Int, j: Int): android.graphics.Bitmap {
-            val arquivo = java.io.File("build/outputs/roborazzi/teste_chapeu/chapeu_${i}_$j.png")
+        fun imagem(tag: String): android.graphics.Bitmap {
+            val arquivo = java.io.File("build/outputs/roborazzi/teste_chapeu/$tag.png")
             arquivo.parentFile?.mkdirs()
             arquivo.delete()
-            regra.onNodeWithTag("chapeu_${i}_$j").captureRoboImage(arquivo.path)
-            return android.graphics.BitmapFactory.decodeFile(arquivo.absolutePath) ?: throw AssertionError("captura $i $j ilegível")
+            regra.onNodeWithTag(tag).captureRoboImage(arquivo.path)
+            return android.graphics.BitmapFactory.decodeFile(arquivo.absolutePath) ?: throw AssertionError("captura $tag ilegível")
         }
-        fun diferente(a: Int, b: Int): Boolean {
-            val d = kotlin.math.abs(android.graphics.Color.red(a) - android.graphics.Color.red(b)) +
+        fun diferenca(a: Int, b: Int): Int =
+            kotlin.math.abs(android.graphics.Color.red(a) - android.graphics.Color.red(b)) +
                 kotlin.math.abs(android.graphics.Color.green(a) - android.graphics.Color.green(b)) +
                 kotlin.math.abs(android.graphics.Color.blue(a) - android.graphics.Color.blue(b)) +
                 kotlin.math.abs(android.graphics.Color.alpha(a) - android.graphics.Color.alpha(b))
-            return d > 60
+        fun diferente(a: Int, b: Int): Boolean = diferenca(a, b) > 60
+        /** A caixa da diferença entre [com] e [sem] nas linhas antes de [ate] (e a última linha com diferença forte). */
+        class Caixa(val x0: Int, val y0: Int, val x1: Int, val y1: Int, val n: Int, val y1Forte: Int)
+        fun caixaDaDiferenca(com: android.graphics.Bitmap, sem: android.graphics.Bitmap, ate: Int): Caixa {
+            org.junit.Assert.assertTrue("tamanhos diferentes", com.width == sem.width && com.height == sem.height)
+            var x0 = Int.MAX_VALUE; var y0 = Int.MAX_VALUE; var x1 = -1; var y1 = -1; var n = 0; var y1Forte = -1
+            for (y in 0 until minOf(sem.height, ate)) {
+                // Linha com só um ou dois pixels diferentes é borda antisserrilhada, não peça.
+                val xs = (0 until sem.width).filter { x -> diferente(com.getPixel(x, y), sem.getPixel(x, y)) }
+                if (xs.size < 3) continue
+                n += xs.size
+                if (xs.first() < x0) x0 = xs.first()
+                if (xs.last() > x1) x1 = xs.last()
+                if (y < y0) y0 = y
+                if (y > y1) y1 = y
+                // Diferença forte: a peça em si (a sombra macia que ela faz escurece pouco).
+                if (xs.count { x -> diferenca(com.getPixel(x, y), sem.getPixel(x, y)) > 150 } >= 3) y1Forte = y
+            }
+            return Caixa(x0, y0, x1, y1, n, y1Forte)
         }
         for (i in perfis.indices) {
-            val sem = imagem(i, 0)
+            val sem = imagem("chapeu_${i}_0")
             val w = sem.width
             val alturaCrianca = sem.height - topoDaCrianca
             // A cabeça na captura: o quadro da arte posto na caixa da criança (pés em apoioNaCaixa da altura).
@@ -673,32 +710,50 @@ class CapturasTest {
             val topoY = topoDaCrianca + caixa.y(topoDaCabeca.y.toFloat())
             val raio = centroY - topoY
             org.junit.Assert.assertTrue("cabeça pequena demais na captura (raio $raio px)", raio > 20f)
+            val olhoY = topoDaCrianca + caixa.y(olhoEsquerdo.y.toFloat())
             for (j in 1 until chapeus.size) {
-                val com = imagem(i, j)
-                org.junit.Assert.assertTrue("tamanhos diferentes", com.width == w && com.height == sem.height)
-                var x0 = Int.MAX_VALUE; var y0 = Int.MAX_VALUE; var x1 = -1; var y1 = -1; var n = 0
                 // Só a faixa da cabeça e acima conta (o chapéu mora ali; o corpo parado pode variar um pouco).
-                for (y in 0 until minOf(sem.height, (centroY + raio).toInt())) {
-                    // Linha com só um ou dois pixels diferentes é borda antisserrilhada, não chapéu.
-                    val xs = (0 until w).filter { x -> diferente(com.getPixel(x, y), sem.getPixel(x, y)) }
-                    if (xs.size < 3) continue
-                    n += xs.size
-                    if (xs.first() < x0) x0 = xs.first()
-                    if (xs.last() > x1) x1 = xs.last()
-                    if (y < y0) y0 = y
-                    if (y > y1) y1 = y
-                }
+                val c = caixaDaDiferenca(imagem("chapeu_${i}_$j"), sem, (centroY + raio).toInt())
                 val qual = "chapéu ${chapeus[j]} no perfil $i"
-                org.junit.Assert.assertTrue("$qual não foi desenhado", n > 50)
-                org.junit.Assert.assertTrue("$qual cortado no alto (sai da área da criança)", y0 > 1)
+                org.junit.Assert.assertTrue("$qual não foi desenhado", c.n > 50)
+                org.junit.Assert.assertTrue("$qual cortado no alto (sai da área da criança)", c.y0 > 1)
                 org.junit.Assert.assertTrue(
-                    "$qual flutua acima da cabeça (base $y1, topo da cabeça $topoY)",
-                    y1 >= topoY - raio * 0.15f,
+                    "$qual flutua acima da cabeça (base ${c.y1}, topo da cabeça $topoY)",
+                    c.y1 >= topoY - raio * 0.15f,
                 )
-                org.junit.Assert.assertTrue("$qual cobre o rosto (base $y1, centro da cabeça $centroY)", y1 <= centroY)
-                org.junit.Assert.assertEquals("$qual fora do centro da cabeça", centroX, (x0 + x1) / 2f, raio * 0.3f)
-                org.junit.Assert.assertTrue("$qual largo demais para a cabeça", x1 - x0 <= raio * 2.6f)
+                org.junit.Assert.assertTrue(
+                    "$qual cobre o rosto (base do chapéu ${c.y1Forte}, linha dos olhos $olhoY)",
+                    c.y1Forte >= 0 && c.y1Forte <= olhoY + raio * 0.04f,
+                )
+                if (chapeus[j] == "🌸") {
+                    // A flor fica de lado, presa no cabelo: dentro da largura da cabeça.
+                    org.junit.Assert.assertTrue(
+                        "$qual fora da cabeça (${c.x0}..${c.x1})",
+                        c.x0 >= centroX - raio * 1.2f && c.x1 <= centroX + raio * 1.2f,
+                    )
+                } else {
+                    org.junit.Assert.assertEquals("$qual fora do centro da cabeça", centroX, (c.x0 + c.x1) / 2f, raio * 0.3f)
+                }
+                org.junit.Assert.assertTrue("$qual largo demais para a cabeça", c.x1 - c.x0 <= raio * 2.6f)
             }
+            // Traje (macacão): no corpo, entre a boca e os pés, centrado.
+            val bocaY = topoDaCrianca + caixa.y(boca.y.toFloat())
+            val apoioY = topoDaCrianca + caixa.y(cabeca.apoio.y.toFloat())
+            val traje = caixaDaDiferenca(imagem("traje_$i"), sem, sem.height)
+            org.junit.Assert.assertTrue("o macacão não foi desenhado no perfil $i", traje.n > 200)
+            org.junit.Assert.assertTrue("o macacão sobe no rosto (topo ${traje.y0}, boca $bocaY)", traje.y0 > bocaY)
+            org.junit.Assert.assertTrue("o macacão passa dos pés (base ${traje.y1}, apoio $apoioY)", traje.y1 <= apoioY)
+            org.junit.Assert.assertEquals("o macacão fora do centro do corpo", centroX, (traje.x0 + traje.x1) / 2f, raio * 0.3f)
+            // Acessório (óculos): na altura dos olhos, cobrindo os dois, sem descer até a boca.
+            val oculos = caixaDaDiferenca(imagem("acessorio_$i"), sem, sem.height)
+            org.junit.Assert.assertTrue("os óculos não foram desenhados no perfil $i", oculos.n > 50)
+            org.junit.Assert.assertTrue(
+                "os óculos não cobrem os dois olhos (${oculos.x0}..${oculos.x1})",
+                oculos.x0 <= caixa.x(olhoEsquerdo.x.toFloat()) && oculos.x1 >= caixa.x(olhoDireito.x.toFloat()),
+            )
+            org.junit.Assert.assertEquals("os óculos fora da linha dos olhos", olhoY, (oculos.y0 + oculos.y1) / 2f, raio * 0.3f)
+            org.junit.Assert.assertTrue("os óculos altos demais (${oculos.y0}..${oculos.y1})", oculos.y1 - oculos.y0 <= raio)
+            org.junit.Assert.assertEquals("os óculos fora do centro do rosto", centroX, (oculos.x0 + oculos.x1) / 2f, raio * 0.3f)
         }
     }
 
