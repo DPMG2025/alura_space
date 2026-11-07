@@ -97,3 +97,5 @@ arte da 8A já integrada ao manifesto (nenhum id faltou).
   títulos do mascote, os enfeites do mascote.
 * Riscos para olhar no CI: a ilha passando um pouco da caixa (folga transparente, sem corte); o lacinho do mascote
   pela âncora (posição aproximada); a figurinha torta com o emoji fora da janelinha em ângulos grandes (até 2,7°).
+
+Commit: `a38afde` (código, testes e este relatório); o hash entrou num commit seguinte só do relatório.
