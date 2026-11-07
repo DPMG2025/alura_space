@@ -181,29 +181,69 @@ class CapturasColorirEPuzzleTest {
         foto("s11_puzzle_deslizar")
     }
 
-    /** Arrastar a peça que está por cima até a casa dela encaixa: faltam 3. */
+    /** Tocar numa peça e depois na casa dela na moldura encaixa a peça: faltam 3 (caminho sem arrastar). */
+    @Test fun puzzleTocarEncaixa() {
+        val semente = 42L
+        montar { TelaPuzzle(EstadoJogo(perfil = menina), {}, {}, semente = semente) }
+        regra.onNodeWithTag("puzzle_montar").performClick()
+        regra.mainClock.advanceTimeBy(800)
+        val id = Puzzle.montar("modelo:gato", 1, semente).pecas.last().id
+        regra.onNodeWithTag("peca_$id").performClick()
+        regra.mainClock.advanceTimeBy(400)
+        // Nível 1 é 2 por 2: a casa do id está na coluna id % 2, linha id / 2.
+        regra.onNodeWithTag("moldura_do_puzzle").performTouchInput {
+            click(Offset(width * ((id % 2) * 0.5f + 0.25f), width * ((id / 2) * 0.5f + 0.25f)))
+        }
+        regra.mainClock.advanceTimeBy(800)
+        val texto = regra.onNodeWithTag("puzzle_faltam").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
+        assertEquals("peça $id escolhida e casa tocada", "Faltam 3", texto)
+        foto("s11_puzzle_uma_peca_no_lugar")
+    }
+
+    /** Tocar numa peça e depois numa casa errada não encaixa nada. */
+    @Test fun puzzleTocarNaCasaErradaNaoEncaixa() {
+        val semente = 42L
+        montar { TelaPuzzle(EstadoJogo(perfil = menina), {}, {}, semente = semente) }
+        regra.onNodeWithTag("puzzle_montar").performClick()
+        regra.mainClock.advanceTimeBy(800)
+        val id = Puzzle.montar("modelo:gato", 1, semente).pecas.last().id
+        val errada = (id + 1) % 4
+        regra.onNodeWithTag("peca_$id").performClick()
+        regra.mainClock.advanceTimeBy(400)
+        regra.onNodeWithTag("moldura_do_puzzle").performTouchInput {
+            click(Offset(width * ((errada % 2) * 0.5f + 0.25f), width * ((errada / 2) * 0.5f + 0.25f)))
+        }
+        regra.mainClock.advanceTimeBy(800)
+        regra.onNodeWithTag("puzzle_faltam").assertTextEquals("Faltam 4")
+    }
+
+    /** Arrastar a peça que está por cima até a casa dela encaixa. Mede também a peça no meio do gesto, para diagnosticar. */
     @Test fun puzzleArrastarEncaixa() {
         val semente = 42L
         montar { TelaPuzzle(EstadoJogo(perfil = menina), {}, {}, semente = semente) }
         regra.onNodeWithTag("puzzle_montar").performClick()
         regra.mainClock.advanceTimeBy(800)
-        // A última da lista é a que fica por cima (e a única que o dedo pega com certeza no centro).
         val id = Puzzle.montar("modelo:gato", 1, semente).pecas.last().id
         val moldura = regra.onNodeWithTag("moldura_do_puzzle").fetchSemanticsNode().boundsInRoot
-        val peca = regra.onNodeWithTag("peca_$id").fetchSemanticsNode().boundsInRoot
-        // Nível 1 é 2 por 2: a casa do id está na coluna id % 2, linha id / 2.
+        val de = regra.onNodeWithTag("peca_$id").fetchSemanticsNode().boundsInRoot.center
         val alvo = Offset(moldura.left + moldura.width * ((id % 2) * 0.5f + 0.25f), moldura.top + moldura.width * ((id / 2) * 0.5f + 0.25f))
-        fun todas() = (0 until 4).associateWith { regra.onAllNodesWithTag("peca_$it").fetchSemanticsNodes().firstOrNull()?.boundsInRoot }
-        val todasAntes = todas()
-        val de = peca.center
         val delta = Offset(alvo.x - de.x, alvo.y - de.y)
-        // No nível da raiz, com coordenadas da tela, como os outros testes de arrastar do projeto.
-        regra.onRoot().performTouchInput { swipe(de, Offset(de.x + delta.x, de.y + delta.y), durationMillis = 450) }
-        regra.mainClock.advanceTimeBy(1200)
-        val depois = regra.onAllNodesWithTag("peca_$id").fetchSemanticsNodes().firstOrNull()?.boundsInRoot
+        fun peca() = regra.onAllNodesWithTag("peca_$id").fetchSemanticsNodes().firstOrNull()?.boundsInRoot
+        val antes = peca()
+        regra.onRoot().performTouchInput {
+            down(de)
+            moveTo(de + delta * 0.25f)
+            moveTo(de + delta * 0.5f)
+        }
+        regra.mainClock.advanceTimeBy(300)
+        val meio = peca()
+        regra.onRoot().performTouchInput {
+            moveTo(de + delta)
+            up()
+        }
+        regra.mainClock.advanceTimeBy(1000)
         val texto = regra.onNodeWithTag("puzzle_faltam").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
-        assertEquals("peça $id: antes=$peca alvo=$alvo depois=$depois moldura=$moldura todasAntes=$todasAntes todasDepois=${todas()}", "Faltam 3", texto)
-        foto("s11_puzzle_uma_peca_no_lugar")
+        assertEquals("arrastar peça $id: antes=$antes meio=$meio depois=${peca()} alvo=$alvo", "Faltam 3", texto)
     }
 
     /** O primeiro nível está sempre aberto e o segundo só abre depois de vencer o primeiro. */

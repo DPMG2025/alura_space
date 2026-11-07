@@ -303,6 +303,8 @@ private fun JogarPuzzle(
     var bordas by remember { mutableStateOf(false) }
     var premio by remember(partida) { mutableStateOf<Puzzle.Premio?>(null) }
     val atual by rememberUpdatedState(montagem)
+    /** Peça escolhida com um toque (para quem não arrasta): o próximo toque na moldura leva a peça até lá. */
+    var selecionada by remember(partida) { mutableIntStateOf(-1) }
     var estrelasGanhas by remember(partida) { mutableIntStateOf(0) }
 
     LaunchedEffect(partida) { narrador.falar(if (partida.tipo == TipoDeJogo.MONTAR) "Arraste cada peça para o lugar dela." else "Deslize as peças para o espaço vazio.") }
@@ -321,6 +323,15 @@ private fun JogarPuzzle(
         estrelasGanhas = estrelas
         premio = p
         narrador.falar("Você montou! " + when (estrelas) { 3 -> "Três estrelas!"; 2 -> "Duas estrelas!"; else -> "Uma estrela!" })
+    }
+
+    /** Larga a peça [id] com o canto em ([x], [y]) (do arrastar ou do toque): encaixa se está perto da casa certa. */
+    fun largar(id: Int, x: Float, y: Float) {
+        val depois = Puzzle.soltar(atual, id, x, y, imaLargo)
+        montagem = depois
+        val encaixou = depois.pecas.first { it.id == id }.colocada
+        if (encaixou) sons.acerto() else sons.pousar()
+        if (depois.venceu) vencer(Puzzle.estrelas(depois), depois.dicas > 0)
     }
 
     EscalaDeTablet {
@@ -360,7 +371,26 @@ private fun JogarPuzzle(
                         val dicaCasa = dicaPeca
                         Box(Modifier.size(lado, lado * altura)) {
                             // Moldura e bandeja.
-                            Canvas(Modifier.fillMaxSize().testTag("moldura_do_puzzle")) {
+                            Canvas(
+                                Modifier
+                                    .fillMaxSize()
+                                    .pointerInput(partida, ladoPx) {
+                                        detectTapGestures { o ->
+                                            val id = selecionada
+                                            val m2 = atual
+                                            if (id >= 0 && o.x in 0f..ladoPx && o.y in 0f..ladoPx) {
+                                                val col = (o.x / (ladoPx / m2.grade.colunas)).toInt().coerceIn(0, m2.grade.colunas - 1)
+                                                val lin = (o.y / (ladoPx / m2.grade.linhas)).toInt().coerceIn(0, m2.grade.linhas - 1)
+                                                val ocupada = m2.pecas.firstOrNull { it.id == lin * m2.grade.colunas + col }?.colocada == true
+                                                if (!ocupada) {
+                                                    selecionada = -1
+                                                    largar(id, col * m2.largura, lin * m2.altura)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    .testTag("moldura_do_puzzle"),
+                            ) {
                                 val s = size.width
                                 drawRoundRect(Color.White, Offset.Zero, Size(s, s), androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()))
                                 if (sombra) {
@@ -404,7 +434,7 @@ private fun JogarPuzzle(
                                         .then(
                                             if (peca.colocada) Modifier
                                             else Modifier
-                                                .border(1.5.dp, Color(0x88000000), RoundedCornerShape(3.dp))
+                                                .border(if (selecionada == peca.id) 4.dp else 1.5.dp, if (selecionada == peca.id) Cores.Estrela else Color(0x88000000), RoundedCornerShape(3.dp))
                                                 .pointerInput(peca.id, ladoPx, imaLargo) {
                                                     detectDragGestures(
                                                         onDragStart = {
@@ -422,17 +452,17 @@ private fun JogarPuzzle(
                                                         onDragEnd = {
                                                             val a = arrasto
                                                             arrasto = null
-                                                            if (a != null && a.first == peca.id) {
-                                                                val antes = atual
-                                                                val depois = Puzzle.soltar(antes, peca.id, a.second.x, a.second.y, imaLargo)
-                                                                montagem = depois
-                                                                val encaixou = depois.pecas.first { it.id == peca.id }.colocada
-                                                                if (encaixou) sons.acerto() else sons.pousar()
-                                                                if (depois.venceu) vencer(Puzzle.estrelas(depois), depois.dicas > 0)
-                                                            }
+                                                            if (a != null && a.first == peca.id) largar(peca.id, a.second.x, a.second.y)
                                                         },
                                                         onDragCancel = { arrasto = null },
                                                     )
+                                                }
+                                                .pointerInput(peca.id) {
+                                                    detectTapGestures {
+                                                        sons.toque()
+                                                        selecionada = if (selecionada == peca.id) -1 else peca.id
+                                                        if (selecionada >= 0) narrador.falar("Agora toque no lugar dela.")
+                                                    }
                                                 }
                                                 .testTag("peca_${peca.id}"),
                                         )
