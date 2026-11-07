@@ -64,7 +64,10 @@ class ManifestoDaArteTest {
             assertEquals("${info.id}: altura do arquivo", info.altura, a)
             assertEquals("${info.id}: largura = uso x escala", info.usoLargura * manifesto.escala, info.largura)
             assertEquals("${info.id}: altura = uso x escala", info.usoAltura * manifesto.escala, info.altura)
-            val pontos = info.ancoras + ("apoio" to info.apoio)
+            // Na câmera isométrica (casa por dentro) o apoio é a referência da grade (iso.referencia projetada):
+            // nas cascas dos cômodos (piso, parede) ela pode cair fora do recorte justo, e o app só a usa para
+            // posicionar a imagem. As âncoras continuam dentro.
+            val pontos = if (info.tipo == "isometrico") info.ancoras else info.ancoras + ("apoio" to info.apoio)
             for ((nome, p) in pontos) {
                 assertTrue("${info.id}: '$nome' fora da imagem: $p", p.x in 0..info.largura && p.y in 0..info.altura)
             }
@@ -83,6 +86,29 @@ class ManifestoDaArteTest {
         assertEquals(PontoDaArte(3, 4), x.ancoras["mao"])
         assertEquals(0.5f to 0.9f, x.fracao(x.apoio))
         assertEquals(listOf(true, false, null, -150.0, "a\"bé"), (LeitorJson("""[true,false,null,-1.5e2,"a\"bé"]""").ler()))
+    }
+
+    @Test fun camposDasFases4E6TemPadraoVazioESaoLidos() {
+        val m = ManifestoDaArte.ler(
+            """
+            {"versao": 1, "escala": 2, "imagens": {
+             "fig": {"arquivo": "fig.webp", "tipo": "item", "largura": 4, "altura": 4, "uso": {"largura": 2, "altura": 2},
+               "apoio": {"x": 2, "y": 3}, "ancoras": {}, "emojis": ["\ud83d\udc1d", "x"], "lugar": "ceu"},
+             "dentro": {"arquivo": "dentro.webp", "tipo": "isometrico", "largura": 4, "altura": 4, "uso": {"largura": 2, "altura": 2},
+               "apoio": {"x": 2, "y": 3}, "ancoras": {}, "iso": {"ladrilho": 64, "movel": "cama", "referencia": {"x": 1.5, "y": 2, "z": 0}}}}}
+            """.trimIndent(),
+        )
+        val fig = m.imagens.getValue("fig")
+        assertEquals(listOf("\uD83D\uDC1D", "x"), fig.emojis)
+        assertEquals("ceu", fig.lugar)
+        assertTrue(fig.iso.isEmpty())
+        val dentro = m.imagens.getValue("dentro")
+        assertTrue(dentro.emojis.isEmpty())
+        assertEquals("", dentro.lugar)
+        assertEquals(64.0, dentro.numeroIso("ladrilho"))
+        assertEquals(1.5, dentro.numeroIso("referencia.x"))
+        assertEquals("cama", dentro.textoIso("movel"))
+        assertEquals(null, dentro.numeroIso("pegada.x0"))
     }
 
     @Test fun reducaoEscolheAMaiorPotenciaDeDoisQueNaoFicaMenorQueOAlvo() {

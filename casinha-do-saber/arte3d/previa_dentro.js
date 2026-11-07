@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Prévia da casa por dentro (PRD visual 3D, Fase 6): monta os dois andares com as imagens dentro_* de
-// app/src/main/assets/arte/ (manifesto_fase6.json) exatamente como o app deve montar: a Projecao de
+// app/src/main/assets/arte/ (manifesto.json; manifesto_fase6.json se houver) exatamente como o app deve montar: a Projecao de
 // ui/componentes/Isometrico.kt com ladrilho = 64 dp x 2 = 128 px (escala 1:1 com as imagens), cada imagem com
 // o apoio em Projecao.ponto(referência) e os móveis na ordem do pintor de PlantaDaCasa.ordenarParaDesenho.
 // Grava em saida/ (não versionado):
@@ -19,7 +19,11 @@ const ARTE = path.resolve(__dirname, '..', 'app', 'src', 'main', 'assets', 'arte
 const SAIDA = path.join(__dirname, 'saida');
 
 async function main() {
-  const m = JSON.parse(fs.readFileSync(path.join(ARTE, 'manifesto_fase6.json'), 'utf8')).imagens;
+  // depois da integração tudo está no manifesto.json; o manifesto à parte só existe num render CATALOGO=fase6
+  const todas = JSON.parse(fs.readFileSync(path.join(ARTE, 'manifesto.json'), 'utf8')).imagens;
+  const f6 = path.join(ARTE, 'manifesto_fase6.json');
+  if (fs.existsSync(f6)) Object.assign(todas, JSON.parse(fs.readFileSync(f6, 'utf8')).imagens);
+  const m = Object.fromEntries(Object.entries(todas).filter(([id]) => id.startsWith('dentro_')));
   const dados = {};
   for (const [id, info] of Object.entries(m)) dados[id] = 'data:image/webp;base64,' + fs.readFileSync(path.join(ARTE, info.arquivo)).toString('base64');
   fs.mkdirSync(SAIDA, { recursive: true });

@@ -11,9 +11,9 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 | 1. Personagens | feita; revisor deu 7 aos personagens (relatorios/revisao-fase1.md); CI 117 testes e lint verdes, emuladores pendentes | 2026-11-07 | execução 117 |
 | 2. Sistema de interface | arte (2A) e Kotlin (2B) feitos, aguardando CI | 2026-11-07 | pendente |
 | 3. Início e casa de fora | arte (3A) pronta e integrada ao manifesto único (relatorios/integracao-arte.md); Kotlin pendente | 2026-11-07 | pendente |
-| 4. Jogo | pendente | | |
+| 4. Jogo | arte (4A) pronta e integrada ao manifesto único, com `emojis` e `lugar` lidos por `InfoDaArte` (relatorios/fase4a.md, relatorios/integracao-arte.md); Kotlin pendente | 2026-11-07 | pendente |
 | 5. Prêmio e Quase | arte (5A) pronta e integrada ao manifesto único (relatorios/integracao-arte.md); Kotlin pendente | 2026-11-07 | pendente |
-| 6. Casa por dentro | pendente | | |
+| 6. Casa por dentro | arte (6A) pronta e integrada ao manifesto único, com `iso` lido por `InfoDaArte` (relatorios/fase6a.md, relatorios/integracao-arte.md); Kotlin pendente | 2026-11-07 | pendente |
 | 7. Guarda roupa | arte (7A) pronta e integrada ao manifesto único, com `esconde` lido por `InfoDaArte` (relatorios/integracao-arte.md); Kotlin pendente | 2026-11-07 | pendente |
 | 8. Demais telas | pendente | | |
 | 9. Acabamento | pendente | | |

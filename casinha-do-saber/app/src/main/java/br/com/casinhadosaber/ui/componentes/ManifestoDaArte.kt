@@ -44,8 +44,15 @@ class ManifestoDaArte(
                 ordem = (m["ordem"] as? Number)?.toInt() ?: 0,
                 personagem = m["personagem"] as? String,
                 esconde = (m["esconde"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                emojis = (m["emojis"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                lugar = m["lugar"] as? String ?: "",
+                iso = (m["iso"] as? Map<*, *>)?.let(::mapaDeTexto) ?: emptyMap(),
             )
         }
+
+        /** Objeto do JSON como mapa de chaves de texto (valores como o [LeitorJson] devolve). */
+        private fun mapaDeTexto(m: Map<*, *>): Map<String, Any?> =
+            m.entries.associate { (k, v) -> (k as String) to (if (v is Map<*, *>) mapaDeTexto(v) else v) }
 
         private fun numero(m: Map<*, *>, chave: String): Int =
             (m[chave] as? Number)?.toInt() ?: error("manifesto da arte: falta o número '$chave'")
@@ -70,6 +77,12 @@ data class PontoDaArte(val x: Int, val y: Int)
  * desenhar da menor para a maior) e [personagem] (`"crianca"` ou `"irmao"`). Nos objetos ficam vazios.
  * Peças do guarda-roupa (Fase 7): [esconde] lista os grupos das camadas da criança que a peça substitui
  * (o app não desenha esses grupos enquanto a peça estiver vestida); vazio nas demais imagens.
+ * Figuras das perguntas (Fase 4, `fig_*`): [emojis] são os emojis que a figura substitui no conteúdo e
+ * [lugar] onde ela fica na cena do jogo (`"ceu"`, `"chao"`...); vazios nas demais imagens.
+ * Casa por dentro (Fase 6, câmera `isometrico`, `dentro_*`): [iso] traz os dados da projeção como vieram do
+ * manifesto (textos, números como Double e objetos aninhados como mapas): `ladrilho`, `unidadeZ`,
+ * `referencia` {x, y, z} e, conforme a peça, `comodo`, `movel`, `estado`, `frente`, `pegada`, `peca`,
+ * `ordem`, `andar`, `tingir`. Vazio nas demais imagens; [numeroIso] e [textoIso] leem os campos simples.
  */
 data class InfoDaArte(
     val id: String,
@@ -86,7 +99,19 @@ data class InfoDaArte(
     val ordem: Int = 0,
     val personagem: String? = null,
     val esconde: List<String> = emptyList(),
+    val emojis: List<String> = emptyList(),
+    val lugar: String = "",
+    val iso: Map<String, Any?> = emptyMap(),
 ) {
+    /** Campo numérico de [iso] (ex.: `"ladrilho"`, ou `"referencia.x"` para um objeto aninhado); nulo se faltar. */
+    fun numeroIso(caminho: String): Double? = (campoIso(caminho) as? Number)?.toDouble()
+
+    /** Campo de texto de [iso] (ex.: `"movel"`, `"comodo"`); nulo se faltar. */
+    fun textoIso(caminho: String): String? = campoIso(caminho) as? String
+
+    private fun campoIso(caminho: String): Any? =
+        caminho.split('.').fold<String, Any?>(iso) { atual, chave -> (atual as? Map<*, *>)?.get(chave) }
+
     /** [ponto] como fração da imagem (0 a 1), para posicionar em qualquer tamanho de exibição. */
     fun fracao(ponto: PontoDaArte): Pair<Float, Float> = ponto.x.toFloat() / largura to ponto.y.toFloat() / altura
 }

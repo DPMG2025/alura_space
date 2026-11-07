@@ -8,7 +8,9 @@
 //
 // Camadas de personagem (camadas.js) têm ainda: grupo, tingir ('pele' | 'cabelo' | 'roupa' | null),
 // ordem (de trás para a frente) e personagem ('crianca' | 'irmao'), que vão para o manifesto; as peças
-// do guarda-roupa (catalogo_fase7.js) têm ainda esconde (grupos da criança que a peça substitui).
+// do guarda-roupa (catalogo_fase7.js) têm ainda esconde (grupos da criança que a peça substitui); as
+// figuras do jogo (catalogo_fase4.js) têm dados (emojis, lugar, vagas), que vão como estão para o manifesto;
+// a casa por dentro (catalogo_fase6.js, câmera 'isometrico') leva iso ao manifesto.
 import { estrelaDourada } from './objetos/estrela3D.js';
 import { moedaDoPlacar } from './objetos/moeda.js';
 import { patinhoDaLagoa } from './objetos/patinho.js';
@@ -16,7 +18,9 @@ import { camadasDosPersonagens } from './camadas.js';
 import { icones } from './objetos/icones.js';
 import * as ui from './objetos/interface.js';
 import { camadasDaCasa, itensDaCasa } from './casa.js';
+import { catalogoDaFase4 } from './catalogo_fase4.js';
 import { catalogoFase5 } from './catalogo_fase5.js';
+import { catalogo as catalogoFase6 } from './catalogo_fase6.js';
 import { catalogo as catalogoFase7 } from './catalogo_fase7.js';
 
 // Fase 2: ícones dos caminhos (ids pelos nomes de dominio/Trilha) e peças da interface.
@@ -50,8 +54,12 @@ export const catalogo = [
   // Fase 3: a casa de fora (casa.js)
   ...camadasDaCasa,
   ...itensDaCasa,
+  // Fase 4: o cenário do jogo e as figuras (catalogo_fase4.js)
+  ...catalogoDaFase4,
   // Fase 5: o Prêmio e o Quase (catalogo_fase5.js)
   ...catalogoFase5,
+  // Fase 6: a casa por dentro, na câmera isométrica (catalogo_fase6.js)
+  ...catalogoFase6,
   // Fase 7: o guarda-roupa, camadas da criança com o campo esconde (catalogo_fase7.js)
   ...catalogoFase7,
 ];

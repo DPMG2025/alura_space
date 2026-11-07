@@ -65,9 +65,10 @@ const RESPOSTAS = [['#ff7a6b', '#f2524a', '#c4342e'], ['#5fb2ff', '#3b8ff0', '#2
 
 /** Código da página: carrega o manifesto, empilha camadas, figuras e crianças em canvas. */
 const SCRIPT = String.raw`
-const m4 = await (await fetch('/arte/manifesto_fase4.json')).json();
+// depois da integração tudo está no manifesto.json; o manifesto à parte só existe num render CATALOGO=fase4
 const m1 = await (await fetch('/arte/manifesto.json')).json();
-const M = { ...m1.imagens, ...m4.imagens };
+const r4 = await fetch('/arte/manifesto_fase4.json');
+const M = { ...m1.imagens, ...(r4.ok ? (await r4.json()).imagens : {}) };
 const cache = {};
 const img = (id) => cache[id] || (cache[id] = new Promise((ok, erro) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => erro(new Error(id)); i.src = '/arte/' + M[id].arquivo; }));
 async function tingida(id, cor) {

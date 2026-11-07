@@ -1,6 +1,6 @@
-// Catálogo da Fase 4 (jogo), feito em paralelo às fases 5 e 7: `CATALOGO=fase4 npm run render` gera só estas
-// imagens e o manifesto à parte app/src/main/assets/arte/manifesto_fase4.json. Quem juntar as fases espalha
-// `catalogoDaFase4` no src/catalogo.js (e apaga este arquivo e o manifesto à parte).
+// Catálogo da Fase 4 (jogo). Já faz parte do src/catalogo.js principal (o `npm run render` completo gera tudo no
+// manifesto.json); `CATALOGO=fase4 npm run render [-- ids]` ainda renderiza só estas imagens, de modo
+// incremental, com o manifesto à parte manifesto_fase4.json para revisão (o próximo render completo o apaga).
 //
 // Camadas do cenário (câmera 'jogo', todas com o mesmo quadro de 400 x 520 dp e o mesmo apoio = centro da
 // ilha): jogo_<caminho>_ilha (caminho = dominio/Trilha.name em minúsculas) e jogo_comum_<cena> (as cenas das

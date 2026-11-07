@@ -2660,6 +2660,1726 @@
         "largura": 170
       }
     },
+    "dentro_abajur": {
+      "altura": 78,
+      "ancoras": {},
+      "apoio": {
+        "x": 39,
+        "y": 55
+      },
+      "arquivo": "dentro_abajur.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "abajur",
+        "pegada": {
+          "altura": 0.55,
+          "x0": 2.7,
+          "x1": 3.15,
+          "y0": 0.13,
+          "y1": 0.62,
+          "z": 0.5
+        },
+        "referencia": {
+          "x": 2.925,
+          "y": 0.375,
+          "z": 0.5
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 78,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 39,
+        "largura": 39
+      }
+    },
+    "dentro_acabamento_de_baixo": {
+      "altura": 500,
+      "ancoras": {},
+      "apoio": {
+        "x": 338,
+        "y": 236
+      },
+      "arquivo": "dentro_acabamento_de_baixo.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "ladrilho": 64,
+        "ordem": 3,
+        "peca": "acabamento",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 868,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 250,
+        "largura": 434
+      }
+    },
+    "dentro_acabamento_de_cima": {
+      "altura": 500,
+      "ancoras": {},
+      "apoio": {
+        "x": 338,
+        "y": 236
+      },
+      "arquivo": "dentro_acabamento_de_cima.webp",
+      "iso": {
+        "andar": "de_cima",
+        "ladrilho": 64,
+        "ordem": 3,
+        "peca": "acabamento",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 868,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 250,
+        "largura": 434
+      }
+    },
+    "dentro_banheira": {
+      "altura": 156,
+      "ancoras": {
+        "agua": {
+          "x": 110,
+          "y": 55
+        }
+      },
+      "apoio": {
+        "x": 110,
+        "y": 98
+      },
+      "arquivo": "dentro_banheira.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "banheira",
+        "pegada": {
+          "altura": 0.6,
+          "x0": 4.15,
+          "x1": 5.8,
+          "y0": 0.1,
+          "y1": 1.35,
+          "z": 0
+        },
+        "referencia": {
+          "x": 4.975,
+          "y": 0.7250000000000001,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 220,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 78,
+        "largura": 110
+      }
+    },
+    "dentro_bolo": {
+      "altura": 62,
+      "ancoras": {},
+      "apoio": {
+        "x": 41,
+        "y": 38
+      },
+      "arquivo": "dentro_bolo.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "bolo",
+        "pegada": {
+          "altura": 0.45,
+          "x0": 5.9,
+          "x1": 6.4,
+          "y0": 2.25,
+          "y1": 2.75,
+          "z": 0.72
+        },
+        "referencia": {
+          "x": 6.15,
+          "y": 2.5,
+          "z": 0.72
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 82,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 31,
+        "largura": 41
+      }
+    },
+    "dentro_cama": {
+      "altura": 190,
+      "ancoras": {},
+      "apoio": {
+        "x": 117,
+        "y": 127
+      },
+      "arquivo": "dentro_cama.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "cama",
+        "pegada": {
+          "altura": 0.55,
+          "x0": 1.25,
+          "x1": 2.5,
+          "y0": 0.1,
+          "y1": 1.98,
+          "z": 0
+        },
+        "referencia": {
+          "x": 1.875,
+          "y": 1.04,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 234,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 95,
+        "largura": 117
+      }
+    },
+    "dentro_criado": {
+      "altura": 90,
+      "ancoras": {},
+      "apoio": {
+        "x": 52,
+        "y": 61
+      },
+      "arquivo": "dentro_criado.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "criado",
+        "pegada": {
+          "altura": 0.5,
+          "x0": 2.65,
+          "x1": 3.2,
+          "y0": 0.1,
+          "y1": 0.65,
+          "z": 0
+        },
+        "referencia": {
+          "x": 2.925,
+          "y": 0.375,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 104,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 45,
+        "largura": 52
+      }
+    },
+    "dentro_escada": {
+      "altura": 318,
+      "ancoras": {},
+      "apoio": {
+        "x": 125,
+        "y": 252
+      },
+      "arquivo": "dentro_escada.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "escada",
+        "pegada": {
+          "altura": 2.7,
+          "x0": 0.08,
+          "x1": 0.95,
+          "y0": 0.08,
+          "y1": 2.6,
+          "z": 0
+        },
+        "referencia": {
+          "x": 0.515,
+          "y": 1.34,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 250,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 159,
+        "largura": 125
+      }
+    },
+    "dentro_escada_de_cima": {
+      "altura": 152,
+      "ancoras": {},
+      "apoio": {
+        "x": 117,
+        "y": 88
+      },
+      "arquivo": "dentro_escada_de_cima.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "escadaDeCima",
+        "pegada": {
+          "altura": 0.75,
+          "x0": 0.08,
+          "x1": 0.95,
+          "y0": 0.08,
+          "y1": 2.6,
+          "z": 0
+        },
+        "referencia": {
+          "x": 0.515,
+          "y": 1.34,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 232,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 76,
+        "largura": 116
+      }
+    },
+    "dentro_espelho": {
+      "altura": 90,
+      "ancoras": {},
+      "apoio": {
+        "x": 37,
+        "y": 78
+      },
+      "arquivo": "dentro_espelho.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "espelho",
+        "pegada": {
+          "altura": 0.8,
+          "x0": 7.07,
+          "x1": 7.81,
+          "y0": 0,
+          "y1": 0.04,
+          "z": 1.3
+        },
+        "referencia": {
+          "x": 7.4399999999999995,
+          "y": 0,
+          "z": 1.3
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 66,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 45,
+        "largura": 33
+      }
+    },
+    "dentro_fogao": {
+      "altura": 130,
+      "ancoras": {},
+      "apoio": {
+        "x": 70,
+        "y": 92
+      },
+      "arquivo": "dentro_fogao.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "fogao",
+        "pegada": {
+          "altura": 0.85,
+          "x0": 5.95,
+          "x1": 6.8,
+          "y0": 0.1,
+          "y1": 0.92,
+          "z": 0
+        },
+        "referencia": {
+          "x": 6.375,
+          "y": 0.51,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 140,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 65,
+        "largura": 70
+      }
+    },
+    "dentro_gato": {
+      "altura": 74,
+      "ancoras": {},
+      "apoio": {
+        "x": 41,
+        "y": 49
+      },
+      "arquivo": "dentro_gato.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "gato",
+        "pegada": {
+          "altura": 0.45,
+          "x0": 1.65,
+          "x1": 2.15,
+          "y0": 0.35,
+          "y1": 0.85,
+          "z": 0.5
+        },
+        "referencia": {
+          "x": 1.9,
+          "y": 0.6,
+          "z": 0.5
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 82,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 37,
+        "largura": 41
+      }
+    },
+    "dentro_geladeira": {
+      "altura": 214,
+      "ancoras": {},
+      "apoio": {
+        "x": 73,
+        "y": 173
+      },
+      "arquivo": "dentro_geladeira.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "geladeira",
+        "pegada": {
+          "altura": 2,
+          "x0": 6.98,
+          "x1": 7.9,
+          "y0": 0.1,
+          "y1": 0.95,
+          "z": 0
+        },
+        "referencia": {
+          "x": 7.44,
+          "y": 0.525,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 146,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 107,
+        "largura": 73
+      }
+    },
+    "dentro_geladeira_aberta": {
+      "altura": 216,
+      "ancoras": {
+        "comida_0": {
+          "x": 91,
+          "y": 166
+        },
+        "comida_1": {
+          "x": 109,
+          "y": 175
+        },
+        "comida_2": {
+          "x": 127,
+          "y": 184
+        },
+        "comida_3": {
+          "x": 91,
+          "y": 130
+        },
+        "comida_4": {
+          "x": 109,
+          "y": 139
+        },
+        "comida_5": {
+          "x": 127,
+          "y": 148
+        },
+        "comida_6": {
+          "x": 91,
+          "y": 94
+        },
+        "comida_7": {
+          "x": 109,
+          "y": 103
+        },
+        "comida_8": {
+          "x": 127,
+          "y": 112
+        }
+      },
+      "apoio": {
+        "x": 123,
+        "y": 176
+      },
+      "arquivo": "dentro_geladeira_aberta.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "aberta",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "geladeira",
+        "pegada": {
+          "altura": 2,
+          "x0": 6.98,
+          "x1": 7.9,
+          "y0": 0.1,
+          "y1": 0.95,
+          "z": 0
+        },
+        "referencia": {
+          "x": 7.44,
+          "y": 0.525,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 196,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 108,
+        "largura": 98
+      }
+    },
+    "dentro_guardaroupa": {
+      "altura": 262,
+      "ancoras": {},
+      "apoio": {
+        "x": 96,
+        "y": 210
+      },
+      "arquivo": "dentro_guardaroupa.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "X",
+        "ladrilho": 64,
+        "movel": "guardaroupa",
+        "pegada": {
+          "altura": 2.2,
+          "x0": 0.1,
+          "x1": 0.72,
+          "y0": 3,
+          "y1": 4.85,
+          "z": 0
+        },
+        "referencia": {
+          "x": 0.41,
+          "y": 3.925,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 192,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 131,
+        "largura": 96
+      }
+    },
+    "dentro_guardaroupa_aberto": {
+      "altura": 274,
+      "ancoras": {
+        "cabide_0": {
+          "x": 158,
+          "y": 70
+        },
+        "cabide_1": {
+          "x": 142,
+          "y": 78
+        },
+        "cabide_2": {
+          "x": 125,
+          "y": 86
+        },
+        "cabide_3": {
+          "x": 108,
+          "y": 95
+        },
+        "cabide_4": {
+          "x": 92,
+          "y": 103
+        },
+        "cabide_5": {
+          "x": 75,
+          "y": 111
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 210
+      },
+      "arquivo": "dentro_guardaroupa_aberto.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "aberto",
+        "frente": "X",
+        "ladrilho": 64,
+        "movel": "guardaroupa",
+        "pegada": {
+          "altura": 2.2,
+          "x0": 0.1,
+          "x1": 0.72,
+          "y0": 3,
+          "y1": 4.85,
+          "z": 0
+        },
+        "referencia": {
+          "x": 0.41,
+          "y": 3.925,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 234,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 137,
+        "largura": 117
+      }
+    },
+    "dentro_janela": {
+      "altura": 160,
+      "ancoras": {},
+      "apoio": {
+        "x": 60,
+        "y": 126
+      },
+      "arquivo": "dentro_janela.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "janela",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 1.32
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 110,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 80,
+        "largura": 55
+      }
+    },
+    "dentro_janela_noite": {
+      "altura": 160,
+      "ancoras": {},
+      "apoio": {
+        "x": 60,
+        "y": 126
+      },
+      "arquivo": "dentro_janela_noite.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "janela",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 1.32
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 110,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 80,
+        "largura": 55
+      }
+    },
+    "dentro_janela_redonda": {
+      "altura": 94,
+      "ancoras": {},
+      "apoio": {
+        "x": 43,
+        "y": 81
+      },
+      "arquivo": "dentro_janela_redonda.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "janela",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 1.55
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 82,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 47,
+        "largura": 41
+      }
+    },
+    "dentro_janela_redonda_noite": {
+      "altura": 94,
+      "ancoras": {},
+      "apoio": {
+        "x": 43,
+        "y": 81
+      },
+      "arquivo": "dentro_janela_redonda_noite.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "janela",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 1.55
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 82,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 47,
+        "largura": 41
+      }
+    },
+    "dentro_laje_de_baixo": {
+      "altura": 460,
+      "ancoras": {},
+      "apoio": {
+        "x": 337,
+        "y": 10
+      },
+      "arquivo": "dentro_laje_de_baixo.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "ladrilho": 64,
+        "ordem": 0,
+        "peca": "laje",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 866,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 230,
+        "largura": 433
+      }
+    },
+    "dentro_laje_de_cima": {
+      "altura": 460,
+      "ancoras": {},
+      "apoio": {
+        "x": 337,
+        "y": 10
+      },
+      "arquivo": "dentro_laje_de_cima.webp",
+      "iso": {
+        "andar": "de_cima",
+        "ladrilho": 64,
+        "ordem": 0,
+        "peca": "laje",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 866,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 230,
+        "largura": 433
+      }
+    },
+    "dentro_lampada_acesa": {
+      "altura": 84,
+      "ancoras": {
+        "luz": {
+          "x": 25,
+          "y": 71
+        }
+      },
+      "apoio": {
+        "x": 25,
+        "y": 71
+      },
+      "arquivo": "dentro_lampada_acesa.webp",
+      "iso": {
+        "ladrilho": 64,
+        "peca": "lampada",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 50,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 42,
+        "largura": 25
+      }
+    },
+    "dentro_lampada_apagada": {
+      "altura": 84,
+      "ancoras": {
+        "luz": {
+          "x": 25,
+          "y": 71
+        }
+      },
+      "apoio": {
+        "x": 25,
+        "y": 71
+      },
+      "arquivo": "dentro_lampada_apagada.webp",
+      "iso": {
+        "ladrilho": 64,
+        "peca": "lampada",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 50,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 42,
+        "largura": 25
+      }
+    },
+    "dentro_livros": {
+      "altura": 52,
+      "ancoras": {},
+      "apoio": {
+        "x": 44,
+        "y": 27
+      },
+      "arquivo": "dentro_livros.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "livros",
+        "pegada": {
+          "altura": 0.5,
+          "x0": 2.8,
+          "x1": 3.22,
+          "y0": 0.12,
+          "y1": 0.54,
+          "z": 0
+        },
+        "referencia": {
+          "x": 3.01,
+          "y": 0.33,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 88,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 26,
+        "largura": 44
+      }
+    },
+    "dentro_lixeira": {
+      "altura": 80,
+      "ancoras": {},
+      "apoio": {
+        "x": 46,
+        "y": 54
+      },
+      "arquivo": "dentro_lixeira.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "lixeira",
+        "pegada": {
+          "altura": 0.55,
+          "x0": 5.17,
+          "x1": 5.62,
+          "y0": 0.12,
+          "y1": 0.57,
+          "z": 0
+        },
+        "referencia": {
+          "x": 5.395,
+          "y": 0.345,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 92,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 40,
+        "largura": 46
+      }
+    },
+    "dentro_mesa": {
+      "altura": 126,
+      "ancoras": {},
+      "apoio": {
+        "x": 83,
+        "y": 80
+      },
+      "arquivo": "dentro_mesa.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "mesa",
+        "pegada": {
+          "altura": 0.72,
+          "x0": 5.6,
+          "x1": 6.7,
+          "y0": 2,
+          "y1": 2.98,
+          "z": 0
+        },
+        "referencia": {
+          "x": 6.15,
+          "y": 2.49,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 166,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 63,
+        "largura": 83
+      }
+    },
+    "dentro_parede_banheiro": {
+      "altura": 362,
+      "ancoras": {},
+      "apoio": {
+        "x": -248,
+        "y": 98
+      },
+      "arquivo": "dentro_parede_banheiro.webp",
+      "iso": {
+        "andar": "de_cima",
+        "comodo": "banheiro",
+        "ladrilho": 64,
+        "ordem": 2,
+        "peca": "parede",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "tingir": "banheiro",
+        "unidadeZ": 0.56
+      },
+      "largura": 280,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 181,
+        "largura": 140
+      }
+    },
+    "dentro_parede_cozinha": {
+      "altura": 330,
+      "ancoras": {},
+      "apoio": {
+        "x": -312,
+        "y": 66
+      },
+      "arquivo": "dentro_parede_cozinha.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "comodo": "cozinha",
+        "ladrilho": 64,
+        "ordem": 2,
+        "peca": "parede",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "tingir": "cozinha",
+        "unidadeZ": 0.56
+      },
+      "largura": 216,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 165,
+        "largura": 108
+      }
+    },
+    "dentro_parede_interna": {
+      "altura": 80,
+      "ancoras": {},
+      "apoio": {
+        "x": 42,
+        "y": 57
+      },
+      "arquivo": "dentro_parede_interna.webp",
+      "iso": {
+        "ladrilho": 64,
+        "peca": "paredeInterna",
+        "pegada": {
+          "altura": 0.45,
+          "x0": -0.06,
+          "x1": 0.06,
+          "y0": 0,
+          "y1": 1,
+          "z": 0
+        },
+        "referencia": {
+          "x": 0,
+          "y": 0.5,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 84,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 40,
+        "largura": 42
+      }
+    },
+    "dentro_parede_quarto": {
+      "altura": 398,
+      "ancoras": {},
+      "apoio": {
+        "x": 335,
+        "y": 230
+      },
+      "arquivo": "dentro_parede_quarto.webp",
+      "iso": {
+        "andar": "de_cima",
+        "comodo": "quarto",
+        "ladrilho": 64,
+        "ordem": 2,
+        "peca": "parede",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "tingir": "quarto",
+        "unidadeZ": 0.56
+      },
+      "largura": 606,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 199,
+        "largura": 303
+      }
+    },
+    "dentro_parede_sala": {
+      "altura": 398,
+      "ancoras": {},
+      "apoio": {
+        "x": 335,
+        "y": 230
+      },
+      "arquivo": "dentro_parede_sala.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "comodo": "sala",
+        "ladrilho": 64,
+        "ordem": 2,
+        "peca": "parede",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "tingir": "sala",
+        "unidadeZ": 0.56
+      },
+      "largura": 670,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 199,
+        "largura": 335
+      }
+    },
+    "dentro_patinho": {
+      "altura": 46,
+      "ancoras": {
+        "cabeca": {
+          "x": 21,
+          "y": 16
+        },
+        "topoDaCabeca": {
+          "x": 21,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 30,
+        "y": 36
+      },
+      "arquivo": "dentro_patinho.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "patinho",
+        "pegada": {
+          "altura": 0.4,
+          "x0": 4.65,
+          "x1": 5.1,
+          "y0": 0.45,
+          "y1": 0.9,
+          "z": 0.6
+        },
+        "referencia": {
+          "x": 4.875,
+          "y": 0.675,
+          "z": 0.6
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 58,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 23,
+        "largura": 29
+      }
+    },
+    "dentro_pia": {
+      "altura": 126,
+      "ancoras": {
+        "bacia": {
+          "x": 61,
+          "y": 32
+        },
+        "bico": {
+          "x": 65,
+          "y": 18
+        }
+      },
+      "apoio": {
+        "x": 65,
+        "y": 90
+      },
+      "arquivo": "dentro_pia.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "pia",
+        "pegada": {
+          "altura": 0.9,
+          "x0": 6.98,
+          "x1": 7.9,
+          "y0": 0.1,
+          "y1": 0.7,
+          "z": 0
+        },
+        "referencia": {
+          "x": 7.44,
+          "y": 0.39999999999999997,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 130,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 63,
+        "largura": 65
+      }
+    },
+    "dentro_piso_banheiro": {
+      "altura": 304,
+      "ancoras": {},
+      "apoio": {
+        "x": 70,
+        "y": -123
+      },
+      "arquivo": "dentro_piso_banheiro.webp",
+      "iso": {
+        "andar": "de_cima",
+        "comodo": "banheiro",
+        "ladrilho": 64,
+        "ordem": 1,
+        "peca": "piso",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 588,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 152,
+        "largura": 294
+      }
+    },
+    "dentro_piso_cozinha": {
+      "altura": 272,
+      "ancoras": {},
+      "apoio": {
+        "x": 6,
+        "y": -155
+      },
+      "arquivo": "dentro_piso_cozinha.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "comodo": "cozinha",
+        "ladrilho": 64,
+        "ordem": 1,
+        "peca": "piso",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 524,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 136,
+        "largura": 262
+      }
+    },
+    "dentro_piso_quarto": {
+      "altura": 304,
+      "ancoras": {},
+      "apoio": {
+        "x": 326,
+        "y": 5
+      },
+      "arquivo": "dentro_piso_quarto.webp",
+      "iso": {
+        "andar": "de_cima",
+        "comodo": "quarto",
+        "ladrilho": 64,
+        "ordem": 1,
+        "peca": "piso",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 588,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 152,
+        "largura": 294
+      }
+    },
+    "dentro_piso_sala": {
+      "altura": 336,
+      "ancoras": {},
+      "apoio": {
+        "x": 326,
+        "y": 5
+      },
+      "arquivo": "dentro_piso_sala.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "comodo": "sala",
+        "ladrilho": 64,
+        "ordem": 1,
+        "peca": "piso",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 652,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 168,
+        "largura": 326
+      }
+    },
+    "dentro_planta": {
+      "altura": 88,
+      "ancoras": {},
+      "apoio": {
+        "x": 52,
+        "y": 59
+      },
+      "arquivo": "dentro_planta.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "planta",
+        "pegada": {
+          "altura": 0.7,
+          "x0": 7.3,
+          "x1": 7.85,
+          "y0": 4.3,
+          "y1": 4.85,
+          "z": 0
+        },
+        "referencia": {
+          "x": 7.574999999999999,
+          "y": 4.574999999999999,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 104,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 44,
+        "largura": 52
+      }
+    },
+    "dentro_porta_0": {
+      "altura": 232,
+      "ancoras": {},
+      "apoio": {
+        "x": 50,
+        "y": 192
+      },
+      "arquivo": "dentro_porta_0.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "porta",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 124,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 116,
+        "largura": 62
+      }
+    },
+    "dentro_porta_1": {
+      "altura": 232,
+      "ancoras": {},
+      "apoio": {
+        "x": 50,
+        "y": 192
+      },
+      "arquivo": "dentro_porta_1.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "porta",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 124,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 116,
+        "largura": 62
+      }
+    },
+    "dentro_porta_2": {
+      "altura": 232,
+      "ancoras": {},
+      "apoio": {
+        "x": 50,
+        "y": 192
+      },
+      "arquivo": "dentro_porta_2.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "porta",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 124,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 116,
+        "largura": 62
+      }
+    },
+    "dentro_porta_3": {
+      "altura": 232,
+      "ancoras": {},
+      "apoio": {
+        "x": 50,
+        "y": 192
+      },
+      "arquivo": "dentro_porta_3.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "porta",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 124,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 116,
+        "largura": 62
+      }
+    },
+    "dentro_porta_4": {
+      "altura": 232,
+      "ancoras": {},
+      "apoio": {
+        "x": 50,
+        "y": 192
+      },
+      "arquivo": "dentro_porta_4.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "porta",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 124,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 116,
+        "largura": 62
+      }
+    },
+    "dentro_quadro": {
+      "altura": 86,
+      "ancoras": {},
+      "apoio": {
+        "x": 43,
+        "y": 64
+      },
+      "arquivo": "dentro_quadro.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "quadro",
+        "pegada": {
+          "altura": 0.65,
+          "x0": 1.45,
+          "x1": 2.3,
+          "y0": 0,
+          "y1": 0.04,
+          "z": 1.5
+        },
+        "referencia": {
+          "x": 1.875,
+          "y": 0,
+          "z": 1.5
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 76,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 43,
+        "largura": 38
+      }
+    },
+    "dentro_sofa": {
+      "altura": 158,
+      "ancoras": {},
+      "apoio": {
+        "x": 98,
+        "y": 106
+      },
+      "arquivo": "dentro_sofa.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "sofa",
+        "pegada": {
+          "altura": 0.88,
+          "x0": 1.05,
+          "x1": 2.7,
+          "y0": 0.1,
+          "y1": 0.98,
+          "z": 0
+        },
+        "referencia": {
+          "x": 1.875,
+          "y": 0.54,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 196,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 79,
+        "largura": 98
+      }
+    },
+    "dentro_tapete": {
+      "altura": 154,
+      "ancoras": {},
+      "apoio": {
+        "x": 147,
+        "y": 78
+      },
+      "arquivo": "dentro_tapete.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "tapete",
+        "pegada": {
+          "altura": 0,
+          "x0": 1.5,
+          "x1": 3.9,
+          "y0": 1.45,
+          "y1": 3.45,
+          "z": 0
+        },
+        "referencia": {
+          "x": 2.7,
+          "y": 2.45,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 294,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 77,
+        "largura": 147
+      }
+    },
+    "dentro_tv": {
+      "altura": 150,
+      "ancoras": {},
+      "apoio": {
+        "x": 70,
+        "y": 112
+      },
+      "arquivo": "dentro_tv.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "tv",
+        "pegada": {
+          "altura": 1.3,
+          "x0": 3.7,
+          "x1": 4.85,
+          "y0": 0.1,
+          "y1": 0.6,
+          "z": 0
+        },
+        "referencia": {
+          "x": 4.275,
+          "y": 0.35,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 140,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 75,
+        "largura": 70
+      }
+    },
+    "dentro_ursinho": {
+      "altura": 78,
+      "ancoras": {},
+      "apoio": {
+        "x": 43,
+        "y": 53
+      },
+      "arquivo": "dentro_ursinho.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "ursinho",
+        "pegada": {
+          "altura": 0.5,
+          "x0": 1.6,
+          "x1": 2.15,
+          "y0": 1.2,
+          "y1": 1.7,
+          "z": 0.55
+        },
+        "referencia": {
+          "x": 1.875,
+          "y": 1.45,
+          "z": 0.55
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 86,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 39,
+        "largura": 43
+      }
+    },
+    "dentro_vaso": {
+      "altura": 108,
+      "ancoras": {},
+      "apoio": {
+        "x": 54,
+        "y": 77
+      },
+      "arquivo": "dentro_vaso.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "vaso",
+        "pegada": {
+          "altura": 0.7,
+          "x0": 5.92,
+          "x1": 6.47,
+          "y0": 0.1,
+          "y1": 0.7,
+          "z": 0
+        },
+        "referencia": {
+          "x": 6.195,
+          "y": 0.39999999999999997,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 108,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 54,
+        "largura": 54
+      }
+    },
+    "dentro_violao": {
+      "altura": 104,
+      "ancoras": {},
+      "apoio": {
+        "x": 52,
+        "y": 74
+      },
+      "arquivo": "dentro_violao.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "violao",
+        "pegada": {
+          "altura": 0.9,
+          "x0": 3.3,
+          "x1": 3.85,
+          "y0": 4.3,
+          "y1": 4.85,
+          "z": 0
+        },
+        "referencia": {
+          "x": 3.575,
+          "y": 4.574999999999999,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 104,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 52,
+        "largura": 52
+      }
+    },
     "estrela3d": {
       "altura": 240,
       "ancoras": {
@@ -2738,6 +4458,1643 @@
       "uso": {
         "altura": 48,
         "largura": 48
+      }
+    },
+    "fig_abelha": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 87,
+          "y": 91
+        },
+        "topo": {
+          "x": 87,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 87,
+        "y": 175
+      },
+      "arquivo": "fig_abelha.webp",
+      "emojis": [
+        "🐝"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_aviao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 92,
+          "y": 95
+        },
+        "topo": {
+          "x": 92,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 92,
+        "y": 142
+      },
+      "arquivo": "fig_aviao.webp",
+      "emojis": [
+        "✈️"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_balao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 95,
+          "y": 97
+        },
+        "topo": {
+          "x": 95,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 95,
+        "y": 187
+      },
+      "arquivo": "fig_balao.webp",
+      "emojis": [
+        "🎈"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_banana": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 35
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 130
+      },
+      "arquivo": "fig_banana.webp",
+      "emojis": [
+        "🍌"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bola": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 63
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 127
+      },
+      "arquivo": "fig_bola.webp",
+      "emojis": [
+        "⚽"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bolinha_amarela": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 138
+      },
+      "arquivo": "fig_bolinha_amarela.webp",
+      "emojis": [
+        "🟡"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bolinha_azul": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 138
+      },
+      "arquivo": "fig_bolinha_azul.webp",
+      "emojis": [
+        "🔵"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bolinha_laranja": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 138
+      },
+      "arquivo": "fig_bolinha_laranja.webp",
+      "emojis": [
+        "🟠"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bolinha_roxa": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 138
+      },
+      "arquivo": "fig_bolinha_roxa.webp",
+      "emojis": [
+        "🟣"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bolinha_verde": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 138
+      },
+      "arquivo": "fig_bolinha_verde.webp",
+      "emojis": [
+        "🟢"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bolinha_vermelha": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 138
+      },
+      "arquivo": "fig_bolinha_vermelha.webp",
+      "emojis": [
+        "🔴"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bolinho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 79
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 145
+      },
+      "arquivo": "fig_bolinho.webp",
+      "emojis": [
+        "🧁"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bolo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 13
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 128
+      },
+      "arquivo": "fig_bolo.webp",
+      "emojis": [
+        "🎂"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bone": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 91,
+          "y": 89
+        },
+        "topo": {
+          "x": 91,
+          "y": 42
+        }
+      },
+      "apoio": {
+        "x": 91,
+        "y": 135
+      },
+      "arquivo": "fig_bone.webp",
+      "emojis": [
+        "🧢"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_borboleta": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 97,
+          "y": 98
+        },
+        "topo": {
+          "x": 97,
+          "y": 16
+        }
+      },
+      "apoio": {
+        "x": 97,
+        "y": 176
+      },
+      "arquivo": "fig_borboleta.webp",
+      "emojis": [
+        "🦋"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cachecol": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 97,
+          "y": 93
+        },
+        "topo": {
+          "x": 97,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 97,
+        "y": 176
+      },
+      "arquivo": "fig_cachecol.webp",
+      "emojis": [
+        "🧣"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cachorro": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_cachorro.webp",
+      "emojis": [
+        "🐶",
+        "🐕"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_camiseta": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 96
+        },
+        "topo": {
+          "x": 98,
+          "y": 30
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 159
+      },
+      "arquivo": "fig_camiseta.webp",
+      "emojis": [
+        "👕"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_carrinho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 38
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 118
+      },
+      "arquivo": "fig_carrinho.webp",
+      "emojis": [
+        "🚗"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cavalo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 148
+      },
+      "arquivo": "fig_cavalo.webp",
+      "emojis": [
+        "🐴"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cenoura": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 88
+        },
+        "topo": {
+          "x": 96,
+          "y": 3
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 163
+      },
+      "arquivo": "fig_cenoura.webp",
+      "emojis": [
+        "🥕"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cereja": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 159
+      },
+      "arquivo": "fig_cereja.webp",
+      "emojis": [
+        "🍒"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_coelho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 6
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 154
+      },
+      "arquivo": "fig_coelho.webp",
+      "emojis": [
+        "🐰",
+        "🐇"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_coracao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 98
+        },
+        "topo": {
+          "x": 98,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 191
+      },
+      "arquivo": "fig_coracao.webp",
+      "emojis": [
+        "❤️"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_elefante": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 9
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 145
+      },
+      "arquivo": "fig_elefante.webp",
+      "emojis": [
+        "🐘"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_estrela": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 97,
+          "y": 96
+        },
+        "topo": {
+          "x": 97,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 97,
+        "y": 182
+      },
+      "arquivo": "fig_estrela.webp",
+      "emojis": [
+        "⭐",
+        "🌟"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_flor": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 93
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 167
+      },
+      "arquivo": "fig_flor.webp",
+      "emojis": [
+        "🌸"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_foca": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 78
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_foca.webp",
+      "emojis": [
+        "🦭"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_galinha": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 146
+      },
+      "arquivo": "fig_galinha.webp",
+      "emojis": [
+        "🐔"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_galo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 79
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 145
+      },
+      "arquivo": "fig_galo.webp",
+      "emojis": [
+        "🐓"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_gato": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 3
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 150
+      },
+      "arquivo": "fig_gato.webp",
+      "emojis": [
+        "🐱",
+        "🐈"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_joaninha": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 67
+        },
+        "topo": {
+          "x": 96,
+          "y": 29
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 103
+      },
+      "arquivo": "fig_joaninha.webp",
+      "emojis": [
+        "🐞"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_leao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 9
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 152
+      },
+      "arquivo": "fig_leao.webp",
+      "emojis": [
+        "🦁"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_lua": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 90,
+          "y": 92
+        },
+        "topo": {
+          "x": 90,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 90,
+        "y": 191
+      },
+      "arquivo": "fig_lua.webp",
+      "emojis": [
+        "🌙"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_luva": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 97,
+          "y": 91
+        },
+        "topo": {
+          "x": 97,
+          "y": 18
+        }
+      },
+      "apoio": {
+        "x": 97,
+        "y": 160
+      },
+      "arquivo": "fig_luva.webp",
+      "emojis": [
+        "🧤"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_maca": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 131
+      },
+      "arquivo": "fig_maca.webp",
+      "emojis": [
+        "🍎"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_macaco": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 150
+      },
+      "arquivo": "fig_macaco.webp",
+      "emojis": [
+        "🐒"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_meia": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 95,
+          "y": 95
+        },
+        "topo": {
+          "x": 95,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 95,
+        "y": 179
+      },
+      "arquivo": "fig_meia.webp",
+      "emojis": [
+        "🧦"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_morango": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 75
+        },
+        "topo": {
+          "x": 96,
+          "y": 2
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 140
+      },
+      "arquivo": "fig_morango.webp",
+      "emojis": [
+        "🍓"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_ovelha": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 78
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 147
+      },
+      "arquivo": "fig_ovelha.webp",
+      "emojis": [
+        "🐑"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_ovo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 77
+        },
+        "topo": {
+          "x": 96,
+          "y": 1
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 145
+      },
+      "arquivo": "fig_ovo.webp",
+      "emojis": [
+        "🥚"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 57
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 109
+      },
+      "arquivo": "fig_pao.webp",
+      "emojis": [
+        "🍞"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_passarinho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 75
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 142
+      },
+      "arquivo": "fig_passarinho.webp",
+      "emojis": [
+        "🐦"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pato": {
+      "altura": 192,
+      "ancoras": {
+        "cabeca": {
+          "x": 122,
+          "y": 52
+        },
+        "centro": {
+          "x": 96,
+          "y": 74
+        },
+        "topo": {
+          "x": 96,
+          "y": 13
+        },
+        "topoDaCabeca": {
+          "x": 122,
+          "y": 19
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 128
+      },
+      "arquivo": "fig_pato.webp",
+      "emojis": [
+        "🦆"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_peixe": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 35
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 126
+      },
+      "arquivo": "fig_peixe.webp",
+      "emojis": [
+        "🐟"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pinguim": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 78
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_pinguim.webp",
+      "emojis": [
+        "🐧"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pintinho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 148
+      },
+      "arquivo": "fig_pintinho.webp",
+      "emojis": [
+        "🐥"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pipa": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 94,
+          "y": 95
+        },
+        "topo": {
+          "x": 94,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 94,
+        "y": 189
+      },
+      "arquivo": "fig_pipa.webp",
+      "emojis": [
+        "🪁"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_porco": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_porco.webp",
+      "emojis": [
+        "🐷"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_rato": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 10
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 151
+      },
+      "arquivo": "fig_rato.webp",
+      "emojis": [
+        "🐭"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_sapo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 77
+        },
+        "topo": {
+          "x": 96,
+          "y": 28
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 122
+      },
+      "arquivo": "fig_sapo.webp",
+      "emojis": [
+        "🐸"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_tambor": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 75
+        },
+        "topo": {
+          "x": 96,
+          "y": 14
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 131
+      },
+      "arquivo": "fig_tambor.webp",
+      "emojis": [
+        "🥁"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_tartaruga": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 98
+      },
+      "arquivo": "fig_tartaruga.webp",
+      "emojis": [
+        "🐢"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_tigre": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 3
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 150
+      },
+      "arquivo": "fig_tigre.webp",
+      "emojis": [
+        "🐯"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_trem": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 79
+        },
+        "topo": {
+          "x": 96,
+          "y": 9
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_trem.webp",
+      "emojis": [
+        "🚂"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_ursinho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 86
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 155
+      },
+      "arquivo": "fig_ursinho.webp",
+      "emojis": [
+        "🧸"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_uva": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 86
+        },
+        "topo": {
+          "x": 96,
+          "y": 1
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 161
+      },
+      "arquivo": "fig_uva.webp",
+      "emojis": [
+        "🍇"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_vaca": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 6
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 147
+      },
+      "arquivo": "fig_vaca.webp",
+      "emojis": [
+        "🐮",
+        "🐄"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
       }
     },
     "icone_ajustes": {
@@ -4398,6 +7755,613 @@
       "uso": {
         "altura": 180,
         "largura": 100
+      }
+    },
+    "jogo_comum_cercado": {
+      "altura": 1040,
+      "ancoras": {
+        "area_direita": {
+          "x": 724,
+          "y": 534
+        },
+        "area_esquerda": {
+          "x": 76,
+          "y": 534
+        },
+        "area_frente": {
+          "x": 400,
+          "y": 703
+        },
+        "area_fundo": {
+          "x": 400,
+          "y": 391
+        },
+        "vaga_1": {
+          "x": 244,
+          "y": 470
+        },
+        "vaga_2": {
+          "x": 429,
+          "y": 440
+        },
+        "vaga_3": {
+          "x": 597,
+          "y": 481
+        },
+        "vaga_4": {
+          "x": 296,
+          "y": 591
+        },
+        "vaga_5": {
+          "x": 505,
+          "y": 603
+        },
+        "vaga_6": {
+          "x": 132,
+          "y": 568
+        }
+      },
+      "apoio": {
+        "x": 400,
+        "y": 546
+      },
+      "arquivo": "jogo_comum_cercado.webp",
+      "grupo": "cena",
+      "largura": 800,
+      "ordem": 20,
+      "tingir": null,
+      "tipo": "jogo",
+      "uso": {
+        "altura": 520,
+        "largura": 400
+      }
+    },
+    "jogo_comum_lagoa": {
+      "altura": 1040,
+      "ancoras": {
+        "area_direita": {
+          "x": 694,
+          "y": 526
+        },
+        "area_esquerda": {
+          "x": 106,
+          "y": 526
+        },
+        "area_frente": {
+          "x": 400,
+          "y": 681
+        },
+        "area_fundo": {
+          "x": 400,
+          "y": 392
+        },
+        "vaga_1": {
+          "x": 251,
+          "y": 488
+        },
+        "vaga_2": {
+          "x": 439,
+          "y": 446
+        },
+        "vaga_3": {
+          "x": 572,
+          "y": 526
+        },
+        "vaga_4": {
+          "x": 327,
+          "y": 583
+        },
+        "vaga_5": {
+          "x": 496,
+          "y": 619
+        },
+        "vaga_6": {
+          "x": 158,
+          "y": 520
+        }
+      },
+      "apoio": {
+        "x": 400,
+        "y": 546
+      },
+      "arquivo": "jogo_comum_lagoa.webp",
+      "grupo": "cena",
+      "largura": 800,
+      "ordem": 20,
+      "tingir": null,
+      "tipo": "jogo",
+      "uso": {
+        "altura": 520,
+        "largura": 400
+      }
+    },
+    "jogo_comum_mesa": {
+      "altura": 1040,
+      "ancoras": {
+        "area_direita": {
+          "x": 669,
+          "y": 442
+        },
+        "area_esquerda": {
+          "x": 131,
+          "y": 442
+        },
+        "area_frente": {
+          "x": 400,
+          "y": 581
+        },
+        "area_fundo": {
+          "x": 400,
+          "y": 321
+        },
+        "vaga_1": {
+          "x": 257,
+          "y": 415
+        },
+        "vaga_2": {
+          "x": 420,
+          "y": 389
+        },
+        "vaga_3": {
+          "x": 564,
+          "y": 426
+        },
+        "vaga_4": {
+          "x": 314,
+          "y": 503
+        },
+        "vaga_5": {
+          "x": 497,
+          "y": 509
+        },
+        "vaga_6": {
+          "x": 158,
+          "y": 475
+        }
+      },
+      "apoio": {
+        "x": 400,
+        "y": 546
+      },
+      "arquivo": "jogo_comum_mesa.webp",
+      "grupo": "cena",
+      "largura": 800,
+      "ordem": 20,
+      "tingir": null,
+      "tipo": "jogo",
+      "uso": {
+        "altura": 520,
+        "largura": 400
+      }
+    },
+    "jogo_comum_tapete": {
+      "altura": 1040,
+      "ancoras": {
+        "area_direita": {
+          "x": 704,
+          "y": 528
+        },
+        "area_esquerda": {
+          "x": 96,
+          "y": 528
+        },
+        "area_frente": {
+          "x": 400,
+          "y": 696
+        },
+        "area_fundo": {
+          "x": 400,
+          "y": 384
+        },
+        "vaga_1": {
+          "x": 252,
+          "y": 484
+        },
+        "vaga_2": {
+          "x": 429,
+          "y": 453
+        },
+        "vaga_3": {
+          "x": 580,
+          "y": 506
+        },
+        "vaga_4": {
+          "x": 306,
+          "y": 590
+        },
+        "vaga_5": {
+          "x": 505,
+          "y": 596
+        },
+        "vaga_6": {
+          "x": 145,
+          "y": 544
+        }
+      },
+      "apoio": {
+        "x": 400,
+        "y": 546
+      },
+      "arquivo": "jogo_comum_tapete.webp",
+      "grupo": "cena",
+      "largura": 800,
+      "ordem": 20,
+      "tingir": null,
+      "tipo": "jogo",
+      "uso": {
+        "altura": 520,
+        "largura": 400
+      }
+    },
+    "jogo_comum_varal": {
+      "altura": 1040,
+      "ancoras": {
+        "vaga_1": {
+          "x": 146,
+          "y": 342
+        },
+        "vaga_2": {
+          "x": 273,
+          "y": 355
+        },
+        "vaga_3": {
+          "x": 400,
+          "y": 359
+        },
+        "vaga_4": {
+          "x": 527,
+          "y": 355
+        },
+        "vaga_5": {
+          "x": 654,
+          "y": 342
+        }
+      },
+      "apoio": {
+        "x": 400,
+        "y": 546
+      },
+      "arquivo": "jogo_comum_varal.webp",
+      "grupo": "cena",
+      "largura": 800,
+      "ordem": 20,
+      "tingir": null,
+      "tipo": "jogo",
+      "uso": {
+        "altura": 520,
+        "largura": 400
+      }
+    },
+    "jogo_ingles_ilha": {
+      "altura": 1040,
+      "ancoras": {
+        "area_direita": {
+          "x": 768,
+          "y": 557
+        },
+        "area_esquerda": {
+          "x": 32,
+          "y": 557
+        },
+        "area_frente": {
+          "x": 400,
+          "y": 757
+        },
+        "area_fundo": {
+          "x": 400,
+          "y": 391
+        },
+        "centro": {
+          "x": 400,
+          "y": 534
+        },
+        "ceu_1": {
+          "x": 122,
+          "y": 255
+        },
+        "ceu_2": {
+          "x": 306,
+          "y": 199
+        },
+        "ceu_3": {
+          "x": 493,
+          "y": 255
+        },
+        "ceu_4": {
+          "x": 681,
+          "y": 199
+        },
+        "personagens": {
+          "x": 99,
+          "y": 400
+        },
+        "vaga_1": {
+          "x": 201,
+          "y": 502
+        },
+        "vaga_2": {
+          "x": 400,
+          "y": 481
+        },
+        "vaga_3": {
+          "x": 599,
+          "y": 502
+        },
+        "vaga_4": {
+          "x": 230,
+          "y": 627
+        },
+        "vaga_5": {
+          "x": 443,
+          "y": 640
+        },
+        "vaga_6": {
+          "x": 653,
+          "y": 615
+        }
+      },
+      "apoio": {
+        "x": 400,
+        "y": 546
+      },
+      "arquivo": "jogo_ingles_ilha.webp",
+      "grupo": "ilha",
+      "largura": 800,
+      "ordem": 10,
+      "tingir": null,
+      "tipo": "jogo",
+      "uso": {
+        "altura": 520,
+        "largura": 400
+      }
+    },
+    "jogo_logica_ilha": {
+      "altura": 1040,
+      "ancoras": {
+        "area_direita": {
+          "x": 768,
+          "y": 557
+        },
+        "area_esquerda": {
+          "x": 32,
+          "y": 557
+        },
+        "area_frente": {
+          "x": 400,
+          "y": 757
+        },
+        "area_fundo": {
+          "x": 400,
+          "y": 391
+        },
+        "centro": {
+          "x": 400,
+          "y": 534
+        },
+        "ceu_1": {
+          "x": 122,
+          "y": 255
+        },
+        "ceu_2": {
+          "x": 306,
+          "y": 199
+        },
+        "ceu_3": {
+          "x": 493,
+          "y": 255
+        },
+        "ceu_4": {
+          "x": 681,
+          "y": 199
+        },
+        "personagens": {
+          "x": 99,
+          "y": 400
+        },
+        "vaga_1": {
+          "x": 201,
+          "y": 502
+        },
+        "vaga_2": {
+          "x": 400,
+          "y": 481
+        },
+        "vaga_3": {
+          "x": 599,
+          "y": 502
+        },
+        "vaga_4": {
+          "x": 230,
+          "y": 627
+        },
+        "vaga_5": {
+          "x": 443,
+          "y": 640
+        },
+        "vaga_6": {
+          "x": 653,
+          "y": 615
+        }
+      },
+      "apoio": {
+        "x": 400,
+        "y": 546
+      },
+      "arquivo": "jogo_logica_ilha.webp",
+      "grupo": "ilha",
+      "largura": 800,
+      "ordem": 10,
+      "tingir": null,
+      "tipo": "jogo",
+      "uso": {
+        "altura": 520,
+        "largura": 400
+      }
+    },
+    "jogo_matematica_ilha": {
+      "altura": 1040,
+      "ancoras": {
+        "area_direita": {
+          "x": 768,
+          "y": 557
+        },
+        "area_esquerda": {
+          "x": 32,
+          "y": 557
+        },
+        "area_frente": {
+          "x": 400,
+          "y": 757
+        },
+        "area_fundo": {
+          "x": 400,
+          "y": 391
+        },
+        "centro": {
+          "x": 400,
+          "y": 534
+        },
+        "ceu_1": {
+          "x": 122,
+          "y": 255
+        },
+        "ceu_2": {
+          "x": 306,
+          "y": 199
+        },
+        "ceu_3": {
+          "x": 493,
+          "y": 255
+        },
+        "ceu_4": {
+          "x": 681,
+          "y": 199
+        },
+        "personagens": {
+          "x": 99,
+          "y": 400
+        },
+        "vaga_1": {
+          "x": 201,
+          "y": 502
+        },
+        "vaga_2": {
+          "x": 400,
+          "y": 481
+        },
+        "vaga_3": {
+          "x": 599,
+          "y": 502
+        },
+        "vaga_4": {
+          "x": 230,
+          "y": 627
+        },
+        "vaga_5": {
+          "x": 443,
+          "y": 640
+        },
+        "vaga_6": {
+          "x": 653,
+          "y": 615
+        }
+      },
+      "apoio": {
+        "x": 400,
+        "y": 546
+      },
+      "arquivo": "jogo_matematica_ilha.webp",
+      "grupo": "ilha",
+      "largura": 800,
+      "ordem": 10,
+      "tingir": null,
+      "tipo": "jogo",
+      "uso": {
+        "altura": 520,
+        "largura": 400
+      }
+    },
+    "jogo_portugues_ilha": {
+      "altura": 1040,
+      "ancoras": {
+        "area_direita": {
+          "x": 768,
+          "y": 557
+        },
+        "area_esquerda": {
+          "x": 32,
+          "y": 557
+        },
+        "area_frente": {
+          "x": 400,
+          "y": 757
+        },
+        "area_fundo": {
+          "x": 400,
+          "y": 391
+        },
+        "centro": {
+          "x": 400,
+          "y": 534
+        },
+        "ceu_1": {
+          "x": 122,
+          "y": 255
+        },
+        "ceu_2": {
+          "x": 306,
+          "y": 199
+        },
+        "ceu_3": {
+          "x": 493,
+          "y": 255
+        },
+        "ceu_4": {
+          "x": 681,
+          "y": 199
+        },
+        "personagens": {
+          "x": 99,
+          "y": 400
+        },
+        "vaga_1": {
+          "x": 201,
+          "y": 502
+        },
+        "vaga_2": {
+          "x": 400,
+          "y": 481
+        },
+        "vaga_3": {
+          "x": 599,
+          "y": 502
+        },
+        "vaga_4": {
+          "x": 230,
+          "y": 627
+        },
+        "vaga_5": {
+          "x": 443,
+          "y": 640
+        },
+        "vaga_6": {
+          "x": 653,
+          "y": 615
+        }
+      },
+      "apoio": {
+        "x": 400,
+        "y": 546
+      },
+      "arquivo": "jogo_portugues_ilha.webp",
+      "grupo": "ilha",
+      "largura": 800,
+      "ordem": 10,
+      "tingir": null,
+      "tipo": "jogo",
+      "uso": {
+        "altura": 520,
+        "largura": 400
       }
     },
     "moeda": {
