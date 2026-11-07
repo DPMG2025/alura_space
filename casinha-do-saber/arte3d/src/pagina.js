@@ -3,7 +3,10 @@
 // Quem chama é o render.js, pelo Playwright: window.renderizar(id, escala, superamostra).
 import { THREE, palco, luzes } from './kit.js';
 import { tiposDeCamera, filtroFinal } from './cameras.js';
-import { catalogo } from './catalogo.js';
+// ?catalogo=fase5 carrega src/catalogo_fase5.js (catálogos de fases paralelas, juntados depois ao principal)
+const nomeDoCatalogo = new URLSearchParams(location.search).get('catalogo');
+if (nomeDoCatalogo && !/^[a-z0-9_]+$/.test(nomeDoCatalogo)) throw new Error('catálogo inválido: ' + nomeDoCatalogo);
+const { catalogo } = await import(nomeDoCatalogo ? `./catalogo_${nomeDoCatalogo}.js` : './catalogo.js');
 import { carregarFonte } from './objetos/icones.js';
 
 /** Fundo preto vira transparente e os reflexos viram branco translúcido (camadas de brilho do cabelo). */
@@ -143,7 +146,9 @@ window.renderizar = (id, escala, superamostra) => {
 
   const pontos = verticesDoMundo(obj);
   if (cfg.sombraDeContato) {
-    const s = sombraDeContato(caixa);
+    // userData.base: a parte que encosta no chão, quando a caixa do objeto inteiro é maior que ela
+    // (quadros de animação com moldura invisível, tampa voando)
+    const s = sombraDeContato(obj.userData.base ? new THREE.Box3().setFromObject(obj.userData.base) : caixa);
     p.cena.add(s.plano);
     pontos.push(...s.pontos);
   }

@@ -88,7 +88,7 @@ export function estrelaVazia() {
 }
 
 /** Halo macio (textura radial) para o brilho atrás da estrela. */
-function halo(raio, cor) {
+export function halo(raio, cor) {
   const cv = document.createElement('canvas');
   cv.width = cv.height = 256;
   const ctx = cv.getContext('2d');
@@ -113,7 +113,7 @@ function halo(raio, cor) {
 }
 
 /** Faísca de quatro pontas (plástico branco brilhante). */
-function faisca(r, mat) {
+export function faisca(r, mat) {
   const s = new THREE.Shape();
   for (let i = 0; i < 8; i++) {
     const a = Math.PI / 2 + (i * Math.PI) / 4;
