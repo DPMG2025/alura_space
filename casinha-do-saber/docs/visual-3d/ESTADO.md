@@ -9,7 +9,7 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 | 0A. Tela cheia (celular e tablet) | código feito, aguardando CI e confirmação no tablet | 2026-11-07 | pendente |
 | 0. Fundação do pipeline (`arte3d/`) | código feito, aguardando CI (captura `v3d_00_arte_de_teste`) | 2026-11-07 | pendente |
 | 1. Personagens | arte (1A) e Kotlin (1B) feitos, aguardando CI e nota do revisor | 2026-11-07 | pendente |
-| 2. Sistema de interface | pendente | | |
+| 2. Sistema de interface | arte (2A) e Kotlin (2B) feitos, aguardando CI | 2026-11-07 | pendente |
 | 3. Início e casa de fora | pendente | | |
 | 4. Jogo | pendente | | |
 | 5. Prêmio e Quase | pendente | | |
@@ -27,7 +27,13 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 
 * 2026-11-07, Fase 1: 97 camadas por personagem (relatorios/fase1a.md), `PersonagemEmCamadas` compõe um bitmap em cache (relatorios/fase1b.md). Trajes e acessórios da loja caem no desenho antigo até a Fase 7. Não enviar imagens parciais ao git: o teste de órfãos derruba o CI.
 
+* 2026-11-07, Fase 2: fontes Baloo 2 (700/800) e Fredoka, BotaoFofo/BotaoRedondo/cartaoFofo/BalaoDeFala em estilo brinquedo, componentes novos (TextoComContorno, Pilula, EstrelasDeProgresso, ContasDeProgresso, IconeDeTrilha). Relatórios fase2a.md e fase2b.md.
+* 2026-11-07: o teste dos chapéus (captura 56) passou a rodar em tela larga; a fila de chapéus não cabia em 393 dp com a criança 3D.
+* Regra de processo: push cancela o CI em andamento (concurrency); só enviar depois que a execução anterior fechar.
+
 ## Problemas abertos
+
+* Pedidos de arte da 2B: glifo branco (casa) para o botão verde; ícones de mapa, álbum, espelho, sol, lua, repetir, desfazer, ouvir, parar, gravar e lixeira.
 
 * Memória das camadas (690 KB cada decodificada): recortar pelo contorno na Fase 9.
 

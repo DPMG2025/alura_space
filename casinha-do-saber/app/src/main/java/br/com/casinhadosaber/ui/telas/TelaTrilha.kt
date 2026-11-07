@@ -70,6 +70,7 @@ import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Crianca
 import br.com.casinhadosaber.ui.componentes.PROPORCAO_CRIANCA
 import br.com.casinhadosaber.ui.componentes.FileiraDeEstrelas
+import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.Raios
@@ -228,7 +229,7 @@ fun TelaTrilha(
             Spacer(Modifier.width(12.dp))
             // Com o botão do mapa a barra fica cheia: o emoji do caminho sai (a cor e o nome já dizem qual é).
             if (onMapa == null) {
-                Text(trilha.emoji, style = MaterialTheme.typography.headlineLarge)
+                IconeDeTrilha(trilha, Modifier.size(40.dp))
                 Spacer(Modifier.width(8.dp))
             }
             // O nome nunca é cortado: se não couber (celular estreito), a letra diminui um pouco até caber.

@@ -48,6 +48,11 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
+import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.faceDeBrinquedo
 import br.com.casinhadosaber.ui.componentes.CenaDaCasa
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.pulsando
@@ -70,7 +75,6 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import br.com.casinhadosaber.ui.componentes.PROPORCAO_CENA
-import br.com.casinhadosaber.ui.componentes.brilhoDoTopo
 import br.com.casinhadosaber.ui.componentes.FundoDecorado
 import br.com.casinhadosaber.ui.tema.Formas
 
@@ -132,8 +136,8 @@ fun TelaInicio(
             BotaoAdulto(onAreaDosPais)
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                // Título branco com contorno e sombra ameixa: lê bem sobre o céu claro.
-                TextoContornado("Casinha do Saber", MaterialTheme.typography.headlineMedium, contorno = 5.dp)
+                // Título de brinquedo: Baloo 2 branca com contorno roxo e lábio embaixo (maquete 1).
+                TextoComContorno("Casinha do Saber", estilo = MaterialTheme.typography.headlineMedium, espessura = 5.dp)
                 TextoContornado(
                     "🏠 ${estado.itensGanhos.size} de ${br.com.casinhadosaber.dominio.CasaQueCresce.metaAtual(estado.fasesVencidas)} coisas",
                     MaterialTheme.typography.titleMedium,
@@ -301,7 +305,8 @@ private fun BotaoTrilha(trilha: Trilha, vencidas: Int, modifier: Modifier, onCli
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(trilha.emoji, style = MaterialTheme.typography.headlineLarge)
+            // Ícone 3D do caminho (blocos 1 2 3, A B C, globo, argolas), no lugar do emoji e do mesmo tamanho.
+            IconeDeTrilha(trilha, Modifier.size(40.dp))
             Spacer(Modifier.width(6.dp))
             Column(Modifier.weight(1f)) {
                 Text(trilha.titulo, style = MaterialTheme.typography.titleMedium.copy(fontSize = 19.sp), color = Color.White, maxLines = 1, softWrap = false)
@@ -353,17 +358,16 @@ private fun BotaoAdulto(onAbrir: () -> Unit) {
             .padding(bottom = 4.dp)
             .size(48.dp)
             .clip(CircleShape)
-            .background(Color.White)
-            .brilhoDoTopo()
-            .border(2.dp, Cores.Contorno, CircleShape),
+            // Mesma face clara do BotaoRedondo (brinquedo 3D), com a engrenagem da arte no lugar do emoji.
+            .faceDeBrinquedo(Color.White, CircleShape, redonda = true),
         contentAlignment = Alignment.Center,
     ) {
-        Text("⚙️", fontSize = 22.sp)
+        ImagemDeArte(IconesDaBarra.AJUSTES, Modifier.size(27.dp)) { Text("⚙️", fontSize = 22.sp) }
     }
 }
 
 /** Base lilás dos botões brancos (a mesma do `BotaoRedondo`). */
-private val BASE_DO_BOTAO = Color(0xFFD9CFF2)
+private val BASE_DO_BOTAO = Cores.LabioLilas
 
 /**
  * Texto branco com contorno e sombra ameixa (o título sobre o céu claro). O contorno é uma cópia do texto

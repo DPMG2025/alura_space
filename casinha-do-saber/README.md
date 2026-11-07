@@ -95,4 +95,5 @@ app/src/main/java/br/com/casinhadosaber/
 ## Créditos
 
 * Fonte Fredoka, licença SIL Open Font License (`licencas/Fredoka-OFL.txt`).
+* Fonte Baloo 2 (títulos e números), licença SIL Open Font License (`licencas/Baloo2-OFL.txt`).
 * Emojis Noto Color Emoji (Google), licença SIL Open Font License, embutidos pela biblioteca AndroidX Emoji2.

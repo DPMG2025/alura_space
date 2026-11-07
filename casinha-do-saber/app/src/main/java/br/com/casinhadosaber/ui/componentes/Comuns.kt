@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
@@ -63,11 +64,10 @@ import br.com.casinhadosaber.ui.tema.Degrades
 import br.com.casinhadosaber.ui.tema.Raios
 
 /**
- * Botão "fofinho": tem uma base mais escura embaixo (efeito 3D) e afunda quando é pressionado.
- *
- * Visual do sistema de design: faixa de brilho no terço de cima ([brilho]), contorno de 2 dp
- * ([contorno], ameixa a 25%, que sobre qualquer cor vira um tom mais escuro dela) e sombra suave
- * embaixo da base ([sombra]). Ao apertar, além de afundar, amassa (1,04 × 0,94) e volta com mola.
+ * Botão "fofinho" com cara de bloco de brinquedo (visual 3D, `.bloco` de `docs/visual-3d/prototipo/ui2.css`):
+ * face colorida em degradê ([Degrades.bloco]), lábio mais escuro embaixo ([corBase], [profundidade]), brilho
+ * macio no alto à esquerda ([brilho]), borda branca ([contorno] diferente de nulo) e sombra suave ([sombra]).
+ * Ao apertar, afunda até o lábio e amassa (1,04 × 0,94), voltando com mola.
  * Desabilitado fica numa versão clarinha da própria cor (nunca cinza).
  */
 @Composable
@@ -82,12 +82,36 @@ fun BotaoFofo(
     profundidade: Dp = 6.dp,
     /** Ocupa todo o espaço que o pai der (para botões que crescem com a tela). */
     preencher: Boolean = false,
-    /** Faixa de brilho no terço de cima. */
+    /** Brilho macio no alto da face. */
     brilho: Boolean = true,
-    /** Cor do contorno de 2 dp da face e da base; `null` tira o contorno. */
+    /** Com cor, o botão ganha a borda branca do brinquedo e um fio desta cor por fora do lábio; `null` tira os dois. */
     contorno: Color? = Cores.Contorno,
-    /** Sombra suave embaixo da base. */
+    /** Sombra suave embaixo do lábio. */
     sombra: Boolean = true,
+    conteudo: @Composable () -> Unit,
+) {
+    BlocoDeBrinquedo(
+        onClick, modifier, cor, corBase, forma, descricao, habilitado, profundidade, preencher, brilho, contorno, sombra,
+        redondoClaro = false, conteudo = conteudo,
+    )
+}
+
+/** O [BotaoFofo] por dentro; [redondoClaro] troca a face pela do botão redondo (`.redondo`, luz em cima à esquerda). */
+@Composable
+private fun BlocoDeBrinquedo(
+    onClick: () -> Unit,
+    modifier: Modifier,
+    cor: Color,
+    corBase: Color,
+    forma: Shape,
+    descricao: String?,
+    habilitado: Boolean,
+    profundidade: Dp,
+    preencher: Boolean,
+    brilho: Boolean,
+    contorno: Color?,
+    sombra: Boolean,
+    redondoClaro: Boolean,
     conteudo: @Composable () -> Unit,
 ) {
     val interacao = remember { MutableInteractionSource() }
@@ -120,14 +144,69 @@ fun BotaoFofo(
                 .then(if (preencher) Modifier.fillMaxSize() else Modifier)
                 .offset { IntOffset(0, (profundidade.toPx() * afundar).roundToInt()) }
                 .clip(forma)
-                .background(corFace)
-                .then(if (brilho) Modifier.brilhoDoTopo() else Modifier)
-                .then(if (contorno != null) Modifier.border(2.dp, contorno, forma) else Modifier)
+                .faceDeBrinquedo(corFace, forma, brilho, bordaBranca = contorno != null, redonda = redondoClaro)
                 .graphicsLayer { alpha = if (habilitado) 1f else 0.8f },
             contentAlignment = Alignment.Center,
         ) {
             conteudo()
         }
+    }
+}
+
+/**
+ * Face do bloco de brinquedo desenhada atrás do conteúdo (use depois do `clip` da [forma]): degradê da cor,
+ * sombra interna embaixo (a face "arredonda" para o lábio), brilho em cima e a borda branca a 75%.
+ * [redonda]: a face clara do botão redondo, com o ponto de luz em cima à esquerda (`radial-gradient` do protótipo).
+ */
+fun Modifier.faceDeBrinquedo(
+    cor: Color,
+    forma: Shape = RoundedCornerShape(24.dp),
+    brilho: Boolean = true,
+    bordaBranca: Boolean = true,
+    redonda: Boolean = false,
+): Modifier = drawWithCache {
+    val w = size.width
+    val h = size.height
+    if (w <= 0f || h <= 0f) return@drawWithCache onDrawBehind { }
+    val face: Brush = if (redonda) {
+        val clara = if (cor == Color.White) Color(0xFFE9E2FF) else lerp(cor, Color.Black, 0.06f)
+        // Ponto de luz: branco no botão claro; nos coloridos, a própria cor bem clareada (não uma mancha branca).
+        val luz = if (cor == Color.White) Color.White else lerp(cor, Color.White, 0.55f)
+        Brush.radialGradient(
+            0f to luz, 0.18f to luz, 0.30f to lerp(luz, clara, 0.15f), 1f to clara,
+            center = Offset(w * 0.35f, h * 0.28f),
+            radius = maxOf(w, h) * 0.85f,
+        )
+    } else {
+        Degrades.bloco(cor)
+    }
+    // Sombra interna do pé (inset 0 -6px 10px): só na faixa de baixo.
+    val pe = Brush.verticalGradient(
+        0f to Color.Transparent, 0.72f to Color.Transparent,
+        1f to (if (redonda) Color(0x2E7850C8) else Color(0x24000000)),
+    )
+    val borda = minOf(3.dp.toPx(), minOf(w, h) * 0.06f)
+    val contornoDaFace = forma.createOutline(size, layoutDirection, this)
+    onDrawBehind {
+        drawRect(face)
+        drawRect(pe)
+        if (brilho && !redonda) {
+            // radial-gradient(120% 70% at 30% 0%, branco .55 até 30%, some em 55%): elipse achatada no alto.
+            val cx = w * 0.30f
+            val raio = w * 1.2f
+            scale(scaleX = 1f, scaleY = (h * 0.7f) / raio, pivot = Offset(cx, 0f)) {
+                drawCircle(
+                    Brush.radialGradient(
+                        0f to Color.White.copy(alpha = 0.55f), 0.30f to Color.White.copy(alpha = 0.50f), 0.55f to Color.Transparent,
+                        center = Offset(cx, 0f),
+                        radius = raio,
+                    ),
+                    radius = raio,
+                    center = Offset(cx, 0f),
+                )
+            }
+        }
+        if (bordaBranca) drawOutline(contornoDaFace, Color.White.copy(alpha = if (redonda) 1f else 0.75f), style = Stroke(borda * 2f))
     }
 }
 
@@ -180,8 +259,9 @@ fun Modifier.brilhoDoTopo(intensidade: Float = 1f): Modifier = drawBehind {
 }
 
 /**
- * Ladrilho/cartão do sistema de design desenhado atrás do conteúdo: sombra suave, "lábio" colorido de
- * [profundidade] embaixo (reserva o espaço com um padding), corpo [cor] com um leve degradê e contorno.
+ * Ladrilho/cartão do sistema de design desenhado atrás do conteúdo, no visual de brinquedo: corpo [cor] em
+ * degradê para um lilás quase branco, brilho no alto, "lábio" colorido de [profundidade] embaixo (com [labio];
+ * reserva o espaço com um padding), contorno fino ([contorno]) e sombra macia em duas camadas.
  * Para respostas, peças e painéis: `Modifier.cartaoFofo(labio = corDaTrilha)`.
  */
 fun Modifier.cartaoFofo(
@@ -196,15 +276,32 @@ fun Modifier.cartaoFofo(
     .drawWithCache {
         val r = CornerRadius(raio.toPx())
         val p = if (labio != null) profundidade.toPx() else 0f
-        val corpo = Brush.verticalGradient(listOf(cor, lerp(cor, Color(0xFFEDE6FF), 0.25f)))
+        val corpo = Brush.verticalGradient(listOf(lerp(cor, Color.White, 0.3f), cor, lerp(cor, Color(0xFFEDE6FF), 0.3f)))
         val traco = Stroke(2.dp.toPx())
+        val brilhoAlto = Brush.verticalGradient(
+            listOf(Color.White.copy(alpha = 0.55f), Color.White.copy(alpha = 0f)),
+            startY = 0f,
+            endY = minOf(size.height * 0.4f, 28.dp.toPx()),
+        )
+        val dentro = 3.dp.toPx()
         onDrawBehind {
-            if (sombra) drawRoundRect(Cores.Sombra, topLeft = Offset(0f, p + 3.dp.toPx()), size = size, cornerRadius = r)
+            if (sombra) {
+                drawRoundRect(Cores.Sombra.copy(alpha = Cores.Sombra.alpha * 0.45f), topLeft = Offset(0f, p + 6.dp.toPx()), size = size, cornerRadius = r)
+                drawRoundRect(Cores.Sombra, topLeft = Offset(0f, p + 2.dp.toPx()), size = size, cornerRadius = r)
+            }
             if (labio != null) {
                 drawRoundRect(labio, topLeft = Offset(0f, p), size = size, cornerRadius = r)
                 if (contorno != null) drawRoundRect(contorno, topLeft = Offset(0f, p), size = size, cornerRadius = r, style = traco)
             }
             drawRoundRect(corpo, size = size, cornerRadius = r)
+            if (size.width > dentro * 2 && size.height > dentro * 2) {
+                drawRoundRect(
+                    brilhoAlto,
+                    topLeft = Offset(dentro, dentro),
+                    size = Size(size.width - dentro * 2, size.height - dentro * 2),
+                    cornerRadius = CornerRadius((raio.toPx() - dentro).coerceAtLeast(0f)),
+                )
+            }
             if (contorno != null) drawRoundRect(contorno, size = size, cornerRadius = r, style = traco)
         }
     }
@@ -214,7 +311,12 @@ fun escurecer(c: Color, fator: Float = 0.78f) = Color(c.red * fator, c.green * f
 /** Cor da base 3D de um botão [cor]: um tom mais escuro dela; para o branco, um lilás claro (o cinza parecia sujo). */
 fun baseDe(cor: Color): Color = if (cor == Color.White) BaseLilas else escurecer(cor)
 
-/** Botão redondo pequeno com um emoji (voltar, som, ouvir de novo). Disco sólido com base lilás. */
+/**
+ * Botão redondo claro da barra (fechar, voltar, som, ajustes...): face branca com luz em cima à esquerda, lábio
+ * lilás, borda branca (`.redondo` do protótipo). Quando a arte 3D tem o ícone de [emoji] ([IconesDaBarra]), ele
+ * aparece no lugar do emoji (glifo roxo de plástico); os outros emojis continuam até a arte deles existir.
+ * Com [cor] diferente de branco, a face fica dessa cor (por exemplo, amarela quando a lojinha está aberta).
+ */
 @Composable
 fun BotaoRedondo(
     emoji: String,
@@ -226,7 +328,8 @@ fun BotaoRedondo(
     corBase: Color = baseDe(cor),
     habilitado: Boolean = true,
 ) {
-    BotaoFofo(
+    val icone = remember(emoji, descricao) { IconesDaBarra.para(emoji, descricao) }
+    BlocoDeBrinquedo(
         onClick = onClick,
         modifier = modifier,
         cor = cor,
@@ -234,24 +337,59 @@ fun BotaoRedondo(
         forma = CircleShape,
         descricao = descricao,
         habilitado = habilitado,
-        profundidade = 4.dp,
+        profundidade = 5.dp,
+        preencher = false,
+        brilho = true,
+        contorno = Cores.Contorno,
+        sombra = true,
+        redondoClaro = true,
     ) {
         Box(Modifier.size(tamanho), contentAlignment = Alignment.Center) {
-            Text(emoji, fontSize = (tamanho.value * 0.45f).sp)
+            val emojiDeReserva: @Composable () -> Unit = { Text(emoji, fontSize = (tamanho.value * 0.45f).sp) }
+            if (icone == null) {
+                emojiDeReserva()
+            } else {
+                IconeDeArteDaBarra(icone, Modifier.size(tamanho * 0.56f), reserva = emojiDeReserva)
+            }
         }
     }
 }
 
-/** Base dos botões brancos: lilás claro e sólido (a base translúcida de antes sumia sobre a cena). */
-private val BaseLilas = Color(0xFFD9CFF2)
+/**
+ * Um ícone da barra em arte 3D (glifo roxo), espelhado quando pedido, com [reserva] se a imagem faltar.
+ * Decorativo: quem fala o nome é o botão em volta.
+ */
+@Composable
+fun IconeDeArteDaBarra(icone: IconeDaBarra, modifier: Modifier = Modifier, reserva: (@Composable () -> Unit)? = null) {
+    ImagemDeArte(
+        icone.id,
+        modifier.then(if (icone.espelhado) Modifier.graphicsLayer { scaleX = -1f } else Modifier),
+        reserva = reserva,
+    )
+}
 
+/** Base dos botões brancos: lilás sólido (`.redondo` do protótipo; a base translúcida de antes sumia sobre a cena). */
+private val BaseLilas = Cores.LabioLilas
+
+/**
+ * Uma estrela de plástico dourado (arte 3D `estrela_cheia`; acima de 48 dp, a `estrela3d` grande) ou a apagada
+ * (`estrela_vazia`). Sem a arte, a estrela desenhada de antes.
+ */
 @Composable
 fun Estrela(acesa: Boolean, modifier: Modifier = Modifier, tamanho: Dp = 24.dp) {
-    Canvas(modifier.size(tamanho)) {
-        val c = Offset(size.width / 2, size.height / 2)
-        drawPath(caminhoEstrela(c, size.minDimension / 2), if (acesa) Cores.Estrela else Cores.EstrelaApagada)
+    val id = when {
+        !acesa -> ID_ESTRELA_VAZIA
+        tamanho > 48.dp -> "estrela3d"
+        else -> ID_ESTRELA_CHEIA
+    }
+    ImagemDeArte(id, modifier.size(tamanho)) {
+        Canvas(Modifier.size(tamanho)) {
+            val c = Offset(size.width / 2, size.height / 2)
+            drawPath(caminhoEstrela(c, size.minDimension / 2), if (acesa) Cores.Estrela else Cores.EstrelaApagada)
+        }
     }
 }
+
 
 @Composable
 fun FileiraDeEstrelas(quantas: Int, modifier: Modifier = Modifier, tamanho: Dp = 22.dp, total: Int = 3) {
@@ -264,8 +402,8 @@ fun FileiraDeEstrelas(quantas: Int, modifier: Modifier = Modifier, tamanho: Dp =
 enum class LadoDaCauda { Nenhum, Esquerda, Direita, Baixo }
 
 /**
- * Balão de fala da criança personagem: branco para lilás de cima para baixo, contorno lilás, sombra
- * suave e uma ponta apontando para quem fala ([cauda]; na tela do jogo a criança fica à esquerda).
+ * Balão de fala da criança personagem (`.balao` do protótipo): branco para lilás de cima para baixo, lábio
+ * lilás embaixo, sombra macia e uma ponta apontando para quem fala ([cauda]; no jogo a criança fica à esquerda).
  */
 @Composable
 fun BalaoDeFala(texto: String, modifier: Modifier = Modifier, cauda: LadoDaCauda = LadoDaCauda.Esquerda) {
@@ -279,6 +417,7 @@ fun BalaoDeFala(texto: String, modifier: Modifier = Modifier, cauda: LadoDaCauda
 }
 
 private val CAUDA = 14.dp
+private val LABIO_DO_BALAO = 5.dp
 
 /**
  * Desenho do balão atrás do conteúdo, num caminho só (corpo arredondado unido à ponta), para o
@@ -286,13 +425,13 @@ private val CAUDA = 14.dp
  */
 fun Modifier.balaoDeFala(
     cauda: LadoDaCauda = LadoDaCauda.Esquerda,
-    raio: Dp = 20.dp,
-    corDoContorno: Color = Color(0xFFE2D8FF),
+    raio: Dp = 24.dp,
+    corDoContorno: Color = Color(0xFFEAE3FF),
 ): Modifier = this
     .padding(
         start = if (cauda == LadoDaCauda.Esquerda) CAUDA else 0.dp,
         end = if (cauda == LadoDaCauda.Direita) CAUDA else 0.dp,
-        bottom = (if (cauda == LadoDaCauda.Baixo) CAUDA else 0.dp) + 3.dp,
+        bottom = (if (cauda == LadoDaCauda.Baixo) CAUDA else 0.dp) + LABIO_DO_BALAO,
     )
     .drawWithCache {
         val r = raio.toPx().coerceAtMost(size.minDimension / 2f)
@@ -329,10 +468,13 @@ fun Modifier.balaoDeFala(
             LadoDaCauda.Nenhum -> Unit
         }
         val forma = if (cauda == LadoDaCauda.Nenhum) corpo else Path.combine(PathOperation.Union, corpo, ponta)
-        val traco = Stroke(3.dp.toPx())
-        val sombraY = 3.dp.toPx()
+        val traco = Stroke(2.dp.toPx())
+        val labio = LABIO_DO_BALAO.toPx()
         onDrawBehind {
-            translate(top = sombraY) { drawPath(forma, Cores.Sombra.copy(alpha = 0.16f)) }
+            // Sombra macia, o lábio lilás sólido logo embaixo (`.balao`: 0 6px 0 #d7ccf7) e o corpo branco.
+            translate(top = labio + 5.dp.toPx()) { drawPath(forma, Cores.Sombra.copy(alpha = 0.10f)) }
+            translate(top = labio + 2.dp.toPx()) { drawPath(forma, Cores.Sombra.copy(alpha = 0.12f)) }
+            translate(top = labio) { drawPath(forma, Cores.LabioClaro) }
             drawPath(forma, Degrades.Cartao)
             drawPath(forma, corDoContorno, style = traco)
         }
