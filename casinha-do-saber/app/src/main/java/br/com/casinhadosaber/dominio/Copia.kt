@@ -82,8 +82,10 @@ object Copia {
             "desafios_pais", "sessoes",
             // Relembrar, Descobrir o nível e Livrinhos (por criança, como o resto do progresso).
             "revisoes", "liberada_ate", "nivel_feito", "livrinhos_lidos",
+            // Livro de Colorir e quebra-cabeças.
+            "obras_colorir", "coloridos", "puzzles_feitos",
         ).forEach { put(it, 's') }
-        listOf("pele", "cabelo", "roupa", "estilo_cabelo", "moedas", "moedas_hoje", "cor_telhado", "cor_porta", "papel", "clima", "timer")
+        listOf("pele", "cabelo", "roupa", "estilo_cabelo", "moedas", "moedas_hoje", "cor_telhado", "cor_porta", "papel", "clima", "timer", "puzzle_seguidas")
             .forEach { put(it, 'i') }
         listOf("segundos", "dia_moedas", "dia_missao", "dia", "segundos_hoje").forEach { put(it, 'l') }
         listOf("crianca_x", "crianca_y").forEach { put(it, 'f') }

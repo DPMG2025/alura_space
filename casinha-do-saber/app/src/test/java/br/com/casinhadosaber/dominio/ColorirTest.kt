@@ -14,11 +14,11 @@ class ColorirTest {
     private val casinha = Desenhos.porId.getValue("casinha")
 
     /** Centro de uma região qualquer que seja a de cima naquele ponto (para tocar com certeza nela). */
-    private fun centro(d: Desenho, i: Int): Ponto {
+    private fun centro(d: DesenhoDeColorir, i: Int): PontoDoDesenho {
         val f = d.regioes[i].forma
         val p = when (f) {
-            is Forma.Elipse -> Ponto(f.cx, f.cy)
-            is Forma.Poligono -> Ponto(f.pontos.map { it.x }.average().toFloat(), f.pontos.map { it.y }.average().toFloat())
+            is Forma.Elipse -> PontoDoDesenho(f.cx, f.cy)
+            is Forma.Poligono -> PontoDoDesenho(f.pontos.map { it.x }.average().toFloat(), f.pontos.map { it.y }.average().toFloat())
         }
         return p
     }
@@ -37,7 +37,7 @@ class ColorirTest {
             assertTrue("${d.id} sem regiões", d.regioes.size in 4..30)
             for ((i, r) in d.regioes.withIndex()) {
                 val pontos = when (val f = r.forma) {
-                    is Forma.Elipse -> listOf(Ponto(f.cx - f.rx, f.cy - f.ry), Ponto(f.cx + f.rx, f.cy + f.ry))
+                    is Forma.Elipse -> listOf(PontoDoDesenho(f.cx - f.rx, f.cy - f.ry), PontoDoDesenho(f.cx + f.rx, f.cy + f.ry))
                     is Forma.Poligono -> f.pontos
                 }
                 assertTrue("${d.id} região $i fora do quadrado", pontos.all { it.x in -0.001f..1.001f && it.y in -0.001f..1.001f })
@@ -76,7 +76,7 @@ class ColorirTest {
         assertTrue(e.contem(0.69f, 0.5f))
         assertFalse(e.contem(0.5f, 0.65f))
         // Letra "L": o canto de dentro da dobra não faz parte.
-        val l = Forma.Poligono(listOf(Ponto(0f, 0f), Ponto(0.3f, 0f), Ponto(0.3f, 0.7f), Ponto(1f, 0.7f), Ponto(1f, 1f), Ponto(0f, 1f)))
+        val l = Forma.Poligono(listOf(PontoDoDesenho(0f, 0f), PontoDoDesenho(0.3f, 0f), PontoDoDesenho(0.3f, 0.7f), PontoDoDesenho(1f, 0.7f), PontoDoDesenho(1f, 1f), PontoDoDesenho(0f, 1f)))
         assertTrue(l.contem(0.1f, 0.5f))
         assertTrue(l.contem(0.8f, 0.85f))
         assertFalse(l.contem(0.8f, 0.3f))
@@ -99,7 +99,7 @@ class ColorirTest {
     fun `balde tapa o pincel da regiao e borracha limpa tudo dela`() {
         val r = gato.regioes.size - 1
         val p = centro(gato, r)
-        val com = Colorir.pincel(gato, Colorir.obraVazia(gato), listOf(p, Ponto(p.x + 0.01f, p.y)), 3, 0.03f, true)
+        val com = Colorir.pincel(gato, Colorir.obraVazia(gato), listOf(p, PontoDoDesenho(p.x + 0.01f, p.y)), 3, 0.03f, true)
         assertEquals(1, com.tracos.size)
         val balde = Colorir.balde(gato, com, p.x, p.y, 1)
         assertTrue(balde.tracos.isEmpty())
@@ -111,7 +111,7 @@ class ColorirTest {
     fun `pincel dentro da linha prende na regiao onde o dedo comecou`() {
         val r = gato.regioes.size - 1
         val p = centro(gato, r)
-        val o = Colorir.pincel(gato, Colorir.obraVazia(gato), listOf(p, Ponto(0.01f, 0.01f)), 2, 0.04f, true)
+        val o = Colorir.pincel(gato, Colorir.obraVazia(gato), listOf(p, PontoDoDesenho(0.01f, 0.01f)), 2, 0.04f, true)
         assertEquals(gato.regiaoEm(p.x, p.y), o.tracos.single().regiao)
         val livre = Colorir.pincel(gato, Colorir.obraVazia(gato), listOf(p), 2, 0.04f, false)
         assertEquals(-1, livre.tracos.single().regiao)
@@ -121,20 +121,20 @@ class ColorirTest {
     fun `pincel fora de qualquer regiao com a trava ligada e ignorado e traco vazio tambem`() {
         // Desenhos com fundo cobrem tudo; força um ponto fora do quadrado.
         val o = Colorir.obraVazia(gato)
-        assertEquals(o, Colorir.pincel(gato, o, listOf(Ponto(-1f, -1f)), 2, 0.04f, true))
+        assertEquals(o, Colorir.pincel(gato, o, listOf(PontoDoDesenho(-1f, -1f)), 2, 0.04f, true))
         assertEquals(o, Colorir.pincel(gato, o, emptyList(), 2, 0.04f, false))
-        assertEquals(o, Colorir.pincel(gato, o, listOf(Ponto(0.5f, 0.5f)), 0, 0.04f, false))
+        assertEquals(o, Colorir.pincel(gato, o, listOf(PontoDoDesenho(0.5f, 0.5f)), 0, 0.04f, false))
     }
 
     @Test
     fun `traco longo e reduzido e o numero de tracos tem limite`() {
-        val longo = List(500) { Ponto(it / 500f, 0.5f) }
+        val longo = List(500) { PontoDoDesenho(it / 500f, 0.5f) }
         val r = Colorir.reduzir(longo)
         assertEquals(Colorir.MAXIMO_DE_PONTOS, r.size)
         assertEquals(longo.first(), r.first())
         assertEquals(longo.last(), r.last())
         var o = Colorir.obraVazia(gato)
-        repeat(Colorir.MAXIMO_DE_TRACOS + 20) { o = Colorir.pincel(gato, o, listOf(Ponto(0.5f, 0.5f)), 1, 0.03f, false) }
+        repeat(Colorir.MAXIMO_DE_TRACOS + 20) { o = Colorir.pincel(gato, o, listOf(PontoDoDesenho(0.5f, 0.5f)), 1, 0.03f, false) }
         assertEquals(Colorir.MAXIMO_DE_TRACOS, o.tracos.size)
     }
 
@@ -160,7 +160,7 @@ class ColorirTest {
         assertTrue(g.passado.size <= Historico.PASSOS)
     }
 
-    private fun pintarTudo(d: Desenho, tintas: List<Int>): Obra {
+    private fun pintarTudo(d: DesenhoDeColorir, tintas: List<Int>): Obra {
         var o = Colorir.obraVazia(d)
         for (i in d.regioes.indices) o = o.copy(tintas = o.tintas.toMutableList().also { it[i] = tintas[i % tintas.size] })
         return o
@@ -229,7 +229,7 @@ class ColorirTest {
         val r = gato.regioes.size - 1
         val p = centro(gato, r)
         var o = pintarTudo(gato, listOf(1, 2, 3))
-        o = Colorir.pincel(gato, o, listOf(p, Ponto(p.x + 0.02f, p.y + 0.01f)), 13, 0.035f, true)
+        o = Colorir.pincel(gato, o, listOf(p, PontoDoDesenho(p.x + 0.02f, p.y + 0.01f)), 13, 0.035f, true)
         val outro = Colorir.balde(casinha, Colorir.obraVazia(casinha), 0.5f, 0.6f, 7)
         val txt = Colorir.obrasParaTexto(mapOf(gato.id to o, casinha.id to outro))
         val volta = Colorir.textoParaObras(txt)

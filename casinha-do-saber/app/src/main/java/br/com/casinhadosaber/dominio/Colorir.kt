@@ -7,7 +7,7 @@ package br.com.casinhadosaber.dominio
  */
 
 /** Um ponto no quadrado do desenho (x e y de 0 a 1). */
-data class Ponto(val x: Float, val y: Float)
+data class PontoDoDesenho(val x: Float, val y: Float)
 
 /** Forma fechada de uma região. [contem] diz se um toque cai dentro dela. */
 sealed interface Forma {
@@ -23,7 +23,7 @@ sealed interface Forma {
     }
 
     /** Polígono fechado (o último ponto liga ao primeiro). Teste do raio, vale para formas côncavas. */
-    data class Poligono(val pontos: List<Ponto>) : Forma {
+    data class Poligono(val pontos: List<PontoDoDesenho>) : Forma {
         override fun contem(x: Float, y: Float): Boolean {
             var dentro = false
             var j = pontos.size - 1
@@ -41,7 +41,7 @@ sealed interface Forma {
 /** Uma região pintável. Quanto mais para o fim da lista, mais "por cima" ela fica. */
 data class Regiao(val forma: Forma, val nome: String = "")
 
-data class Desenho(
+data class DesenhoDeColorir(
     val id: String,
     val titulo: String,
     val colecao: String,
@@ -51,9 +51,9 @@ data class Desenho(
     val coresPadrao: List<Int>,
 ) {
     init {
-        require(regioes.isNotEmpty()) { "Desenho $id sem regiões" }
-        require(coresPadrao.size == regioes.size) { "Desenho $id: ${coresPadrao.size} cores para ${regioes.size} regiões" }
-        require(coresPadrao.all { it in 1 until Tintas.todas.size }) { "Desenho $id usa tinta que não existe" }
+        require(regioes.isNotEmpty()) { "DesenhoDeColorir $id sem regiões" }
+        require(coresPadrao.size == regioes.size) { "DesenhoDeColorir $id: ${coresPadrao.size} cores para ${regioes.size} regiões" }
+        require(coresPadrao.all { it in 1 until Tintas.todas.size }) { "DesenhoDeColorir $id usa tinta que não existe" }
     }
 
     /** A região que fica por cima no ponto (o toque), ou -1 se não há nenhuma. */
@@ -113,7 +113,7 @@ object Tintas {
 }
 
 /** Um traço de pincel. [regiao] = onde o dedo começou (-1 = pincel livre, sem prender). Pontos no quadrado 0..1. */
-data class Traco(val regiao: Int, val tinta: Int, val largura: Float, val pontos: List<Ponto>)
+data class Traco(val regiao: Int, val tinta: Int, val largura: Float, val pontos: List<PontoDoDesenho>)
 
 /**
  * O que a criança fez num desenho: a tinta de cada região (balde) e os traços de pincel. Imutável: cada toque
@@ -134,13 +134,13 @@ object Colorir {
     const val MAXIMO_DE_TRACOS = 80
     const val MAXIMO_DE_PONTOS = 48
 
-    fun obraVazia(d: Desenho) = Obra(d.id, List(d.regioes.size) { 0 })
+    fun obraVazia(d: DesenhoDeColorir) = Obra(d.id, List(d.regioes.size) { 0 })
 
     /** A obra com as cores da versão bonita (modelo). */
-    fun obraModelo(d: Desenho) = Obra(d.id, d.coresPadrao)
+    fun obraModelo(d: DesenhoDeColorir) = Obra(d.id, d.coresPadrao)
 
     /** Balde: enche a região tocada com a tinta. Toque fora de qualquer região ou tinta inexistente não muda nada. */
-    fun balde(d: Desenho, o: Obra, x: Float, y: Float, tinta: Int): Obra {
+    fun balde(d: DesenhoDeColorir, o: Obra, x: Float, y: Float, tinta: Int): Obra {
         if (tinta !in 1 until Tintas.todas.size) return o
         val r = d.regiaoEm(x, y)
         if (r < 0 || o.tintas[r] == tinta) return o
@@ -149,7 +149,7 @@ object Colorir {
     }
 
     /** Borracha: limpa a região tocada (tinta e pincel). */
-    fun borracha(d: Desenho, o: Obra, x: Float, y: Float): Obra {
+    fun borracha(d: DesenhoDeColorir, o: Obra, x: Float, y: Float): Obra {
         val r = d.regiaoEm(x, y)
         if (r < 0) return o
         if (o.tintas[r] == 0 && o.tracos.none { it.regiao == r }) return o
@@ -160,7 +160,7 @@ object Colorir {
      * Fecha um traço de pincel. Com [dentroDaLinha], o traço fica preso à região onde o dedo começou (o que cai
      * fora dela nem é desenhado). Sem ele, é livre. Traço começado fora de região, com a trava ligada, é ignorado.
      */
-    fun pincel(d: Desenho, o: Obra, pontos: List<Ponto>, tinta: Int, largura: Float, dentroDaLinha: Boolean): Obra {
+    fun pincel(d: DesenhoDeColorir, o: Obra, pontos: List<PontoDoDesenho>, tinta: Int, largura: Float, dentroDaLinha: Boolean): Obra {
         if (pontos.isEmpty() || tinta !in 1 until Tintas.todas.size) return o
         val regiao = if (dentroDaLinha) d.regiaoEm(pontos.first().x, pontos.first().y) else -1
         if (dentroDaLinha && regiao < 0) return o
@@ -170,7 +170,7 @@ object Colorir {
     }
 
     /** Guarda no máximo [MAXIMO_DE_PONTOS] pontos, sempre com o primeiro e o último. */
-    fun reduzir(pontos: List<Ponto>): List<Ponto> {
+    fun reduzir(pontos: List<PontoDoDesenho>): List<PontoDoDesenho> {
         if (pontos.size <= MAXIMO_DE_PONTOS) return pontos
         val passo = (pontos.size - 1).toFloat() / (MAXIMO_DE_PONTOS - 1)
         return List(MAXIMO_DE_PONTOS) { pontos[kotlin.math.round(it * passo).toInt().coerceIn(0, pontos.size - 1)] }
@@ -184,13 +184,13 @@ object Colorir {
     // ----------------------------------------------------------------------------------------------
 
     /** Terminado = toda região tem tinta (balde) ou pincel cobrindo. Pelo menos 90% das regiões, para não travar nas minúsculas. */
-    fun terminou(d: Desenho, o: Obra): Boolean {
+    fun terminou(d: DesenhoDeColorir, o: Obra): Boolean {
         val cobertas = d.regioes.indices.count { o.tintas[it] != 0 || o.tracos.any { t -> t.regiao == it } }
         return cobertas * 10 >= d.regioes.size * 9
     }
 
     /** 1 estrela por terminar, 2 por usar 5 cores diferentes, 3 por usar uma tinta especial. 0 se não terminou. */
-    fun estrelas(d: Desenho, o: Obra): Int {
+    fun estrelas(d: DesenhoDeColorir, o: Obra): Int {
         if (!terminou(d, o)) return 0
         val usadas = o.coresUsadas()
         return when {
@@ -206,7 +206,7 @@ object Colorir {
      * O que a criança ganha ao dizer "Pronto!". [feitos] são os desenhos já terminados (id -> melhores estrelas),
      * antes deste. Terminar de novo só dá prêmio se melhorar as estrelas; nunca tira nada. Devolve null se ainda não terminou.
      */
-    fun premio(d: Desenho, o: Obra, feitos: Map<String, Int>, todos: List<Desenho> = Desenhos.todos): Premio? {
+    fun premio(d: DesenhoDeColorir, o: Obra, feitos: Map<String, Int>, todos: List<DesenhoDeColorir> = Desenhos.todos): Premio? {
         val e = estrelas(d, o)
         if (e == 0) return null
         val antes = feitos[d.id] ?: 0
@@ -243,7 +243,7 @@ object Colorir {
 
     private fun centesimos(v: Float): Int = kotlin.math.round(v.coerceIn(0f, 1f) * 1000f).toInt()
 
-    fun textoParaObras(s: String?, todos: List<Desenho> = Desenhos.todos): Map<String, Obra> {
+    fun textoParaObras(s: String?, todos: List<DesenhoDeColorir> = Desenhos.todos): Map<String, Obra> {
         if (s.isNullOrBlank()) return emptyMap()
         val porId = todos.associateBy { it.id }
         val saida = LinkedHashMap<String, Obra>()
@@ -259,7 +259,7 @@ object Colorir {
         return saida
     }
 
-    private fun lerTraco(s: String, d: Desenho): Traco? {
+    private fun lerTraco(s: String, d: DesenhoDeColorir): Traco? {
         if (s.isBlank()) return null
         val p = s.split(":")
         if (p.size != 4) return null
@@ -271,7 +271,7 @@ object Colorir {
             val xy = it.split(",")
             val x = xy.getOrNull(0)?.toIntOrNull() ?: return@mapNotNull null
             val y = xy.getOrNull(1)?.toIntOrNull() ?: return@mapNotNull null
-            Ponto(x / 1000f, y / 1000f)
+            PontoDoDesenho(x / 1000f, y / 1000f)
         }.take(MAXIMO_DE_PONTOS)
         if (pontos.isEmpty()) return null
         return Traco(regiao, tinta, largura, pontos)
@@ -280,7 +280,7 @@ object Colorir {
     /** "id:estrelas" por desenho terminado. */
     fun feitosParaTexto(feitos: Map<String, Int>): String = feitos.entries.joinToString(",") { "${it.key}:${it.value}" }
 
-    fun textoParaFeitos(s: String?, todos: List<Desenho> = Desenhos.todos): Map<String, Int> {
+    fun textoParaFeitos(s: String?, todos: List<DesenhoDeColorir> = Desenhos.todos): Map<String, Int> {
         val ids = todos.map { it.id }.toSet()
         return s.orEmpty().split(",").mapNotNull {
             val p = it.split(":")

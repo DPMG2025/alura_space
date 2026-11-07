@@ -419,6 +419,11 @@ class Repositorio(private val context: Context) {
                 eventosRecebidos = prefs.getString(EVENTOS_RECEBIDOS, "").orEmpty().split(",").filter { it.isNotBlank() }.toSet(),
                 desenhos = desenhos,
                 quadrosNaParede = Atelie.textoParaParede(prefs.getString(QUADROS_PAREDE, null), desenhos),
+                // Livro de Colorir e quebra-cabeças: chaves novas, saves antigos ficam com o padrão.
+                obrasDeColorir = br.com.casinhadosaber.dominio.Colorir.textoParaObras(prefs.getString(OBRAS_COLORIR, null)),
+                coloridos = br.com.casinhadosaber.dominio.Colorir.textoParaFeitos(prefs.getString(COLORIDOS, null)),
+                puzzlesFeitos = br.com.casinhadosaber.dominio.Puzzle.textoParaFeitos(prefs.getString(PUZZLES_FEITOS, null)),
+                puzzleSeguidas = prefs.getInt(PUZZLE_SEGUIDAS, 0).coerceIn(0, 99),
                 desafiosDosPaisFeitos = Pais.textoParaDias(prefs.getString(DESAFIOS_PAIS, null)),
                 sessoes = Pais.textoParaRegistros(prefs.getString(SESSOES, null)),
                 // Relembrar, Descobrir o nível e Livrinhos: chaves novas, saves antigos ficam com o padrão.
@@ -480,6 +485,10 @@ class Repositorio(private val context: Context) {
         putString(EVENTOS_RECEBIDOS, e.eventosRecebidos.joinToString(","))
         putString(DESENHOS, Atelie.desenhosParaTexto(e.desenhos))
         putString(QUADROS_PAREDE, Atelie.paredeParaTexto(e.quadrosNaParede))
+        putString(OBRAS_COLORIR, br.com.casinhadosaber.dominio.Colorir.obrasParaTexto(e.obrasDeColorir))
+        putString(COLORIDOS, br.com.casinhadosaber.dominio.Colorir.feitosParaTexto(e.coloridos))
+        putString(PUZZLES_FEITOS, br.com.casinhadosaber.dominio.Puzzle.feitosParaTexto(e.puzzlesFeitos))
+        putInt(PUZZLE_SEGUIDAS, e.puzzleSeguidas)
         putString(DESAFIOS_PAIS, Pais.diasParaTexto(e.desafiosDosPaisFeitos))
         putString(SESSOES, Pais.registrosParaTexto(e.sessoes))
         putString(REVISOES, br.com.casinhadosaber.dominio.Relembrar.paraTexto(e.revisoes))
@@ -541,5 +550,9 @@ class Repositorio(private val context: Context) {
         const val LIBERADA_ATE = "liberada_ate"
         const val NIVEL_FEITO = "nivel_feito"
         const val LIVRINHOS = "livrinhos_lidos"
+        const val OBRAS_COLORIR = "obras_colorir"
+        const val COLORIDOS = "coloridos"
+        const val PUZZLES_FEITOS = "puzzles_feitos"
+        const val PUZZLE_SEGUIDAS = "puzzle_seguidas"
     }
 }

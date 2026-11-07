@@ -2,7 +2,7 @@ package br.com.casinhadosaber.dominio
 
 /**
  * Catálogo do Livro de Colorir: desenhos feitos de formas simples num quadrado de 0 a 1 (y cresce para baixo).
- * Cada região leva a cor da versão bonita ([Desenho.coresPadrao]); o quebra-cabeça usa essa versão como imagem.
+ * Cada região leva a cor da versão bonita ([DesenhoDeColorir.coresPadrao]); o quebra-cabeça usa essa versão como imagem.
  * Novos desenhos entram aqui, em [Desenhos.todos], sem mexer em mais nada.
  */
 private class Construtor(val id: String, val titulo: String, val colecao: String, val emoji: String) {
@@ -14,20 +14,20 @@ private class Construtor(val id: String, val titulo: String, val colecao: String
     fun el(cx: Float, cy: Float, rx: Float, ry: Float, cor: Int) = add(Forma.Elipse(cx, cy, rx, ry), cor)
     fun bola(cx: Float, cy: Float, r: Float, cor: Int) = el(cx, cy, r, r, cor)
     fun ret(x0: Float, y0: Float, x1: Float, y1: Float, cor: Int) =
-        add(Forma.Poligono(listOf(Ponto(x0, y0), Ponto(x1, y0), Ponto(x1, y1), Ponto(x0, y1))), cor)
+        add(Forma.Poligono(listOf(PontoDoDesenho(x0, y0), PontoDoDesenho(x1, y0), PontoDoDesenho(x1, y1), PontoDoDesenho(x0, y1))), cor)
     fun tri(x0: Float, y0: Float, x1: Float, y1: Float, x2: Float, y2: Float, cor: Int) =
-        add(Forma.Poligono(listOf(Ponto(x0, y0), Ponto(x1, y1), Ponto(x2, y2))), cor)
+        add(Forma.Poligono(listOf(PontoDoDesenho(x0, y0), PontoDoDesenho(x1, y1), PontoDoDesenho(x2, y2))), cor)
     fun poli(cor: Int, vararg xy: Float) {
         require(xy.size >= 6 && xy.size % 2 == 0)
-        add(Forma.Poligono(List(xy.size / 2) { Ponto(xy[2 * it], xy[2 * it + 1]) }), cor)
+        add(Forma.Poligono(List(xy.size / 2) { PontoDoDesenho(xy[2 * it], xy[2 * it + 1]) }), cor)
     }
     /** Estrela de [pontas] pontas. */
     fun estrela(cx: Float, cy: Float, r: Float, cor: Int, pontas: Int = 5) {
-        val pts = ArrayList<Ponto>()
+        val pts = ArrayList<PontoDoDesenho>()
         for (i in 0 until pontas * 2) {
             val ang = -Math.PI / 2 + i * Math.PI / pontas
             val raio = if (i % 2 == 0) r else r * 0.45f
-            pts += Ponto(cx + (raio * Math.cos(ang)).toFloat(), cy + (raio * Math.sin(ang)).toFloat())
+            pts += PontoDoDesenho(cx + (raio * Math.cos(ang)).toFloat(), cy + (raio * Math.sin(ang)).toFloat())
         }
         add(Forma.Poligono(pts), cor)
     }
@@ -37,10 +37,10 @@ private class Construtor(val id: String, val titulo: String, val colecao: String
     fun chao(topo: Float, cor: Int) = ret(0f, topo, 1f, 1f, cor)
     fun fundo(cor: Int) = ret(0f, 0f, 1f, 1f, cor)
 
-    fun pronto() = Desenho(id, titulo, colecao, emoji, regioes.toList(), cores.toList())
+    fun pronto() = DesenhoDeColorir(id, titulo, colecao, emoji, regioes.toList(), cores.toList())
 }
 
-private fun desenho(id: String, titulo: String, colecao: String, emoji: String, f: Construtor.() -> Unit): Desenho =
+private fun desenho(id: String, titulo: String, colecao: String, emoji: String, f: Construtor.() -> Unit): DesenhoDeColorir =
     Construtor(id, titulo, colecao, emoji).apply(f).pronto()
 
 object Desenhos {
@@ -55,7 +55,7 @@ object Desenhos {
 
     fun nomeDaColecao(id: String): String = colecoes.firstOrNull { it.first == id }?.second ?: id
 
-    val todos: List<Desenho> = listOf(
+    val todos: List<DesenhoDeColorir> = listOf(
         // ---------------------------------------------------------------- Bichos
         desenho("gato", "Gatinho", "bichos", "🐱") {
             fundo(3)
@@ -341,7 +341,7 @@ object Desenhos {
         },
     )
 
-    val porId: Map<String, Desenho> = todos.associateBy { it.id }
+    val porId: Map<String, DesenhoDeColorir> = todos.associateBy { it.id }
 
-    fun daColecao(colecao: String): List<Desenho> = todos.filter { it.colecao == colecao }
+    fun daColecao(colecao: String): List<DesenhoDeColorir> = todos.filter { it.colecao == colecao }
 }

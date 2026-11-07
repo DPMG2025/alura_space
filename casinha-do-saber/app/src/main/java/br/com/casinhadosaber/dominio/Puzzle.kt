@@ -9,21 +9,21 @@ import kotlin.random.Random
  * Dois jogos: **montar** (arrastar peças para a moldura, com ímã) e **deslizar** (empurrar peças para o espaço
  * vazio). A tela é o quadrado da moldura de 0 a 1; a bandeja com as peças soltas fica logo abaixo (y de 1,05 a 1,55).
  */
-data class NivelDeQuebraCabeca(val numero: Int, val colunas: Int, val linhas: Int) {
+data class NivelDePuzzle(val numero: Int, val colunas: Int, val linhas: Int) {
     val pecas: Int get() = colunas * linhas
 }
 
-object QuebraCabeca {
+object Puzzle {
     /** Oito níveis por coleção: de 4 a 36 peças. */
-    val niveis: List<NivelDeQuebraCabeca> = listOf(
-        NivelDeQuebraCabeca(1, 2, 2),
-        NivelDeQuebraCabeca(2, 3, 2),
-        NivelDeQuebraCabeca(3, 3, 3),
-        NivelDeQuebraCabeca(4, 4, 3),
-        NivelDeQuebraCabeca(5, 4, 4),
-        NivelDeQuebraCabeca(6, 5, 4),
-        NivelDeQuebraCabeca(7, 5, 5),
-        NivelDeQuebraCabeca(8, 6, 6),
+    val niveis: List<NivelDePuzzle> = listOf(
+        NivelDePuzzle(1, 2, 2),
+        NivelDePuzzle(2, 3, 2),
+        NivelDePuzzle(3, 3, 3),
+        NivelDePuzzle(4, 4, 3),
+        NivelDePuzzle(5, 4, 4),
+        NivelDePuzzle(6, 5, 4),
+        NivelDePuzzle(7, 5, 5),
+        NivelDePuzzle(8, 6, 6),
     )
 
     const val NIVEL_MAXIMO = 8
@@ -36,7 +36,7 @@ object QuebraCabeca {
     const val IMA = 0.38f
     const val IMA_LARGO = 0.6f
 
-    fun nivel(n: Int): NivelDeQuebraCabeca = niveis[(n - 1).coerceIn(0, niveis.size - 1)]
+    fun nivel(n: Int): NivelDePuzzle = niveis[(n - 1).coerceIn(0, niveis.size - 1)]
 
     // ----------------------------------------------------------------------------------------------
     // Montar
@@ -56,7 +56,7 @@ object QuebraCabeca {
         val dicas: Int = 0,
         val arrastos: Int = 0,
     ) {
-        val grade: NivelDeQuebraCabeca get() = nivel(nivel)
+        val grade: NivelDePuzzle get() = nivel(nivel)
         val largura: Float get() = 1f / grade.colunas
         val altura: Float get() = 1f / grade.linhas
         val venceu: Boolean get() = pecas.isNotEmpty() && pecas.all { it.colocada }
@@ -206,7 +206,7 @@ object QuebraCabeca {
     fun chave(desenhoId: String, nivel: Int) = "$desenhoId:$nivel"
 
     /** Maior nível já vencido na coleção (qualquer desenho), 0 se nenhum. */
-    fun nivelMaximo(colecao: String, feitos: Map<String, Int>, todos: List<Desenho> = Desenhos.todos): Int {
+    fun nivelMaximo(colecao: String, feitos: Map<String, Int>, todos: List<DesenhoDeColorir> = Desenhos.todos): Int {
         val ids = todos.filter { it.colecao == colecao }.map { it.id }.toSet()
         return feitos.keys.mapNotNull { k ->
             val p = k.split(":")
@@ -216,7 +216,7 @@ object QuebraCabeca {
     }
 
     /** Até que nível a criança pode escolher na coleção: o seguinte ao maior vencido (o 1 está sempre aberto). */
-    fun nivelAberto(colecao: String, feitos: Map<String, Int>, todos: List<Desenho> = Desenhos.todos): Int =
+    fun nivelAberto(colecao: String, feitos: Map<String, Int>, todos: List<DesenhoDeColorir> = Desenhos.todos): Int =
         (nivelMaximo(colecao, feitos, todos) + 1).coerceIn(1, NIVEL_MAXIMO)
 
     /**
@@ -255,7 +255,7 @@ object QuebraCabeca {
      * estrelas, antes desta vitória. Repetir só paga se melhorar as estrelas. Peças douradas: 1 por (desenho, nível)
      * novo e mais 1 ao chegar às 3 estrelas pela primeira vez.
      */
-    fun premio(desenhoId: String, nivel: Int, estrelas: Int, feitos: Map<String, Int>, todos: List<Desenho> = Desenhos.todos): Premio? {
+    fun premio(desenhoId: String, nivel: Int, estrelas: Int, feitos: Map<String, Int>, todos: List<DesenhoDeColorir> = Desenhos.todos): Premio? {
         if (estrelas !in 1..3) return null
         val d = todos.firstOrNull { it.id == desenhoId } ?: return null
         val k = chave(desenhoId, nivel)
@@ -284,7 +284,7 @@ object QuebraCabeca {
     /** "desenho:nível:estrelas" separados por vírgula. */
     fun feitosParaTexto(feitos: Map<String, Int>): String = feitos.entries.joinToString(",") { "${it.key}:${it.value}" }
 
-    fun textoParaFeitos(s: String?, todos: List<Desenho> = Desenhos.todos): Map<String, Int> {
+    fun textoParaFeitos(s: String?, todos: List<DesenhoDeColorir> = Desenhos.todos): Map<String, Int> {
         val ids = todos.map { it.id }.toSet()
         return s.orEmpty().split(",").mapNotNull {
             val p = it.split(":")

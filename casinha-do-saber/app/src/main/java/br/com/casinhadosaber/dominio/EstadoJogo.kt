@@ -86,6 +86,12 @@ data class EstadoJogo(
     /** Desenhos do ateliê ([Atelie.MAXIMO_DE_DESENHOS] no máximo) e os que estão pendurados na parede (ids). */
     val desenhos: List<Pintura> = emptyList(),
     val quadrosNaParede: List<String> = emptyList(),
+    /** Livro de Colorir (Fase 10): a obra de cada desenho (id -> obra) e as melhores estrelas dos terminados. */
+    val obrasDeColorir: Map<String, Obra> = emptyMap(),
+    val coloridos: Map<String, Int> = emptyMap(),
+    /** Quebra-cabeças (Fase 11): melhores estrelas por "desenho:nível" e vitórias seguidas sem dica (para subir de nível). */
+    val puzzlesFeitos: Map<String, Int> = emptyMap(),
+    val puzzleSeguidas: Int = 0,
     /** Dias (dia época) em que o desafio dos pais foi marcado como feito (últimos [Pais.DIAS_GUARDADOS] dias). */
     val desafiosDosPaisFeitos: Set<Long> = emptySet(),
     /** Registro curto das partidas para o relatório da semana (últimos [Pais.DIAS_GUARDADOS] dias). */
