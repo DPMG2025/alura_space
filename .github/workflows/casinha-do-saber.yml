@@ -280,6 +280,67 @@ jobs:
       - name: Falhar se o teste dos emojis falhou
         run: test ! -f emulador-falhou.txt
 
+  # DIAGNÓSTICO TEMPORÁRIO: o emulador de celular morre depois de uns 12 testes (execuções 121 a 123). Cada entrada roda
+  # só parte dos testes, em paralelo, para achar se é um teste, uma classe ou o acúmulo. Não bloqueia a publicação.
+  emulador-diag:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        alvo:
+          - "br.com.casinhadosaber.JogoNoEmuladorTest#abrirMapaEAlbum"
+          - "br.com.casinhadosaber.JogoNoEmuladorTest#areaDosPaisDesafioDoDia"
+          - "br.com.casinhadosaber.DiagnosticoTelasTest"
+          - "br.com.casinhadosaber.JogoNoEmuladorTest"
+    defaults:
+      run:
+        working-directory: casinha-do-saber
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Diagnóstico (${{ matrix.alvo }})
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          heap-size: 512M
+          cores: 4
+          disable-animations: false
+          working-directory: casinha-do-saber
+          script: |
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=${{ matrix.alvo }} || echo "FALHA_TESTES" > emulador-falhou.txt
+
+      - name: Resultado do diagnóstico
+        if: always()
+        run: |
+          echo "ALVO: ${{ matrix.alvo }}"
+          if [ -f emulador-falhou.txt ]; then echo "RESULTADO_DIAG: FALHOU"; else echo "RESULTADO_DIAG: PASSOU"; fi
+          find app/build/outputs/androidTest-results -name "*.xml" -exec grep -h -A12 "<failure" {} \; 2>/dev/null | head -40 || true
+
+      - name: Falhar se o diagnóstico falhou
+        run: test ! -f emulador-falhou.txt
+
   # Tela cheia no tablet (Fase 0A do PRD do visual 3D): as barras do sistema ficam escondidas no perfil de tablet.
   emulador-tablet:
     needs: build
