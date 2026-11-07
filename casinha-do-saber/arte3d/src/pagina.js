@@ -206,6 +206,7 @@ window.renderizar = (id, escala, superamostra) => {
   p.r.dispose();
   p.r.forceContextLoss();
   const extra = item.grupo === undefined ? {} : { grupo: item.grupo, tingir: item.tingir, ordem: item.ordem, personagem: item.personagem };
+  if (item.esconde) extra.esconde = item.esconde;
   return { png, largura, altura, tipo: item.tipo, uso: item.uso, apoio, ancoras, bordas, ...extra };
 };
 
