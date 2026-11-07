@@ -6,7 +6,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import br.com.casinhadosaber.ui.componentes.SetaDesenhada
-import br.com.casinhadosaber.ui.componentes.escurecer
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -79,10 +78,26 @@ import br.com.casinhadosaber.dominio.Visual
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
-import br.com.casinhadosaber.ui.componentes.BalaoDeFala
+import br.com.casinhadosaber.dominio.Trilha
+import br.com.casinhadosaber.ui.componentes.CorDaConta
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.FigurasNaCena
+import br.com.casinhadosaber.ui.componentes.IconeDaBarra
+import br.com.casinhadosaber.ui.componentes.IconeDeArteDaBarra
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
 import br.com.casinhadosaber.ui.componentes.Irmaozinho
 import br.com.casinhadosaber.ui.componentes.LadoDaCauda
+import br.com.casinhadosaber.ui.componentes.PilulaDeContas
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import br.com.casinhadosaber.ui.componentes.balaoDeFala
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
 import br.com.casinhadosaber.ui.componentes.cenarioDoJogo
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.unit.em
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Confete
@@ -276,14 +291,16 @@ fun TelaJogo(
     }
     if (treino != null) BackHandler { terminarTreino() }
 
-    Box(
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            // Cenário ao ar livre (céu na cor do caminho, sol, nuvens, morros e flores), opaco e parado: no jogo
-            // nada se mexe atrás das atividades (e a tela não é redesenhada à toa).
-            .cenarioDoJogo(cor)
+            // Cenário (céu em degradê e a ilha 3D do caminho; sem a arte, o cenário desenhado na cor do caminho),
+            // opaco e parado: no jogo nada se mexe atrás das atividades (e a tela não é redesenhada à toa).
+            .cenarioDoJogo(cor, fase.trilha)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
+        // As crianças grandes ao lado do balão, como na maquete 2; em telas baixas (celular pequeno, deitado), menores.
+        val telaBaixa = maxHeight < 700.dp
         Column(Modifier.fillMaxSize().padding(12.dp)) {
             // barra de cima (por cima da criança: o pulo e o braço que acena nunca cobrem o ✖)
             Row(Modifier.zIndex(1f), verticalAlignment = Alignment.CenterVertically) {
@@ -292,38 +309,19 @@ fun TelaJogo(
                 } else {
                     BotaoRedondo("✖️", "Sair da fase", onSair, tamanho = 48.dp)
                 }
-                Row(
-                    Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    // Bolinhas do progresso, uma cor por estado (nunca vermelho: vermelho parece erro):
-                    // verde com estrela = acertou de primeira; amarelo com estrela = acertou com ajuda;
-                    // branca com borda na cor do caminho = a da vez; branca clarinha = ainda vem.
-                    // No treino (sem fim), só as últimas bolinhas aparecem.
-                    val visiveis = if (treino != null) maxOf(0, indice - 5)..indice else perguntas.indices
-                    for (i in visiveis) {
-                        val resultado = comoFoi[i]
-                        val daVez = i == indice && resultado == null
-                        val tamanho = if (i == indice) 24.dp else 18.dp
-                        val (fundo, borda) = when {
-                            resultado == true -> Cores.Certo to Color(0xFF2A9452)
-                            resultado == false -> Cores.Estrela to Color(0xFFE0A800)
-                            daVez -> Color.White to escurecer(cor)
-                            else -> Color.White to Color(0x33000000)
-                        }
-                        Box(
-                            Modifier
-                                .padding(horizontal = 4.dp)
-                                .size(tamanho)
-                                .background(fundo, CircleShape)
-                                .border(if (daVez) 4.dp else 3.dp, borda, CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (resultado != null) {
-                                Text("★", color = Color.White, fontSize = (tamanho.value * 0.6f).sp, lineHeight = (tamanho.value * 0.7f).sp)
-                            }
-                        }
+                // Contas 3D do progresso numa pílula (maquete 2), uma cor por estado (nunca vermelho: vermelho
+                // parece erro): verde = acertou de primeira; azul = acertou com ajuda; amarela e maior = a da vez;
+                // perolada = ainda vem. No treino (sem fim), só as últimas contas aparecem.
+                val visiveis = if (treino != null) maxOf(0, indice - 5)..indice else perguntas.indices
+                val contas = visiveis.map { i ->
+                    when (comoFoi[i]) {
+                        true -> CorDaConta.VERDE.id to 1f
+                        false -> CorDaConta.AZUL.id to 1f
+                        null -> if (i == indice) CorDaConta.AMARELA.id to 1.25f else CorDaConta.VAZIA to 0.9f
                     }
+                }
+                Box(Modifier.weight(1f).padding(horizontal = 6.dp), contentAlignment = Alignment.Center) {
+                    PilulaDeContas(contas, tamanho = 24.dp)
                 }
                 BotaoRedondo("🔊", "Ouvir de novo", { narrador.falar(pergunta.fala) }, tamanho = 48.dp)
             }
@@ -332,6 +330,7 @@ fun TelaJogo(
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .zIndex(1f)
                     .padding(top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -339,11 +338,15 @@ fun TelaJogo(
                 // A ponta do balão só aparece quando a criança está ao lado dele (sem ela, o balão não aponta para o nada).
                 val comCrianca = perfil != null && (pergunta.cena != Cena.Nenhuma || deMexer)
                 if (comCrianca) {
-                    perfil?.let { CriancaEIrmao(it, pulo, acertou, humor, falando = narrador.falando, altura = if (deMexer) 76.dp else 96.dp) }
+                    val altura = when {
+                        deMexer -> if (telaBaixa) 76.dp else 96.dp
+                        else -> if (telaBaixa) 100.dp else 132.dp
+                    }
+                    perfil?.let { CriancaEIrmao(it, pulo, acertou, humor, falando = narrador.falando, altura = altura) }
                 }
                 Spacer(Modifier.width(8.dp))
-                BalaoDeFala(
-                    "🔊 " + pergunta.instrucao,
+                BalaoDaPergunta(
+                    pergunta.instrucao,
                     Modifier
                         .weight(1f)
                         .clickable(onClickLabel = "Ouvir de novo") { narrador.falar(pergunta.fala) },
@@ -400,7 +403,7 @@ fun TelaJogo(
                                 Column(Modifier.fillMaxSize()) {
                                     // Espaço de cima: a criança "conta" a pergunta, grandona, mexendo a boca.
                                     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                        perfil?.let { CriancaEIrmao(it, pulo, acertou, humor, falando = narrador.falando, altura = 150.dp) }
+                                        perfil?.let { CriancaEIrmao(it, pulo, acertou, humor, falando = narrador.falando, altura = if (telaBaixa) 130.dp else 170.dp) }
                                     }
                                     opcoes(alturaRespostas)
                                 }
@@ -413,7 +416,7 @@ fun TelaJogo(
                                     .padding(vertical = 12.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                CenaDaPergunta(p.cena, perfil)
+                                CenaDaPergunta(p.cena, perfil, fase.trilha)
                             }
                             opcoes(null)
                         }
@@ -454,10 +457,11 @@ private fun CriancaEIrmao(
                 humor == Humor.PENSANDO -> Humor.PENSANDO
                 else -> Humor.FELIZ
             }
+            // Na maquete 2 o irmãozinho tem uns 80% da altura da irmã.
             Irmaozinho(
                 perfil,
                 Modifier
-                    .height(altura * 0.66f)
+                    .height(altura * 0.8f)
                     .graphicsLayer { translationY = salto.value * density },
                 humor = humorDoIrmao,
             )
@@ -521,28 +525,42 @@ private fun tamanhoParaFiguras(n: Int): TextUnit = when {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CenaDaPergunta(cena: Cena, perfil: Perfil?) {
+private fun CenaDaPergunta(cena: Cena, perfil: Perfil?, trilha: Trilha) {
     when (cena) {
         Cena.Nenhuma -> Unit
         is Cena.Emojis -> BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             val figuras = separarFiguras(cena.texto)
             val n = figuras.size
-            // Até 6: grade de 3 por linha (como num dado); mais que isso: 5 por linha (como os dedos da mão).
-            val porLinha = if (n <= 3) n else if (n <= 6) 3 else 5
-            val linhas = (n + porLinha - 1) / porLinha
-            val tamanho = minOf(maxWidth * 0.8f / porLinha, maxHeight * 0.7f / linhas, 150.dp)
-            Column(
-                Modifier
-                    .background(Color.White.copy(alpha = 0.75f), RoundedCornerShape(32.dp))
-                    .padding(horizontal = 16.dp, vertical = 10.dp)
-                    .then(if (n == 1) Modifier.pulsando() else Modifier),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                for (linha in figuras.chunked(porLinha)) {
-                    Row {
-                        for (f in linha) {
-                            Box(Modifier.size(tamanho), contentAlignment = Alignment.Center) {
-                                Text(f, fontSize = (tamanho.value * 0.75f).sp, lineHeight = (tamanho.value * 0.85f).sp)
+            // Várias figuras iguais (contar): numa cena 3D da ilha, como os patinhos na lagoa da maquete 2.
+            val deContar = n >= 2 && figuras.none { it.isBlank() } && figuras.distinct().size == 1
+            when {
+                deContar -> FigurasNaCena(figuras, trilha, Modifier.fillMaxSize())
+                // Uma figura só: grande, em pé na grama da ilha, pulsando.
+                n == 1 -> {
+                    val lado = minOf(maxWidth * 0.62f, maxHeight * 0.9f, 190.dp)
+                    FiguraDaPergunta(figuras[0], lado, Modifier.pulsando())
+                }
+                else -> {
+                    // Figuras diferentes, numa ordem que importa (lista, balança): a grade de antes, num cartão.
+                    // Até 6: grade de 3 por linha (como num dado); mais que isso: 5 por linha (como os dedos da mão).
+                    val porLinha = if (n <= 3) n else if (n <= 6) 3 else 5
+                    val linhas = (n + porLinha - 1) / porLinha
+                    val tamanho = minOf(maxWidth * 0.8f / porLinha, maxHeight * 0.7f / linhas, 150.dp)
+                    Column(
+                        Modifier
+                            .cartaoFofo(cor = Color.White.copy(alpha = 0.9f), raio = 32.dp)
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        for (linha in figuras.chunked(porLinha)) {
+                            Row {
+                                for (f in linha) {
+                                    Box(Modifier.size(tamanho), contentAlignment = Alignment.Center) {
+                                        FiguraDaPergunta(f, tamanho * 0.92f) {
+                                            Text(f, fontSize = (tamanho.value * 0.75f).sp, lineHeight = (tamanho.value * 0.85f).sp)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -554,7 +572,7 @@ private fun CenaDaPergunta(cena: Cena, perfil: Perfil?) {
             style = MaterialTheme.typography.displayLarge.copy(letterSpacing = 4.sp),
             textAlign = TextAlign.Center,
             modifier = Modifier
-                .background(Color.White, RoundedCornerShape(24.dp))
+                .cartaoFofo(raio = 24.dp, labio = Cores.LabioClaro)
                 .padding(horizontal = 24.dp, vertical = 8.dp),
         )
         is Cena.Conta -> Conta(cena)
@@ -579,12 +597,14 @@ private fun CenaDaPergunta(cena: Cena, perfil: Perfil?) {
                             .border(3.dp, if (pergunta) Color(0xFFE0A800) else Color(0xFFEDE6FF), RoundedCornerShape(16.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            item,
-                            fontSize = (tamanho.value * 0.55f).sp,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.headlineMedium,
-                        )
+                        FiguraDaPergunta(item, tamanho * 0.86f) {
+                            Text(
+                                item,
+                                fontSize = (tamanho.value * 0.55f).sp,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.headlineMedium,
+                            )
+                        }
                     }
                 }
             }
@@ -609,7 +629,7 @@ private fun Grade(g: Cena.Grade) {
         val lado = minOf(pelaLargura, pelaAltura, 72.dp).coerceAtLeast(24.dp)
         Column(
             Modifier
-                .background(Color.White.copy(alpha = 0.75f), RoundedCornerShape(20.dp))
+                .cartaoFofo(cor = Color.White.copy(alpha = 0.9f), raio = 20.dp)
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -633,12 +653,14 @@ private fun Grade(g: Cena.Grade) {
                             contentAlignment = Alignment.Center,
                         ) {
                             if (item.isNotEmpty()) {
-                                Text(
-                                    item,
-                                    fontSize = (lado.value * 0.58f).sp,
-                                    lineHeight = (lado.value * 0.7f).sp,
-                                    fontWeight = if (pergunta) FontWeight.Bold else null,
-                                )
+                                FiguraDaPergunta(item, lado * 0.86f) {
+                                    Text(
+                                        item,
+                                        fontSize = (lado.value * 0.58f).sp,
+                                        lineHeight = (lado.value * 0.7f).sp,
+                                        fontWeight = if (pergunta) FontWeight.Bold else null,
+                                    )
+                                }
                             }
                         }
                     }
@@ -680,7 +702,7 @@ private fun Conta(c: Cena.Conta) {
 private fun GrupoDeFiguras(emoji: String, total: Int, riscadas: Int, tamanho: TextUnit) {
     FlowRow(
         Modifier
-            .background(Color.White, RoundedCornerShape(20.dp))
+            .cartaoFofo(raio = 20.dp, labio = Cores.LabioClaro)
             .padding(8.dp),
         horizontalArrangement = Arrangement.Center,
         maxItemsInEachRow = 5,
@@ -688,7 +710,9 @@ private fun GrupoDeFiguras(emoji: String, total: Int, riscadas: Int, tamanho: Te
         for (i in 0 until total) {
             val saiu = i >= total - riscadas
             Box(contentAlignment = Alignment.Center) {
-                Text(emoji, fontSize = tamanho, modifier = Modifier.alpha(if (saiu) 0.3f else 1f))
+                FiguraDaPergunta(emoji, (tamanho.value * 1.15f).dp, Modifier.alpha(if (saiu) 0.3f else 1f)) {
+                    Text(emoji, fontSize = tamanho)
+                }
                 if (saiu) {
                     Canvas(Modifier.size((tamanho.value * 1.1f).dp)) {
                         val m = size.width * 0.15f
@@ -703,6 +727,26 @@ private fun GrupoDeFiguras(emoji: String, total: Int, riscadas: Int, tamanho: Te
 
 // ------------------------------------------------------------------------------------- opções
 
+/**
+ * Cores dos blocos das respostas (maquete 2: vermelho, azul, verde e amarelo), com o lábio de cada uma.
+ * Perguntas de cor ("Toque na cor", "What color is it?") ficam com os blocos claros de antes: um bloco colorido
+ * ali confundiria a resposta.
+ */
+private val CoresDasRespostas = listOf(
+    Color(0xFFFF5A4E) to Color(0xFFC4342E),
+    Color(0xFF3E8EF7) to Color(0xFF2366C4),
+    Color(0xFF34C46A) to Color(0xFF1D9150),
+    Color(0xFFFFB020) to Color(0xFFD08100),
+)
+
+private val PalavraCor = Regex("""\bcor(es)?\b""")
+
+private fun respostasColoridas(pergunta: Pergunta): Boolean {
+    if (pergunta.opcoes.any { it.visual is Visual.Cor }) return false
+    val instrucao = pergunta.instrucao.lowercase()
+    return !(PalavraCor.containsMatchIn(instrucao) || "color" in instrucao || "colour" in instrucao)
+}
+
 @Composable
 private fun Opcoes(
     pergunta: Pergunta,
@@ -715,6 +759,10 @@ private fun Opcoes(
 ) {
     val grupos = pergunta.opcoes.any { (it.visual as? Visual.Emoji)?.let { v -> contarFiguras(v.emoji) > 1 } == true }
     val n = pergunta.opcoes.size
+    val coloridas = remember(pergunta) { respostasColoridas(pergunta) }
+    val corDe = { i: Int -> if (coloridas) CoresDasRespostas[i % CoresDasRespostas.size] else null }
+    // Com a ajuda ligada (dois erros ou exemplo), as outras respostas ficam mais apagadas e a certa pulsa.
+    val comAjuda = !acertou && (erradas.size >= 2 || mostrarCerta)
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         when {
             grupos -> BoxWithConstraints {
@@ -724,20 +772,20 @@ private fun Opcoes(
                 val alturaCartao = minOf(alturaGrande ?: 150.dp, celula * 3 + 36.dp)
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 pergunta.opcoes.forEachIndexed { i, o ->
-                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaCartao, mostrarCerta = mostrarCerta, comoGrupo = true)
+                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaCartao, mostrarCerta = mostrarCerta, comoGrupo = true, corDoBloco = corDe(i), comAjuda = comAjuda)
                 }
                 }
             }
             n == 4 -> for (linha in 0 until 2) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     for (i in linha * 2 until linha * 2 + 2) {
-                        CartaoOpcao(pergunta.opcoes[i], i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaGrande?.let { (it - 10.dp) / 2 } ?: 112.dp, mostrarCerta = mostrarCerta)
+                        CartaoOpcao(pergunta.opcoes[i], i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaGrande?.let { (it - 10.dp) / 2 } ?: 112.dp, mostrarCerta = mostrarCerta, corDoBloco = corDe(i), comAjuda = comAjuda)
                     }
                 }
             }
             else -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 pergunta.opcoes.forEachIndexed { i, o ->
-                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaGrande ?: 130.dp, mostrarCerta = mostrarCerta)
+                    CartaoOpcao(o, i, pergunta, erradas, acertou, onTocar, Modifier.weight(1f), altura = alturaGrande ?: 130.dp, mostrarCerta = mostrarCerta, corDoBloco = corDe(i), comAjuda = comAjuda)
                 }
             }
         }
@@ -757,14 +805,27 @@ private fun CartaoOpcao(
     mostrarCerta: Boolean = false,
     /** Opção de quantidade: até 1 figura vai na grade, do mesmo tamanho das outras. */
     comoGrupo: Boolean = false,
+    /** Cor do bloco de brinquedo e do lábio dele; nulo: o bloco claro (perguntas de cor). */
+    corDoBloco: Pair<Color, Color>? = null,
+    /** A ajuda está ligada nesta pergunta (as outras respostas ficam mais apagadas). */
+    comAjuda: Boolean = false,
 ) {
     val certa = acertou && i == pergunta.indiceCorreto
     val errada = i in erradas
     val ajuda = !acertou && (erradas.size >= 2 || mostrarCerta) && i == pergunta.indiceCorreto
     val apagada = acertou && !certa
+    // Números e palavras ficam brancos com contorno em cima da cor viva; figuras, num tom clarinho da cor (com o
+    // lábio na cor viva), para a figura aparecer bem.
+    val deTexto = opcao.visual is Visual.Texto
+    val corDoRepouso = when {
+        corDoBloco == null -> Color.White
+        deTexto -> corDoBloco.first
+        else -> lerp(corDoBloco.first, Color.White, 0.62f)
+    }
     val cor by animateColorAsState(
         when {
             certa -> Cores.Certo
+            corDoBloco != null -> corDoRepouso
             errada -> Color(0xFFFFE1E1)
             ajuda -> Color(0xFFFFF3C4)
             else -> Color.White
@@ -785,7 +846,11 @@ private fun CartaoOpcao(
     BotaoFofo(
         onClick = { onTocar(i) },
         cor = cor,
-        corBase = if (certa) Color(0xFF2A9452) else Color(0xFFD9CFF0),
+        corBase = when {
+            certa -> Color(0xFF2A9452)
+            corDoBloco != null -> corDoBloco.second
+            else -> Color(0xFFD9CFF0)
+        },
         descricao = descreverOpcao(opcao),
         modifier = modifier
             // Marca usada só pelos testes automáticos no emulador (não aparece para a criança).
@@ -795,7 +860,11 @@ private fun CartaoOpcao(
                 rotationZ = tremida.value
                 scaleX = pulo.value
                 scaleY = pulo.value
-                alpha = if (apagada || errada) 0.45f else 1f
+                alpha = when {
+                    apagada || errada -> 0.45f
+                    comAjuda && !ajuda && corDoBloco != null -> 0.6f
+                    else -> 1f
+                }
             },
     ) {
         Box(
@@ -805,15 +874,29 @@ private fun CartaoOpcao(
                 .padding(8.dp),
             contentAlignment = if (comoGrupo) Alignment.TopCenter else Alignment.Center,
         ) {
-            VisualDaOpcao(opcao.visual, certa, altura, comoGrupo)
+            VisualDaOpcao(opcao.visual, certa, altura, comoGrupo, sobreCor = corDoBloco != null && deTexto)
             if (certa || errada) {
-                Text(
-                    if (certa) "✔" else "✖",
-                    color = if (certa) Color.White else Cores.Errado,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.align(Alignment.TopEnd),
-                )
+                MarcaDaResposta(certa, Modifier.align(Alignment.TopEnd))
             }
+        }
+    }
+}
+
+/** O certinho (branco, na resposta certa) ou o xis (vermelho, na errada), desenhados num selo redondo. */
+@Composable
+private fun MarcaDaResposta(certa: Boolean, modifier: Modifier = Modifier) {
+    Canvas(modifier.size(26.dp)) {
+        val r = size.minDimension / 2f
+        drawCircle(if (certa) Color(0xFF2A9452) else Color.White, r)
+        drawCircle(Color.White, r, style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
+        val traco = 3.5.dp.toPx()
+        val tinta = if (certa) Color.White else Cores.Errado
+        if (certa) {
+            drawLine(tinta, Offset(r * 0.55f, r * 1.02f), Offset(r * 0.88f, r * 1.36f), traco, StrokeCap.Round)
+            drawLine(tinta, Offset(r * 0.88f, r * 1.36f), Offset(r * 1.48f, r * 0.66f), traco, StrokeCap.Round)
+        } else {
+            drawLine(tinta, Offset(r * 0.62f, r * 0.62f), Offset(r * 1.38f, r * 1.38f), traco, StrokeCap.Round)
+            drawLine(tinta, Offset(r * 1.38f, r * 0.62f), Offset(r * 0.62f, r * 1.38f), traco, StrokeCap.Round)
         }
     }
 }
@@ -828,22 +911,31 @@ private fun descreverOpcao(o: Opcao): String = when (val v = o.visual) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui.unit.Dp = 150.dp, comoGrupo: Boolean = false) {
+private fun VisualDaOpcao(
+    v: Visual,
+    certa: Boolean,
+    altura: androidx.compose.ui.unit.Dp = 150.dp,
+    comoGrupo: Boolean = false,
+    /** Em cima de um bloco de cor viva: número branco com contorno escuro (`.contorno-escuro`). */
+    sobreCor: Boolean = false,
+) {
     when (v) {
-        is Visual.Texto -> Text(
-            v.texto,
+        is Visual.Texto -> {
             // Palavras e valores maiores (CHAVE, R$ 10) diminuem para caber inteiros no cartão.
-            style = MaterialTheme.typography.displayLarge.let { estilo ->
+            val estilo = MaterialTheme.typography.displayLarge.let { e ->
                 when (v.texto.length) {
-                    in 0..3 -> estilo
-                    4 -> estilo.copy(fontSize = 44.sp)
-                    5 -> estilo.copy(fontSize = 36.sp)
-                    else -> estilo.copy(fontSize = 30.sp)
+                    in 0..3 -> e
+                    4 -> e.copy(fontSize = 44.sp)
+                    5 -> e.copy(fontSize = 36.sp)
+                    else -> e.copy(fontSize = 30.sp)
                 }
-            },
-            color = if (certa) Color.White else Cores.Texto,
-            maxLines = 1,
-        )
+            }
+            if (sobreCor || certa) {
+                TextoComContorno(v.texto, estilo = estilo, corDoContorno = Cores.ContornoEscuro)
+            } else {
+                Text(v.texto, style = estilo, color = Cores.Texto, maxLines = 1)
+            }
+        }
         is Visual.Emoji -> {
             val figuras = separarFiguras(v.emoji)
             if (figuras.size > 1 || comoGrupo) {
@@ -856,7 +948,9 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui
                             Row {
                                 for (f in linha) {
                                     Box(Modifier.size(celula), contentAlignment = Alignment.Center) {
-                                        Text(f, fontSize = (celula.value * 0.78f).sp, lineHeight = (celula.value * 0.9f).sp)
+                                        FiguraDaPergunta(f, celula * 0.94f) {
+                                            Text(f, fontSize = (celula.value * 0.78f).sp, lineHeight = (celula.value * 0.9f).sp)
+                                        }
                                     }
                                 }
                             }
@@ -865,7 +959,9 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui
                 }
             } else {
                 val base = minOf(altura.value * 0.42f, 100f)
-                Text(v.emoji, fontSize = (base * v.escala).sp, lineHeight = (base * 1.12f * v.escala).sp)
+                FiguraDaPergunta(v.emoji, (base * 1.3f * v.escala).dp) {
+                    Text(v.emoji, fontSize = (base * v.escala).sp, lineHeight = (base * 1.12f * v.escala).sp)
+                }
             }
         }
         is Visual.Sombra -> Text(
@@ -892,3 +988,34 @@ private fun VisualDaOpcao(v: Visual, certa: Boolean, altura: androidx.compose.ui
         )
     }
 }
+
+/**
+ * O balão com a instrução da pergunta. O alto-falante do começo é o ícone 3D de som (sem emoji de sistema); para a
+ * acessibilidade e os testes no emulador o texto continua começando com "🔊" (o texto alternativo do ícone).
+ */
+@Composable
+private fun BalaoDaPergunta(instrucao: String, modifier: Modifier = Modifier, cauda: LadoDaCauda = LadoDaCauda.Esquerda) {
+    val texto = remember(instrucao) {
+        buildAnnotatedString {
+            appendInlineContent(ICONE_DO_SOM, "🔊")
+            append(" ")
+            append(instrucao)
+        }
+    }
+    Box(
+        modifier
+            .balaoDeFala(cauda)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+    ) {
+        Text(texto, style = MaterialTheme.typography.titleMedium, inlineContent = IconeDoSomNoBalao)
+    }
+}
+
+private const val ICONE_DO_SOM = "som"
+
+/** O ícone 3D de som dentro do texto do balão (com o emoji de reserva, se a arte faltar). */
+private val IconeDoSomNoBalao = mapOf(
+    ICONE_DO_SOM to InlineTextContent(Placeholder(1.25.em, 1.1.em, PlaceholderVerticalAlign.TextCenter)) {
+        IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.SOM_LIGADO), Modifier.fillMaxSize()) { Text("🔊") }
+    },
+)

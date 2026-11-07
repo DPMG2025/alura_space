@@ -48,6 +48,7 @@ import br.com.casinhadosaber.dominio.Vocabulario
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
@@ -309,7 +310,9 @@ private fun FrenteDaCarta(conteudo: String, largura: Dp) {
     }
     val figuras = figurasDe(conteudo)
     if (figuras.size <= 1) {
-        Text(conteudo, fontSize = (largura.value * 0.5f).sp, lineHeight = (largura.value * 0.6f).sp)
+        FiguraDaPergunta(conteudo, largura * 0.66f) {
+            Text(conteudo, fontSize = (largura.value * 0.5f).sp, lineHeight = (largura.value * 0.6f).sp)
+        }
         return
     }
     // Várias figuras (quantidade): grade como num dado.
@@ -320,7 +323,9 @@ private fun FrenteDaCarta(conteudo: String, largura: Dp) {
             Row {
                 for (f in linha) {
                     Box(Modifier.size(celula), contentAlignment = Alignment.Center) {
-                        Text(f, fontSize = (celula.value * 0.72f).sp, lineHeight = (celula.value * 0.85f).sp)
+                        FiguraDaPergunta(f, celula * 0.92f) {
+                            Text(f, fontSize = (celula.value * 0.72f).sp, lineHeight = (celula.value * 0.85f).sp)
+                        }
                     }
                 }
             }

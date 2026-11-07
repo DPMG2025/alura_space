@@ -54,6 +54,10 @@ import br.com.casinhadosaber.dominio.Vocabulario
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.IconeDaBarra
+import br.com.casinhadosaber.ui.componentes.IconeDeArteDaBarra
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
@@ -238,12 +242,13 @@ internal fun AtividadeMontarPalavra(
                 },
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                montar.emoji,
-                fontSize = (alturaFiguraDp * 0.62f).sp,
-                lineHeight = (alturaFiguraDp * 0.74f).sp,
-                modifier = Modifier.pulsando(terminou),
-            )
+            FiguraDaPergunta(montar.emoji, (alturaFiguraDp * 0.8f).dp, Modifier.pulsando(terminou)) {
+                Text(
+                    montar.emoji,
+                    fontSize = (alturaFiguraDp * 0.62f).sp,
+                    lineHeight = (alturaFiguraDp * 0.74f).sp,
+                )
+            }
             // Alto-falante: tocar na figura faz ouvir a palavra.
             Box(
                 Modifier
@@ -253,7 +258,9 @@ internal fun AtividadeMontarPalavra(
                     .background(cor, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("🔊", fontSize = (min(alturaFiguraDp * 0.3f, 44f) * 0.5f).sp)
+                IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.SOM_LIGADO), Modifier.size((min(alturaFiguraDp * 0.3f, 44f) * 0.62f).dp)) {
+                    Text("🔊", fontSize = (min(alturaFiguraDp * 0.3f, 44f) * 0.5f).sp)
+                }
             }
         }
 

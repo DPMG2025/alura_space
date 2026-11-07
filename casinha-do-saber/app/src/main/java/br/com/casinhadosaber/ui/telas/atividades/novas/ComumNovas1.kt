@@ -40,6 +40,7 @@ import br.com.casinhadosaber.dominio.Opcao
 import br.com.casinhadosaber.dominio.Trecho
 import br.com.casinhadosaber.dominio.Visual
 import br.com.casinhadosaber.dominio.pt
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.SetaDesenhada
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.figurasDe
@@ -191,7 +192,9 @@ internal fun N1Figura(o: Opcao, lado: Dp, modifier: Modifier = Modifier, corText
                 val figuras = remember(v.emoji) { figurasDe(v.emoji) }
                 if (figuras.size <= 1) {
                     val tam = lado.value * 0.74f * v.escala.coerceIn(0.4f, 1.3f)
-                    Text(v.emoji, fontSize = tam.sp, lineHeight = (tam * 1.1f).sp)
+                    FiguraDaPergunta(v.emoji, (tam * 1.2f).dp) {
+                        Text(v.emoji, fontSize = tam.sp, lineHeight = (tam * 1.1f).sp)
+                    }
                 } else {
                     val colunas = ceil(sqrt(figuras.size.toFloat())).toInt()
                     val linhas = ceil(figuras.size / colunas.toFloat()).toInt()
@@ -201,7 +204,9 @@ internal fun N1Figura(o: Opcao, lado: Dp, modifier: Modifier = Modifier, corText
                             Row(horizontalArrangement = Arrangement.Center) {
                                 for (f in linha) {
                                     Box(Modifier.size(cel.dp), contentAlignment = Alignment.Center) {
-                                        Text(f, fontSize = (cel * 0.78f).sp, lineHeight = (cel * 0.9f).sp)
+                                        FiguraDaPergunta(f, (cel * 0.92f).dp) {
+                                            Text(f, fontSize = (cel * 0.78f).sp, lineHeight = (cel * 0.9f).sp)
+                                        }
                                     }
                                 }
                             }

@@ -57,6 +57,7 @@ import br.com.casinhadosaber.dominio.Visual
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
@@ -345,7 +346,9 @@ internal fun AtividadeEscondeEsconde(
                     .graphicsLayer { alpha = if (e.saida.value > 0.75f) (1f - e.saida.value) / 0.25f else 1f },
                 contentAlignment = Alignment.Center,
             ) {
-                Text(e.surpresa, fontSize = (lado * 0.42f / d).sp, lineHeight = (lado * 0.48f / d).sp)
+                FiguraDaPergunta(e.surpresa, (lado * 0.5f / d).dp) {
+                    Text(e.surpresa, fontSize = (lado * 0.42f / d).sp, lineHeight = (lado * 0.48f / d).sp)
+                }
             }
         }
 
@@ -377,7 +380,9 @@ internal fun AtividadeEscondeEsconde(
                 .testTag("bicho"),
             contentAlignment = Alignment.Center,
         ) {
-            Text(escondeEsconde.bicho, fontSize = (ladoBicho * 0.8f / d).sp, lineHeight = (ladoBicho * 0.9f / d).sp)
+            FiguraDaPergunta(escondeEsconde.bicho, (ladoBicho * 0.96f / d).dp) {
+                Text(escondeEsconde.bicho, fontSize = (ladoBicho * 0.8f / d).sp, lineHeight = (ladoBicho * 0.9f / d).sp)
+            }
         }
         if (momento == Momento.ACENANDO) {
             Box(

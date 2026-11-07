@@ -55,6 +55,7 @@ import br.com.casinhadosaber.dominio.Trecho
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.telas.atividades.ContornoDoJogo
@@ -292,7 +293,9 @@ internal fun AtividadeDitado(
                     .semantics { contentDescription = "Figura" },
                 contentAlignment = Alignment.Center,
             ) {
-                Text(figura, fontSize = (ladoOuvir.paraDp().value * 0.6f).sp, lineHeight = (ladoOuvir.paraDp().value * 0.7f).sp)
+                FiguraDaPergunta(figura, ladoOuvir.paraDp() * 0.78f) {
+                    Text(figura, fontSize = (ladoOuvir.paraDp().value * 0.6f).sp, lineHeight = (ladoOuvir.paraDp().value * 0.7f).sp)
+                }
             }
         }
         Box(

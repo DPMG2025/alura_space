@@ -187,7 +187,28 @@ fun ContasDeProgresso(
     comAtual: Boolean = true,
     descricao: String? = null,
 ) {
-    val contas = ProgressoVisivel.contas(feitas, total, comAtual)
+    val contas = ProgressoVisivel.contas(feitas, total, comAtual).map { estado ->
+        when (estado) {
+            EstadoDaConta.FEITA -> cor.id to 1f
+            EstadoDaConta.ATUAL -> CorDaConta.AMARELA.id to 1.25f
+            EstadoDaConta.FALTA -> CorDaConta.VAZIA to 0.9f
+        }
+    }
+    PilulaDeContas(contas, modifier, tamanho, descricao)
+}
+
+/**
+ * Uma fileira de contas 3D numa pílula, cada uma com o seu id da arte (`conta_*`) e a sua escala (a da vez é
+ * maior). As contas diminuem para caber na largura dada, até 14 dp. Serve para quando cada conta tem a sua cor
+ * (no jogo: verde de primeira, azul com ajuda, amarela a da vez).
+ */
+@Composable
+fun PilulaDeContas(
+    contas: List<Pair<String, Float>>,
+    modifier: Modifier = Modifier,
+    tamanho: Dp = 28.dp,
+    descricao: String? = null,
+) {
     if (contas.isEmpty()) return
     BoxWithConstraints(modifier) {
         val espaco = 4.dp
@@ -202,14 +223,7 @@ fun ContasDeProgresso(
             horizontalArrangement = Arrangement.spacedBy(espaco),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            for (estado in contas) {
-                val (id, escala) = when (estado) {
-                    EstadoDaConta.FEITA -> cor.id to 1f
-                    EstadoDaConta.ATUAL -> CorDaConta.AMARELA.id to 1.25f
-                    EstadoDaConta.FALTA -> CorDaConta.VAZIA to 0.9f
-                }
-                ImagemDeArte(id, Modifier.size(lado * escala))
-            }
+            for ((id, escala) in contas) ImagemDeArte(id, Modifier.size(lado * escala))
         }
     }
 }
