@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -190,6 +191,8 @@ class CapturasColorirEPuzzleTest {
         val id = Puzzle.montar("modelo:gato", 1, semente).pecas.last().id
         regra.onNodeWithTag("peca_$id").performClick()
         regra.mainClock.advanceTimeBy(400)
+        // Primeiro: o toque na peça a deixa escolhida (separa "o toque na peça falhou" de "o toque na casa falhou").
+        regra.onNodeWithTag("peca_$id").assertIsSelected()
         // Nível 1 é 2 por 2: a casa do id está na coluna id % 2, linha id / 2.
         regra.onNodeWithTag("moldura_do_puzzle").performTouchInput {
             click(Offset(width * ((id % 2) * 0.5f + 0.25f), width * ((id / 2) * 0.5f + 0.25f)))

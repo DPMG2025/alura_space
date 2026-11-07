@@ -49,6 +49,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -430,7 +431,6 @@ private fun JogarPuzzle(
                                         }
                                         .size(larguraPeca, alturaPeca)
                                         .zIndex(if (emArrasto) 20f else if (peca.colocada) 0f else 5f)
-                                        .alpha(if (apagada) 0.3f else 1f)
                                         .then(
                                             if (peca.colocada) Modifier
                                             else Modifier
@@ -454,7 +454,12 @@ private fun JogarPuzzle(
                                                             arrasto = null
                                                             if (a != null && a.first == peca.id) largar(peca.id, a.second.x, a.second.y)
                                                         },
-                                                        onDragCancel = { arrasto = null },
+                                                        onDragCancel = {
+                                                            // Como nas outras atividades de arrastar: gesto interrompido também larga a peça onde ela está.
+                                                            val a = arrasto
+                                                            arrasto = null
+                                                            if (a != null && a.first == peca.id) largar(peca.id, a.second.x, a.second.y)
+                                                        },
                                                     )
                                                 }
                                                 .pointerInput(peca.id) {
@@ -466,7 +471,11 @@ private fun JogarPuzzle(
                                                 }
                                                 .testTag("peca_${peca.id}"),
                                         )
-                                        .semantics { contentDescription = "Peça ${peca.id + 1}" + if (peca.colocada) ", no lugar" else "" },
+                                        .semantics {
+                                            contentDescription = "Peça ${peca.id + 1}" + if (peca.colocada) ", no lugar" else ""
+                                            selected = selecionada == peca.id
+                                        }
+                                        .alpha(if (apagada) 0.3f else 1f),
                                 ) {
                                     PecaDeQuebraCabeca(d, obra, peca.id % g.colunas, peca.id / g.colunas, g.colunas, g.linhas)
                                 }
