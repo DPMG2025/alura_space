@@ -49,6 +49,8 @@ Pendências que não são do código: confirmação da tela cheia no tablet Sams
 
 * 2026-11-07, execução 128 (commit 962c3ad, Fases 0A a 8B + orquestrador + medição): build, tablet e Android 7 e 8 VERDES. Celular: com o Android Test Orchestrator, 23 testes rodaram com 0 falhas (todos passam); o emulador sumiu durante o 24º (DesempenhoTest, que não era para rodar no celular), de novo ~6 min depois do início, como em todas as quedas (121 a 128). Desempenho medido: Android 7 abre em 3,1 s (0,9 s a quente), memória máxima 113 MB; Android 8: 3,1 s, 134 MB (limite 384 MB). Decisão: os testes do celular rodam em dois emuladores seguidos (1: Diagnóstico, Emojis, TelaCheia, Vozes; 2: JogoNoEmuladorTest), cada um abaixo de 6 minutos; DesempenhoTest só nos Androids antigos.
 
+* 2026-11-07, execução 133 (commit 0bcb23b): build (inclui o polimento), tablet, Android 7 e 8 VERDES. Celular em dois emuladores: o passo 1 (Diagnóstico, Emojis, TelaCheia, Vozes; 11 testes) PASSOU com 0 falhas; o passo 2 (JogoNoEmuladorTest, 11 testes pesados) caiu com "device offline" ~8 min depois de o emulador subir. Regra confirmada em 6 execuções: o emulador de celular some depois de uns 6 a 8 min de vida, e o orquestrador deixa cada teste ~35 s. Decisão: JogoNoEmuladorTest dividido em três emuladores (3 + 4 + 4 testes), no total quatro emuladores seguidos no job do celular.
+
 ## Problemas abertos
 
 * Emulador de celular caindo em abrirMapaEAlbum desde a Fase 2B (ver acima). Bloqueia marcar as Fases 0A a 2 como provadas.

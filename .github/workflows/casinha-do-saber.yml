@@ -175,8 +175,8 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       # O emulador de celular do CI some depois de uns 6 a 7 minutos de uso (execuções 121 a 128), qualquer que seja o teste.
-      # Por isso os testes rodam em dois emuladores seguidos, cada um abaixo disso. O DesempenhoTest só roda nos Androids antigos.
-      - name: Testes no emulador (1 de 2)
+      # Por isso os testes rodam em quatro emuladores seguidos, cada um abaixo disso (com o orquestrador cada teste leva ~35 s). O DesempenhoTest só roda nos Androids antigos.
+      - name: Testes no emulador (1 de 4)
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -195,7 +195,7 @@ jobs:
             mkdir -p saida-emulador/a
             cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/a/ 2>/dev/null || true
 
-      - name: Testes no emulador (2 de 2)
+      - name: Testes no emulador (2 de 4)
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -210,9 +210,47 @@ jobs:
           script: |
             adb logcat -c || true
             nohup sh -c 'adb logcat -v time "*:W" TestRunner:I > logcat-emulador-b.txt 2>&1' > /dev/null 2>&1 &
-            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest || echo "FALHA_TESTES" > emulador-falhou.txt
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest#jogarFase100DeCadaCaminho,br.com.casinhadosaber.JogoNoEmuladorTest#jogarFasesAltasComOsOutrosDesafios,br.com.casinhadosaber.JogoNoEmuladorTest#escreverAPalavraComODedo || echo "FALHA_TESTES" > emulador-falhou.txt
             mkdir -p saida-emulador/b
             cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/b/ 2>/dev/null || true
+
+      - name: Testes no emulador (3 de 4)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          heap-size: 512M
+          cores: 4
+          disable-animations: false
+          working-directory: casinha-do-saber
+          script: |
+            adb logcat -c || true
+            nohup sh -c 'adb logcat -v time "*:W" TestRunner:I > logcat-emulador-c.txt 2>&1' > /dev/null 2>&1 &
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest#jogarUmaFaseEColocarOPremioNaCasa,br.com.casinhadosaber.JogoNoEmuladorTest#jogarFaseComAtividadesDeMexer,br.com.casinhadosaber.JogoNoEmuladorTest#arrastarACamaComODedo,br.com.casinhadosaber.JogoNoEmuladorTest#abrirMapaEAlbum || echo "FALHA_TESTES" > emulador-falhou.txt
+            mkdir -p saida-emulador/c
+            cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/c/ 2>/dev/null || true
+
+      - name: Testes no emulador (4 de 4)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          heap-size: 512M
+          cores: 4
+          disable-animations: false
+          working-directory: casinha-do-saber
+          script: |
+            adb logcat -c || true
+            nohup sh -c 'adb logcat -v time "*:W" TestRunner:I > logcat-emulador-d.txt 2>&1' > /dev/null 2>&1 &
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest#jaSeiBastanteNaoAtrapalha,br.com.casinhadosaber.JogoNoEmuladorTest#pintarNoAtelieETocarOPiano,br.com.casinhadosaber.JogoNoEmuladorTest#vozesEmPortuguesEIngles,br.com.casinhadosaber.JogoNoEmuladorTest#areaDosPaisDesafioDoDia || echo "FALHA_TESTES" > emulador-falhou.txt
+            mkdir -p saida-emulador/d
+            cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/d/ 2>/dev/null || true
 
       - name: Log do emulador (avisos e erros)
         if: always()
