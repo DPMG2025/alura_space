@@ -1,7 +1,7 @@
 # Fase 6, parte A: casa por dentro na projeção isométrica (arte)
 
 Data: 2026-11-07. Só a arte: sem Kotlin e sem testes. Branch `worktree-agent-a9f31e3db30f6e1b5` (worktree
-`.claude/worktrees/agent-a9f31e3db30f6e1b5`), a partir de `210d507` (3A e 3B). Commit da arte: ver o fim deste arquivo.
+`.claude/worktrees/agent-a9f31e3db30f6e1b5`), a partir de `210d507` (3A e 3B). Commit da arte: `bcd61dd` (este arquivo ganhou o hash num commit seguinte).
 
 ## O que foi feito
 
