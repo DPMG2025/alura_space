@@ -253,6 +253,8 @@ class MainActivity : ComponentActivity() {
         val gerador = remember { GeradorDeFases() }
         /** Figurinhas e diplomas ganhos na vitória, mostrados quando a criança sai do prêmio. */
         var conquistas by remember { mutableStateOf(NovasConquistas()) }
+        // Dia ou noite na casa: o botão da casa de fora decide, e a casa por dentro abre com o mesmo céu.
+        var noiteNaCasa by remember { mutableStateOf(false) }
         // Limite de tempo do dia: conta só o tempo com o app aberto e fica salvo no aparelho.
         LaunchedEffect(repo.limiteMinutos, repo.dormindo) {
             while (repo.limiteMinutos > 0 && !repo.dormindo) {
@@ -497,6 +499,8 @@ class MainActivity : ComponentActivity() {
                         onEntrar = { irPara(Tela.CasaPorDentro) },
                         hoje = repo.hojeData(),
                         perguntarMascote = true,
+                        noiteInicial = noiteNaCasa,
+                        onNoite = { noiteNaCasa = it },
                     )
 
                     Tela.CasaPorDentro -> TelaCasaPorDentro(
@@ -510,6 +514,7 @@ class MainActivity : ComponentActivity() {
                             onDiplomas = { irPara(Tela.Diplomas(Tela.CasaPorDentro)) },
                             onAlbum = { irPara(Tela.Album(Trilha.entries.maxBy { estado.vencidasNa(it) }, -1, Tela.CasaPorDentro)) },
                         ),
+                        noite = noiteNaCasa,
                     )
 
                     Tela.Atelie -> TelaAtelie(estado, repo::atualizar, onVoltar = { irPara(Tela.CasaPorDentro) })

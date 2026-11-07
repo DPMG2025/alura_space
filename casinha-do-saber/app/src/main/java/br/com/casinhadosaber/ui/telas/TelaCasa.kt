@@ -127,6 +127,15 @@ import br.com.casinhadosaber.ui.componentes.ProgressoVisivel
 import br.com.casinhadosaber.ui.componentes.TextoComContorno
 import br.com.casinhadosaber.ui.componentes.miniaturaVestindo
 import br.com.casinhadosaber.ui.componentes.pilula
+import br.com.casinhadosaber.ui.componentes.ArteDasAreas
+import br.com.casinhadosaber.ui.componentes.ArteDoApp
+import br.com.casinhadosaber.ui.componentes.IconesDaCasaK2
+import br.com.casinhadosaber.ui.componentes.RotuloDaLojaK2
+import br.com.casinhadosaber.ui.componentes.SituacaoNaLojaK2
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import br.com.casinhadosaber.dominio.Perfil
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
@@ -156,6 +165,8 @@ fun TelaCasa(
     perguntarMascote: Boolean = false,
     /** Abre mostrando uma área nova da casa que cresce (id de [CasaQueCresce.areas]); usado nas capturas. */
     paginaInicial: String? = null,
+    /** Avisa quem chamou quando vira dia ou noite (a casa por dentro abre com o mesmo céu). */
+    onNoite: (Boolean) -> Unit = {},
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -466,6 +477,7 @@ fun TelaCasa(
                     descricao = if (noite) "Virar dia" else "Virar noite",
                     onClick = {
                         noite = !noite
+                        onNoite(noite)
                         sons.colocar()
                         narrador.falar(if (noite) listOf(pt("Boa noite!"), en("Good night!")) else listOf(pt("Bom dia!"), en("Good morning!")))
                     },
@@ -885,17 +897,8 @@ private fun Bau(
                             },
                         contentAlignment = Alignment.Center,
                     ) {
-                        // Silhueta: o desenho do presente pintado de uma cor só (dá para adivinhar o que é).
-                        IconeDoItem(
-                            proximo,
-                            54.dp,
-                            Modifier
-                                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-                                .drawWithContent {
-                                    drawContent()
-                                    drawRect(Color(0xFF8A6342), blendMode = BlendMode.SrcIn)
-                                },
-                        )
+                        // Silhueta: o presente em 3D, apagadinho em cinza (dá para adivinhar o que é).
+                        SilhuetaDoProximoK2(proximo, 58.dp)
                         Box(
                             Modifier
                                 .align(Alignment.BottomEnd)
@@ -930,7 +933,9 @@ private fun Bau(
                             ImagemDeArte(ID_TROFEU, Modifier.size(52.dp)) { Text("🏆", fontSize = 40.sp) }
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 ImagemDeArte(IconesDaBarra.CASA, Modifier.size(24.dp)) { Text("🏠", style = MaterialTheme.typography.titleMedium) }
-                                Text(" ✔", style = MaterialTheme.typography.titleMedium, color = Cores.Certo)
+                                ImagemDeArte(IconesDaBarra.CERTO, Modifier.padding(start = 4.dp).size(24.dp)) {
+                                    Text(" ✔", style = MaterialTheme.typography.titleMedium, color = Cores.Certo)
+                                }
                             }
                         }
                     }
@@ -1112,12 +1117,7 @@ private fun CartaoDaLoja(produto: Produto, estado: EstadoJogo, previa: Produto?,
         Column(Modifier.width(92.dp).padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             MiniaturaDoProduto(produto, estado, Modifier.size(52.dp))
             if (tem) {
-                Text(
-                    if (usando) "✔ usando" else "✔ é seu",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Cores.Certo,
-                    maxLines = 1,
-                )
+                RotuloDaLojaK2(if (usando) SituacaoNaLojaK2.USANDO else SituacaoNaLojaK2.E_SEU, preco)
             } else {
                 // O preço como no placar das maquetes: a moeda 3D e o número (com a mãozinha na prévia).
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -1215,7 +1215,9 @@ private fun ItemDoBau(item: ItemCasa, primeiro: Boolean, onClick: () -> Unit) {
             Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
                 IconeDaCoisa(item, 60.dp)
                 if (item.ehEstrutura) {
-                    Text("🔨", style = MaterialTheme.typography.titleMedium, modifier = Modifier.align(Alignment.BottomEnd))
+                    ImagemDeArte(IconesDaBarra.MARTELO, Modifier.align(Alignment.BottomEnd).size(26.dp)) {
+                        Text("🔨", style = MaterialTheme.typography.titleMedium)
+                    }
                 }
                 if (primeiro) MaoGuia(Modifier.align(Alignment.BottomStart).offset(x = (-6).dp, y = 22.dp), espera = 1500)
             }
@@ -1269,7 +1271,7 @@ private fun LugaresDaCasa(estado: EstadoJogo, areas: List<AreaDaCasa>, paginaAtu
                 if (area == null) {
                     ImagemDeArte(IconesDaBarra.CASA, Modifier.size(34.dp)) { Text("🏠", style = MaterialTheme.typography.titleLarge) }
                 } else {
-                    FiguraDaPergunta(area.icone, 30.dp) { Text(area.icone, style = MaterialTheme.typography.titleLarge, maxLines = 1) }
+                    IconeDaAreaK2(area, 32.dp)
                     EstrelasDeProgresso(
                         ProgressoVisivel.estrelasAcesas(progresso!!.colocadas, progresso.total, 3),
                         total = 3,
@@ -1300,11 +1302,56 @@ private fun LugaresDaCasa(estado: EstadoJogo, areas: List<AreaDaCasa>, paginaAtu
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     ImagemDeArte(IconesDaBarra.PAIS, Modifier.size(24.dp)) { Text("🔒", style = MaterialTheme.typography.titleMedium) }
-                    FiguraDaPergunta(area.icone, 30.dp) { Text(area.icone, style = MaterialTheme.typography.titleLarge, maxLines = 1) }
+                    IconeDaAreaK2(area, 32.dp)
                 }
             }
         }
     }
+}
+
+/** O ícone 3D de uma área (`icone_area_<id>`, pelo id: 🥕 ⚽ 🧸 também são conteúdo); a figura do emoji de reserva. */
+@Composable
+internal fun IconeDaAreaK2(area: AreaDaCasa, lado: Dp) {
+    ImagemDeArte(IconesDaCasaK2.daArea(area.id), Modifier.size(lado)) {
+        FiguraDaPergunta(area.icone, lado) { Text(area.icone, style = MaterialTheme.typography.titleLarge, maxLines = 1) }
+    }
+}
+
+/**
+ * O próximo presente apagadinho: a imagem 3D de verdade ([ArteDasAreas.silhuetaK2]) em tons de cinza azulado, com
+ * a luz e a sombra da arte (não uma mancha de uma cor só). Sem a arte, o desenho antigo pintado do mesmo cinza.
+ */
+@Composable
+private fun SilhuetaDoProximoK2(item: ItemCasa, lado: Dp) {
+    val contexto = LocalContext.current
+    val id = remember(item.id) { ArteDasAreas.silhuetaK2(ArteDoApp.manifesto(contexto), item) }
+    // Cinza: a luminância de cada pixel, mais clara e puxada para o azul; o alfa fica (é só um filtro de cor).
+    val filtro = remember {
+        val k = 0.42f
+        ColorFilter.colorMatrix(
+            ColorMatrix(
+                floatArrayOf(
+                    0.299f * k, 0.587f * k, 0.114f * k, 0f, 96f,
+                    0.299f * k, 0.587f * k, 0.114f * k, 0f, 102f,
+                    0.299f * k, 0.587f * k, 0.114f * k, 0f, 122f,
+                    0f, 0f, 0f, 1f, 0f,
+                ),
+            ),
+        )
+    }
+    val reserva: @Composable () -> Unit = {
+        IconeDoItem(
+            item,
+            lado,
+            Modifier
+                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                .drawWithContent {
+                    drawContent()
+                    drawRect(Color(0xFF8E97A8), blendMode = BlendMode.SrcIn)
+                },
+        )
+    }
+    if (id == null) reserva() else ImagemDeArte(id, Modifier.size(lado), filtro = filtro, reserva = reserva)
 }
 
 /**

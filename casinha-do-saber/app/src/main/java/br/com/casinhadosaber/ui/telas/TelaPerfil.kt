@@ -80,6 +80,9 @@ import br.com.casinhadosaber.ui.componentes.LabioDoVerde
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.NuvensDoCeu
 import br.com.casinhadosaber.ui.componentes.Provador
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.IconesDaCasaK2
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
 import br.com.casinhadosaber.ui.componentes.TextoDoBotao
 import br.com.casinhadosaber.ui.componentes.TituloDeBrinquedo
 import br.com.casinhadosaber.ui.componentes.VerdeDoPronto
@@ -242,17 +245,17 @@ fun TelaPerfil(
                 }
             }
 
-            Linha("🧑", "pele") {
+            Linha("🧑", "pele", IconesDaCasaK2.PELE) {
                 Aparencia.peles.forEachIndexed { i, c ->
                     Bolinha(Color(c), i == pele, "Cor de pele ${i + 1}") { escolher("Que lindo!") { pele = i } }
                 }
             }
-            Linha("💇", "cor do cabelo") {
+            Linha("💇", "cor do cabelo", IconesDaCasaK2.COR_DO_CABELO) {
                 Aparencia.cabelos.forEachIndexed { i, c ->
                     Bolinha(Color(c), i == cabelo, "Cabelo ${nomesDoCabelo[i]}") { escolher("Cabelo ${nomesDoCabelo[i]}!") { cabelo = i } }
                 }
             }
-            Linha("✂️", "penteado") {
+            Linha("✂️", "penteado", IconesDaCasaK2.PENTEADO) {
                 val nomesEstilo = if (g == Genero.MENINA) listOf("liso", "cacheado", "trancinhas") else listOf("liso", "cacheado", "espetadinho")
                 for (i in 0..2) {
                     val escolhido = i == estilo
@@ -272,7 +275,7 @@ fun TelaPerfil(
                     }
                 }
             }
-            Linha("👕", "roupa") {
+            Linha("👕", "roupa", IconesDaCasaK2.ROUPA) {
                 val roupaAtual = if (roupa >= 0) roupa else if (g == Genero.MENINA) 1 else 0
                 Aparencia.roupas.forEachIndexed { i, c ->
                     Bolinha(Color(c), i == roupaAtual, "Roupa ${nomesDaRoupa[i]}") { escolher("Roupa ${nomesDaRoupa[i]}!") { roupa = i } }
@@ -311,16 +314,24 @@ fun TelaPerfil(
                     textStyle = MaterialTheme.typography.titleLarge,
                 )
             } else {
-                Text(
-                    if (nome.isBlank()) "✏️ Adulto: escrever o nome" else "✏️ $nome",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Cores.TextoDaPilula,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
+                // O lápis 3D e o texto (o mesmo de antes, sem o ✏️ de sistema); o toque junta os dois num nó só.
+                val textoDoNome = if (nome.isBlank()) "Adulto: escrever o nome" else nome
+                Row(
+                    Modifier
                         .pilula()
                         .clickable { mostrarNome = true }
                         .padding(horizontal = 18.dp, vertical = 8.dp),
-                )
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    ImagemDeArte(IconesDaBarra.ESCREVER, Modifier.size(28.dp)) { Text("✏️", style = MaterialTheme.typography.titleMedium) }
+                    Text(
+                        textoDoNome,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Cores.TextoDaPilula,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
 
             Spacer(Modifier.height(22.dp))
@@ -412,7 +423,7 @@ private fun EscolhaDoPersonagem(pele: Int, cabelo: Int, alturaDaTela: Dp, onEsco
 
 /** Uma linha de escolhas com um ícone na frente (sem depender de leitura). */
 @Composable
-private fun Linha(icone: String, descricao: String, conteudo: @Composable () -> Unit) {
+private fun Linha(icone: String, descricao: String, idDoIcone: String, conteudo: @Composable () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -430,7 +441,10 @@ private fun Linha(icone: String, descricao: String, conteudo: @Composable () -> 
                     .faceDeBrinquedo(Color.White, CircleShape, redonda = true)
                     .clearAndSetSemantics { },
                 contentAlignment = Alignment.Center,
-            ) { Text(icone, fontSize = 20.sp) }
+            ) {
+                // O ícone 3D da linha (pelo que a linha escolhe, não pelo emoji: 👕 também é conteúdo).
+                ImagemDeArte(idDoIcone, Modifier.size(30.dp)) { Text(icone, fontSize = 20.sp) }
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { conteudo() }
     }

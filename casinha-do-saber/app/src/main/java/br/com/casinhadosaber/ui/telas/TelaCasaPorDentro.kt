@@ -158,6 +158,21 @@ import br.com.casinhadosaber.ui.componentes.desenharIrmaozinho
 import br.com.casinhadosaber.ui.componentes.desenharPersonagemEmCamadas
 import br.com.casinhadosaber.ui.componentes.desenharSprite
 import br.com.casinhadosaber.ui.componentes.multiplicarPor
+import br.com.casinhadosaber.ui.componentes.CamadasDaCasa
+import br.com.casinhadosaber.ui.componentes.EstiloDaPilula
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.FigurasDaPergunta
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.IconesDaCasaK2
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.RotuloDaLojaK2
+import br.com.casinhadosaber.ui.componentes.SituacaoNaLojaK2
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import br.com.casinhadosaber.dominio.temNa
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.Fredoka
 import kotlinx.coroutines.Job
@@ -212,6 +227,21 @@ private val CoresDoArcoIris = listOf(Color(0xFFEF476F), Color(0xFFFFA62B), Color
 /** As mesmas cores das peças na casa de fora (os emojis 🛏️ e 🛋️ da fonte Noto são azuis). */
 private val CorDoCobertor = Color(0xFF4F8FE6)
 private val CorDoSofa = Color(0xFF4A90E2)
+
+/** A grama da arte 3D (a mesma da casa de fora e das áreas). */
+private val GramaDaArteK2 = Color(0xFFA9E56F)
+
+/** De noite, a cor multiplicada pela luz da noite da casa de fora ([CamadasDaCasa.NOITE]). */
+private fun noturnaK2(c: Color, noite: Boolean): Color =
+    if (!noite) c else Color(CamadasDaCasa.multiplicar(c.toArgb().toLong() and 0xFFFFFFFFL, CamadasDaCasa.NOITE))
+
+/** Céu e grama de dentro, iguais aos de fora: o céu da casa (azul, clarinho, pêssego) e a grama da arte embaixo. */
+private val CeuDeDentroDiaK2 = Brush.verticalGradient(
+    0f to Color(0xFF7CC4FA), 0.30f to Color(0xFFB8E2FF), 0.52f to Color(0xFFFFE6D6), 0.64f to Color(0xFFC9EE96), 1f to GramaDaArteK2,
+)
+private val CeuDeDentroNoiteK2 = Brush.verticalGradient(
+    0f to Color(0xFF0E1638), 0.30f to Color(0xFF22306A), 0.52f to Color(0xFF3B4C8C), 0.64f to noturnaK2(Color(0xFFC9EE96), true), 1f to noturnaK2(GramaDaArteK2, true),
+)
 
 /** Fundo das abas da geladeira (a aba escolhida "cola" na prateleira de baixo). */
 private val CorDaPrateleira = Color(0xFFDDF3FF)
@@ -821,12 +851,14 @@ fun TelaCasaPorDentro(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFFA9DCFF), Color(0xFFDDF3D0), Color(0xFFBFE3A8), Color(0xFFA6D58C))))
+            // O mesmo céu e a mesma grama da casa de fora (azul, clarinho e pêssego; a grama da arte 3D), e de
+            // noite os mesmos tons escuros dela (a grama multiplicada pela luz da noite).
+            .background(if (noite) CeuDeDentroNoiteK2 else CeuDeDentroDiaK2)
             .drawWithCache {
                 // Gramado de fundo: morrinhos suaves no terço de baixo e os cantos um pouco mais escuros
-                // (o verde de baixo não fica vazio). Montado uma vez por tamanho.
-                val morroLonge = Color(0xFFB5DE9C)
-                val morroPerto = Color(0xFFA2D488)
+                // (o verde de baixo não fica vazio). Montado uma vez por tamanho e por dia/noite.
+                val morroLonge = noturnaK2(Color(0xFFBDEA8A), noite)
+                val morroPerto = noturnaK2(GramaDaArteK2, noite)
                 val cantos = Brush.radialGradient(
                     listOf(Color.Transparent, Color.Transparent, Color(0x2A2E5A1E)),
                     center = Offset(size.width / 2f, size.height * 0.55f),
@@ -855,15 +887,18 @@ fun TelaCasaPorDentro(
             ) {
                 BotaoRedondo("⬅️", "Voltar para o jardim", onVoltar, tamanho = 52.dp)
                 Spacer(Modifier.width(6.dp))
-                Text(
-                    "🪙 ${estado.moedas}",
-                    style = MaterialTheme.typography.titleLarge,
-                    maxLines = 1,
-                    modifier = Modifier
-                        .background(Color.White.copy(alpha = 0.7f), RoundedCornerShape(50))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                        .semantics { contentDescription = "Você tem ${estado.moedas} moedinhas" },
-                )
+                // A moeda 3D (a mesma do baú de fora) e o saldo, numa pílula clara.
+                Row(
+                    Modifier
+                        .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(50))
+                        .padding(start = 6.dp, end = 12.dp, top = 4.dp, bottom = 4.dp)
+                        .semantics(mergeDescendants = true) { contentDescription = "Você tem ${estado.moedas} moedinhas" },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    ImagemDeArte(IconesDaCasaK2.MOEDA, Modifier.size(30.dp)) { Text("🪙", style = MaterialTheme.typography.titleLarge) }
+                    Text("${estado.moedas}", style = EstiloDaPilula, maxLines = 1)
+                }
                 Spacer(Modifier.weight(1f))
                 BotaoDoAndar(andarDaCrianca) { sons.toque(); usarEscada() }
                 Spacer(Modifier.width(6.dp))
@@ -1263,6 +1298,11 @@ private data class Peca(
     val extrasAbertos: List<Forma> = emptyList(),
     /** Os [extrasAbertos] só aparecem à direita desta linha (a porta da esquerda fica na frente deles). */
     val recorteAberto: Float = Float.NEGATIVE_INFINITY,
+    /** A seta 3D da escada (`icone_subir`/`icone_descer`) no lugar do [emoji], neste retângulo da tela. */
+    val icone: ImageBitmap? = null,
+    val iconeEm: Rect = Rect.Zero,
+    /** Comidas 3D da geladeira aberta (`fig_*`), cada uma no seu retângulo; as sem figura ficam em [emojisAbertos]. */
+    val iconesAbertos: List<Pair<ImageBitmap, Rect>> = emptyList(),
 )
 
 /** A luz de um cômodo: a lâmpada pendurada e o que escurece quando ela apaga. */
@@ -1321,6 +1361,14 @@ private class Geometria(
     val comIrmao: Boolean,
     val alturaIrmao: Float,
     val larguraIrmao: Float,
+    /** De noite: céu escuro, lua no lugar do sol e estrelas no lugar das nuvens (como a casa de fora). */
+    val noite: Boolean = false,
+    /** Sol (ou lua) e nuvens 3D da casa de fora (`item_sol`/`item_sol_noite`, `ceu_nuvem_*`); nulos sem a arte. */
+    val sol: ImageBitmap? = null,
+    val nuvens: List<ImageBitmap> = emptyList(),
+    /** Comida 3D na mão (figura das perguntas) e o "zzz" 3D, quando há arte; senão os emojis medidos. */
+    val comidasArte: Map<String, ImageBitmap> = emptyMap(),
+    val zzzArte: ImageBitmap? = null,
 ) {
     fun geo(a: Andar): GeoAndar? = andares.firstOrNull { it.andar == a }
 }
@@ -1438,6 +1486,17 @@ private fun montarGeometria(
     val zzz = medirEmoji(medidor, densidade, "💤", larguraCrianca * 0.5f)
     // O irmãozinho do tamanho da casa de fora (dois terços da criança).
     val alturaIrmao = alturaCrianca * 0.66f
+    // Céu igual ao da casa de fora: o sol 3D (a lua de noite) e as nuvens 3D, no tamanho em que aparecem.
+    val ladoDoSol = tw * 1.15f
+    val sol = arte?.let { a -> a.info(CamadasDaCasa.idDoItem("sol", noite))?.let { a.imagem(it, ladoDoSol / it.largura) } }
+    val nuvens = if (arte == null || noite) emptyList() else NUVENS_DE_DENTRO_K2.mapNotNull { (id, largura) ->
+        arte.info(id)?.let { arte.imagem(it, tw * largura / it.largura) }
+    }
+    // Só as comidas que estão na geladeira (as únicas que a criança pode comer): poucas imagens pequenas.
+    val comidasArte = if (arte == null) emptyMap() else Loja.naGeladeira(estado).map { it.valor }.distinct().mapNotNull { e ->
+        arte.figuraK2(e, larguraCrianca * 0.42f)?.let { e to it }
+    }.toMap()
+    val zzzArte = arte?.let { a -> a.info(ID_ZZZ_K2)?.let { a.imagem(it, larguraCrianca * 0.5f / it.largura) } }
 
     return Geometria(
         andares = andares,
@@ -1458,6 +1517,11 @@ private fun montarGeometria(
         irmaoEmCamadas = arte != null && perfil.irmao.ligado && ComposicaoDosPersonagens.podeUsar(arte.contexto, PersonagemDaArte.IRMAO, perfil),
         comIrmao = perfil.irmao.ligado,
         alturaIrmao = alturaIrmao,
+        noite = noite,
+        sol = sol,
+        nuvens = nuvens,
+        comidasArte = comidasArte,
+        zzzArte = zzzArte,
         larguraIrmao = alturaIrmao * PROPORCAO_IRMAO,
     )
 }
@@ -1831,8 +1895,22 @@ private const val BORDA_DA_PORTA_DO_GUARDA_ROUPA = 118f
  * Sem a imagem (ou sem as duas, nos móveis que abrem), o desenho antigo.
  */
 private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Perfil, medidor: TextMeasurer, densidade: Density, arte: ArteDaCasaPorDentro?): Peca {
-    val p = montarPecaVetorial(m, proj, estado, perfil, medidor, densidade)
-    if (arte == null) return p
+    val vetorial = montarPecaVetorial(m, proj, estado, perfil, medidor, densidade)
+    if (arte == null) return vetorial
+    // A setinha da escada vira a seta 3D da arte (contorno branco, lê sobre a cena), no mesmo lugar do emoji.
+    val p = vetorial.emoji?.takeIf { m.acao == Acao.ESCADA }?.let { l ->
+        val sobe = m.andar == Andar.DE_BAIXO
+        val info = arte.info(if (sobe) IconesDaBarra.SUBIR else IconesDaBarra.DESCER)
+        val lado = proj.ladrilho * 0.62f
+        val img = info?.let { arte.imagem(it, lado / it.largura) }
+        if (img == null) {
+            vetorial
+        } else {
+            val cx = vetorial.emojiEm.x + l.size.width / 2f
+            val baixo = vetorial.emojiEm.y + l.size.height
+            vetorial.copy(emoji = null, icone = img, iconeEm = Rect(cx - lado / 2f, baixo - lado, cx + lado / 2f, baixo))
+        }
+    } ?: vetorial
     val tw = proj.ladrilho
     val ref = CamadasDaCasaPorDentro.referenciaDoMovel(m)
     fun sprite(aberto: Boolean) = arte.sprite(CamadasDaCasaPorDentro.idDoMovel(m, aberto), tw, proj.origemX, proj.origemY, ref)
@@ -1854,12 +1932,21 @@ private fun montarPeca(m: Movel, proj: Projecao, estado: EstadoJogo, perfil: Per
         "banheira" -> ancora(fechado, "agua")?.let { agua -> base.copy(pontos = listOf(agua) + p.pontos.drop(1)) } ?: base
         "geladeira" -> {
             val s = aberto ?: return base
-            base.copy(
-                emojisAbertos = p.emojisAbertos.mapIndexed { i, (l, em) ->
-                    val a = ancora(s, "comida_$i") ?: return@mapIndexed l to em
-                    l to Offset(a.x - l.size.width / 2f, a.y - l.size.height * 0.92f)
-                },
-            )
+            // As comidas em 3D (a figura das perguntas pelo emoji); sem figura, o emoji de reserva no mesmo ponto.
+            val comidas = Loja.naGeladeira(estado).take(9)
+            val lado = tw * 0.34f
+            val emojis = ArrayList<Pair<TextLayoutResult, Offset>>()
+            val figuras = ArrayList<Pair<ImageBitmap, Rect>>()
+            p.emojisAbertos.forEachIndexed { i, (l, em) ->
+                val a = ancora(s, "comida_$i")
+                val img = comidas.getOrNull(i)?.let { c -> arte.figuraK2(c.valor, lado) }
+                when {
+                    a == null -> emojis += l to em
+                    img != null -> figuras += img to Rect(a.x - lado / 2f, a.y - lado * 0.92f, a.x + lado / 2f, a.y + lado * 0.08f)
+                    else -> emojis += l to Offset(a.x - l.size.width / 2f, a.y - l.size.height * 0.92f)
+                }
+            }
+            base.copy(emojisAbertos = emojis, iconesAbertos = figuras)
         }
         "guardaroupa" -> {
             val s = aberto ?: return base
@@ -2228,27 +2315,66 @@ private fun corDoTraje(traje: String, perfil: Perfil): Color = when (traje) {
 // Desenho de cada quadro (sem montar caminhos novos; só lê a geometria pronta e o estado da cena)
 // ---------------------------------------------------------------------------------------------
 
-/** Sol e nuvenzinhas na faixa de céu acima da casa (só quando sobra céu, como no celular em pé). */
+/**
+ * Sol e nuvens na faixa de céu acima da casa (só quando sobra céu, como no celular em pé), os mesmos da casa de
+ * fora: o sol 3D (`item_sol`) e as nuvens 3D de dia; de noite, a lua 3D (`item_sol_noite`) e estrelinhas.
+ * Sem a arte, o sol e as nuvens desenhados de antes.
+ */
 private fun DrawScope.desenharCeu(g: Geometria, t: Float) {
     val tw = g.ladrilho
     val livre = g.ceu
     if (livre < tw * 0.9f) return
     val w = g.larguraDaCena
-    // Sol no alto à direita (o telhado desce para a direita: ali sobra mais céu), com raios girando devagar.
+    // Sol (ou lua) no alto à direita (o telhado desce para a direita: ali sobra mais céu).
     val sol = Offset(w * 0.86f, livre * 0.5f + tw * 0.55f)
     val raio = tw * 0.36f
-    drawCircle(Color(0x33FFE066), raio * 1.9f, sol)
-    rotate(t * 12f, pivot = sol) {
-        for (k in 0 until 10) {
-            val a = k * (2 * PI.toFloat() / 10)
-            val de = Offset(sol.x + kotlin.math.cos(a) * raio * 1.25f, sol.y + sin(a) * raio * 1.25f)
-            val ate = Offset(sol.x + kotlin.math.cos(a) * raio * 1.6f, sol.y + sin(a) * raio * 1.6f)
-            drawLine(Color(0xFFFFC93C), de, ate, strokeWidth = tw * 0.07f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+    if (g.noite) {
+        // Estrelinhas paradas (lugares fixos), piscando devagar.
+        for (k in 0 until 9) {
+            val x = w * ((k * 0.137f + 0.07f) % 0.78f)
+            val y = livre * (0.18f + ((k * 0.29f) % 0.7f))
+            val brilho = 0.55f + 0.45f * sin(t * 1.3f + k)
+            drawCircle(Color(0xFFFFF4C2).copy(alpha = brilho.coerceIn(0.2f, 1f)), tw * (0.035f + (k % 3) * 0.012f), Offset(x, y))
         }
     }
-    drawCircle(Color(0xFFFFD84D), raio, sol)
-    drawCircle(Color(0xFFFFE98A), raio * 0.62f, Offset(sol.x - raio * 0.2f, sol.y - raio * 0.2f))
-    // Nuvens fofas que passeiam um pouquinho para os lados.
+    val img = g.sol
+    if (img != null) {
+        // Brilho macio atrás (amarelo de dia, azulado de noite) e a imagem 3D por cima.
+        drawCircle(if (g.noite) Color(0x22C9D6FF) else Color(0x33FFE066), raio * 1.9f, sol)
+        val lado = tw * 1.15f
+        val alto = lado * img.height / img.width.coerceAtLeast(1)
+        desenharImagemK2(img, Rect(sol.x - lado / 2f, sol.y - alto / 2f, sol.x + lado / 2f, sol.y + alto / 2f))
+    } else if (g.noite) {
+        drawCircle(Color(0xFFFFF3C4), raio, sol)
+        drawCircle(Color(0x33000000), raio * 0.8f, Offset(sol.x + raio * 0.45f, sol.y - raio * 0.2f))
+    } else {
+        drawCircle(Color(0x33FFE066), raio * 1.9f, sol)
+        rotate(t * 12f, pivot = sol) {
+            for (k in 0 until 10) {
+                val a = k * (2 * PI.toFloat() / 10)
+                val de = Offset(sol.x + kotlin.math.cos(a) * raio * 1.25f, sol.y + sin(a) * raio * 1.25f)
+                val ate = Offset(sol.x + kotlin.math.cos(a) * raio * 1.6f, sol.y + sin(a) * raio * 1.6f)
+                drawLine(Color(0xFFFFC93C), de, ate, strokeWidth = tw * 0.07f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            }
+        }
+        drawCircle(Color(0xFFFFD84D), raio, sol)
+        drawCircle(Color(0xFFFFE98A), raio * 0.62f, Offset(sol.x - raio * 0.2f, sol.y - raio * 0.2f))
+    }
+    if (g.noite) return
+    // Nuvens que passeiam um pouquinho para os lados (as 3D da casa de fora, ou as desenhadas).
+    val centros = listOf(
+        Offset(w * 0.42f + sin(t * 0.25f) * tw * 0.3f, livre * 0.42f),
+        Offset(w * 0.12f + sin(t * 0.2f + 2f) * tw * 0.2f, livre * 0.8f),
+    )
+    if (g.nuvens.size >= 2) {
+        g.nuvens.forEachIndexed { i, n ->
+            val c = centros[i % centros.size]
+            val lado = tw * NUVENS_DE_DENTRO_K2[i % NUVENS_DE_DENTRO_K2.size].second
+            val alto = lado * n.height / n.width.coerceAtLeast(1)
+            desenharImagemK2(n, Rect(c.x - lado / 2f, c.y - alto / 2f, c.x + lado / 2f, c.y + alto / 2f))
+        }
+        return
+    }
     fun nuvem(c: Offset, tamanho: Float) {
         val cor = Color(0xF2FFFFFF)
         drawOval(cor, topLeft = Offset(c.x - tamanho * 0.75f, c.y - tamanho * 0.18f), size = Size(tamanho * 1.5f, tamanho * 0.42f))
@@ -2256,9 +2382,37 @@ private fun DrawScope.desenharCeu(g: Geometria, t: Float) {
         drawCircle(cor, tamanho * 0.42f, Offset(c.x + tamanho * 0.12f, c.y - tamanho * 0.2f))
         drawCircle(cor, tamanho * 0.26f, Offset(c.x + tamanho * 0.5f, c.y + tamanho * 0.0f))
     }
-    nuvem(Offset(w * 0.42f + sin(t * 0.25f) * tw * 0.3f, livre * 0.42f), tw * 1.1f)
-    nuvem(Offset(w * 0.12f + sin(t * 0.2f + 2f) * tw * 0.2f, livre * 0.8f), tw * 0.8f)
+    nuvem(centros[0], tw * 1.1f)
+    nuvem(centros[1], tw * 0.8f)
 }
+
+/** Uma imagem da arte (já no tamanho de uso) esticada no retângulo [r] da tela. */
+private fun DrawScope.desenharImagemK2(img: ImageBitmap, r: Rect, alfa: Float = 1f) {
+    val x0 = r.left.roundToInt()
+    val y0 = r.top.roundToInt()
+    drawImage(
+        image = img,
+        srcOffset = IntOffset.Zero,
+        srcSize = IntSize(img.width, img.height),
+        dstOffset = IntOffset(x0, y0),
+        dstSize = IntSize((r.right.roundToInt() - x0).coerceAtLeast(1), (r.bottom.roundToInt() - y0).coerceAtLeast(1)),
+        alpha = alfa,
+        filterQuality = FilterQuality.Low,
+    )
+}
+
+/** A figura 3D das perguntas para o [emoji] (comidas da geladeira e na mão), com [lado] px de largura; nula sem ela. */
+private fun ArteDaCasaPorDentro.figuraK2(emoji: String, lado: Float): ImageBitmap? {
+    val id = FigurasDaPergunta.idPara(manifesto, emoji) ?: return null
+    val info = info(id) ?: return null
+    return imagem(info, lado / info.largura)
+}
+
+/** Nuvens 3D do céu de dentro (as da casa de fora) e a largura de cada uma, em ladrilhos. */
+private val NUVENS_DE_DENTRO_K2 = listOf("ceu_nuvem_1" to 1.7f, "ceu_nuvem_2" to 1.2f)
+
+/** O "zzz" 3D de quem dorme. */
+private const val ID_ZZZ_K2 = "tela_zzz"
 
 private fun DrawScope.desenharCena(g: Geometria, cena: Cena, perfil: Perfil) {
     val t = cena.tempo
@@ -2432,12 +2586,17 @@ private fun DrawScope.desenharPecaSemPulo(g: Geometria, p: Peca, cena: Cena, apa
             val (l, em) = p.emojisAbertos[i]
             drawText(l, topLeft = em)
         }
+        for (i in p.iconesAbertos.indices) {
+            val (img, r) = p.iconesAbertos[i]
+            desenharImagemK2(img, r)
+        }
     } else {
         desenharFormas(p.fechado, Contorno, g.tracoFino)
     }
+    // A setinha da escada balança devagar, chamando para subir ou descer (3D da arte; o emoji só de reserva).
+    val balanco = if (acao == Acao.ESCADA) sin(t * 3.2f) * g.ladrilho * 0.06f else 0f
+    p.icone?.let { desenharImagemK2(it, p.iconeEm.translate(0f, balanco), alfa = if (escuro) 0.55f else 1f) }
     p.emoji?.let {
-        // A setinha da escada balança devagar, chamando para subir ou descer.
-        val balanco = if (acao == Acao.ESCADA) sin(t * 3.2f) * g.ladrilho * 0.06f else 0f
         drawText(it, topLeft = Offset(p.emojiEm.x, p.emojiEm.y + balanco), alpha = if (escuro) 0.55f else 1f)
     }
     if (escuro) {
@@ -2546,14 +2705,28 @@ private fun DrawScope.desenharCriancaNaCena(g: Geometria, proj: Projecao, cena: 
                 drawText(l, topLeft = Offset(largura / 2f - l.size.width / 2f, baseDoChapeu - l.size.height * 0.95f))
             }
             if (comendo != null) {
-                g.comidas[comendo]?.let { l ->
-                    val dx = if (cena.virado) largura * 0.05f else largura * 0.95f
-                    drawText(l, topLeft = Offset(dx - l.size.width / 2f, altura * 0.42f - l.size.height / 2f))
+                val dx = if (cena.virado) largura * 0.05f else largura * 0.95f
+                val img = g.comidasArte[comendo]
+                if (img != null) {
+                    val lado = g.larguraCrianca * 0.42f
+                    desenharImagemK2(img, Rect(dx - lado / 2f, altura * 0.42f - lado / 2f, dx + lado / 2f, altura * 0.42f + lado / 2f))
+                } else {
+                    g.comidas[comendo]?.let { l ->
+                        drawText(l, topLeft = Offset(dx - l.size.width / 2f, altura * 0.42f - l.size.height / 2f))
+                    }
                 }
             }
             if (dormindo) {
                 val sobe = ((t * 0.8f) % 1f)
-                drawText(g.zzz, topLeft = Offset(largura * 0.7f, -altura * 0.1f - sobe * altura * 0.2f), alpha = 1f - sobe * 0.6f)
+                val z = g.zzzArte
+                if (z != null) {
+                    val lado = g.larguraCrianca * 0.5f
+                    val x = largura * 0.7f
+                    val y = -altura * 0.1f - sobe * altura * 0.2f
+                    desenharImagemK2(z, Rect(x, y, x + lado, y + lado), alfa = 1f - sobe * 0.6f)
+                } else {
+                    drawText(g.zzz, topLeft = Offset(largura * 0.7f, -altura * 0.1f - sobe * altura * 0.2f), alpha = 1f - sobe * 0.6f)
+                }
             }
         }
     }
@@ -2655,11 +2828,13 @@ private fun PainelGeladeira(
                         .semantics { contentDescription = "${p.nome}: $quantas" },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        p.icone,
-                        fontSize = if (escolhida) 34.sp else 28.sp,
-                        modifier = Modifier.graphicsLayer { alpha = if (escolhida) 1f else 0.65f },
-                    )
+                    // O ícone 3D da prateleira (pelo enum: 🍎 também é comida); o emoji só de reserva.
+                    ImagemDeArte(
+                        IconesDaCasaK2.daPrateleira(p),
+                        Modifier
+                            .size(if (escolhida) 46.dp else 40.dp)
+                            .graphicsLayer { alpha = if (escolhida) 1f else 0.65f },
+                    ) { Text(p.icone, fontSize = if (escolhida) 34.sp else 28.sp) }
                     if (quantas > 0) {
                         Text(
                             "$quantas",
@@ -2690,10 +2865,21 @@ private fun PainelGeladeira(
         ) {
             if (daAba.isEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("🫙", fontSize = 48.sp)
+                    FiguraDaPergunta("🫙", 56.dp) { Text("🫙", fontSize = 48.sp) }
                     Spacer(Modifier.weight(1f))
                     BotaoFofo(onClick = onLoja, cor = Cores.Certo, descricao = "Comprar comidas", modifier = Modifier.pulsando()) {
-                        Text("🛒 ${aba.icone}", style = MaterialTheme.typography.headlineMedium, color = Color.White, modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp))
+                        Row(
+                            Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Box(Modifier.size(40.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
+                                ImagemDeArte(IconesDaBarra.LOJA, Modifier.size(30.dp)) { Text("🛒", fontSize = 24.sp) }
+                            }
+                            Box(Modifier.size(40.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
+                                ImagemDeArte(IconesDaCasaK2.daPrateleira(aba), Modifier.size(30.dp)) { Text(aba.icone, fontSize = 24.sp) }
+                            }
+                        }
                     }
                 }
             } else {
@@ -2709,7 +2895,7 @@ private fun PainelGeladeira(
                                     .clickable { onComer(c) },
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text(c.icone, fontSize = 36.sp)
+                                FiguraDaPergunta(c.icone, 52.dp) { Text(c.icone, fontSize = 36.sp) }
                             }
                         }
                     }
@@ -2743,7 +2929,41 @@ private fun PainelGuardaRoupa(
         ) {
             Crianca(perfilNaCena, Modifier.height(104.dp), acenando = true)
         }
-        Spacer(Modifier.weight(1f))
+        // Ao lado do retrato (antes um vazio branco): o nome do móvel e o que a criança está vestindo, em 3D.
+        BoxWithConstraints(
+            Modifier
+                .weight(1f)
+                .height(112.dp)
+                .padding(start = 8.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            val base = MaterialTheme.typography.headlineSmall
+            val titulo = "Guarda-roupa"
+            val cabe = ((maxWidth.value - 8f) / (titulo.length * 0.55f)).coerceIn(15f, base.fontSize.value)
+            val vestidas = br.com.casinhadosaber.dominio.Gaveta.entries.filter { perfilNaCena.temNa(it) }
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                TextoComContorno(
+                    titulo,
+                    estilo = base.copy(fontSize = cabe.sp, lineHeight = (cabe * 1.15f).sp),
+                    espessura = 3.dp,
+                    profundidade = 2.dp,
+                    alinhamento = TextAlign.Start,
+                )
+                Row(
+                    Modifier
+                        .background(Color(0xFFFFF0F6), RoundedCornerShape(50))
+                        .padding(horizontal = 6.dp, vertical = 4.dp)
+                        .clearAndSetSemantics { },
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    // Uma gaveta com alguma coisa vestida = um ícone (até 4); sem nada, o cabide das roupas apagado.
+                    if (vestidas.isEmpty()) {
+                        ImagemDeArte(IconesDaCasaK2.daGaveta(br.com.casinhadosaber.dominio.Gaveta.ROUPAS), Modifier.size(28.dp).graphicsLayer { alpha = 0.5f })
+                    }
+                    for (g in vestidas.take(4)) ImagemDeArte(IconesDaCasaK2.daGaveta(g), Modifier.size(28.dp))
+                }
+            }
+        }
     }) {
         Spacer(Modifier.height(8.dp))
         br.com.casinhadosaber.ui.componentes.Provador(
@@ -2838,22 +3058,24 @@ private fun Lojinha(estado: EstadoJogo, previa: Produto?, temGeladeira: Boolean,
                                     Modifier.height(52.dp),
                                     animado = false,
                                 )
-                                Text(produto.icone, fontSize = 14.sp, maxLines = 1, modifier = Modifier.align(Alignment.TopEnd).offset(x = 22.dp))
+                                FiguraDaPergunta(produto.icone, 18.dp, Modifier.align(Alignment.TopEnd).offset(x = 22.dp)) {
+                                    Text(produto.icone, fontSize = 14.sp, maxLines = 1)
+                                }
                             }
                         } else {
-                            Text(produto.icone, fontSize = 34.sp, maxLines = 1)
+                            // A comida em 3D (a figura das perguntas pelo emoji); o emoji só de reserva.
+                            FiguraDaPergunta(produto.icone, 46.dp) { Text(produto.icone, fontSize = 34.sp, maxLines = 1) }
                         }
-                        Text(
+                        RotuloDaLojaK2(
                             when {
-                                trancado -> "🔒"
-                                usando -> "✔ usando"
-                                tem && produto.categoria == Categoria.COMIDA -> "✔ 🧊"
-                                tem -> "✔ é seu"
-                                previa?.id == produto.id -> "👆 🪙 $preco"
-                                else -> "🪙 $preco"
+                                trancado -> SituacaoNaLojaK2.TRANCADO
+                                usando -> SituacaoNaLojaK2.USANDO
+                                tem && produto.categoria == Categoria.COMIDA -> SituacaoNaLojaK2.NA_GELADEIRA
+                                tem -> SituacaoNaLojaK2.E_SEU
+                                previa?.id == produto.id -> SituacaoNaLojaK2.PREVIA
+                                else -> SituacaoNaLojaK2.PRECO
                             },
-                            style = MaterialTheme.typography.titleMedium,
-                            color = if (tem) Cores.Certo else Cores.Texto,
+                            preco,
                         )
                     }
                 }
