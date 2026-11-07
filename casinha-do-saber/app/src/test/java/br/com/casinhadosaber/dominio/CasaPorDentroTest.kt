@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 import kotlin.math.abs
 
 class CasaPorDentroTest {
@@ -458,6 +459,24 @@ class OcultacaoNaCasaTest {
                     soma += coberto
                 }
                 assertTrue("${m[i].id} fica ${(soma * 100).toInt()}% escondido", soma < 0.5)
+            }
+        }
+    }
+
+    /**
+     * Com a arte 3D (Fase 6) a ordem de desenho continua a mesma: cada imagem dentro_* foi encaixada na pegada do
+     * seu móvel, então a caixa de oclusão da planta é a pegada da imagem (o teste acima vale para as imagens).
+     */
+    @Test
+    fun `as imagens 3D dos moveis usam as mesmas caixas da oclusao`() {
+        val pasta = listOf("src/main/assets/arte", "app/src/main/assets/arte").map(::File).first { it.isDirectory }
+        val manifesto = br.com.casinhadosaber.ui.componentes.ManifestoDaArte.ler(File(pasta, "manifesto.json").readText())
+        for (a in Andar.entries) for (m in PlantaDaCasa.moveisDe(tudo, a).filter { !it.naParede && !it.noChao }) {
+            val id = br.com.casinhadosaber.ui.componentes.CamadasDaCasaPorDentro.idDoMovel(m)
+            val info = manifesto.imagens[id] ?: error("falta $id")
+            val c = PlantaDaCasa.caixaDo(m)
+            for ((campo, valor) in listOf("x0" to c.x0, "y0" to c.y0, "x1" to c.x1, "y1" to c.y1, "z" to c.z0, "altura" to c.z1 - c.z0)) {
+                assertEquals("$id: pegada.$campo", valor.toDouble(), info.numeroIso("pegada.$campo")!!, 1e-4)
             }
         }
     }
