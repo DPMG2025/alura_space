@@ -8,7 +8,7 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 |---|---|---|---|
 | 0A. Tela cheia (celular e tablet) | código feito, aguardando CI e confirmação no tablet | 2026-11-07 | pendente |
 | 0. Fundação do pipeline (`arte3d/`) | código feito, aguardando CI (captura `v3d_00_arte_de_teste`) | 2026-11-07 | pendente |
-| 1. Personagens | arte (1A) e Kotlin (1B) feitos, aguardando CI e nota do revisor | 2026-11-07 | pendente |
+| 1. Personagens | feita; revisor deu 7 aos personagens (relatorios/revisao-fase1.md); CI 117 testes e lint verdes, emuladores pendentes | 2026-11-07 | execução 117 |
 | 2. Sistema de interface | arte (2A) e Kotlin (2B) feitos, aguardando CI | 2026-11-07 | pendente |
 | 3. Início e casa de fora | pendente | | |
 | 4. Jogo | pendente | | |
