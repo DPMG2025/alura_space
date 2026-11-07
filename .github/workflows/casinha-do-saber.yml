@@ -88,6 +88,21 @@ jobs:
           CASINHA_KEY_PASSWORD: ${{ secrets.CASINHA_KEY_PASSWORD }}
         run: ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease
 
+      # Orçamento do app (PRD visual 3D, seção 7): nenhum APK passa de 150 MB. Imprime o tamanho dos APKs e do .aab.
+      - name: Conferir tamanho do APK (limite 150 MB)
+        run: |
+          LIMITE=$((150 * 1024 * 1024))
+          ACIMA=0
+          for ARQ in app/build/outputs/apk/debug/*.apk app/build/outputs/apk/release/*.apk app/build/outputs/bundle/release/*.aab; do
+            [ -f "$ARQ" ] || { echo "ERRO: $ARQ não encontrado"; exit 1; }
+            BYTES=$(stat -c %s "$ARQ")
+            echo "$ARQ: $((BYTES / 1024 / 1024)) MB ($BYTES bytes)"
+            case "$ARQ" in
+              *.apk) if [ "$BYTES" -gt "$LIMITE" ]; then echo "ERRO: $ARQ passa do limite de 150 MB"; ACIMA=1; fi ;;
+            esac
+          done
+          exit $ACIMA
+
       # Promessas da ficha da loja: sem ID de publicidade e sem internet no pacote final.
       - name: Conferir permissões do pacote final
         run: |
@@ -209,11 +224,12 @@ jobs:
       - name: Falhar se os testes do emulador falharam
         run: test ! -f emulador-falhou.txt
 
-  # Android antigo (7 e 8): só o teste dos emojis na fonte embutida, para caber no tempo do CI.
+  # Android antigo (7 e 8): o teste dos emojis na fonte embutida e o de desempenho (abertura e memória, Fase 9),
+  # só esses dois para caber no tempo do CI.
   emulador-android-antigo:
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -239,7 +255,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Emojis no emulador (API ${{ matrix.api }})
+      - name: Emojis e desempenho no emulador (API ${{ matrix.api }})
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api }}
@@ -249,7 +265,12 @@ jobs:
           disable-animations: true
           working-directory: casinha-do-saber
           script: |
-            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.EmojisNaFonteEmbutidaTest || echo "FALHA_TESTES" > emulador-falhou.txt
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.EmojisNaFonteEmbutidaTest,br.com.casinhadosaber.DesempenhoTest || echo "FALHA_TESTES" > emulador-falhou.txt
+
+      # Os números de desempenho no log do job (também vão para docs/emulador/apiNN/desempenho.txt no push).
+      - name: Desempenho no Android antigo (API ${{ matrix.api }})
+        if: always()
+        run: find app/build/outputs/connected_android_test_additional_output -name desempenho.txt -exec cat {} \; 2>/dev/null || echo "desempenho.txt não gerado"
 
       - name: Versionar resultado do emulador antigo
         if: github.event_name == 'push' && !cancelled()
@@ -263,7 +284,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A $DESTINO
-          git diff --cached --quiet || git commit -m "Atualiza emojis no Android API ${{ matrix.api }} [skip ci]"
+          git diff --cached --quiet || git commit -m "Atualiza emojis e desempenho no Android API ${{ matrix.api }} [skip ci]"
           for tentativa in 1 2 3 4 5; do
             git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break
             sleep 11
@@ -277,7 +298,7 @@ jobs:
           path: casinha-do-saber/app/build/reports/androidTests/
           if-no-files-found: ignore
 
-      - name: Falhar se o teste dos emojis falhou
+      - name: Falhar se o teste dos emojis ou o de desempenho falhou
         run: test ! -f emulador-falhou.txt
 
   # Tela cheia no tablet (Fase 0A do PRD do visual 3D): as barras do sistema ficam escondidas no perfil de tablet.
