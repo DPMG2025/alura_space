@@ -101,14 +101,19 @@ fun CenaDaArea(
         Canvas(Modifier.fillMaxSize()) { desenharFundoAnimado(area, obra.value, t, noite, nuvensDesenhadas = !nuvensDaArte) }
         if (nuvensDaArte) {
             val volta = 2f * Math.PI.toFloat()
-            NuvemDaArte(ID_NUVEM_1, larguraPx, alturaPx, 0.06f, 0.03f, 0.30f) { 0.04f * sin(t * volta) }
-            NuvemDaArte(ID_NUVEM_2, larguraPx, alturaPx, 0.62f, 0.10f, 0.24f) { -0.03f * sin(t * volta) }
+            // Longe do canto de cima à esquerda, onde fica o botão do espelho da casa (a nuvem não passa por baixo dele).
+            NuvemDaArte(ID_NUVEM_1, larguraPx, alturaPx, 0.34f, 0.03f, 0.27f) { 0.03f * sin(t * volta) }
+            NuvemDaArte(ID_NUVEM_2, larguraPx, alturaPx, 0.70f, 0.12f, 0.22f) { -0.025f * sin(t * volta) }
         }
         if (evento != null) EnfeitesDoEvento(evento, Modifier.fillMaxSize())
 
         // Do fundo para a frente: quem está mais embaixo (mais perto) é desenhado por último.
+        // No lugar de partida, cada coisa ganha um desvio fixo e pequeno (a grade do começo não aparece).
         val presentes = area.coisas.mapNotNull { item ->
-            estado.colocados[item.id]?.let { g -> item to Posicao(g.x.coerceIn(0.03f, 0.97f), g.y.coerceIn(0.08f, 1f)) }
+            estado.colocados[item.id]?.let { g ->
+                val (x, y) = ArteDasAreas.posicaoNaIlhaK2(item, g.x, g.y)
+                item to Posicao(x.coerceIn(0.03f, 0.97f), y.coerceIn(0.08f, 1f))
+            }
         }.sortedBy { it.second.y }
         for ((item, pos) in presentes) {
             // A coisa em 3D quando a arte existe (o bicho, o item igual ao da casa ou a figura do emoji).
@@ -222,7 +227,10 @@ fun CenaDaArea(
                             alpha = ((1f - progresso) * 1.4f).coerceIn(0f, 1f)
                             rotationZ = -25f + 50f * kotlin.math.abs(sin((t * 4f + i * 0.33f) * Math.PI.toFloat()))
                         },
-                ) { EmojiGrande(if (i == 1) "🚧" else "🔨", lado) }
+                ) {
+                    // O martelinho 3D da obra (o emoji só de reserva).
+                    ImagemDeArte(IconesDaBarra.MARTELO, Modifier.fillMaxSize()) { EmojiGrande(if (i == 1) "🚧" else "🔨", lado) }
+                }
             }
         }
     }

@@ -32,13 +32,16 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.Categoria
 import br.com.casinhadosaber.dominio.Gaveta
 import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.dominio.Perfil
+import br.com.casinhadosaber.dominio.PrateleiraDaGeladeira
 import br.com.casinhadosaber.dominio.Produto
 import br.com.casinhadosaber.dominio.en
 import br.com.casinhadosaber.dominio.pt
@@ -48,6 +51,7 @@ import br.com.casinhadosaber.dominio.usa
 import br.com.casinhadosaber.dominio.vestindo
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.tema.Baloo2
 import br.com.casinhadosaber.ui.tema.Cores
 
 /**
@@ -101,11 +105,13 @@ fun Provador(
                         },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        g.icone,
-                        fontSize = if (escolhida) 34.sp else 28.sp,
-                        modifier = Modifier.graphicsLayer { alpha = if (escolhida) 1f else 0.7f },
-                    )
+                    // O ícone 3D da gaveta (pelo enum, não pelo emoji: 🎈 também é conteúdo); o emoji só de reserva.
+                    ImagemDeArte(
+                        IconesDaCasaK2.daGaveta(g),
+                        Modifier
+                            .size(if (escolhida) 44.dp else 38.dp)
+                            .graphicsLayer { alpha = if (escolhida) 1f else 0.7f },
+                    ) { Text(g.icone, fontSize = if (escolhida) 34.sp else 28.sp) }
                     // Bolinha verde: tem alguma coisa vestida nesta gaveta.
                     if (perfil.temNa(g)) {
                         Box(
@@ -133,7 +139,7 @@ fun Provador(
             ItemDoProvador(
                 descricao = tirar,
                 usando = !perfil.temNa(aba),
-                rodape = null,
+                preco = null,
                 onClick = {
                     sons.toque()
                     narrador.falar(if (aba == Gaveta.ROUPAS) "A roupa de sempre!" else "Pronto, tirei!")
@@ -145,7 +151,7 @@ fun Provador(
                 } else {
                     // A criança sem nada nesta gaveta, com o ✖ no canto.
                     Crianca(perfil.tirando(aba), Modifier.height(ALTURA_DA_MINIATURA), animado = false)
-                    IconeNoCanto("✖️")
+                    IconeNoCanto("✖️", IconesDaBarra.FECHAR)
                 }
             }
             for (p in itens) {
@@ -153,7 +159,7 @@ fun Provador(
                 ItemDoProvador(
                     descricao = p.nome + if (tem || precoDe == null) "" else ", ${precoDe(p)} moedinhas",
                     usando = perfil.usa(p),
-                    rodape = if (tem || precoDe == null) null else "🪙 ${precoDe(p)}",
+                    preco = if (tem || precoDe == null) null else precoDe(p),
                     apagado = !tem,
                     onClick = {
                         if (tem) {
@@ -170,15 +176,15 @@ fun Provador(
             }
             if (itens.isEmpty()) {
                 // Gaveta vazia (no espelho): mostra que dá para comprar na lojinha da casa.
-                Text(
-                    "🛒",
-                    fontSize = 34.sp,
-                    modifier = Modifier
+                Box(
+                    Modifier
                         .graphicsLayer { alpha = 0.6f }
                         .semantics { contentDescription = "Gaveta vazia. Compre na lojinha da casa." }
                         .clickable { narrador.falar("Essa gaveta está vazia. Compre na lojinha da casa!") }
                         .padding(14.dp),
-                )
+                ) {
+                    ImagemDeArte(IconesDaBarra.LOJA, Modifier.size(40.dp)) { Text("🛒", fontSize = 34.sp) }
+                }
             }
         }
     }
@@ -194,25 +200,67 @@ private val ALTURA_DA_MINIATURA = 58.dp
 fun miniaturaVestindo(perfil: Perfil, p: Produto): Perfil =
     if (p.categoria == Categoria.ROUPA) perfil.vestindo(p).copy(chapeu = "") else perfil.vestindo(p)
 
-/** O ícone da peça, pequeno, no canto de cima da miniatura (só para reconhecer; a peça está na criança). */
+/**
+ * O ícone da peça, pequeno, no canto de cima da miniatura (só para reconhecer; a peça está na criança): a figura
+ * 3D do emoji (ou o ícone [id] da arte, quando dado); o emoji só de reserva.
+ */
 @Composable
-private fun BoxScope.IconeNoCanto(icone: String) {
-    Text(
-        icone,
-        fontSize = 15.sp,
-        maxLines = 1,
-        modifier = Modifier
+private fun BoxScope.IconeNoCanto(icone: String, id: String? = null) {
+    val emoji: @Composable () -> Unit = { Text(icone, fontSize = 15.sp, maxLines = 1) }
+    Box(
+        Modifier
             .align(Alignment.TopEnd)
             .background(Color.White.copy(alpha = 0.85f), CircleShape)
             .padding(2.dp),
-    )
+        contentAlignment = Alignment.Center,
+    ) {
+        if (id != null) ImagemDeArte(id, Modifier.size(18.dp), reserva = emoji) else FiguraDaPergunta(icone, 18.dp, reserva = emoji)
+    }
+}
+
+/** O que a lojinha (de fora e de dentro) e o guarda-roupa mostram embaixo de cada coisa. */
+enum class SituacaoNaLojaK2 { TRANCADO, USANDO, NA_GELADEIRA, E_SEU, PREVIA, PRECO }
+
+/**
+ * Rodapé de uma coisa da lojinha ou do guarda-roupa, com os ícones 3D no lugar dos emojis: o cadeado, o certo e
+ * "usando" ou "é seu" (o congelador para a comida que já está na geladeira), ou a moeda 3D e o preço (com a
+ * mãozinha na prévia). Decorativo: quem fala é o cartão em volta.
+ */
+@Composable
+fun RotuloDaLojaK2(situacao: SituacaoNaLojaK2, preco: Int, modifier: Modifier = Modifier, tamanho: TextUnit = 16.sp) {
+    val lado = (tamanho.value * 1.15f).dp
+    val estilo = TextStyle(fontFamily = Baloo2, fontWeight = FontWeight.ExtraBold, fontSize = tamanho, lineHeight = tamanho * 1.15f)
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+        val certo: @Composable () -> Unit = {
+            ImagemDeArte(IconesDaBarra.CERTO, Modifier.size(lado)) { Text("✔", style = estilo, color = Cores.Certo) }
+        }
+        val moeda: @Composable () -> Unit = {
+            ImagemDeArte(IconesDaCasaK2.MOEDA, Modifier.size(lado)) { Text("🪙", fontSize = tamanho) }
+        }
+        when (situacao) {
+            SituacaoNaLojaK2.TRANCADO -> ImagemDeArte(IconesDaBarra.PAIS, Modifier.size(lado)) { Text("🔒", fontSize = tamanho) }
+            SituacaoNaLojaK2.USANDO -> { certo(); Text("usando", style = estilo, color = Cores.Certo, maxLines = 1) }
+            SituacaoNaLojaK2.E_SEU -> { certo(); Text("é seu", style = estilo, color = Cores.Certo, maxLines = 1) }
+            SituacaoNaLojaK2.NA_GELADEIRA -> {
+                certo()
+                ImagemDeArte(IconesDaCasaK2.daPrateleira(PrateleiraDaGeladeira.CONGELADOR), Modifier.size(lado)) { Text("🧊", fontSize = tamanho) }
+            }
+            SituacaoNaLojaK2.PREVIA -> {
+                ImagemDeArte("ui_mao_toque", Modifier.size(lado)) { Text("👆", fontSize = tamanho) }
+                moeda()
+                Text("$preco", style = estilo, color = Cores.TextoDaPilula, maxLines = 1)
+            }
+            SituacaoNaLojaK2.PRECO -> { moeda(); Text("$preco", style = estilo, color = Cores.TextoDaPilula, maxLines = 1) }
+        }
+    }
 }
 
 @Composable
 private fun ItemDoProvador(
     descricao: String,
     usando: Boolean,
-    rodape: String?,
+    /** Preço de quem ainda não é seu (moeda 3D e o número); nulo, nada (ou o certo, quando está usando). */
+    preco: Int?,
     onClick: () -> Unit,
     apagado: Boolean = false,
     desenho: @Composable BoxScope.() -> Unit,
@@ -237,14 +285,12 @@ private fun ItemDoProvador(
                 .graphicsLayer { alpha = if (apagado) 0.6f else 1f },
             contentAlignment = Alignment.Center,
         ) { desenho() }
-        if (rodape != null || usando) {
-            Text(
-                rodape ?: "✔",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (usando) Cores.Certo else Cores.Texto,
-                maxLines = 1,
-            )
+        when {
+            preco != null -> RotuloDaLojaK2(SituacaoNaLojaK2.PRECO, preco, tamanho = 15.sp)
+            // Sobre o verde claro do "usando": o certo 3D de fundo claro.
+            usando -> ImagemDeArte(IconesDaBarra.CERTO, Modifier.size(20.dp)) {
+                Text("✔", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Cores.Certo, maxLines = 1)
+            }
         }
     }
 }

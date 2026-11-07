@@ -1,5 +1,8 @@
 package br.com.casinhadosaber.ui.componentes
 
+import br.com.casinhadosaber.dominio.CasaQueCresce
+import br.com.casinhadosaber.dominio.Gaveta
+import br.com.casinhadosaber.dominio.PrateleiraDaGeladeira
 import br.com.casinhadosaber.dominio.Trilha
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -31,6 +34,35 @@ class PecasDaInterfaceTest {
         assertEquals(IconeDaBarra(IconesDaBarra.ESPELHO), IconesDaBarra.para("🪞"))
         assertEquals(IconeDaBarra(IconesDaBarra.GRAVAR), IconesDaBarra.para("⏺️"))
         assertNull(IconesDaBarra.para("🥁"))
+    }
+
+    @Test fun botoesSoltosDaFase9CViramIcones() {
+        assertEquals(IconeDaBarra(IconesDaBarra.SUBIR), IconesDaBarra.para("⬆️"))
+        assertEquals(IconeDaBarra(IconesDaBarra.DESCER), IconesDaBarra.para("⬇"))
+        assertEquals(IconeDaBarra(IconesDaBarra.BUSSOLA), IconesDaBarra.para("🧭"))
+        assertEquals(IconeDaBarra(IconesDaBarra.DICA), IconesDaBarra.para("💡"))
+        assertEquals(IconeDaBarra(IconesDaBarra.MARTELO), IconesDaBarra.para("🔨"))
+        assertEquals(IconeDaBarra(IconesDaBarra.MARCADOR), IconesDaBarra.para("🔖"))
+        assertEquals(IconeDaBarra(IconesDaBarra.VASSOURA), IconesDaBarra.para("🧹"))
+        assertEquals(IconeDaBarra(IconesDaBarra.BROTO), IconesDaBarra.para("🌱"))
+        assertEquals(IconeDaBarra(IconesDaBarra.ALFINETE), IconesDaBarra.para("📍"))
+        assertEquals(IconeDaBarra(IconesDaBarra.ESCREVER), IconesDaBarra.para("✏️"))
+        assertEquals(IconeDaBarra(IconesDaBarra.TREINO), IconesDaBarra.para("🏋️"))
+        assertEquals(IconeDaBarra(IconesDaBarra.BANDEIRA), IconesDaBarra.para("🚩"))
+        assertEquals(IconeDaBarra(IconesDaBarra.CERTO), IconesDaBarra.para("✔"))
+        assertEquals(IconeDaBarra(IconesDaBarra.CERTO), IconesDaBarra.para("✔️"))
+        // Emojis que também são conteúdo não entram pelo emoji (vão pelo enum ou pelo id).
+        for (e in listOf("🎈", "🍎", "👕", "🥕", "⚽", "🧸", "🎁", "🪙")) assertNull(e, IconesDaBarra.para(e))
+    }
+
+    @Test fun abasDaCasaPeloEnumOuPeloId() {
+        assertEquals("icone_roupas", IconesDaCasaK2.daGaveta(Gaveta.ROUPAS))
+        assertEquals("icone_mao", IconesDaCasaK2.daGaveta(Gaveta.MAO))
+        assertEquals("icone_congelador", IconesDaCasaK2.daPrateleira(PrateleiraDaGeladeira.CONGELADOR))
+        assertEquals("icone_area_quarto2", IconesDaCasaK2.daArea("quarto2"))
+        val ids = IconesDaCasaK2.fixos + CasaQueCresce.areas.map { IconesDaCasaK2.daArea(it.id) }
+        for (id in ids) assertTrue("'$id' fora do manifesto", id in manifesto.imagens)
+        assertEquals(20, CasaQueCresce.areas.size)
     }
 
     @Test fun todoIconeDaBarraEDosCaminhosEstaNoManifesto() {

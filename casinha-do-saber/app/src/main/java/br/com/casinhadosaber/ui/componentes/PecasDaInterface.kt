@@ -1,5 +1,7 @@
 package br.com.casinhadosaber.ui.componentes
 
+import br.com.casinhadosaber.dominio.Gaveta
+import br.com.casinhadosaber.dominio.PrateleiraDaGeladeira
 import br.com.casinhadosaber.dominio.Trilha
 
 // Peças do visual brinquedo 3D que não dependem do Android (testáveis na JVM): que ícone da arte entra no
@@ -33,10 +35,31 @@ object IconesDaBarra {
     const val PAPEL_NOVO = "icone_papel_novo"
     const val LIXEIRA = "icone_lixeira"
 
+    // Botões soltos da Fase 9C (lote 3 de arte).
+    const val SUBIR = "icone_subir"
+    const val DESCER = "icone_descer"
+    const val BUSSOLA = "icone_bussola"
+    const val DICA = "icone_dica"
+    const val MARTELO = "icone_martelo"
+    const val MARCADOR = "icone_marcador"
+    const val VASSOURA = "icone_vassoura"
+    const val BROTO = "icone_broto"
+    const val ALFINETE = "icone_alfinete"
+    const val ESCREVER = "icone_escrever"
+    const val TREINO = "icone_no_treino"
+    const val BANDEIRA = "icone_no_marco"
+
+    /** O "✔" sobre fundo claro; sobre fundo colorido, use [CERTO_BRANCO] (não está em [porEmoji]). */
+    const val CERTO = "icone_certo"
+    const val CERTO_BRANCO = "icone_certo_branco"
+    const val BAU = "icone_bau"
+
     /** Todos os ids que o [BotaoRedondo] pode pedir à arte. */
     val todos = listOf(
         FECHAR, VOLTAR, SOM_LIGADO, SOM_DESLIGADO, AJUSTES, PAIS, CASA, LOJA,
         MAPA, ALBUM, ESTANTE, ESPELHO, SOL, LUA, PINTAR, TOCAR, PARAR, GRAVAR, OUVIR, REPETIR, DESFAZER, PAPEL_NOVO, LIXEIRA,
+        SUBIR, DESCER, BUSSOLA, DICA, MARTELO, MARCADOR, VASSOURA, BROTO, ALFINETE, ESCREVER, TREINO, BANDEIRA,
+        CERTO, CERTO_BRANCO, BAU,
     )
 
     // Só emojis que o app já usa, escritos como nas telas (a lista do teste de emojis no emulador sai do código).
@@ -54,6 +77,12 @@ object IconesDaBarra {
         "☀️" to IconeDaBarra(SOL), "🌙" to IconeDaBarra(LUA), "🎨" to IconeDaBarra(PINTAR),
         "⏹️" to IconeDaBarra(PARAR), "⏺️" to IconeDaBarra(GRAVAR), "👂" to IconeDaBarra(OUVIR), "🔁" to IconeDaBarra(REPETIR),
         "↩️" to IconeDaBarra(DESFAZER), "📄" to IconeDaBarra(PAPEL_NOVO), "🗑️" to IconeDaBarra(LIXEIRA),
+        // Fase 9C: só botões soltos. Emojis que também são conteúdo (🎈 🍎 👕 ⚽...) mapeiam pelo enum/id
+        // ([IconesDaCasaK2]), nunca aqui.
+        "⬆️" to IconeDaBarra(SUBIR), "⬇️" to IconeDaBarra(DESCER), "🧭" to IconeDaBarra(BUSSOLA), "💡" to IconeDaBarra(DICA),
+        "🔨" to IconeDaBarra(MARTELO), "🔖" to IconeDaBarra(MARCADOR), "🧹" to IconeDaBarra(VASSOURA), "🌱" to IconeDaBarra(BROTO),
+        "📍" to IconeDaBarra(ALFINETE), "✏️" to IconeDaBarra(ESCREVER), "🏋️" to IconeDaBarra(TREINO), "🚩" to IconeDaBarra(BANDEIRA),
+        "✔️" to IconeDaBarra(CERTO),
     ).mapKeys { it.key.replace("️", "") }
 
     /**
@@ -65,6 +94,48 @@ object IconesDaBarra {
         if (limpo == "▶" && (descricao.startsWith("Ouvir") || descricao.startsWith("Tocar"))) return IconeDaBarra(TOCAR)
         return porEmoji[limpo]
     }
+}
+
+/**
+ * Ícones 3D das abas e linhas da casa (Fase 9C, lote 3), escolhidos pelo enum ou pelo id, não pelo emoji:
+ * 🎈 🍎 👕 🥕 ⚽ 🧸 também são conteúdo (com `fig_*`). Kotlin puro (testável na JVM).
+ */
+object IconesDaCasaK2 {
+    /** Presente fechado 3D (o 🎁 do baú) e a moeda 3D (o 🪙). */
+    const val PRESENTE = "premio_presente_fechado"
+    const val MOEDA = "moeda"
+
+    // Linhas do espelho (TelaPerfil).
+    const val PELE = "icone_pele"
+    const val COR_DO_CABELO = "icone_cor_do_cabelo"
+    const val PENTEADO = "icone_penteado"
+    const val ROUPA = "icone_roupa"
+
+    /** O ícone de uma área da casa que cresce (pílulas dos lugares, cadeado da próxima): `icone_area_<id>`. */
+    fun daArea(idDaArea: String): String = "icone_area_$idDaArea"
+
+    /** O ícone da aba de uma gaveta do guarda-roupa e do espelho. */
+    fun daGaveta(g: Gaveta): String = when (g) {
+        Gaveta.ROUPAS -> "icone_roupas"
+        Gaveta.CHAPEUS -> "icone_chapeus"
+        Gaveta.ROSTO -> "icone_rosto"
+        Gaveta.PESCOCO -> "icone_pescoco"
+        Gaveta.COSTAS -> "icone_costas"
+        Gaveta.MAO -> "icone_mao"
+        Gaveta.PES -> "icone_pes"
+        Gaveta.CABELO -> "icone_cabelo"
+    }
+
+    /** O ícone da aba de uma prateleira da geladeira. */
+    fun daPrateleira(p: PrateleiraDaGeladeira): String = when (p) {
+        PrateleiraDaGeladeira.FRUTAS -> "icone_frutas"
+        PrateleiraDaGeladeira.LEITE -> "icone_leite"
+        PrateleiraDaGeladeira.CONGELADOR -> "icone_congelador"
+    }
+
+    /** Os ids fixos desta tabela (as áreas à parte), para o teste conferir no manifesto. */
+    val fixos: List<String> get() = listOf(PRESENTE, MOEDA, PELE, COR_DO_CABELO, PENTEADO, ROUPA) +
+        Gaveta.entries.map(::daGaveta) + PrateleiraDaGeladeira.entries.map(::daPrateleira)
 }
 
 /** Id da arte 3D do ícone de um caminho (blocos 1 2 3, blocos A B C, globo, argolas). */

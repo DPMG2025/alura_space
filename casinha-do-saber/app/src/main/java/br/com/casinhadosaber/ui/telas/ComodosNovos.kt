@@ -45,7 +45,6 @@ import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.CenaDaArea
 import br.com.casinhadosaber.ui.componentes.EstrelasDeProgresso
-import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.IconeDaCoisa
 import br.com.casinhadosaber.ui.componentes.ImagemDeArte
 import br.com.casinhadosaber.ui.componentes.ProgressoVisivel
@@ -96,7 +95,7 @@ fun BoxScope.ComodosNovosDaCasa(
                 ) {
                     Column(Modifier.padding(horizontal = 6.dp, vertical = 2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         ImagemDeArte("icone_avancar", Modifier.size(26.dp)) { Text("🚪", fontSize = 22.sp) }
-                        FiguraDaPergunta(c.icone, 28.dp) { Text(c.icone, fontSize = 22.sp) }
+                        IconeDaAreaK2(c, 30.dp)
                     }
                 }
             }

@@ -60,6 +60,7 @@ import br.com.casinhadosaber.ui.componentes.EstrelasDeProgresso
 import br.com.casinhadosaber.ui.componentes.ID_ESTRELA_CHEIA
 import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
 import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.IconesDaCasaK2
 import br.com.casinhadosaber.ui.componentes.ImagemDeArte
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.MoedasQueSeContam
@@ -242,18 +243,25 @@ fun TelaInicio(
                 if (noBau > 0) {
                     // O aviso e a mãozinha ficam juntos: a mão aponta para o aviso.
                     Box(Modifier.align(Alignment.TopCenter).padding(top = 10.dp)) {
-                        Box(
+                        // O presente 3D (o mesmo do baú da casa) no lugar do 🎁 de sistema.
+                        Row(
                             Modifier
                                 .pulsando()
                                 .background(Cores.Estrela, RoundedCornerShape(50))
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .padding(start = 10.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
+                            ImagemDeArte(IconesDaCasaK2.PRESENTE, Modifier.size(34.dp)) { Text("🎁", style = MaterialTheme.typography.titleMedium) }
                             Text(
-                                if (noBau == 1) "🎁 1 presente!" else "🎁 $noBau presentes!",
+                                if (noBau == 1) "1 presente!" else "$noBau presentes!",
                                 style = MaterialTheme.typography.titleMedium,
+                                maxLines = 1,
                             )
                         }
-                        MaoGuia(Modifier.align(Alignment.BottomEnd).offset(x = 28.dp, y = 40.dp), espera = 2500)
+                        // A ponta do dedo encosta no canto de baixo à direita do aviso (antes a caixa da mão, mais
+                        // alta que o aviso, a levava para cima do telhado, solta).
+                        MaoGuia(Modifier.align(Alignment.TopEnd).offset(x = 26.dp, y = 12.dp), espera = 2500)
                     }
                 }
             }

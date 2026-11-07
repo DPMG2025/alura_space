@@ -199,7 +199,8 @@ class CapturasTest {
         TelaJogo(gerador.fases(Trilha.LOGICA)[6], menino, {}, { })
     }
 
-    @Test fun premio() = capturar("11_premio") {
+    /** Com o presente já aberto: o objeto ganho e o botão "Pôr na casinha" (antes saía com o presente fechado). */
+    @Test fun premio() = capturar("11_premio", acao = ::abrirPresente) {
         TelaPremio(gerador.fases(Trilha.INGLES)[2], 3, ItensDaCasa.porId.getValue("cama"), menina, 5, true, {}, {}, {})
     }
 
