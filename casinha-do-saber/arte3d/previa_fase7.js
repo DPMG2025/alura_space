@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Prévia da Fase 7 (guarda-roupa): empilha as camadas da criança (manifesto.json) com as roupas, acessórios e
-// chapéus (manifesto_fase7.json), tingindo pele, cabelo e roupa como o app, e grava em saida/ (não versionado):
+// chapéus (já no manifesto.json; manifesto_fase7.json se houver), tingindo pele, cabelo e roupa como o app, e grava em saida/ (não versionado):
 //   previa_trajes.png      os 16 trajes (meninas e meninos, peles, cabelos e cores de roupa variados)
 //   previa_acessorios.png  os 18 acessórios e os 4 chapéus
 //   previa_combos.png      combinações com poses (tchau, torcendo, pensando): mangas e objetos na mão
@@ -110,8 +110,9 @@ const FOLHAS = {
 
 async function main() {
   const m = JSON.parse(fs.readFileSync(path.join(ARTE, 'manifesto.json'), 'utf8'));
-  const m7 = JSON.parse(fs.readFileSync(path.join(ARTE, 'manifesto_fase7.json'), 'utf8'));
-  Object.assign(m.imagens, m7.imagens);
+  // depois da integração tudo está no manifesto.json; o manifesto à parte só existe num render CATALOGO=fase7
+  const f7 = path.join(ARTE, 'manifesto_fase7.json');
+  if (fs.existsSync(f7)) Object.assign(m.imagens, JSON.parse(fs.readFileSync(f7, 'utf8')).imagens);
   const pedidas = process.argv.slice(2);
   const folhas = {};
   const usados = new Set();
