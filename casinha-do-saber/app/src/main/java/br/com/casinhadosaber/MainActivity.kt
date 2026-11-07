@@ -6,6 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -173,6 +176,25 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Modo imersivo: esconde a barra de status e a de navegação (e a barra de tarefas do tablet, no Android 12L
+     * ou mais novo). Um deslize da borda mostra as barras por instantes e elas somem sozinhas. O recorte da
+     * câmera continua respeitado pelas telas (`WindowInsets.safeDrawing` inclui o `displayCutout`).
+     */
+    private fun entrarEmTelaCheia() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    /** Teclado, diálogos do sistema e a troca de apps devolvem as barras: esconde de novo ao recuperar o foco. */
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) entrarEmTelaCheia()
+    }
+
     override fun onPause() {
         super.onPause()
         narrador.parar()
@@ -205,6 +227,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         inicioDaSessao = System.currentTimeMillis()
+        entrarEmTelaCheia()
         if (musicaPermitida) musica.tocar()
     }
 

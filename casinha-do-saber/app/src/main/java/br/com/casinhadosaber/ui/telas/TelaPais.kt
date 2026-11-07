@@ -354,6 +354,16 @@ private fun Painel(
         )
     }
 
+    Cartao {
+        Text("Para a criança não sair do jogo", style = MaterialTheme.typography.titleLarge)
+        Text(
+            "O app já esconde as barras do sistema. Para impedir também que a criança troque de app, fixe a janela: " +
+                "Configurações, Segurança (ou Tela de bloqueio), Fixar janelas, e ligue. Depois abra o app, toque no botão de apps recentes e em " +
+                "\"Fixar\" no ícone do app. Para sair, os pais seguram Voltar e Recentes ao mesmo tempo (ou deslizam e seguram, nos gestos).",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+
     if (confirmar) {
         JanelaDosPais(onFechar = { confirmar = false }, titulo = if (variasCriancas) "Apagar o progresso" else "Apagar tudo") {
             CaixaDeDialogo(
