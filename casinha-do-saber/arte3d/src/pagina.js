@@ -3,7 +3,9 @@
 // Quem chama é o render.js, pelo Playwright: window.renderizar(id, escala, superamostra).
 import { THREE, palco, luzes } from './kit.js';
 import { tiposDeCamera, filtroFinal } from './cameras.js';
-import { catalogo } from './catalogo.js';
+// ?catalogo=fase7 troca o catálogo principal pelo da Fase 7 (guarda-roupa), renderizado à parte.
+const qualCatalogo = new URLSearchParams(location.search).get('catalogo');
+const { catalogo } = qualCatalogo === 'fase7' ? await import('./catalogo_fase7.js') : await import('./catalogo.js');
 import { carregarFonte } from './objetos/icones.js';
 
 /** Fundo preto vira transparente e os reflexos viram branco translúcido (camadas de brilho do cabelo). */
@@ -181,6 +183,7 @@ window.renderizar = (id, escala, superamostra) => {
   p.r.dispose();
   p.r.forceContextLoss();
   const extra = item.grupo === undefined ? {} : { grupo: item.grupo, tingir: item.tingir, ordem: item.ordem, personagem: item.personagem };
+  if (item.esconde) extra.esconde = item.esconde;
   return { png, largura, altura, tipo: item.tipo, uso: item.uso, apoio, ancoras, bordas, ...extra };
 };
 

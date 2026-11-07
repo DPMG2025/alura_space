@@ -3,6 +3,9 @@
 //
 //   npm run render              renderiza o catálogo inteiro e apaga imagens órfãs
 //   npm run render -- moeda     renderiza só os ids dados (o resto do manifesto fica como está)
+//   CATALOGO=fase7 npm run render [-- ids]
+//                               só o catálogo da Fase 7 (src/catalogo_fase7.js), sempre incremental (não apaga
+//                               nada), com manifesto próprio: manifesto_fase7.json (o integrador junta depois)
 //
 // Sobe um servidor local com esta pasta, abre pagina/render.html no Chromium headless (WebGL por
 // SwiftShader), pede cada objeto do catálogo (src/catalogo.js) e grava, em
@@ -43,8 +46,13 @@ function ordenar(obj) {
   return Object.fromEntries(Object.keys(obj).sort().map((k) => [k, ordenar(obj[k])]));
 }
 
+/** Catálogo alternativo (CATALOGO=fase7): renderiza só ele, sem apagar nada, com manifesto próprio. */
+const CATALOGO = process.env.CATALOGO || '';
+if (CATALOGO && CATALOGO !== 'fase7') throw new Error('CATALOGO desconhecido: ' + CATALOGO);
+
 async function main() {
   const pedidos = process.argv.slice(2);
+  const incremental = pedidos.length > 0 || CATALOGO !== '';
   fs.mkdirSync(DESTINO, { recursive: true });
   fs.mkdirSync(PREVIA, { recursive: true });
   const srv = await servir();
@@ -55,15 +63,15 @@ async function main() {
     const pagina = await navegador.newPage();
     pagina.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log('console:', m.text()); });
     pagina.on('pageerror', (e) => { falhou = true; console.log('erro na página:', e.message); });
-    await pagina.goto(`http://127.0.0.1:${porta}/pagina/render.html`);
+    await pagina.goto(`http://127.0.0.1:${porta}/pagina/render.html${CATALOGO ? '?catalogo=' + CATALOGO : ''}`);
     await pagina.waitForFunction(() => window.PRONTO === true, null, { timeout: 120000 });
     const todos = await pagina.evaluate(() => window.catalogo());
     const ids = pedidos.length ? pedidos : todos;
     const desconhecidos = ids.filter((i) => !todos.includes(i));
     if (desconhecidos.length) throw new Error('fora do catálogo: ' + desconhecidos.join(', '));
 
-    const arqManifesto = path.join(DESTINO, 'manifesto.json');
-    const anterior = pedidos.length && fs.existsSync(arqManifesto) ? JSON.parse(fs.readFileSync(arqManifesto, 'utf8')).imagens : {};
+    const arqManifesto = path.join(DESTINO, CATALOGO ? `manifesto_${CATALOGO}.json` : 'manifesto.json');
+    const anterior = incremental && fs.existsSync(arqManifesto) ? JSON.parse(fs.readFileSync(arqManifesto, 'utf8')).imagens : {};
     const imagens = { ...anterior };
 
     for (const id of ids) {
@@ -77,13 +85,16 @@ async function main() {
       fs.writeFileSync(path.join(DESTINO, arquivo), webp);
       imagens[id] = { arquivo, tipo: r.tipo, largura: r.largura, altura: r.altura, uso: r.uso, apoio: r.apoio, ancoras: r.ancoras };
       if (r.grupo !== undefined) Object.assign(imagens[id], { grupo: r.grupo, tingir: r.tingir, ordem: r.ordem, personagem: r.personagem });
+      if (r.esconde) imagens[id].esconde = r.esconde;
       // camadas de câmera fixa não podem encostar na borda: seria parte da figura cortada
       if (r.bordas.length) { falhou = true; console.log(`CORTADO ${id}: encosta em ${r.bordas.join(', ')}`); }
       console.log(`ok ${arquivo} ${r.largura}x${r.altura} ${(webp.length / 1024).toFixed(1)} KB (${Date.now() - t0} ms)`);
     }
 
     // Sem lista explícita, o manifesto é exatamente o catálogo: remove o que saiu dele.
-    if (!pedidos.length) {
+    // Catálogo inteiro da Fase 7: o manifesto próprio fica igual ao catálogo (as imagens não são apagadas).
+    if (CATALOGO && !pedidos.length) for (const id of Object.keys(imagens)) if (!todos.includes(id)) delete imagens[id];
+    if (!incremental) {
       for (const id of Object.keys(imagens)) if (!todos.includes(id)) delete imagens[id];
       const validos = new Set(Object.values(imagens).map((i) => i.arquivo).concat('manifesto.json'));
       for (const f of fs.readdirSync(DESTINO)) {
