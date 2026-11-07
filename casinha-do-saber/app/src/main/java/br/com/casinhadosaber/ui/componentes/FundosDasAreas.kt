@@ -83,7 +83,7 @@ fun DrawScope.desenharFundoParado(area: AreaDaCasa, progresso: Float, noite: Boo
             "observatorio" -> listOf(Color(0xFFB5654A), Color(0xFF8E4A35))
             "gourmet" -> listOf(Color(0xFFD9A46C), Color(0xFFB98552))
             // A grama lisa e viva da arte 3D (a mesma da casa de fora), um pouco mais escura perto da gente.
-            else -> if (noite) listOf(Color(0xFF3F7A45), Color(0xFF2F5E35)) else listOf(GramaDaIlha, Color(0xFF86CF57))
+            else -> if (noite) listOf(Color(0xFF3F7A45), Color(0xFF2F5E35)) else listOf(GramaDaAreaNova, Color(0xFF86CF57))
         }
         drawRect(Brush.verticalGradient(chao, startY = size.height * H, endY = size.height), p(0f, H), s(1f, 1f - H))
         // Luz do sol no topo da grama (o "verniz" da massinha), logo abaixo do horizonte.
@@ -156,7 +156,7 @@ fun DrawScope.desenharFundoParado(area: AreaDaCasa, progresso: Float, noite: Boo
 }
 
 /** Grama clara da ilha (a `A9E56F` da arte 3D da casa, um tico mais viva no alto). */
-private val GramaDaIlha = Color(0xFFB0EA74)
+private val GramaDaAreaNova = Color(0xFFB0EA74)
 
 /**
  * A beirada da ilha de grama embaixo da cena (o mundo de brinquedo em ilhas): a grama faz uma borda redondinha
