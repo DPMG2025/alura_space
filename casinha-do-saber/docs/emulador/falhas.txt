@@ -1,8 +1,8 @@
     <failure></failure>
   </testcase>
-  <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device 'emulator-5554' not found
-device 'emulator-5554' not found
-com.android.ddmlib.AdbCommandRejectedException: device 'emulator-5554' not found
+  <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
+device offline
+com.android.ddmlib.AdbCommandRejectedException: device offline
 	at com.android.ddmlib.AdbHelper.setDevice(AdbHelper.java:981)
 	at com.android.ddmlib.AdbHelper.setDevice(AdbHelper.java:1000)
 	at com.android.ddmlib.internal.DeviceImpl.lambda$executeRemoteCommand$18(DeviceImpl.java:785)
