@@ -77,6 +77,7 @@ import br.com.casinhadosaber.ui.componentes.cartaoFofo
 import br.com.casinhadosaber.ui.componentes.clarear
 import br.com.casinhadosaber.ui.componentes.CamadasDaCasa
 import br.com.casinhadosaber.ui.componentes.EstrelasLeves
+import br.com.casinhadosaber.ui.componentes.FiguraLeveDoEmoji
 import br.com.casinhadosaber.ui.componentes.GramaDaIlha
 import br.com.casinhadosaber.ui.componentes.IconesDaBarra
 import br.com.casinhadosaber.ui.componentes.ImagemDeArte
@@ -86,7 +87,6 @@ import br.com.casinhadosaber.ui.componentes.TextoComContorno
 import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
 import br.com.casinhadosaber.ui.componentes.desenharArte
 import br.com.casinhadosaber.ui.componentes.lembrarArteLeve
-import br.com.casinhadosaber.ui.tema.Baloo2
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -253,7 +253,8 @@ fun TelaTrilha(
                         Text("🎁", style = MaterialTheme.typography.titleLarge)
                     }
                     ImagemDeArte(CamadasDaCasa.idDoItem(proximoPremio.id, noite = false), Modifier.size(32.dp).pulsando()) {
-                        Text(proximoPremio.icone, style = MaterialTheme.typography.headlineMedium)
+                        // Item ainda sem arte da casa (🐶, 🐞...): a figura 3D das perguntas; sem ela, o emoji.
+                        FiguraLeveDoEmoji(proximoPremio.icone, 32.dp)
                     }
                 }
             } else {
@@ -387,16 +388,10 @@ fun TelaTrilha(
                                 .semantics(mergeDescendants = true) { contentDescription = mundo.titulo },
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(mundo.emoji, style = MaterialTheme.typography.titleMedium)
+                            // A figura 3D do mundo e o nome dele (o número do mundo fica só na descrição).
+                            FiguraLeveDoEmoji(mundo.emoji, 26.dp)
                             Spacer(Modifier.width(4.dp))
-                            Text(
-                                "Mundo ${mundo.numero}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = corEscura,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            NomeDoMundoNaPlaca(mundo.nome, corEscura, Modifier.weight(1f, fill = false))
                         }
                     }
                     if (eAtual) {
@@ -482,7 +477,7 @@ fun TelaTrilha(
                                 Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text("🏋️", style = MaterialTheme.typography.headlineMedium)
+                                IconeLeve("icone_no_treino", 34.dp) { Text("🏋️", style = MaterialTheme.typography.headlineMedium) }
                                 Spacer(Modifier.width(8.dp))
                                 Text("Treinar", style = MaterialTheme.typography.headlineSmall, color = corEscura, fontWeight = FontWeight.Bold)
                             }
@@ -612,12 +607,13 @@ private fun BolinhaDaFase(
                             if (marco) drawCircle(Cores.Estrela, style = Stroke(8.dp.toPx()))
                             drawCircle(cor, radius = size.minDimension / 2 - (if (marco) 6.dp.toPx() else 0f), style = Stroke(5.dp.toPx()))
                         }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        // O ícone 3D do tipo da fase (comum, chefão, revisão, desafio, novidade), sem número: o número
+                        // e o nome ficam na descrição ("Fase 24, ..."); o emoji da fase é só a reserva sem a arte.
+                        IconeLeve(idDoNoDaFase(fase), TAMANHO_DO_ICONE_DO_NO) {
                             Text(fase.emoji, style = MaterialTheme.typography.headlineLarge)
-                            Text("${fase.numero + 1}", style = NUMERO_DA_FASE, color = corEscura)
                         }
                         if (estrelas > 0) {
-                            // Fase vencida: um "certinho" na cor do caminho, num selinho de borda branca.
+                            // Fase vencida: o "certinho" 3D branco num selinho na cor do caminho, de borda branca.
                             Box(
                                 Modifier
                                     .align(Alignment.TopEnd)
@@ -625,7 +621,9 @@ private fun BolinhaDaFase(
                                     .background(cor, CircleShape)
                                     .border(2.dp, Color.White, CircleShape),
                                 contentAlignment = Alignment.Center,
-                            ) { Text("✔", color = Color.White, style = MaterialTheme.typography.titleMedium) }
+                            ) {
+                                IconeLeve("icone_certo_branco", 20.dp) { Text("✔", color = Color.White, style = MaterialTheme.typography.titleMedium) }
+                            }
                         }
                     } else {
                         // Fechada: mostra o desenho da fase apagadinho e o cadeado 3D pequeno (um bitmap só para
@@ -633,9 +631,9 @@ private fun BolinhaDaFase(
                         if (marco) {
                             Canvas(Modifier.fillMaxSize()) { drawCircle(Cores.Estrela.copy(alpha = 0.45f), style = Stroke(6.dp.toPx())) }
                         }
-                        Text(fase.emoji, style = MaterialTheme.typography.headlineLarge, modifier = Modifier.graphicsLayer { alpha = 0.3f })
-                        IconeLeve(IconesDaBarra.PAIS, 26.dp, Modifier.align(Alignment.BottomEnd)) {
-                            Text("🔒", style = MaterialTheme.typography.titleLarge)
+                        // Fechada: o cadeado 3D gordinho do caminho no meio (um bitmap só para todas as fechadas).
+                        IconeLeve("icone_no_bloqueado", TAMANHO_DO_ICONE_DO_NO, alfa = 0.75f) {
+                            IconeLeve(IconesDaBarra.PAIS, 34.dp) { Text("🔒", style = MaterialTheme.typography.titleLarge) }
                         }
                     }
                 }
@@ -654,7 +652,7 @@ private fun BolinhaDaFase(
                     if (estrelas > 0) {
                         IconeLeve("premio_trofeu", 26.dp) { Text("🏆", style = MaterialTheme.typography.titleMedium) }
                     } else {
-                        Text("🚩", style = MaterialTheme.typography.titleMedium)
+                        IconeLeve("icone_no_marco", 24.dp) { Text("🚩", style = MaterialTheme.typography.titleMedium) }
                     }
                 }
             }
@@ -710,8 +708,56 @@ internal fun TituloQueCabe(texto: String, modifier: Modifier = Modifier, estilo:
     }
 }
 
-/** Número da fase dentro da bolinha: Baloo 2 bem gordinha. */
-private val NUMERO_DA_FASE = TextStyle(fontFamily = Baloo2, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, lineHeight = 20.sp)
+/** Lado do ícone do tipo da fase dentro da bolinha (a arte é de 48 dp; a bolinha tem 88). */
+private val TAMANHO_DO_ICONE_DO_NO = 50.dp
+
+/**
+ * O ícone 3D do tipo de nó do caminho (relatório da Fase 9C): chefão do mundo (👑, a 10ª fase), revisão (🔁),
+ * desafio (⚡), jeito de jogar novo (✨/🌟) ou fase comum (a estrelinha). O emoji da fase diz o tipo.
+ */
+private fun idDoNoDaFase(fase: Fase): String {
+    val e = fase.emoji.replace("\uFE0F", "")
+    return when {
+        e == "👑" || Mundos.ehChefao(fase) -> "icone_no_chefao"
+        e == "🔁" -> "icone_no_revisao"
+        e == "⚡" -> "icone_no_desafio"
+        e == "✨" || e == "🌟" -> "icone_no_novidade"
+        else -> "icone_no_fase"
+    }
+}
+
+/**
+ * Nome do mundo na plaquinha do caminho, nunca cortado em 360 dp: numa linha, com a letra diminuindo até 80%; se
+ * ainda não couber ("Vale dos Dinossauros"), em duas linhas menores (a plaquinha fica acima do caminho, que passa na
+ * altura do meio da bolinha).
+ */
+@Composable
+private fun NomeDoMundoNaPlaca(nome: String, cor: Color, modifier: Modifier = Modifier) {
+    val estilo = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+    val medidor = rememberTextMeasurer()
+    BoxWithConstraints(modifier) {
+        val cabe = if (constraints.hasBoundedWidth) constraints.maxWidth.toFloat() else Float.MAX_VALUE
+        val (escala, linhas) = remember(nome, estilo, cabe) {
+            val inteiro = medidor.measure(nome, estilo, maxLines = 1, softWrap = false).size.width.toFloat()
+            if (inteiro <= 0f || inteiro <= cabe) {
+                1f to 1
+            } else if (cabe / inteiro >= 0.8f) {
+                cabe / inteiro to 1
+            } else {
+                val maiorPalavra = nome.split(' ').maxOf { medidor.measure(it, estilo, maxLines = 1, softWrap = false).size.width }.toFloat()
+                minOf(0.8f, cabe / maiorPalavra.coerceAtLeast(1f)).coerceAtLeast(0.6f) to 2
+            }
+        }
+        Text(
+            nome,
+            style = estilo.copy(fontSize = estilo.fontSize * escala, lineHeight = estilo.lineHeight * escala),
+            color = cor,
+            maxLines = linhas,
+            softWrap = linhas > 1,
+            overflow = TextOverflow.Clip,
+        )
+    }
+}
 
 /** Altura do lábio embaixo da faixa de cada mundo. */
 private val LABIO_DA_FAIXA = 5.dp

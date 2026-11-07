@@ -62,6 +62,7 @@ import br.com.casinhadosaber.ui.componentes.Corujinha
 import br.com.casinhadosaber.ui.componentes.caminhoEstrela
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.FiguraLeveDoEmoji
 import br.com.casinhadosaber.ui.componentes.LadoDaCauda
 import br.com.casinhadosaber.ui.componentes.TextoComContorno
 import br.com.casinhadosaber.ui.componentes.balaoDeFala
@@ -119,7 +120,7 @@ fun CenaDaHistoria(fase: Fase, texto: String, chefao: Boolean = false, onContinu
             ) {
                 // Título em branco com contorno (o emoji do mundo fica fora do contorno, ao lado).
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                    Text(mundo.emoji, style = MaterialTheme.typography.headlineMedium)
+                    FiguraLeveDoEmoji(mundo.emoji, 40.dp) { Text(mundo.emoji, style = MaterialTheme.typography.headlineMedium) }
                     Spacer(Modifier.size(6.dp))
                     TextoComContorno(
                         if (chefao) "Você venceu o chefão!" else mundo.titulo,
@@ -215,8 +216,12 @@ fun CenaDaHistoria(fase: Fase, texto: String, chefao: Boolean = false, onContinu
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // O símbolo fica fora do contorno (emoji com traço sairia duplicado).
-                    Text(if (chefao) "🎉" else "▶", style = MaterialTheme.typography.headlineMedium, color = Color.White)
+                    // O símbolo fica fora do contorno: no chefão, a estrela 3D brilhando (no lugar do 🎉); senão, a setinha.
+                    if (chefao) {
+                        IconeLeve("estrela_brilhando", 40.dp) { Text("🎉", style = MaterialTheme.typography.headlineMedium) }
+                    } else {
+                        Text("▶", style = MaterialTheme.typography.headlineMedium, color = Color.White)
+                    }
                     Spacer(Modifier.size(8.dp))
                     TextoComContorno(
                         if (chefao) "Oba!" else "Vamos lá!",

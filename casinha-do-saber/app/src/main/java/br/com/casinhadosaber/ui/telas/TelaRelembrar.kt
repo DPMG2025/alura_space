@@ -46,7 +46,10 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
+import br.com.casinhadosaber.ui.componentes.ContasLeves
+import br.com.casinhadosaber.ui.componentes.CorDaConta
 import br.com.casinhadosaber.ui.componentes.Corujinha
+import br.com.casinhadosaber.ui.componentes.FiguraLeveDoEmoji
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.componentes.ID_ESTRELA_CHEIA
 import br.com.casinhadosaber.ui.componentes.ImagemDeArte
@@ -82,6 +85,10 @@ fun ConviteDaCorujinha(
     destaqueIcone: String? = null,
     /** Ícone ao lado do título (por exemplo, o ícone 3D do caminho). */
     icone: (@Composable () -> Unit)? = null,
+    /** Emoji cuja figura 3D vai na pílula do [destaque] (o mundo sugerido no fim do "Descobrir o nível"). */
+    destaqueFigura: String? = null,
+    /** Descrição da pílula com [destaqueFigura] para a acessibilidade (por exemplo "Mundo 7: Selva"). */
+    destaqueDescricao: String? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -131,6 +138,10 @@ fun ConviteDaCorujinha(
                 }
                 Corujinha(Modifier.height(170.dp), falando = narrador.falando)
                 when {
+                    destaqueFigura != null && destaque != null -> Pilula(descricao = destaqueDescricao ?: destaque) {
+                        FiguraLeveDoEmoji(destaqueFigura, 36.dp)
+                        Text(destaque, style = MaterialTheme.typography.headlineSmall, color = Cores.TextoDaPilula, maxLines = 1)
+                    }
                     destaqueIcone != null && destaque.isNullOrBlank() -> Pilula(descricao = "Estrela") {
                         ImagemDeArte(destaqueIcone, Modifier.size(36.dp)) { Text("⭐", style = MaterialTheme.typography.headlineSmall) }
                     }
@@ -223,15 +234,17 @@ fun BotaoRelembrar(quantas: Int, onClick: () -> Unit, modifier: Modifier = Modif
         Row(Modifier.padding(horizontal = if (comTexto) 12.dp else 6.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Box {
                 Corujinha(Modifier.size(width = 50.dp, height = 56.dp))
-                Text(
-                    "$quantas",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
+                // Quantas para hoje como contas laranja que se contam (até 3 à vista), nunca o número.
+                ContasLeves(
+                    feitas = quantas.coerceIn(1, 3),
+                    total = quantas.coerceIn(1, 3),
+                    tamanho = 11.dp,
+                    cor = CorDaConta.LARANJA,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .offset(x = 14.dp, y = (-4).dp)
-                        .background(Color(0xFFFF8A3D), CircleShape)
-                        .padding(horizontal = 7.dp),
+                        .background(Color.White, CircleShape)
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
                 )
             }
             if (comTexto) {

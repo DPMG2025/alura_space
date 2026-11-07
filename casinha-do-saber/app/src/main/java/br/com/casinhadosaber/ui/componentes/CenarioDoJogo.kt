@@ -2,7 +2,13 @@ package br.com.casinhadosaber.ui.componentes
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.Shader
 import android.util.LruCache
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
@@ -19,7 +25,9 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
@@ -30,6 +38,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.Trilha
 import kotlin.math.PI
@@ -214,8 +223,10 @@ fun Modifier.cenarioDoJogo(cor: Color, trilha: Trilha): Modifier {
     return this.drawWithCache {
         val w = size.width
         val h = size.height
-        val quadro = QuadroDoJogo.daIlha(w, h)
-        val ilha = if (w >= 1f && h >= 1f) ComposicaoDoJogo.camada(contexto, info, quadro.largura.roundToInt()) else null
+        val quadro = ilhaAbaixoDoBalao(QuadroDoJogo.daIlha(w, h), h, alturaDoBalaoNoJogo(h))
+        // Ilha mais estreita que a tela (deitado, tablet): as pontas da grama somem macio, sem corte reto.
+        val macia = quadro.largura < w - 1f
+        val ilha = if (w >= 1f && h >= 1f) ComposicaoDoJogo.camada(contexto, info, quadro.largura.roundToInt(), bordasMacias = macia) else null
         onDrawBehind {
             if (ilha == null) {
                 if (w >= 1f && h >= 1f) desenharCenarioDoJogo(cor)
@@ -225,6 +236,32 @@ fun Modifier.cenarioDoJogo(cor: Color, trilha: Trilha): Modifier {
             }
         }
     }
+}
+
+/**
+ * Até onde vão o cabeçalho e o balão da pergunta no jogo (com a criança ao lado), contando do alto da tela: em telas
+ * baixas (menos de 700 dp, como o celular de 360 x 640) a criança e o balão são menores.
+ */
+private fun androidx.compose.ui.unit.Density.alturaDoBalaoNoJogo(altura: Float): Float =
+    if (altura < 700.dp.toPx()) 186.dp.toPx() else 218.dp.toPx()
+
+/** Fração da altura da arte da ilha (800 x 1040) em que começam os enfeites do fundo (o globo, os blocos 1 2 3). */
+private const val TOPO_DOS_ENFEITES_DA_ILHA = 0.15f
+
+/** Fração da altura da arte da ilha em que a grama acaba (a borda de baixo da ilha flutuante). */
+private const val PE_DA_ILHA = 0.93f
+
+/**
+ * Fase 9 (K1): a ilha desce o bastante para os enfeites do fundo (o globo do Inglês, os blocos dos Números) ficarem
+ * abaixo do balão da pergunta ([limite]), sem a ilha passar do pé da tela ([altura]).
+ */
+private fun ilhaAbaixoDoBalao(quadro: QuadroDaArte, altura: Float, limite: Float): QuadroDaArte {
+    val topoDosEnfeites = quadro.y + quadro.altura * TOPO_DOS_ENFEITES_DA_ILHA
+    val falta = limite - topoDosEnfeites
+    if (falta <= 0f) return quadro
+    val cabe = altura - (quadro.y + quadro.altura * PE_DA_ILHA)
+    val descer = minOf(falta, cabe)
+    return if (descer <= 0f) quadro else quadro.copy(y = quadro.y + descer)
 }
 
 /** Desenha a camada [imagem] (quadro inteiro da arte do jogo) no [quadro]. */
@@ -245,7 +282,7 @@ private fun DrawScope.desenharNoQuadro(imagem: ImageBitmap, quadro: QuadroDaArte
  * pequeno (1/16 da memória do app, com lugar para a ilha e duas cenas: a da pergunta que sai e a da que entra).
  */
 object ComposicaoDoJogo {
-    private data class Chave(val id: String, val largura: Int)
+    private data class Chave(val id: String, val largura: Int, val bordasMacias: Boolean)
 
     private class Composta(val bitmap: Bitmap, val imagem: ImageBitmap)
 
@@ -255,15 +292,19 @@ object ComposicaoDoJogo {
         override fun sizeOf(key: Chave, value: Composta): Int = (value.bitmap.byteCount / 1024).coerceAtLeast(1)
     }
 
-    /** A camada [info] com [largura] px (no máximo a da arte), ou nula se não der para ler. */
-    fun camada(contexto: Context, info: InfoDaArte, largura: Int): ImageBitmap? {
+    /**
+     * A camada [info] com [largura] px (no máximo a da arte), ou nula se não der para ler. Com [bordasMacias], as
+     * pontas da esquerda e da direita somem num degradê (a lagoa e o varal da arte chegam na borda do quadro e,
+     * desenhados no meio da tela, ficavam com um corte reto): feito uma vez, no bitmap guardado (nada por quadro).
+     */
+    fun camada(contexto: Context, info: InfoDaArte, largura: Int, bordasMacias: Boolean = false): ImageBitmap? {
         if (largura <= 0) return null
         val l = (((largura + 63) / 64) * 64).coerceIn(1, info.largura)
-        val chave = Chave(info.id, l)
+        val chave = Chave(info.id, l, bordasMacias)
         cache.get(chave)?.let { return it.imagem }
         val a = (l.toLong() * info.altura / info.largura).toInt().coerceAtLeast(1)
         val lida = ArteDoApp.decodificar(contexto, info, amostraDaArte(info.largura, info.altura, l, a)) ?: return null
-        val bmp = if (lida.width == l && lida.height == a) {
+        val pronta = if (lida.width == l && lida.height == a) {
             lida
         } else {
             val reduzida = try {
@@ -274,6 +315,7 @@ object ComposicaoDoJogo {
             if (reduzida !== lida) lida.recycle()
             reduzida ?: return null
         }
+        val bmp = if (bordasMacias) comBordasMacias(pronta) ?: return null else pronta
         bmp.prepareToDraw()
         val composta = Composta(bmp, bmp.asImageBitmap())
         cache.put(chave, composta)
@@ -281,7 +323,50 @@ object ComposicaoDoJogo {
     }
 
     fun limparCache() = cache.evictAll()
+
+    /** Fração da largura em que as pontas somem (de cada lado). */
+    private const val FAIXA_MACIA = 0.09f
+
+    /** [bmp] (ou uma cópia editável dele) com as pontas transparentes em degradê, ou nulo sem memória. */
+    private fun comBordasMacias(bmp: Bitmap): Bitmap? {
+        val editavel = if (bmp.isMutable) {
+            bmp
+        } else {
+            val copia = try {
+                bmp.copy(Bitmap.Config.ARGB_8888, true)
+            } catch (e: OutOfMemoryError) {
+                null
+            }
+            bmp.recycle()
+            copia ?: return null
+        }
+        val w = editavel.width.toFloat()
+        val pincel = Paint().apply {
+            shader = LinearGradient(
+                0f, 0f, w, 0f,
+                intArrayOf(0x00000000, 0xFF000000.toInt(), 0xFF000000.toInt(), 0x00000000),
+                floatArrayOf(0f, FAIXA_MACIA, 1f - FAIXA_MACIA, 1f),
+                Shader.TileMode.CLAMP,
+            )
+            xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+        }
+        android.graphics.Canvas(editavel).drawRect(0f, 0f, w, editavel.height.toFloat(), pincel)
+        return editavel
+    }
 }
+
+/**
+ * Figuras quase brancas (fração de pixels claros de 0,82 ou mais, medida na arte): ganham um contorno lilás para não
+ * sumirem sobre a grama clara ou o cartão branco (o copo de leite da captura 10).
+ */
+private val FIGURAS_CLARAS_K1 = setOf(
+    "fig_bolhas", "fig_nuvem", "fig_gelo", "fig_leite", "fig_ovo", "fig_coelho", "fig_chuva", "fig_osso", "fig_poodle",
+    "fig_bola_de_beisebol", "fig_dente", "fig_bolinha_branca", "fig_cabra", "fig_dado", "fig_livro_aberto",
+    "fig_urso_polar", "fig_placa_de_petri", "fig_gol",
+)
+
+/** Cor do contorno das figuras claras: lilás acinzentado, meio transparente (lê como sombra, não como traço). */
+private val CONTORNO_DA_FIGURA_CLARA = ColorFilter.tint(Color(0x8C6E5C9E), BlendMode.SrcIn)
 
 /**
  * Uma figura das perguntas: a figura 3D (`fig_<nome>`) quando o [emoji] tem modelo (campo `emojis` do manifesto,
@@ -301,7 +386,21 @@ fun FiguraDaPergunta(
         Text(emoji, fontSize = (tamanho.value * 0.86f).sp, lineHeight = (tamanho.value * 1.0f).sp, maxLines = 1, softWrap = false)
     }
     Box(modifier.size(tamanho), contentAlignment = Alignment.Center) {
-        if (id == null) doEmoji() else ImagemDeArte(id, Modifier.size(tamanho), reserva = doEmoji)
+        when {
+            id == null -> doEmoji()
+            id in FIGURAS_CLARAS_K1 -> {
+                // Figura quase branca: o bitmap pequeno do cache com o contorno lilás por baixo.
+                val imagem = lembrarArteLeve(id, tamanho)
+                if (imagem == null) {
+                    doEmoji()
+                } else {
+                    Canvas(Modifier.size(tamanho)) {
+                        desenharArteComContorno(imagem, center, size.minDimension, CONTORNO_DA_FIGURA_CLARA, maxOf(1.5.dp.toPx(), size.minDimension * 0.025f))
+                    }
+                }
+            }
+            else -> ImagemDeArte(id, Modifier.size(tamanho), reserva = doEmoji)
+        }
     }
 }
 
@@ -341,7 +440,8 @@ fun FigurasNaCena(figuras: List<String>, trilha: Trilha, modifier: Modifier = Mo
         val quadro = QuadroDoJogo.paraCaber(caixa, w, h, larguraMaxima = if (desenho != null) w * 1.1f else w * 1.3f)
         if (infoDaCena != null) {
             val larguraDaCena = quadro.largura.roundToInt()
-            val camada = remember(infoDaCena, larguraDaCena) { ComposicaoDoJogo.camada(contexto, infoDaCena, larguraDaCena) }
+            // As cenas (lagoa, varal, cercado, tapete) chegam na borda da arte: no meio da tela, pontas macias.
+            val camada = remember(infoDaCena, larguraDaCena) { ComposicaoDoJogo.camada(contexto, infoDaCena, larguraDaCena, bordasMacias = true) }
             if (camada != null) Spacer(Modifier.fillMaxSize().drawBehind { desenharNoQuadro(camada, quadro) })
         }
         val densidade = LocalDensity.current

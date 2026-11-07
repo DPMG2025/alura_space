@@ -35,6 +35,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -83,6 +85,7 @@ import br.com.casinhadosaber.ui.componentes.MascoteAnimado
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.componentes.ContasDeProgresso
 import br.com.casinhadosaber.ui.componentes.CorDaConta
+import br.com.casinhadosaber.ui.componentes.FiguraLeveDoEmoji
 import br.com.casinhadosaber.ui.componentes.IconeDaBarra
 import br.com.casinhadosaber.ui.componentes.IconeDeArteDaBarra
 import br.com.casinhadosaber.ui.componentes.IconesDaBarra
@@ -279,16 +282,30 @@ fun CantinhoDoMascote(
                 // Até o próximo estágio: 5 contas que se enchem (o número fica para o adulto, embaixo).
                 val faltam = Crescimento.faltamParaCrescer(fasesVencidas)
                 val cheias = if (faltam == 0) 5 else (Crescimento.progressoNoEstagio(fasesVencidas) * 5).toInt().coerceIn(0, 4)
-                ContasDeProgresso(cheias, 5, cor = CorDaConta.VERDE, tamanho = 30.dp, comAtual = faltam > 0)
-                Text(
-                    when {
-                        faltam == 0 -> "Já é campeão! 🏆"
-                        faltam == 1 -> "Falta 1 fase nova para crescer!"
-                        else -> "Faltam $faltam fases novas para crescer!"
+                // Nada de "Faltam 55 fases": as contas mostram o caminho; o número fica só na descrição (e na fala).
+                ContasDeProgresso(
+                    cheias,
+                    5,
+                    cor = CorDaConta.VERDE,
+                    tamanho = 30.dp,
+                    comAtual = faltam > 0,
+                    descricao = when (faltam) {
+                        0 -> "Já é campeão"
+                        1 -> "Falta 1 fase nova para crescer"
+                        else -> "Faltam $faltam fases novas para crescer"
                     },
-                    style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Center,
                 )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (faltam == 0) {
+                        IconeLeve("premio_trofeu", 30.dp) { Text("🏆", fontSize = 22.sp) }
+                        Spacer(Modifier.width(6.dp))
+                    }
+                    Text(
+                        if (faltam == 0) "Já é campeão!" else "Jogue fases novas para crescer!",
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center,
+                    )
+                }
                 Text("Enfeites", style = MaterialTheme.typography.titleLarge)
                 // Enfeites em fileiras de 4 botões grandes.
                 AcessorioMascote.entries.chunked(4).forEach { linha ->
@@ -313,23 +330,35 @@ fun CantinhoDoMascote(
                                             narrador.falar(if (f == 1) "Esse enfeite chega com mais uma fase nova!" else "Esse enfeite chega com mais $f fases novas!")
                                         }
                                     }
-                                    .semantics { contentDescription = if (livre) a.nome else "${a.nome}, ainda guardado" }
+                                    .semantics {
+                                        contentDescription = if (livre) a.nome else "${a.nome}, ainda guardado, chega com ${a.fasesMinimas} fases"
+                                    }
                                     .padding(vertical = 8.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 if (livre) {
-                                    Text(a.emoji, fontSize = 30.sp)
+                                    FiguraLeveDoEmoji(a.emoji, 38.dp) { Text(a.emoji, fontSize = 30.sp) }
+                                    // O nome encolhe até caber no cartão ("Cachecol"), sempre com folga dos dois lados.
+                                    RotuloQueCabe(
+                                        a.nome.substringBefore(' '),
+                                        MaterialTheme.typography.labelLarge,
+                                        Cores.Texto,
+                                        Modifier.padding(horizontal = 6.dp),
+                                    )
                                 } else {
-                                    // Ainda guardado: o cadeado 3D da barra.
-                                    IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.PAIS), Modifier.size(36.dp)) { Text("🔒", fontSize = 30.sp) }
+                                    // Ainda guardado: o presente 3D fechado com o cadeado do caminho, e uma barrinha que
+                                    // enche com as fases vencidas (no lugar de "60", "120"... que a criança não lê).
+                                    Box(Modifier.size(40.dp)) {
+                                        IconeLeve("premio_presente_fechado", 38.dp, Modifier.align(Alignment.Center), alfa = 0.85f) {
+                                            IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.PAIS), Modifier.size(36.dp)) { Text("🔒", fontSize = 30.sp) }
+                                        }
+                                        IconeLeve("icone_no_bloqueado", 20.dp, Modifier.align(Alignment.BottomEnd).offset(x = 4.dp, y = 2.dp)) { }
+                                    }
+                                    BarraDoEnfeiteGuardado(
+                                        fasesVencidas.toFloat() / a.fasesMinimas.coerceAtLeast(1),
+                                        Modifier.padding(top = 6.dp, bottom = 4.dp, start = 10.dp, end = 10.dp).fillMaxWidth().height(10.dp),
+                                    )
                                 }
-                                // O nome encolhe até caber no cartão ("Cachecol"), sempre com folga dos dois lados.
-                                RotuloQueCabe(
-                                    if (livre) a.nome.substringBefore(' ') else "${a.fasesMinimas}",
-                                    MaterialTheme.typography.labelLarge,
-                                    if (livre) Cores.Texto else Cores.TextoSuave,
-                                    Modifier.padding(horizontal = 6.dp),
-                                )
                             }
                         }
                     }
@@ -413,6 +442,22 @@ fun FestaDoMascote(mascote: Mascote, fasesAntes: Int, fasesDepois: Int, onFechar
             }
         }
         Confete(confete)
+    }
+}
+
+/** Barrinha de brinquedo (trilho lilás, enchimento verde com brilho) de quanto já foi até o enfeite chegar. */
+@Composable
+private fun BarraDoEnfeiteGuardado(fracao: Float, modifier: Modifier) {
+    Canvas(modifier) {
+        val r = androidx.compose.ui.geometry.CornerRadius(size.height / 2f)
+        drawRoundRect(Color(0xFFDCD3EE), cornerRadius = r)
+        val f = fracao.coerceIn(0f, 1f)
+        if (f > 0f) {
+            val w = maxOf(size.height, size.width * f)
+            drawRoundRect(Color(0xFF5FBF4A), size = Size(w, size.height), cornerRadius = r)
+            drawRoundRect(Color(0xFF8EE07A), topLeft = Offset(0f, 0f), size = Size(w, size.height * 0.55f), cornerRadius = r)
+        }
+        drawRoundRect(Color.White, cornerRadius = r, style = androidx.compose.ui.graphics.drawscope.Stroke(1.5.dp.toPx()))
     }
 }
 

@@ -64,7 +64,9 @@ import br.com.casinhadosaber.ui.tema.Raios
 import br.com.casinhadosaber.ui.componentes.cartaoFofo
 import br.com.casinhadosaber.ui.componentes.ContasLeves
 import br.com.casinhadosaber.ui.componentes.CorDaConta
-import br.com.casinhadosaber.ui.componentes.EstiloDaPilula
+import br.com.casinhadosaber.ui.componentes.EstrelasLeves
+import br.com.casinhadosaber.ui.componentes.ProgressoVisivel
+import br.com.casinhadosaber.ui.componentes.FiguraLeveDoEmoji
 import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
 import br.com.casinhadosaber.ui.componentes.IconesDaBarra
 import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
@@ -96,7 +98,8 @@ fun faseDaVez(estado: EstadoJogo, trilha: Trilha): Int? {
 
 /**
  * Mapa grande do caminho: os 25 mundos de uma vez, em zigue-zague. Os completos brilham com o diploma, o da vez
- * tem o alfinete "você está aqui", e cada um mostra o chefão (👑, dourado quando vencido) e quantas fases já foram.
+ * tem o alfinete 3D "você está aqui", e cada um mostra o chefão (a coroa: o ícone do chefão apagadinho até vencer, a
+ * coroa 3D dourada depois) e quantas fases já foram, em contas. Nenhum número na tela (só na acessibilidade).
  */
 @Composable
 fun TelaMapa(
@@ -156,7 +159,8 @@ fun TelaMapa(
                 Spacer(Modifier.width(4.dp))
                 Column(Modifier.weight(1f)) {
                     TituloQueCabe("Mapa: ${trilha.titulo}", estilo = MaterialTheme.typography.headlineSmall)
-                    // As medalhas dos mundos completos numa pilulazinha (o "de 25" fica só para a acessibilidade).
+                    // As medalhas dos mundos completos numa pilulazinha: a medalha e cinco estrelas que acendem com os
+                    // mundos completos (nenhum número: "2 de 25" fica só para a acessibilidade).
                     Row(
                         Modifier
                             .clearAndSetSemantics { contentDescription = "$completos de ${Mundos.todos.size} mundos completos" }
@@ -166,7 +170,7 @@ fun TelaMapa(
                     ) {
                         IconeLeve("tela_medalha", 22.dp) { Text("🏅", fontSize = 16.sp) }
                         Spacer(Modifier.width(4.dp))
-                        Text("$completos", style = EstiloDaPilula.copy(fontSize = 18.sp, lineHeight = 22.sp), maxLines = 1)
+                        EstrelasLeves(ProgressoVisivel.estrelasAcesas(completos, Mundos.todos.size, 5), total = 5, tamanho = 15.dp)
                     }
                 }
                 Spacer(Modifier.width(6.dp))
@@ -311,7 +315,10 @@ private fun IlhaDoMundo(s: SituacaoDoMundo, trilha: Trilha, modifier: Modifier, 
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(m.emoji, fontSize = 46.sp, modifier = Modifier.alpha(if (s.alcancado) 1f else 0.5f))
+                // A figura 3D do mundo (bitmap pequeno do cache, num Canvas: são 25 ilhas); sem modelo, o emoji.
+                FiguraLeveDoEmoji(m.emoji, 64.dp, alfa = if (s.alcancado) 1f else 0.5f) {
+                    Text(m.emoji, fontSize = 46.sp, modifier = Modifier.alpha(if (s.alcancado) 1f else 0.5f))
+                }
             }
             // Selo do canto: mundo ainda fechado mostra o cadeado (num selo lilás, sem coroa); aberto mostra o
             // chefão (a 10ª fase), coroa apagadinha num selo branco tracejado até vencer e dourada depois.
@@ -349,8 +356,9 @@ private fun IlhaDoMundo(s: SituacaoDoMundo, trilha: Trilha, modifier: Modifier, 
                 // Cadeado e coroa 3D: um bitmap pequeno de cada, dividido pelos 25 mundos.
                 when {
                     !s.alcancado -> IconeLeve(IconesDaBarra.PAIS, 24.dp) { Text("🔒", fontSize = 17.sp) }
-                    else -> IconeLeve("premio_coroa", 26.dp, alfa = if (dourado) 1f else 0.4f) {
-                        Text("👑", fontSize = 18.sp, modifier = Modifier.alpha(if (dourado) 1f else 0.4f))
+                    dourado -> IconeLeve("premio_coroa", 26.dp) { Text("👑", fontSize = 18.sp) }
+                    else -> IconeLeve("icone_no_chefao", 26.dp, alfa = 0.55f) {
+                        IconeLeve("premio_coroa", 26.dp, alfa = 0.4f) { Text("👑", fontSize = 18.sp, modifier = Modifier.alpha(0.4f)) }
                     }
                 }
             }
@@ -360,11 +368,14 @@ private fun IlhaDoMundo(s: SituacaoDoMundo, trilha: Trilha, modifier: Modifier, 
                 }
             }
             if (s.atual) {
-                Text("📍", fontSize = 34.sp, modifier = Modifier.align(Alignment.TopStart).offset(x = 4.dp).pulsando())
+                IconeLeve("icone_alfinete", 40.dp, Modifier.align(Alignment.TopStart).offset(x = 2.dp).pulsando()) {
+                    Text("📍", fontSize = 34.sp)
+                }
             }
         }
         Text(
-            "${m.numero}. ${m.nome}",
+            // Só o nome: o número do mundo fica na descrição ("Mundo 3, Praia").
+            m.nome,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,

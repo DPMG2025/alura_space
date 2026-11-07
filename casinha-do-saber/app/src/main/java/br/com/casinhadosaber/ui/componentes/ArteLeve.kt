@@ -8,8 +8,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
@@ -23,8 +29,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.ui.tema.Cores
+import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 // Arte 3D "leve" (Fase 8B): ícones pequenos (estrelas, contas, cadeado, notinha) lidos uma vez do cache da
 // [ArteDoApp] e desenhados várias vezes num único Canvas. Uma fileira de 10 contas é um nó só, e não dez
@@ -48,8 +58,11 @@ fun lembrarArteLeve(id: String, lado: Dp): ImageBitmap? {
     }
 }
 
-/** Desenha [imagem] inteira, com a proporção dela, dentro do quadrado de [lado] px centrado em [centro]. */
-fun DrawScope.desenharArte(imagem: ImageBitmap, centro: Offset, lado: Float, alfa: Float = 1f) {
+/**
+ * Desenha [imagem] inteira, com a proporção dela, dentro do quadrado de [lado] px centrado em [centro]. Com [filtro]
+ * (por exemplo `ColorFilter.tint(cor, BlendMode.SrcIn)`), sai a silhueta numa cor só.
+ */
+fun DrawScope.desenharArte(imagem: ImageBitmap, centro: Offset, lado: Float, alfa: Float = 1f, filtro: ColorFilter? = null) {
     val maior = maxOf(imagem.width, imagem.height).coerceAtLeast(1).toFloat()
     val l = (imagem.width / maior * lado).roundToInt().coerceAtLeast(1)
     val a = (imagem.height / maior * lado).roundToInt().coerceAtLeast(1)
@@ -60,8 +73,55 @@ fun DrawScope.desenharArte(imagem: ImageBitmap, centro: Offset, lado: Float, alf
         dstOffset = IntOffset((centro.x - l / 2f).roundToInt(), (centro.y - a / 2f).roundToInt()),
         dstSize = IntSize(l, a),
         alpha = alfa,
+        colorFilter = filtro,
         filterQuality = FilterQuality.Medium,
     )
+}
+
+/**
+ * Fase 9 (K1): [imagem] com um contorno de [espessura] px em volta (a silhueta tingida por [contorno], desenhada em
+ * oito direções por baixo), para uma figura clarinha (copo de leite, ovo, nuvem) não sumir sobre a grama clara.
+ * Sem blur nem camada: nove `drawImage` do mesmo bitmap pequeno.
+ */
+fun DrawScope.desenharArteComContorno(imagem: ImageBitmap, centro: Offset, lado: Float, contorno: ColorFilter, espessura: Float) {
+    val l = (lado - espessura * 2f).coerceAtLeast(1f)
+    for (k in 0 until 8) {
+        val a = k * PI / 4.0
+        desenharArte(imagem, Offset(centro.x + cos(a).toFloat() * espessura, centro.y + sin(a).toFloat() * espessura), l, 1f, contorno)
+    }
+    desenharArte(imagem, centro, l)
+}
+
+/**
+ * Fase 9 (K1): a figura 3D de [emoji] (`fig_*`, campo `emojis` do manifesto, [FigurasDaPergunta]) desenhada num
+ * Canvas pelo bitmap pequeno do cache (sem o BoxWithConstraints da [ImagemDeArte]: serve para listas, como os 25
+ * mundos do mapa ou os marcadores da estante). Sem modelo, o próprio emoji ([reserva]). Com [silhueta], a figura
+ * sai pintada de uma cor só (o que ainda falta ganhar). É decorativa: quem fala o nome é a peça em volta.
+ */
+@Composable
+fun FiguraLeveDoEmoji(
+    emoji: String,
+    tamanho: Dp,
+    modifier: Modifier = Modifier,
+    alfa: Float = 1f,
+    silhueta: Color? = null,
+    reserva: (@Composable () -> Unit)? = null,
+) {
+    val contexto = LocalContext.current
+    val id = remember(emoji) { FigurasDaPergunta.idPara(ArteDoApp.manifesto(contexto), emoji) }
+    val imagem = if (id != null) lembrarArteLeve(id, tamanho) else null
+    if (imagem == null) {
+        Box(modifier.size(tamanho).graphicsLayer { alpha = alfa }, contentAlignment = Alignment.Center) {
+            if (reserva != null) {
+                reserva()
+            } else {
+                Text(emoji, fontSize = (tamanho.value * 0.78f).sp, lineHeight = (tamanho.value * 0.95f).sp, maxLines = 1, softWrap = false)
+            }
+        }
+    } else {
+        val filtro = remember(silhueta) { silhueta?.let { ColorFilter.tint(it, BlendMode.SrcIn) } }
+        Canvas(modifier.size(tamanho)) { desenharArte(imagem, center, size.minDimension, alfa, filtro) }
+    }
 }
 
 /**

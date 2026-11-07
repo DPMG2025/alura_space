@@ -30,7 +30,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -59,10 +59,11 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.escurecer
-import br.com.casinhadosaber.ui.componentes.faceDeBrinquedo
+import androidx.compose.foundation.layout.padding
 import br.com.casinhadosaber.ui.componentes.pulsando
 import androidx.compose.ui.draw.clip
 import br.com.casinhadosaber.ui.telas.atividades.festejo
+import br.com.casinhadosaber.ui.telas.atividades.ladrilho
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import kotlinx.coroutines.Job
@@ -315,28 +316,29 @@ private fun CartaN4(carta: CartaVirada, aberta: Boolean, brilhar: Boolean, cor: 
                 translationX = carta.tremida.value * density
             }
             .festejo(carta.achada)
-            .shadow(if (carta.achada) 2.dp else 4.dp, forma)
-            // Carta de brinquedo: face em degradê com brilho no alto (verso na cor do caminho).
-            .clip(forma)
-            .faceDeBrinquedo(
-                when {
+            // Carta como tecla de brinquedo (Fase 9): sombra desenhada (sem a de elevação, borrada), face em degradê
+            // com brilho no alto, borda branca por dentro e lábio mais escuro embaixo (verso na cor do caminho).
+            .drawBehind {
+                val r = CornerRadius((if (carta.achada) 12.dp else 16.dp).toPx())
+                drawRoundRect(Cores.Sombra, topLeft = Offset(0f, LABIO_DA_CARTA_N4.toPx()), size = size, cornerRadius = r)
+            }
+            .ladrilho(
+                cor = when {
+                    !mostrandoFrente -> escurecer(cor, 0.72f)
+                    carta.achada -> Cores.Certo
+                    else -> Color(0xFFD9CFF0)
+                },
+                raio = if (carta.achada) 12.dp else 16.dp,
+                fundo = when {
                     !mostrandoFrente -> cor
                     carta.achada -> Color(0xFFDFF7E7)
                     else -> Color.White
                 },
-                forma,
-                bordaBranca = false,
+                labio = LABIO_DA_CARTA_N4,
             )
-            .border(
-                if (brilhar) 5.dp else 3.dp,
-                when {
-                    brilhar -> Cores.Estrela
-                    !mostrandoFrente -> escurecer(cor)
-                    carta.achada -> Cores.Certo
-                    else -> Color(0xFFEDE6FF)
-                },
-                forma,
-            ),
+            .then(if (brilhar) Modifier.border(5.dp, Cores.Estrela, forma) else Modifier)
+            .padding(bottom = LABIO_DA_CARTA_N4)
+            .clip(forma),
         contentAlignment = Alignment.Center,
     ) {
         if (mostrandoFrente) {
@@ -362,3 +364,6 @@ private fun CartaN4(carta: CartaVirada, aberta: Boolean, brilhar: Boolean, cor: 
         }
     }
 }
+
+/** Altura do lábio das cartas viradas (fica dentro do tamanho da carta). */
+private val LABIO_DA_CARTA_N4 = 6.dp

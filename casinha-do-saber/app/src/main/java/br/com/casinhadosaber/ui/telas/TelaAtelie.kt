@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -67,6 +68,8 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
+import br.com.casinhadosaber.ui.componentes.ContasLeves
+import br.com.casinhadosaber.ui.componentes.CorDaConta
 import br.com.casinhadosaber.ui.componentes.DesenhoDaPintura
 import br.com.casinhadosaber.ui.componentes.corDaPaleta
 import br.com.casinhadosaber.ui.componentes.coresEmIngles
@@ -253,7 +256,9 @@ fun TelaAtelie(
                     descricao = "Limpar o quadro",
                     profundidade = 4.dp,
                 ) {
-                    Box(Modifier.size(width = 56.dp, height = 56.dp), contentAlignment = Alignment.Center) { Text("🧹", fontSize = 28.sp) }
+                    Box(Modifier.size(width = 56.dp, height = 56.dp), contentAlignment = Alignment.Center) {
+                        IconeLeve("icone_vassoura", 42.dp) { Text("🧹", fontSize = 28.sp) }
+                    }
                 }
             }
 
@@ -288,7 +293,13 @@ fun TelaAtelie(
                                     },
                                 contentAlignment = Alignment.Center,
                             ) {
-                                if (escolhida) Text("✔", color = if (i == 4 || i == 11) Cores.Texto else Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                if (escolhida) {
+                                    // O certinho 3D: branco sobre as cores fortes, roxo sobre as clarinhas (amarelo e bege).
+                                    val clara = i == 4 || i == 11
+                                    IconeLeve(if (clara) "icone_certo" else "icone_certo_branco", 30.dp) {
+                                        Text("✔", color = if (clara) Cores.Texto else Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
                             }
                         }
                     }
@@ -478,13 +489,17 @@ private fun Galeria(
     onApagar: (Pintura) -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)) {
-        Text(
-            aviso ?: "Meus desenhos: ${estado.desenhos.size} de ${Atelie.MAXIMO_DE_DESENHOS}   🖼️ na sala: ${estado.quadrosNaParede.size} de ${Atelie.MAXIMO_NA_PAREDE}",
-            style = MaterialTheme.typography.titleSmall,
-            color = if (aviso != null) Color(0xFFB5244A) else Cores.TextoSuave,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-        )
+        if (aviso != null) {
+            Text(
+                aviso,
+                style = MaterialTheme.typography.titleSmall,
+                color = Color(0xFFB5244A),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+            )
+        } else {
+            ContasDaGaleria(estado.desenhos.size, estado.quadrosNaParede.size)
+        }
         Spacer(Modifier.height(4.dp))
         if (estado.desenhos.isEmpty()) {
             // Mesma altura da fileira de desenhos: quando o primeiro desenho é guardado, o quadro não pula.
@@ -523,12 +538,17 @@ private fun Galeria(
                             .semantics { contentDescription = "Desenho guardado" + if (naParede) ", pendurado na sala" else "" },
                     ) {
                         DesenhoDaPintura(d, Modifier.fillMaxSize())
-                        if (naParede) Text("🖼️", fontSize = 18.sp, modifier = Modifier.align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp))
+                        if (naParede) {
+                            IconeLeve(ID_DO_QUADRO, 30.dp, Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-10).dp)) {
+                                Text("🖼️", fontSize = 18.sp)
+                            }
+                        }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 4.dp)) {
                         BotaoPequeno(
                             "🖼️", if (naParede) "Tirar da parede" else "Pendurar na sala",
                             if (naParede) Cores.Estrela else Color.White,
+                            idDaArte = ID_DO_QUADRO,
                         ) { onParede(d) }
                         BotaoPequeno(
                             "🗑️", if (apagando == d.id) "Toque de novo para apagar" else "Apagar desenho",
@@ -542,16 +562,46 @@ private fun Galeria(
 }
 
 @Composable
-private fun BotaoPequeno(emoji: String, descricao: String, cor: Color, onClick: () -> Unit) {
-    // 🗑️ vira a lixeira 3D da barra (IconesDaBarra); 🖼️ ainda não tem arte e continua emoji.
+private fun BotaoPequeno(emoji: String, descricao: String, cor: Color, idDaArte: String? = null, onClick: () -> Unit) {
+    // 🗑️ vira a lixeira 3D da barra (IconesDaBarra); 🖼️ vira o quadro 3D da casa ([idDaArte]).
     val icone = remember(emoji) { IconesDaBarra.para(emoji) }
     BotaoFofo(onClick = onClick, cor = cor, corBase = escurecer(cor, 0.7f), descricao = descricao, forma = RoundedCornerShape(12.dp), profundidade = 3.dp) {
         Box(Modifier.size(width = 44.dp, height = 44.dp), contentAlignment = Alignment.Center) {
-            if (icone == null) {
+            if (idDaArte != null) {
+                IconeLeve(idDaArte, 34.dp) { Text(emoji, fontSize = 20.sp) }
+            } else if (icone == null) {
                 Text(emoji, fontSize = 20.sp)
             } else {
                 IconeDeArteDaBarra(icone, Modifier.size(28.dp)) { Text(emoji, fontSize = 20.sp) }
             }
         }
+    }
+}
+
+/** O quadrinho 3D da casa (`item_quadro`): pendurar o desenho na sala (no lugar do 🖼️). */
+private const val ID_DO_QUADRO = "item_quadro"
+
+/**
+ * Quantos desenhos estão guardados e quantos estão na sala, como contas que se contam (no lugar de "Meus desenhos:
+ * 1 de 12" e "na sala: 0 de 3"): o pincel e uma conta por desenho guardado, o quadro e uma conta por quadro na sala.
+ * Os números ficam só na descrição.
+ */
+@Composable
+private fun ContasDaGaleria(desenhos: Int, naSala: Int) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp)
+            .clearAndSetSemantics {
+                contentDescription = "Meus desenhos: $desenhos de ${Atelie.MAXIMO_DE_DESENHOS}. Na sala: $naSala de ${Atelie.MAXIMO_NA_PAREDE}"
+            },
+        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconeLeve("tela_pincel", 26.dp) { Text("🖌️", fontSize = 16.sp) }
+        ContasLeves(desenhos, Atelie.MAXIMO_DE_DESENHOS, tamanho = 11.dp, cor = CorDaConta.ROXA)
+        Spacer(Modifier.width(10.dp))
+        IconeLeve(ID_DO_QUADRO, 26.dp) { Text("🖼️", fontSize = 16.sp) }
+        ContasLeves(naSala, Atelie.MAXIMO_NA_PAREDE, tamanho = 11.dp, cor = CorDaConta.AMARELA)
     }
 }

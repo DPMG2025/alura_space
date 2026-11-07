@@ -57,6 +57,9 @@ import org.robolectric.annotation.GraphicsMode
  *   nível com a Corujinha e o caminho todo vencido (cinco estrelas na pílula, nunca "250/250").
  * * `v3d_17_atelie_piano_livros`: o ateliê (paleta, lápis, balde e borracha 3D), o piano seguindo a música, a
  *   estante, a página do livrinho (as páginas em contas) e a pergunta do livrinho (balão com o som 3D).
+ * * `v3d_20_trilha_sem_numeros` (Fase 9, K1): os nós do caminho com o ícone 3D do tipo da fase (comum, chefão,
+ *   fechada), sem número visível (o número fica só na descrição "Fase 25, ..."), a plaquinha do mundo com a figura
+ *   3D e o nome ("Vale dos Dinossauros" cabe em 360 dp), o botão Treinar e o alfinete do mapa em 3D.
  *
  * As capturas 04, 04b, 40, 41, 51, 61, s5_*, s6_* e s10_* destas telas mudam sozinhas.
  */
@@ -218,6 +221,50 @@ class CapturasTelas3DTest {
         assertTrue(existe("3 de ${Livrinhos.todos.size} livrinhos lidos"))
         conferirTextos()
         regra.onRoot().captureRoboImage("build/outputs/roborazzi/v3d_17_atelie_piano_livros.png")
+    }
+
+    /** Inglês com 131 fases vencidas: o caminho mostra a plaquinha do mundo 14, "Vale dos Dinossauros". */
+    private fun inglesNoMundo14(): EstadoJogo {
+        val estrelas = HashMap<String, Int>()
+        for (n in 0 until 131) estrelas[EstadoJogo.chave(Trilha.INGLES, n)] = 3
+        return EstadoJogo(perfil = menina, estrelas = estrelas)
+    }
+
+    @Test fun trilhaSemNumeros() {
+        conferirArte(
+            listOf(
+                "icone_no_fase", "icone_no_chefao", "icone_no_bloqueado", "icone_no_marco", "icone_no_treino",
+                "icone_certo_branco", "icone_alfinete", "icone_bussola", "premio_trofeu", "fig_dinossauro",
+            ),
+        )
+        montar(
+            listOf(
+                { TelaTrilha(Trilha.MATEMATICA, progresso(), {}, {}, onTreinar = {}, onMapa = {}, relembrar = 2) },
+                { TelaTrilha(Trilha.PORTUGUES, progresso(), {}, {}, onTreinar = {}) },
+                { TelaTrilha(Trilha.INGLES, inglesNoMundo14(), {}, {}, onTreinar = {}) },
+                { TelaTrilha(Trilha.LOGICA, EstadoJogo(perfil = menina), {}, {}, onDescobrirNivel = {}) },
+                { TelaMapa(Trilha.MATEMATICA, progresso(), {}, {}) },
+            ),
+        )
+        // O número da fase e do mundo ficam na descrição (o emulador procura "Fase N, ...").
+        assertTrue(existe("Fase 1, ", substring = true))
+        assertTrue(existe("Fase 26, ", substring = true))
+        assertTrue(existe("Mundo 14: Vale dos Dinossauros"))
+        assertTrue(existe("Mundo 1, Jardim, completo"))
+        assertTrue(existeTag("abrir_nivel"))
+        assertTrue(existeTag("abrir_relembrar"))
+        // Nenhum número solto na tela (o "24" da bolinha, o "2" do Relembrar), nem "Mundo 7" ou "3. Praia".
+        val sozinho = Regex("""^\s*\d+\s*$""")
+        val doMundo = Regex("""^\s*(Mundo\s+\d+|\d+\.)""")
+        val nos = regra.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult), useUnmergedTree = true)
+            .fetchSemanticsNodes()
+        for (no in nos) {
+            val texto = no.config.getOrNull(SemanticsProperties.Text)?.joinToString { it.text }.orEmpty()
+            assertTrue("número solto no caminho: '$texto'", !sozinho.matches(texto))
+            assertTrue("número do mundo no caminho: '$texto'", !doMundo.containsMatchIn(texto))
+        }
+        conferirTextos()
+        regra.onRoot().captureRoboImage("build/outputs/roborazzi/v3d_20_trilha_sem_numeros.png")
     }
 
     private companion object {

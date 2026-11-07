@@ -72,6 +72,7 @@ import br.com.casinhadosaber.ui.componentes.ContasLeves
 import br.com.casinhadosaber.ui.componentes.CorDaConta
 import br.com.casinhadosaber.ui.componentes.EstrelasLeves
 import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.FiguraLeveDoEmoji
 import br.com.casinhadosaber.ui.componentes.IconeDaBarra
 import br.com.casinhadosaber.ui.componentes.IconeDeArteDaBarra
 import br.com.casinhadosaber.ui.componentes.IconesDaBarra
@@ -107,6 +108,7 @@ private val coresDosLivros = listOf(
  * Lido = com o marcador; aberto = colorido; fechado = esmaecido com um cadeado e a fase de Letras que abre.
  * Marcas de teste: "livrinho_<id>" em cada livro e "estante_voltar".
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TelaEstante(estado: EstadoJogo, onAbrir: (Livrinho) -> Unit, onVoltar: () -> Unit) {
     val narrador = LocalNarrador.current
@@ -163,12 +165,19 @@ fun TelaEstante(estado: EstadoJogo, onAbrir: (Livrinho) -> Unit, onVoltar: () ->
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("🔖", style = MaterialTheme.typography.headlineMedium)
+                IconeLeve("icone_marcador", 40.dp) { Text("🔖", style = MaterialTheme.typography.headlineMedium) }
                 Spacer(Modifier.width(8.dp))
                 if (lidos.isEmpty()) {
                     Text("Leia um livrinho até o fim para ganhar um marcador.", style = MaterialTheme.typography.bodyLarge, color = Cores.TextoSuave)
                 } else {
-                    Text(lidos.joinToString(" ") { it.marcador }, style = MaterialTheme.typography.headlineSmall)
+                    // Os marcadores ganhos como figuras 3D (um por livrinho lido: dá para contar), em fileiras.
+                    FlowRow(
+                        Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        for (l in lidos) FiguraLeveDoEmoji(l.marcador, 34.dp)
+                    }
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -272,7 +281,8 @@ private fun CapaDoLivrinho(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(livro.capa, fontSize = 44.sp, lineHeight = 50.sp)
+                // A capa: a figura 3D do livrinho (sem modelo, o emoji de antes).
+                FiguraLeveDoEmoji(livro.capa, 54.dp) { Text(livro.capa, fontSize = 44.sp, lineHeight = 50.sp) }
                 Text(
                     livro.titulo,
                     style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp, lineHeight = 18.sp),
@@ -282,11 +292,11 @@ private fun CapaDoLivrinho(
                 )
             }
             when {
-                lido -> Text(
-                    livro.marcador,
-                    fontSize = 22.sp,
-                    modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).background(Color.White, CircleShape).padding(4.dp),
-                )
+                lido -> Box(
+                    Modifier.align(Alignment.TopEnd).padding(4.dp).background(Color.White, CircleShape).padding(3.dp),
+                ) {
+                    FiguraLeveDoEmoji(livro.marcador, 26.dp) { Text(livro.marcador, fontSize = 22.sp) }
+                }
                 !aberto -> IconeLeve(IconesDaBarra.PAIS, 26.dp, Modifier.align(Alignment.TopEnd).padding(5.dp)) {
                     Text("🔒", fontSize = 22.sp)
                 }
@@ -601,10 +611,14 @@ private fun androidx.compose.foundation.layout.ColumnScope.FimDoLivrinho(livro: 
                         .cartaoFofo(cor = Color(0xFFFFD166), raio = 16.dp, labio = Color(0xFFE59A2F)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(livro.marcador, fontSize = 64.sp, modifier = Modifier.pulsando())
+                    FiguraLeveDoEmoji(livro.marcador, 88.dp, Modifier.pulsando()) { Text(livro.marcador, fontSize = 64.sp) }
                 }
             }
-            Text("🔖 Novo marcador na estante", style = MaterialTheme.typography.titleLarge, color = Cores.Roxo, textAlign = TextAlign.Center)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconeLeve("icone_marcador", 32.dp) { Text("🔖", style = MaterialTheme.typography.titleLarge) }
+                Spacer(Modifier.width(6.dp))
+                Text("Novo marcador na estante", style = MaterialTheme.typography.titleLarge, color = Cores.Roxo, textAlign = TextAlign.Center)
+            }
             BotaoFofo(onClick = { narrador.parar(); sons.toque(); onVoltar() }, cor = Cores.Certo, descricao = "Ver a estante", modifier = Modifier.testTag("livrinho_estante")) {
                 Row(Modifier.padding(horizontal = 22.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.ESTANTE), Modifier.size(36.dp)) { Text("📚", fontSize = 26.sp) }

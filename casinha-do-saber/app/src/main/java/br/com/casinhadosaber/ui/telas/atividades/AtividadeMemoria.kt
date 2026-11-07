@@ -28,7 +28,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -49,6 +51,9 @@ import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.ID_ESTRELA_CHEIA
+import br.com.casinhadosaber.ui.componentes.desenharArte
+import br.com.casinhadosaber.ui.componentes.lembrarArteLeve
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
@@ -253,25 +258,25 @@ private fun CartaDaMemoria(
             }
             // Par achado: achata, estica e solta estrelinhas.
             .festejo(achada)
-            .shadow(4.dp, forma)
-            .background(
-                when {
+            // Carta como tecla de brinquedo (Fase 9): sombra desenhada embaixo (sem a de elevação, borrada), face em
+            // degradê com brilho no alto, borda branca por dentro e o lábio mais escuro embaixo.
+            .drawBehind { drawRoundRect(Cores.Sombra, topLeft = Offset(0f, LABIO_DA_CARTA.toPx()), size = size, cornerRadius = CornerRadius(18.dp.toPx())) }
+            .ladrilho(
+                cor = when {
+                    !mostrandoFrente -> escurecer(cor, 0.72f)
+                    achada -> Cores.Certo
+                    else -> Color(0xFFD9CFF0)
+                },
+                raio = 18.dp,
+                fundo = when {
                     !mostrandoFrente -> cor
                     achada -> Color(0xFFDFF7E7)
                     else -> Color.White
                 },
-                forma,
+                labio = LABIO_DA_CARTA,
             )
-            .border(
-                if (brilhar) 5.dp else 3.dp,
-                when {
-                    brilhar -> Cores.Estrela
-                    !mostrandoFrente -> escurecer(cor)
-                    achada -> Cores.Certo
-                    else -> Color(0xFFEDE6FF)
-                },
-                forma,
-            ),
+            .then(if (brilhar) Modifier.border(5.dp, Cores.Estrela, forma) else Modifier)
+            .padding(bottom = LABIO_DA_CARTA),
         contentAlignment = Alignment.Center,
     ) {
         if (mostrandoFrente) {
@@ -292,8 +297,18 @@ private fun VersoDaCarta(largura: Dp) {
             drawCircle(Color.White.copy(alpha = 0.25f), r * 0.06f, Offset(r * (0.2f + 0.3f * i), r * (0.2f + 0.3f * j)))
         }
     }
-    Text("⭐", fontSize = (largura.value * 0.32f).sp)
+    // A estrela 3D do progresso (a mesma das plaquinhas), um bitmap pequeno do cache; sem a arte, a ⭐.
+    val lado = largura * 0.4f
+    val estrela = lembrarArteLeve(ID_ESTRELA_CHEIA, lado)
+    if (estrela == null) {
+        Text("⭐", fontSize = (largura.value * 0.32f).sp)
+    } else {
+        Canvas(Modifier.size(lado)) { desenharArte(estrela, center, size.minDimension) }
+    }
 }
+
+/** Altura do lábio das cartas da memória (fica dentro do tamanho da carta). */
+private val LABIO_DA_CARTA = 6.dp
 
 @Composable
 private fun FrenteDaCarta(conteudo: String, largura: Dp) {

@@ -3,7 +3,6 @@ package br.com.casinhadosaber.ui.telas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -47,6 +46,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -65,6 +66,7 @@ import br.com.casinhadosaber.ui.componentes.Confete
 import br.com.casinhadosaber.ui.componentes.VeuDoModal
 import androidx.compose.ui.graphics.graphicsLayer
 import br.com.casinhadosaber.ui.componentes.ContasDeProgresso
+import br.com.casinhadosaber.ui.componentes.FiguraLeveDoEmoji
 import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
 import br.com.casinhadosaber.ui.componentes.ImagemDeArte
 import br.com.casinhadosaber.ui.componentes.PecasDasTelas
@@ -188,18 +190,24 @@ private fun ParedeVazia(estado: EstadoJogo) {
         }
         Spacer(Modifier.height(12.dp))
         Text(
-            "Complete as 10 fases de um mundo para pendurar o primeiro diploma!",
+            "Complete todas as fases de um mundo para pendurar o primeiro diploma!",
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
         )
         if (perto != null && perto.third > 0) {
             val (t, m, n) = perto
             Spacer(Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // O mundo mais perto pelo caminho, pela figura 3D e pelo nome (o número do mundo fica na descrição).
+            Row(
+                Modifier.semantics(mergeDescendants = true) { contentDescription = m.titulo },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 IconeDeTrilha(t, Modifier.size(28.dp))
                 Spacer(Modifier.width(4.dp))
+                FiguraLeveDoEmoji(m.emoji, 32.dp)
+                Spacer(Modifier.width(4.dp))
                 Text(
-                    "${m.emoji} Mundo ${m.numero}: ${m.nome}",
+                    m.nome,
                     style = MaterialTheme.typography.titleMedium,
                     color = Color(t.corEscuraArgb),
                     textAlign = TextAlign.Center,
@@ -238,9 +246,17 @@ private fun QuadroDeDiploma(d: Diploma, modifier: Modifier, onClick: () -> Unit)
                 .padding(vertical = 8.dp, horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(m.emoji, fontSize = 30.sp)
-            Text("Mundo ${m.numero}", style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp), fontWeight = FontWeight.Bold, color = Cores.Texto, maxLines = 1)
-            Text(m.nome, style = MaterialTheme.typography.labelLarge.copy(fontSize = 11.sp, fontWeight = FontWeight.Normal), color = Cores.TextoSuave, maxLines = 1, textAlign = TextAlign.Center)
+            // A figura 3D do mundo e o nome dele, em até duas linhas (nada cortado em 360 dp; sem "Mundo 7").
+            FiguraLeveDoEmoji(m.emoji, 38.dp) { Text(m.emoji, fontSize = 30.sp) }
+            Text(
+                m.nome,
+                style = MaterialTheme.typography.labelLarge.copy(fontSize = 12.sp, lineHeight = 14.sp),
+                fontWeight = FontWeight.Bold,
+                color = Cores.Texto,
+                maxLines = 2,
+                minLines = 2,
+                textAlign = TextAlign.Center,
+            )
             ImagemDeArte(PecasDasTelas.SELO, Modifier.padding(top = 2.dp).size(30.dp)) {
                 Canvas(Modifier.size(26.dp)) {
                     desenharSelo(Offset(size.width / 2f, size.height * 0.42f), size.minDimension * 0.36f, Color(d.trilha.corArgb), comFitas = true)
@@ -262,7 +278,8 @@ private fun DiplomaGrande(d: Diploma, nome: String?, onFechar: () -> Unit) {
                 .padding(20.dp)
                 .widthIn(max = 420.dp)
                 .fillMaxWidth()
-                .shadow(18.dp, RoundedCornerShape(10.dp))
+                // Destaque sobre o véu escuro (sem sombra borrada): halo claro, sombra desenhada e moldura branca.
+                .drawBehind { desenharDestaqueDoDiploma() }
                 .drawBehind { desenharCertificado(cor, corEscura) }
                 .padding(horizontal = 30.dp, vertical = 26.dp)
                 .testTag("diploma_aberto"),
@@ -280,7 +297,7 @@ private fun DiplomaGrande(d: Diploma, nome: String?, onFechar: () -> Unit) {
             Row(Modifier.padding(top = 12.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconeDeTrilha(d.trilha, Modifier.size(44.dp))
                 Spacer(Modifier.width(10.dp))
-                Text(m.emoji, fontSize = 32.sp)
+                FiguraLeveDoEmoji(m.emoji, 48.dp) { Text(m.emoji, fontSize = 32.sp) }
             }
             if (!nome.isNullOrBlank()) {
                 Text(nome, style = MaterialTheme.typography.headlineMedium, color = corEscura, textAlign = TextAlign.Center)
@@ -302,6 +319,28 @@ private fun DiplomaGrande(d: Diploma, nome: String?, onFechar: () -> Unit) {
             }
         }
     }
+}
+
+/**
+ * Atrás do diploma aberto, que fica sobre o véu escuro do modal (o cabeçalho escurecido): um halo claro em volta,
+ * a sombra desenhada embaixo e uma moldura branca grossa. Formas chapadas e um degradê radial, sem blur.
+ */
+private fun DrawScope.desenharDestaqueDoDiploma() {
+    val folga = 18.dp.toPx()
+    drawRoundRect(
+        Brush.radialGradient(
+            listOf(Color(0x66FFF6D8), Color(0x00FFF6D8)),
+            center = center,
+            radius = size.maxDimension * 0.72f,
+        ),
+        topLeft = Offset(-folga, -folga),
+        size = Size(size.width + folga * 2, size.height + folga * 2),
+        cornerRadius = CornerRadius(28.dp.toPx()),
+    )
+    val borda = 5.dp.toPx()
+    drawRoundRect(Color(0x59000000), topLeft = Offset(-borda, -borda + 10.dp.toPx()), size = Size(size.width + borda * 2, size.height + borda * 2), cornerRadius = CornerRadius(14.dp.toPx()))
+    drawRoundRect(Color.White, topLeft = Offset(-borda, -borda), size = Size(size.width + borda * 2, size.height + borda * 2), cornerRadius = CornerRadius(14.dp.toPx()))
+    drawRoundRect(Color(0xFFFFE6A6), topLeft = Offset(-borda, -borda), size = Size(size.width + borda * 2, size.height + borda * 2), cornerRadius = CornerRadius(14.dp.toPx()), style = Stroke(1.5.dp.toPx()))
 }
 
 /** Papel de parede listradinho, bem clarinho, atrás dos quadros, com rodapé de madeira. */

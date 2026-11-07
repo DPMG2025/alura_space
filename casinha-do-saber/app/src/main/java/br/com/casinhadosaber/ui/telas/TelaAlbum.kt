@@ -61,6 +61,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.platform.LocalContext
 import br.com.casinhadosaber.ui.componentes.ArteDoApp
 import br.com.casinhadosaber.ui.componentes.ContasDeProgresso
+import br.com.casinhadosaber.ui.componentes.FiguraLeveDoEmoji
+import br.com.casinhadosaber.ui.componentes.ID_ESTRELA_CHEIA
 import br.com.casinhadosaber.ui.componentes.CorDaConta
 import br.com.casinhadosaber.ui.componentes.IconeDaBarra
 import br.com.casinhadosaber.ui.componentes.IconeDeArteDaBarra
@@ -169,9 +171,17 @@ fun TelaAlbum(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     BotaoRedondo("◀️", "Página anterior", { irPara(pagina - 1) }, cor = if (pagina > 0) Color.White else Color(0xFFEDEDED), tamanho = 52.dp)
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("${Mundos.todos[p.mundo].emoji} ${p.titulo}", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center, maxLines = 2)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            FiguraLeveDoEmoji(Mundos.todos[p.mundo].emoji, 32.dp)
+                            Spacer(Modifier.width(4.dp))
+                            Text(p.titulo, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center, maxLines = 2)
+                        }
                         if (p.completa) {
-                            Text("Página completa! ✨", style = MaterialTheme.typography.titleSmall, color = Cores.TextoSuave)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconeLeve(ID_ESTRELA_CHEIA, 18.dp) { }
+                                Spacer(Modifier.width(4.dp))
+                                Text("Página completa!", style = MaterialTheme.typography.titleSmall, color = Cores.TextoSuave)
+                            }
                         } else {
                             // As figurinhas da página como contas: as coladas na cor do caminho (nada de "3 de 11").
                             ContasDeProgresso(
@@ -203,7 +213,8 @@ fun TelaAlbum(
                                 CartaoDeFigurinha(f, p.ganhou(f), Color(trilha.corArgb)) {
                                     if (p.ganhou(f)) {
                                         sons.colocar()
-                                        dica = if (f.dourada) "Figurinha dourada do chefão! 👑" else "Figurinha da fase ${f.fase + 1}!"
+                                        // Na tela, sem o número da fase (a descrição da figurinha ainda diz qual é).
+                                        dica = if (f.dourada) "Figurinha dourada do chefão!" else "Figurinha colada! Você ganhou três estrelas."
                                         narrador.falar(dica ?: "")
                                     } else {
                                         sons.toque()
@@ -278,30 +289,19 @@ private fun CartaoDeFigurinha(f: Figurinha, ganha: Boolean, corDoCaminho: Color,
                     .border(if (ganha) 3.dp else 2.dp, if (ganha) borda else Color(0x33000000), RoundedCornerShape(12.dp)),
             )
         }
-        Text(
+        // O desenho da figurinha: a figura 3D (sem modelo, o emoji). Falta ganhar: a silhueta numa cor só (dá para
+        // adivinhar o que vem). Sem o número da fase na figurinha: ele fica na descrição, para o adulto.
+        val silhueta = Modifier.graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
+            drawContent()
+            drawRect(Color(0x66534A6B), blendMode = BlendMode.SrcIn)
+        }
+        FiguraLeveDoEmoji(
             f.emoji,
-            fontSize = 32.sp,
-            modifier = Modifier
-                .offset(x = 72.dp * (cx - 0.5f), y = 86.dp * (cy - 0.5f))
-                .then(
-                    // A silhueta: o próprio desenho pintado de uma cor só (dá para adivinhar o que vem).
-                    if (ganha) Modifier else Modifier
-                        .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-                        .drawWithContent {
-                            drawContent()
-                            drawRect(Color(0x66534A6B), blendMode = BlendMode.SrcIn)
-                        },
-                ),
-        )
-        if (!f.dourada) {
-            // O número da fase, pequenininho no pé da figurinha (para o adulto achar a fase).
-            Text(
-                "${f.fase + 1}",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (ganha) Cores.Texto else Cores.TextoSuave,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp),
-            )
+            40.dp,
+            Modifier.offset(x = 72.dp * (cx - 0.5f), y = 86.dp * (cy - 0.5f)),
+            silhueta = if (ganha) null else Color(0x66534A6B),
+        ) {
+            Text(f.emoji, fontSize = 32.sp, modifier = if (ganha) Modifier else silhueta)
         }
     }
 }

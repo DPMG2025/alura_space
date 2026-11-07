@@ -62,7 +62,10 @@ fun TelaResultadoNivel(nivel: Nivelamento, nome: String?, onContinuar: () -> Uni
         onSim = onContinuar,
         marcaSim = "nivel_continuar",
         cor = Color(nivel.trilha.corArgb),
-        destaque = "${mundo.emoji} Mundo ${mundo.numero}",
+        // O mundo sugerido pela figura 3D e pelo nome (sem "Mundo 7": o número fica na descrição).
+        destaque = mundo.nome,
+        destaqueFigura = mundo.emoji,
+        destaqueDescricao = mundo.titulo,
     )
 }
 
@@ -78,7 +81,7 @@ fun BotaoDescobrirNivel(trilha: Trilha, onClick: () -> Unit, modifier: Modifier 
         modifier = modifier.testTag("abrir_nivel"),
     ) {
         Row(Modifier.padding(horizontal = 18.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("🧭", style = MaterialTheme.typography.headlineMedium)
+            IconeLeve("icone_bussola", 36.dp) { Text("🧭", style = MaterialTheme.typography.headlineMedium) }
             Spacer(Modifier.width(8.dp))
             Text("Já sei bastante!", style = MaterialTheme.typography.titleLarge, color = Color(trilha.corEscuraArgb), fontWeight = FontWeight.Bold)
         }

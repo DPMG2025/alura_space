@@ -177,16 +177,18 @@ class CapturasTest {
         TelaJogo(gerador.fases(Trilha.MATEMATICA)[1], menina, {}, { })
     }
 
+    // Fase 12, "Tirar até 5" (a de índice 8 era "Maior e menor número": o nome da captura não batia).
     @Test fun jogoSubtrair() = capturar("06_jogo_subtrair") {
-        TelaJogo(gerador.fases(Trilha.MATEMATICA)[8], menino, {}, { })
+        TelaJogo(gerador.fases(Trilha.MATEMATICA)[11], menino, {}, { })
     }
 
     @Test fun jogoMaisOuMenos() = capturar("07_jogo_mais_ou_menos") {
         TelaJogo(gerador.fases(Trilha.MATEMATICA)[4], menina, {}, { })
     }
 
+    // Fase 12, "Pedacinhos" (sílaba inicial; a de índice 6 era "Traçar letras": o nome da captura não batia).
     @Test fun jogoLetras() = capturar("08_jogo_silabas") {
-        TelaJogo(gerador.fases(Trilha.PORTUGUES)[6], menino, {}, { })
+        TelaJogo(gerador.fases(Trilha.PORTUGUES)[11], menino, {}, { })
     }
 
     @Test fun jogoIngles() = capturar("09_jogo_cores_ingles") {
