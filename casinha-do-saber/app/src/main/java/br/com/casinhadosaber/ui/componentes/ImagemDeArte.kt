@@ -99,19 +99,26 @@ object ArteDoApp {
     fun bitmap(contexto: Context, info: InfoDaArte, amostra: Int): Bitmap? {
         val chave = "${info.arquivo}@$amostra"
         cache.get(chave)?.let { return it }
+        val bmp = decodificar(contexto, info, amostra) ?: return null
+        bmp.prepareToDraw()
+        cache.put(chave, bmp)
+        return bmp
+    }
+
+    /**
+     * A imagem decodificada com [amostra], sem passar pelo cache (quem chama pode reciclar depois). Serve para as
+     * camadas grandes da casa, que só são lidas para compor um bitmap e não precisam ficar na memória.
+     */
+    fun decodificar(contexto: Context, info: InfoDaArte, amostra: Int): Bitmap? {
         val opcoes = BitmapFactory.Options().apply {
             inSampleSize = amostra
             inPreferredConfig = Bitmap.Config.ARGB_8888
         }
-        val lido: Bitmap? = try {
+        return try {
             contexto.assets.open("$PASTA/${info.arquivo}").use { BitmapFactory.decodeStream(it, null, opcoes) }
         } catch (e: IOException) {
             null
         }
-        val bmp = lido ?: return null
-        bmp.prepareToDraw()
-        cache.put(chave, bmp)
-        return bmp
     }
 
     fun limparCache() = cache.evictAll()
