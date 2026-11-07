@@ -65,10 +65,8 @@ export const LISTA_DA_FASE9B = [
   // varanda gourmet
   ['espetinho', ['🍢'], 'mesa'],
   ['panquecas', ['🥞'], 'mesa'],
-  // biblioteca
-  ['livro_verde', ['📗'], 'tapete'],
-  ['livro_azul', ['📘'], 'tapete'],
-  ['livro_laranja', ['📙'], 'tapete'],
+  // biblioteca: livro_verde 📗, livro_azul 📘 e livro_laranja 📙 saíram na integração (rodada 3): os três emojis já
+  // são do fig_livro do lote 1 (catalogo_fase9a.js); os modelos seguem em figurasFase9b.js
   // observatório
   ['lua_cheia', ['🌕'], 'ceu', true],
   // fazendinha (os mesmos bichos das perguntas, para os emojis de corpo inteiro)

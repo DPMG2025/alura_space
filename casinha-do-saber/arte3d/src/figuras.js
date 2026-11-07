@@ -25,7 +25,7 @@ export const LISTA_DE_FIGURAS = [
   ['borboleta', ['🦋'], 'ceu', true],
   ['leao', ['🦁'], 'grama'],
   ['pintinho', ['🐥'], 'cercado'],
-  ['macaco', ['🐒'], 'grama'],
+  ['macaco', ['🐒', '🐵'], 'grama'],
   ['elefante', ['🐘'], 'grama'],
   ['coelho', ['🐰', '🐇'], 'grama'],
   ['galo', ['🐓'], 'cercado'],

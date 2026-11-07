@@ -28,6 +28,9 @@ class FigurasDaPerguntaTest {
             "🦆" to "fig_pato", "🍎" to "fig_maca", "⚽" to "fig_bola", "🐶" to "fig_cachorro", "🐕" to "fig_cachorro",
             "🐮" to "fig_vaca", "🐄" to "fig_vaca", "🧦" to "fig_meia", "🔴" to "fig_bolinha_vermelha", "🪁" to "fig_pipa",
             "🪙" to "moeda",
+            // Fase 9 (lotes 1 e 2, integração da rodada 3)
+            "🦓" to "fig_zebra", "🐬" to "fig_golfinho", "🐵" to "fig_macaco", "🐒" to "fig_macaco", "📘" to "fig_livro",
+            "🩰" to "fig_sapatilha", "🥿" to "fig_sapatilha_baixa", "🏈" to "fig_bola_de_rugbi",
         )
         for ((emoji, id) in casos) assertEquals("figura de $emoji", id, FigurasDaPergunta.idPara(manifesto, emoji))
         // Seletor de variação (U+FE0F) não muda a figura.
@@ -37,8 +40,8 @@ class FigurasDaPerguntaTest {
         assertEquals("fig_coracao", FigurasDaPergunta.idPara(manifesto, "❤"))
         assertEquals("fig_coracao", FigurasDaPergunta.idPara(manifesto, "❤️"))
         assertEquals("fig_aviao", FigurasDaPergunta.idPara(manifesto, "✈"))
-        // Sem modelo ainda (lista da fase 4A): continuam emoji.
-        for (e in listOf("🦓", "🐬", "🐙", "🍋", "🟦", "🦃", "❄️", "🏠", "☀️")) {
+        // Sem modelo ainda (depois da Fase 9, lotes 1 e 2): continuam emoji.
+        for (e in listOf("🧚", "🤡", "🦘", "🐺", "🍔", "🚩", "📝", "🕸️", "🩺")) {
             assertNull("$e não tem modelo", FigurasDaPergunta.idPara(manifesto, e))
             assertFalse(FigurasDaPergunta.temModelo(manifesto, e))
         }
@@ -72,13 +75,13 @@ class FigurasDaPerguntaTest {
 
     @Test fun lugarDaCenaVemDaPrimeiraFiguraComModelo() {
         assertEquals("lagoa", FigurasDaPergunta.lugarDaCena(manifesto, List(4) { "🦆" }))
-        assertEquals("mesa", FigurasDaPergunta.lugarDaCena(manifesto, listOf("🦓", "🍌", "🍌")))
+        assertEquals("mesa", FigurasDaPergunta.lugarDaCena(manifesto, listOf("🦘", "🍌", "🍌")))
         assertEquals("varal", FigurasDaPergunta.lugarDaCena(manifesto, listOf("👕")))
         assertEquals("cercado", FigurasDaPergunta.lugarDaCena(manifesto, listOf("🐷")))
         assertEquals("tapete", FigurasDaPergunta.lugarDaCena(manifesto, listOf("🧸")))
         assertEquals("ceu", FigurasDaPergunta.lugarDaCena(manifesto, listOf("🦋")))
         assertEquals("grama", FigurasDaPergunta.lugarDaCena(manifesto, listOf("🐱")))
-        assertNull(FigurasDaPergunta.lugarDaCena(manifesto, listOf("🦓", "🐬")))
+        assertNull(FigurasDaPergunta.lugarDaCena(manifesto, listOf("🦘", "🧚")))
         assertNull(FigurasDaPergunta.lugarDaCena(manifesto, emptyList()))
     }
 

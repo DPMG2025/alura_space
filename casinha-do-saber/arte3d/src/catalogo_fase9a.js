@@ -36,7 +36,7 @@ export const LISTA_DO_LOTE_9A = [
   ['coruja', ['🦉'], 'grama'],
   ['gorila', ['🦍'], 'grama'],
   ['urso', ['🐻'], 'grama'],
-  ['urso_polar', ['🐻‍❄️', '🐻‍❄'], 'grama'],
+  ['urso_polar', ['🐻‍❄️'], 'grama'],
   ['onca', ['🐆'], 'grama'],
   ['preguica', ['🦥'], 'grama'],
   ['lagartixa', ['🦎'], 'grama'],

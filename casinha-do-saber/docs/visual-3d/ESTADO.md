@@ -4,7 +4,7 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 
 ## Fases
 
-Situação em 2026-11-07, 17:00 UTC. "Provada" = CI verde completo (build, tablet, celular, Android 7 e 8) naquele commit.
+Situação em 2026-11-07, 17:45 UTC. "Provada" = CI verde completo (build, tablet, celular, Android 7 e 8) naquele commit.
 
 | Fase | Código e arte | Prova no CI | Revisor independente |
 |---|---|---|---|
@@ -18,7 +18,7 @@ Situação em 2026-11-07, 17:00 UTC. "Provada" = CI verde completo (build, table
 | 6. Casa por dentro | feito (6A, 6B) | build verde (128); celular pendente | pendente (revisão final) |
 | 7. Guarda roupa | feito (7A, 7B, polimento de arte) | build verde; celular pendente | 6 |
 | 8. Demais telas | feito (8A arte; 8B grupos A, B, C) | build verde (128); celular pendente | pendente (revisão final) |
-| 9. Acabamento | polimento visual e medição feitos, locais/enviados; revisão final pendente | build verde; Android 7 e 8 (desempenho) rodando na 128 | pendente |
+| 9. Acabamento | polimento visual e medição feitos; segunda rodada de arte (lotes 1, 2 e 3) integrada (local); Kotlin dos lotes e revisão final pendentes | build verde; Android 7 e 8 (desempenho) rodando na 128 | pendente |
 
 Pendências que não são do código: confirmação da tela cheia no tablet Samsung (dono do produto) e os testes de dez minutos com a criança (fases 1, 4 e 5).
 
@@ -44,6 +44,8 @@ Pendências que não são do código: confirmação da tela cheia no tablet Sams
 * 2026-11-07: revisão independente das Fases 2, 3, 5 e 7 (relatorios/revisao-fases-2-3-5-7.md): notas 8, 6, 8, 6; lista de pendências da Fase 9 registrada lá.
 
 * 2026-11-07, revisão independente das Fases 4, 6, 8 e 9 (relatorios/revisao-fases-4-6-8-9.md): notas 7, 4, 4, 4; geral 5. Decisão: segunda rodada da Fase 9 em três frentes de arte em lote (lote 1: figuras do vocabulário das perguntas; lote 2: áreas novas, livros e ateliê; lote 3: ícones de interface) mais Kotlin para os números abstratos, a noite do interior e a integração; refazer a revisão ao fim.
+
+* 2026-11-07, integração da arte, rodada 3 (relatorios/integracao-arte.md): lotes 1 (160 `fig_*`), 2 (74 `fig_*`) e 3 (57 `icone_*`) da segunda rodada da Fase 9 juntados num `manifesto.json` só (sem re-render). 825 imagens, 6,12 MB. Conflitos: `fig_sapatilha` do lote 2 virou `fig_sapatilha_baixa`; 📗 📘 📙 ficaram com o `fig_livro` do lote 1 e os três livros coloridos do lote 2 saíram; 🐵 entrou no `fig_macaco`. Cobertura de emojis das perguntas: 90,4 % das aparições (mínimo do teste agora 75 %). Falta o Kotlin ligar os ícones do lote 3 (mapa em relatorios/fase9c-arte-lote3.md).
 
 * 2026-11-07, execução 128 (commit 962c3ad, Fases 0A a 8B + orquestrador + medição): build, tablet e Android 7 e 8 VERDES. Celular: com o Android Test Orchestrator, 23 testes rodaram com 0 falhas (todos passam); o emulador sumiu durante o 24º (DesempenhoTest, que não era para rodar no celular), de novo ~6 min depois do início, como em todas as quedas (121 a 128). Desempenho medido: Android 7 abre em 3,1 s (0,9 s a quente), memória máxima 113 MB; Android 8: 3,1 s, 134 MB (limite 384 MB). Decisão: os testes do celular rodam em dois emuladores seguidos (1: Diagnóstico, Emojis, TelaCheia, Vozes; 2: JogoNoEmuladorTest), cada um abaixo de 6 minutos; DesempenhoTest só nos Androids antigos.
 

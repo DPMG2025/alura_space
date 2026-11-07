@@ -74,3 +74,55 @@ fases 5 e 7), juntadas por `git merge` sobre a rodada 1.
   rodado (cerca de 25 min).
 * `ManifestoDaArteTest` 7/7 e `CamadasDosPersonagensTest` 10/10 verdes (JVM puro, Gradle temporário `--offline`,
   Kotlin 2.0.21, `workingDir` = `app/`).
+
+# Rodada 3: Fase 9, segunda rodada de arte (lotes 1, 2 e 3)
+
+Data: 2026-11-07. Branches `worktree-agent-a7980ccbd152d5016` (lote 1, f85f1cb: 160 `fig_*`),
+`worktree-agent-ae9acbba27e046444` (lote 2, ca560b2: 74 `fig_*`) e `worktree-agent-a5fdba9dfd1acfa1c` (lote 3,
+9f268d7: 57 `icone_*`), as três feitas a partir de 917ee8b e juntadas por `git merge`, uma de cada vez, sobre
+`ccr-162c6a70-urxpmq` (0bcb23b).
+
+## O que juntou
+
+* Conflitos só nas exportações: `objetos/figuras.js` (`pecasDasFiguras`: ficou a lista do lote 1, que já contém
+  a do lote 2) e `objetos/itensDaCasa.js` (`modelosDosItens` com o `escorregador` do lote 2, mais o
+  `maisModelosDosItens` do lote 1). O lote 3 entrou sem conflito.
+* `src/catalogo.js` espalha `catalogoDaFase9a`, `catalogoDaFase9b` e `catalogoFase9c` depois da Fase 8: um
+  `npm run render` completo gera tudo. Os catálogos à parte ficam para o render incremental `CATALOGO=fase9a|b|c`.
+* `manifesto_fase9a.json`, `manifesto_fase9b.json` e `manifesto_fase9c.json` juntados ao `manifesto.json` por
+  script (Python), sem re-render: campos exatamente como vieram (`emojis`, `lugar`, `apoio`, `ancoras`...), chaves
+  em ordem como o `ordenar()` do `render.js`, ida e volta do JSON com os mesmos bytes. Os três manifestos à parte
+  foram apagados. `previa_fase9a.js`, `previa_fase9b.js`, `previa_fase9c.js` e `validar_fase9b.py` leem o manifesto
+  à parte: rodar antes `CATALOGO=faseN npm run render`, que o recria (o `validar_fase9b.py` então acusa os ids
+  como já presentes no `manifesto.json`, o que agora é esperado).
+
+## Conflitos de id e de emoji
+
+* `fig_sapatilha` existia nos lotes 1 (🩰, sapatilha de balé) e 2 (🥿, sapatilha baixa). O id fica com o lote 1;
+  a do lote 2 virou `fig_sapatilha_baixa` (mesma imagem e mesma entrada, só o id e o arquivo mudaram;
+  `catalogo_fase9b.js` e `figurasFase9b.js` acompanham).
+* 📗 📘 📙 estavam no `fig_livro` (lote 1) e em `fig_livro_verde`, `fig_livro_azul` e `fig_livro_laranja` (lote 2).
+  Ficaram com o lote 1; as três figuras do lote 2 ficariam sem emoji (o `FigurasDaPerguntaTest` exige emoji em
+  toda figura) e saíram do catálogo, do manifesto e da pasta. Os modelos continuam em `figurasFase9b.js`.
+* `fig_urso_polar` trazia 🐻‍❄️ e 🐻‍❄, iguais depois de tirar o U+FE0F: ficou só o primeiro.
+* 🐵 entrou nos `emojis` do `fig_macaco` (sugestão do lote 1), no manifesto e em `src/figuras.js`.
+* Nenhum outro emoji aparece em duas figuras (comparação sem U+FE0F).
+
+## Totais
+
+* 825 imagens, 6,12 MB no total (orçamento 40 MB), maior 50 KB (`premio_clarao`; limite 400 KB). 289 `fig_*` e
+  86 `icone_*`.
+* Novas nesta rodada: 288 (160 do lote 1, 71 do lote 2, 57 do lote 3).
+* Cobertura de emojis das perguntas (`CoberturaDeEmojisTest`): 90,4 % das aparições (47267 de 52284), 229 de 377
+  emojis com modelo. O mínimo do teste subiu de 50 % para 75 %.
+
+## Verificação
+
+* Script: todo arquivo do manifesto existe, nenhum órfão, nenhum id ou arquivo repetido, todas abaixo de 400 KB,
+  total abaixo de 40 MB, largura e altura = cabeçalho do WebP = `uso x escala`, nenhum emoji em duas figuras; as
+  listas de `catalogo_fase9a.js` e `catalogo_fase9b.js` batem com o manifesto (ids, emojis, lugar, tipo). O render
+  completo não foi rodado.
+* `FigurasDaPerguntaTest` atualizado: 🦓 🐬 deixaram de ser exemplos sem modelo (agora 🧚 🤡 🦘 🐺 🍔 🚩 📝 🕸️ 🩺)
+  e há casos novos (`fig_zebra`, `fig_macaco` com 🐵, `fig_livro` com 📘, as duas sapatilhas).
+* `ManifestoDaArteTest` 7/7, `CamadasDosPersonagensTest` 16/16, `FigurasDaPerguntaTest` 6/6 e
+  `CoberturaDeEmojisTest` 1/1 verdes (JVM puro, Gradle temporário `--offline`, Kotlin 2.0.21, `workingDir` = `app/`).

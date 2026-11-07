@@ -6,7 +6,7 @@
 //   CATALOGO=fase5 npm run render [-- ids]
 //                               renderiza só src/catalogo_fase5.js (ou fase4, fase6, fase7...), de modo incremental, e grava
 //                               um manifesto à parte (manifesto_fase5.json) para revisão, sem apagar nada.
-//                               O catálogo principal (src/catalogo.js) já inclui as fases 4, 5, 6 e 7: o render
+//                               O catálogo principal (src/catalogo.js) já inclui as fases 4 a 8 e 9a, 9b, 9c: o render
 //                               completo gera tudo num manifesto.json só e apaga os manifestos à parte.
 //
 // Sobe um servidor local com esta pasta, abre pagina/render.html no Chromium headless (WebGL por
