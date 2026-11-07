@@ -9,9 +9,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -192,11 +194,18 @@ class CapturasColorirEPuzzleTest {
         // Nível 1 é 2 por 2: a casa do id está na coluna id % 2, linha id / 2.
         val alvo = Offset(moldura.left + moldura.width * ((id % 2) * 0.5f + 0.25f), moldura.top + moldura.width * ((id / 2) * 0.5f + 0.25f))
         val de = peca.center
+        val delta = Offset(alvo.x - de.x, alvo.y - de.y)
         regra.onNodeWithTag("peca_$id").performTouchInput {
-            swipe(center, Offset(center.x + (alvo.x - de.x), center.y + (alvo.y - de.y)), durationMillis = 400)
+            down(center)
+            moveTo(center + delta * 0.3f)
+            moveTo(center + delta * 0.7f)
+            moveTo(center + delta)
+            up()
         }
         regra.mainClock.advanceTimeBy(800)
-        regra.onNodeWithTag("puzzle_faltam").assertTextEquals("Faltam 3")
+        val depois = regra.onAllNodesWithTag("peca_$id").fetchSemanticsNodes().firstOrNull()?.boundsInRoot
+        val texto = regra.onNodeWithTag("puzzle_faltam").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
+        assertEquals("peça $id: antes=$peca alvo=$alvo depois=$depois moldura=$moldura", "Faltam 3", texto)
         foto("s11_puzzle_uma_peca_no_lugar")
     }
 
