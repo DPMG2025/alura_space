@@ -8,7 +8,7 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 |---|---|---|---|
 | 0A. Tela cheia (celular e tablet) | código feito, aguardando CI e confirmação no tablet | 2026-11-07 | pendente |
 | 0. Fundação do pipeline (`arte3d/`) | código feito, aguardando CI (captura `v3d_00_arte_de_teste`) | 2026-11-07 | pendente |
-| 1. Personagens | pendente | | |
+| 1. Personagens | arte (1A) e Kotlin (1B) feitos, aguardando CI e nota do revisor | 2026-11-07 | pendente |
 | 2. Sistema de interface | pendente | | |
 | 3. Início e casa de fora | pendente | | |
 | 4. Jogo | pendente | | |
@@ -25,7 +25,11 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 
 * 2026-11-07, Fase 0: pipeline em `arte3d/` (`npm run render`), imagens em `app/src/main/assets/arte/` com `manifesto.json`; `ImagemDeArte` (LruCache + inSampleSize); orçamento 400 KB por imagem e 40 MB no total. Relatório em `relatorios/fase0.md`. Escala de render 2x (subir `ESCALA` em `render.js` se faltar nitidez).
 
+* 2026-11-07, Fase 1: 97 camadas por personagem (relatorios/fase1a.md), `PersonagemEmCamadas` compõe um bitmap em cache (relatorios/fase1b.md). Trajes e acessórios da loja caem no desenho antigo até a Fase 7. Não enviar imagens parciais ao git: o teste de órfãos derruba o CI.
+
 ## Problemas abertos
+
+* Memória das camadas (690 KB cada decodificada): recortar pelo contorno na Fase 9.
 
 * Dúvida da Fase 0: o Robolectric pode não decodificar WebP; se a captura `v3d_00` falhar com "não decodificou", trocar o formato nos testes ou usar PNG nas capturas.
 * Job de CI que confere imagens desatualizadas ainda não existe (opcional).

@@ -46,6 +46,8 @@ import br.com.casinhadosaber.dominio.Perfil
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -57,14 +59,14 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** Proporção largura/altura do desenho da criança. */
-const val PROPORCAO_CRIANCA = 0.62f
-
-enum class Humor { FELIZ, PENSANDO, SURPRESO, TORCENDO }
+/** Proporção do desenho antigo da criança (feito com formas), usado como reserva. */
+const val PROPORCAO_DESENHO_CRIANCA = 0.62f
 
 /**
- * Desenho da criança (menino ou menina), feito com formas simples para ficar leve
- * e igual em qualquer aparelho. [acenando] faz um braço dar tchau.
+ * A criança (menino ou menina). Monta as camadas 3D pré-renderizadas (`assets/arte/crianca_*`) para o perfil,
+ * o humor e a pose, tingidas com a pele, o cabelo e a cor da roupa; com traje ou acessório da loja (que ainda
+ * não têm camadas) ou se faltar alguma camada, usa o desenho antigo, feito com formas simples.
+ * [acenando] faz um braço dar tchau.
  */
 @Composable
 fun Crianca(
@@ -81,37 +83,59 @@ fun Crianca(
     animado: Boolean = true,
 ) {
     val descricao = if (perfil.genero == Genero.MENINA) "Menina" else "Menino"
+    val contexto = LocalContext.current
+    val emCamadas = remember(perfil) { ComposicaoDosPersonagens.podeUsar(contexto, PersonagemDaArte.CRIANCA, perfil) }
     BoxWithConstraints(
         modifier
             .aspectRatio(PROPORCAO_CRIANCA)
             .semantics { contentDescription = perfil.nome.ifBlank { descricao } },
     ) {
-        if (animado && animacoesLigadas()) {
-            CriancaAnimada(perfil, acenando, humor, falando)
+        val vivo = animado && animacoesLigadas()
+        if (emCamadas) {
+            PersonagemEmCamadas(
+                personagem = PersonagemDaArte.CRIANCA,
+                perfil = perfil,
+                humor = humor,
+                acenando = acenando,
+                falando = falando,
+                vivo = vivo,
+                largura = maxWidth,
+                altura = maxHeight,
+                chapeu = perfil.chapeu,
+                ritmoDoPiscar = 3800,
+                ginga = 0f,
+                reserva = { q -> desenharCrianca(perfil, null, q.olhosFechados, q.humor) },
+            )
         } else {
-            CriancaParada(perfil, humor)
-        }
-        // Chapéu comprado na loja, em cima da cabeça.
-        if (perfil.chapeu.isNotEmpty()) {
-            // Cabeça: centro em 27% da altura, raio = 34% da largura. O chapéu tem ~90% da largura da cabeça
-            // e a aba fica um pouco acima dos olhos.
-            val raio = maxWidth * 0.34f
-            val largura = raio * 2f * 0.9f
-            val fonte = largura * 0.82f
-            val baseDoChapeu = maxHeight * 0.27f - raio * 0.45f
-            val densidade = LocalDensity.current
-            Box(
-                Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = baseDoChapeu - fonte * 1.05f)
-                    .size(largura, fonte * 1.1f),
-                contentAlignment = Alignment.BottomCenter,
-            ) {
-                Text(
-                    perfil.chapeu,
-                    fontSize = with(densidade) { fonte.toSp() },
-                    lineHeight = with(densidade) { (fonte * 1.05f).toSp() },
-                )
+            if (vivo) {
+                CriancaAnimada(perfil, acenando, humor, falando)
+            } else {
+                CriancaParada(perfil, humor)
+            }
+            // Chapéu comprado na loja, em cima da cabeça do desenho antigo (centrado, na altura toda).
+            if (perfil.chapeu.isNotEmpty()) {
+                // Cabeça: centro em 27% da altura, raio = 34% da largura. O chapéu tem ~90% da largura da cabeça
+                // e a aba fica um pouco acima dos olhos.
+                val larguraDoDesenho = if (maxWidth < maxHeight * PROPORCAO_DESENHO_CRIANCA) maxWidth else maxHeight * PROPORCAO_DESENHO_CRIANCA
+                val topoDoDesenho = maxHeight - larguraDoDesenho / PROPORCAO_DESENHO_CRIANCA
+                val raio = larguraDoDesenho * 0.34f
+                val largura = raio * 2f * 0.9f
+                val fonte = largura * 0.82f
+                val baseDoChapeu = topoDoDesenho + (maxHeight - topoDoDesenho) * 0.27f - raio * 0.45f
+                val densidade = LocalDensity.current
+                Box(
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .offset(y = baseDoChapeu - fonte * 1.05f)
+                        .size(largura, fonte * 1.1f),
+                    contentAlignment = Alignment.BottomCenter,
+                ) {
+                    Text(
+                        perfil.chapeu,
+                        fontSize = with(densidade) { fonte.toSp() },
+                        lineHeight = with(densidade) { (fonte * 1.05f).toSp() },
+                    )
+                }
             }
         }
     }
@@ -243,6 +267,28 @@ private val TintaDoContorno = Paint().apply { colorFilter = ColorFilter.tint(Con
  * cima, o desenho colorido.
  */
 fun DrawScope.desenharCrianca(perfil: Perfil, aceno: Float?, olhosFechados: Boolean, humor: Humor) {
+    noQuadroDoDesenho(PROPORCAO_DESENHO_CRIANCA) { desenharCriancaNoQuadro(perfil, aceno, olhosFechados, humor) }
+}
+
+/**
+ * Roda [bloco] numa área com a [proporcao] do desenho antigo, a maior que cabe nesta, centrada e encostada
+ * embaixo (os pés no chão): o desenho com formas não fica esticado no quadro novo, mais largo.
+ */
+internal inline fun DrawScope.noQuadroDoDesenho(proporcao: Float, bloco: DrawScope.() -> Unit) {
+    val w = size.width
+    val h = size.height
+    val largura = minOf(w, h * proporcao)
+    val altura = largura / proporcao
+    val lado = (w - largura) / 2f
+    val cima = h - altura
+    if (lado < 0.5f && cima < 0.5f) {
+        bloco()
+    } else {
+        inset(lado, cima, lado, 0f) { bloco() }
+    }
+}
+
+private fun DrawScope.desenharCriancaNoQuadro(perfil: Perfil, aceno: Float?, olhosFechados: Boolean, humor: Humor) {
     val w = size.width
     val h = size.height
     if (w < 1f || h < 1f) return

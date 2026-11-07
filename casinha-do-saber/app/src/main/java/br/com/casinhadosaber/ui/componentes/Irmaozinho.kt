@@ -7,7 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import br.com.casinhadosaber.dominio.Aparencia
@@ -50,14 +51,15 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import androidx.compose.ui.graphics.Canvas as ComposeCanvas
 
-/** Proporção largura/altura do desenho do irmãozinho (mais gordinho que a criança). */
-const val PROPORCAO_IRMAO = 0.74f
+/** Proporção do desenho antigo do irmãozinho (feito com formas), usado como reserva. */
+const val PROPORCAO_DESENHO_IRMAO = 0.74f
 
 /**
  * O irmãozinho (ou a irmãzinha) da criança: pequeno, cabeçudo, de jardineira, com a mesma pele e o mesmo
  * cabelo da criança do [perfil] (os dois são da mesma família). O gênero e o nome vêm de `perfil.irmao`.
+ * Monta as camadas 3D (`assets/arte/irmao_*`); se faltar alguma, usa o desenho antigo.
  * [humor] usa os mesmos rostos da criança; [acenando] faz um bracinho dar tchau. Com [animado] falso, a figura
- * é desenhada uma vez e só copiada (listas e miniaturas).
+ * é composta uma vez e só copiada (listas e miniaturas).
  */
 @Composable
 fun Irmaozinho(
@@ -67,12 +69,32 @@ fun Irmaozinho(
     acenando: Boolean = false,
     animado: Boolean = true,
 ) {
-    Box(
+    val contexto = LocalContext.current
+    val emCamadas = remember(perfil) { ComposicaoDosPersonagens.podeUsar(contexto, PersonagemDaArte.IRMAO, perfil) }
+    BoxWithConstraints(
         modifier
             .aspectRatio(PROPORCAO_IRMAO)
             .semantics { contentDescription = perfil.irmao.nomeDeFrase },
     ) {
-        if (animado && animacoesLigadas()) {
+        val vivo = animado && animacoesLigadas()
+        if (emCamadas) {
+            PersonagemEmCamadas(
+                personagem = PersonagemDaArte.IRMAO,
+                perfil = perfil,
+                humor = humor,
+                acenando = acenando,
+                falando = false,
+                vivo = vivo,
+                largura = maxWidth,
+                altura = maxHeight,
+                chapeu = "",
+                // Pisca num ritmo diferente da criança: os dois nunca piscam juntos.
+                ritmoDoPiscar = 3100,
+                // Bebê balança de um lado para o outro (e não só respira), bem de leve.
+                ginga = 2.5f,
+                reserva = { q -> desenharIrmaozinho(perfil, null, q.olhosFechados, q.humor) },
+            )
+        } else if (vivo) {
             IrmaoAnimado(perfil, humor, acenando)
         } else {
             Spacer(
@@ -129,6 +151,10 @@ private object PosesDoIrmao : LinkedHashMap<ChaveDoIrmao, ImageBitmap>(16, 0.75f
  * direções numa camada de uma cor só, feita na CPU e guardada por pose) e o desenho colorido por cima.
  */
 fun DrawScope.desenharIrmaozinho(perfil: Perfil, aceno: Float?, olhosFechados: Boolean, humor: Humor) {
+    noQuadroDoDesenho(PROPORCAO_DESENHO_IRMAO) { desenharIrmaozinhoNoQuadro(perfil, aceno, olhosFechados, humor) }
+}
+
+private fun DrawScope.desenharIrmaozinhoNoQuadro(perfil: Perfil, aceno: Float?, olhosFechados: Boolean, humor: Humor) {
     val w = size.width
     val h = size.height
     if (w < 1f || h < 1f) return

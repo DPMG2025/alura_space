@@ -580,15 +580,27 @@ class CapturasTest {
     /**
      * Regressão: o chapéu fica na cabeça da criança. Cada criança é desenhada com e sem cada chapéu,
      * no mesmo quadro (o relógio parado deixa as animações iguais) e com medidas em pixels inteiros.
-     * A diferença entre as duas imagens é o chapéu; a caixa dela tem que encostar na cabeça
-     * (centro em 27% da altura, raio de 34% da largura, como em Crianca.kt), centrada, sem cobrir o rosto.
+     * A diferença entre as duas imagens é o chapéu; a caixa dela tem que encostar na cabeça, centrada, sem
+     * cobrir o rosto. A cabeça vem da âncora do manifesto da arte 3D (`crianca_cabeca`: `cabeca` e
+     * `topoDaCabeca`), posta na caixa da criança pela mesma conta que o componente usa.
      */
     @Test fun chapeuFicaNaCabeca() {
         val narrador = Narrador(RuntimeEnvironment.getApplication()).apply { ativo = false }
         val sons = Sons().apply { ativo = false }
         val chapeus = listOf("") + Loja.produtos.filter { it.categoria == br.com.casinhadosaber.dominio.Categoria.CHAPEU }.map { it.valor }
-        // Menina com o penteado sem laço (o laço some quando há chapéu e entraria na diferença).
+        // Menina com tranças (o laço dos coques some quando há chapéu e entraria na diferença).
         val perfis = listOf(menina.copy(estiloCabelo = 2), menino)
+        val app = RuntimeEnvironment.getApplication()
+        for (p in perfis) {
+            org.junit.Assert.assertTrue(
+                "a criança $p devia usar as camadas 3D",
+                br.com.casinhadosaber.ui.componentes.ComposicaoDosPersonagens.podeUsar(app, br.com.casinhadosaber.ui.componentes.PersonagemDaArte.CRIANCA, p),
+            )
+        }
+        val cabeca = br.com.casinhadosaber.ui.componentes.ArteDoApp.info(app, "crianca_cabeca")
+            ?: throw AssertionError("crianca_cabeca fora do manifesto")
+        val centroDaCabeca = cabeca.ancoras["cabeca"] ?: throw AssertionError("sem a âncora 'cabeca'")
+        val topoDaCabeca = cabeca.ancoras["topoDaCabeca"] ?: throw AssertionError("sem a âncora 'topoDaCabeca'")
         regra.mainClock.autoAdvance = false
         regra.setContent {
             TemaCasinha {
@@ -597,9 +609,9 @@ class CapturasTest {
                         for ((i, p) in perfis.withIndex()) {
                             androidx.compose.foundation.layout.Row {
                                 for ((j, c) in chapeus.withIndex()) {
-                                    // 125 dp de altura dá 77,5 dp de largura: 155 x 370 px inteiros em xhdpi.
+                                    // 130 dp de altura dá 85 dp de largura (quadro 170 x 260): 170 x 380 px inteiros em xhdpi.
                                     Box(Modifier.testTag("chapeu_${i}_$j").padding(top = 60.dp)) {
-                                        br.com.casinhadosaber.ui.componentes.Crianca(p.copy(chapeu = c), Modifier.height(125.dp), animado = false)
+                                        br.com.casinhadosaber.ui.componentes.Crianca(p.copy(chapeu = c), Modifier.height(130.dp), animado = false)
                                     }
                                 }
                             }
@@ -629,9 +641,15 @@ class CapturasTest {
             val sem = imagem(i, 0)
             val w = sem.width
             val alturaCrianca = sem.height - topoDaCrianca
-            val raio = 0.34f * w
-            val centroX = w / 2f
-            val centroY = topoDaCrianca + 0.27f * alturaCrianca
+            // A cabeça na captura: o quadro da arte posto na caixa da criança (pés em apoioNaCaixa da altura).
+            val caixa = br.com.casinhadosaber.ui.componentes.CamadasDosPersonagens.caixaDoQuadro(
+                cabeca, w.toFloat(), alturaCrianca, br.com.casinhadosaber.ui.componentes.PersonagemDaArte.CRIANCA.apoioNaCaixa,
+            )
+            val centroX = caixa.x(centroDaCabeca.x.toFloat())
+            val centroY = topoDaCrianca + caixa.y(centroDaCabeca.y.toFloat())
+            val topoY = topoDaCrianca + caixa.y(topoDaCabeca.y.toFloat())
+            val raio = centroY - topoY
+            org.junit.Assert.assertTrue("cabeça pequena demais na captura (raio $raio px)", raio > 20f)
             for (j in 1 until chapeus.size) {
                 val com = imagem(i, j)
                 org.junit.Assert.assertTrue("tamanhos diferentes", com.width == w && com.height == sem.height)
@@ -651,8 +669,8 @@ class CapturasTest {
                 org.junit.Assert.assertTrue("$qual não foi desenhado", n > 50)
                 org.junit.Assert.assertTrue("$qual cortado no alto (sai da área da criança)", y0 > 1)
                 org.junit.Assert.assertTrue(
-                    "$qual flutua acima da cabeça (base $y1, topo da cabeça ${centroY - raio})",
-                    y1 >= centroY - raio * 1.15f,
+                    "$qual flutua acima da cabeça (base $y1, topo da cabeça $topoY)",
+                    y1 >= topoY - raio * 0.15f,
                 )
                 org.junit.Assert.assertTrue("$qual cobre o rosto (base $y1, centro da cabeça $centroY)", y1 <= centroY)
                 org.junit.Assert.assertEquals("$qual fora do centro da cabeça", centroX, (x0 + x1) / 2f, raio * 0.3f)

@@ -39,6 +39,10 @@ class ManifestoDaArte(
                 usoAltura = numero(uso, "altura"),
                 apoio = ponto(m["apoio"], "$id.apoio"),
                 ancoras = ancoras.entries.associate { (k, v) -> (k as String) to ponto(v, "$id.ancoras.$k") },
+                grupo = m["grupo"] as? String ?: "",
+                tingir = m["tingir"] as? String,
+                ordem = (m["ordem"] as? Number)?.toInt() ?: 0,
+                personagem = m["personagem"] as? String,
             )
         }
 
@@ -59,6 +63,10 @@ data class PontoDaArte(val x: Int, val y: Int)
  * Uma imagem da arte: [largura] x [altura] em pixels, mostrada em até [usoLargura] x [usoAltura] dp.
  * [apoio] é onde a peça encosta no chão (meio da base); [ancoras] são pontos úteis do modelo
  * (centro da cabeça para chapéus, mãos para acessórios).
+ *
+ * Camadas dos personagens (Fase 1): [grupo] (parte do corpo), [tingir] (`"pele"`, `"cabelo"`, `"roupa"` ou
+ * nulo: a camada sai em neutro claro e o app tinge por multiplicação), [ordem] (de trás para a frente:
+ * desenhar da menor para a maior) e [personagem] (`"crianca"` ou `"irmao"`). Nos objetos ficam vazios.
  */
 data class InfoDaArte(
     val id: String,
@@ -70,6 +78,10 @@ data class InfoDaArte(
     val usoAltura: Int,
     val apoio: PontoDaArte,
     val ancoras: Map<String, PontoDaArte>,
+    val grupo: String = "",
+    val tingir: String? = null,
+    val ordem: Int = 0,
+    val personagem: String? = null,
 ) {
     /** [ponto] como fração da imagem (0 a 1), para posicionar em qualquer tamanho de exibição. */
     fun fracao(ponto: PontoDaArte): Pair<Float, Float> = ponto.x.toFloat() / largura to ponto.y.toFloat() / altura
