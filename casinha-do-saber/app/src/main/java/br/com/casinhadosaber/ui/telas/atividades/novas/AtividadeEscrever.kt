@@ -68,6 +68,7 @@ import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalCriancaAtiva
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
@@ -305,7 +306,9 @@ internal fun AtividadeEscrever(
                             .semantics { contentDescription = "Figura da palavra" },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(figura, fontSize = (ladoTopo.value * 0.6f).sp, lineHeight = (ladoTopo.value * 0.7f).sp)
+                        FiguraDaPergunta(figura, ladoTopo * 0.78f) {
+                            Text(figura, fontSize = (ladoTopo.value * 0.6f).sp, lineHeight = (ladoTopo.value * 0.7f).sp)
+                        }
                     }
                 }
                 Box(

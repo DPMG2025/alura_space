@@ -56,6 +56,7 @@ import br.com.casinhadosaber.dominio.Mercadinho
 import br.com.casinhadosaber.dominio.Trecho
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
@@ -331,7 +332,9 @@ internal fun AtividadeMercadinho(
             contentAlignment = Alignment.Center,
         ) {
             val l = ladoProduto / densidade.density
-            Text(mercadinho.produto, fontSize = (l * 0.72f).sp, lineHeight = (l * 0.84f).sp)
+            FiguraDaPergunta(mercadinho.produto, (l * 0.92f).dp) {
+                Text(mercadinho.produto, fontSize = (l * 0.72f).sp, lineHeight = (l * 0.84f).sp)
+            }
         }
         // Etiqueta pendurada no produto.
         val etiquetaL = px(124f)

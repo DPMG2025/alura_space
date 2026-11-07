@@ -61,6 +61,7 @@ import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
@@ -419,7 +420,9 @@ internal fun AtividadeCesta(
                 contentAlignment = Alignment.Center,
             ) {
                 val ladoDp = lado / densidade.density
-                Text(f.emoji, fontSize = (ladoDp * 0.76f).sp, lineHeight = (ladoDp * 0.86f).sp)
+                FiguraDaPergunta(f.emoji, (ladoDp * 0.92f).dp) {
+                    Text(f.emoji, fontSize = (ladoDp * 0.76f).sp, lineHeight = (ladoDp * 0.86f).sp)
+                }
             }
         }
 
@@ -572,7 +575,9 @@ internal fun AtividadeCesta(
                         tamanhoCarga = with(densidade) { lado.toDp() },
                     ) {
                         val ladoDp = lado / densidade.density
-                        Text(exemploDaMao.emoji, fontSize = (ladoDp * 0.76f).sp, lineHeight = (ladoDp * 0.86f).sp)
+                        FiguraDaPergunta(exemploDaMao.emoji, (ladoDp * 0.92f).dp) {
+                            Text(exemploDaMao.emoji, fontSize = (ladoDp * 0.76f).sp, lineHeight = (ladoDp * 0.86f).sp)
+                        }
                     }
                 }
             }

@@ -60,6 +60,7 @@ import br.com.casinhadosaber.dominio.Vocabulario
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
@@ -513,7 +514,9 @@ private fun PesoDesenhado(valor: Int, figura: String, numeros: Boolean, ladoDp: 
                 for (l in 0 until linhas) {
                     androidx.compose.foundation.layout.Row {
                         for (k in 0 until min(porLinha, valor - l * porLinha)) {
-                            Text(emoji, fontSize = (tamanho * 0.8f).sp, lineHeight = (tamanho * 0.95f).sp)
+                            FiguraDaPergunta(emoji, tamanho.dp) {
+                                Text(emoji, fontSize = (tamanho * 0.8f).sp, lineHeight = (tamanho * 0.95f).sp)
+                            }
                         }
                     }
                 }

@@ -42,6 +42,7 @@ import br.com.casinhadosaber.dominio.Trecho
 import br.com.casinhadosaber.dominio.Visual
 import br.com.casinhadosaber.dominio.Vocabulario
 import br.com.casinhadosaber.dominio.pt
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.SetaDesenhada
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ehTexto
@@ -145,7 +146,9 @@ internal fun VisualN4(v: Visual, lado: Dp, corTexto: Color = Cores.Texto, modifi
                 val figuras = figurasDe(v.emoji)
                 if (figuras.size <= 1) {
                     val t = lado.value * 0.6f * v.escala.coerceIn(0.4f, 1.3f)
-                    Text(v.emoji, fontSize = t.sp, lineHeight = (t * 1.15f).sp)
+                    FiguraDaPergunta(v.emoji, (t * 1.2f).dp) {
+                        Text(v.emoji, fontSize = t.sp, lineHeight = (t * 1.15f).sp)
+                    }
                 } else {
                     // Quantidade: grade como num dado.
                     val porLinha = if (figuras.size <= 4) 2 else 3
@@ -155,7 +158,9 @@ internal fun VisualN4(v: Visual, lado: Dp, corTexto: Color = Cores.Texto, modifi
                             Row {
                                 for (f in linha) {
                                     Box(Modifier.size(celula), contentAlignment = Alignment.Center) {
-                                        Text(f, fontSize = (celula.value * 0.7f).sp, lineHeight = (celula.value * 0.84f).sp)
+                                        FiguraDaPergunta(f, celula * 0.92f) {
+                                            Text(f, fontSize = (celula.value * 0.7f).sp, lineHeight = (celula.value * 0.84f).sp)
+                                        }
                                     }
                                 }
                             }
