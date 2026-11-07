@@ -19,14 +19,14 @@ import { laco3D } from './laco3D.js';
  * Neutro claro para tingir no app por multiplicação (pele, cabelo, cor da roupa). Quase branco: no sol a
  * cor fica perto da cor escolhida na paleta; na sombra escurece junto.
  */
-const NEUTRO = '#ffffff';
+const NEUTRO = '#d4d4d4';
 const matPele = () => plastico(NEUTRO, { rugosidade: 0.55, verniz: 0.12, ambiente: 0.5 });
 const matCabelo = () => plastico(NEUTRO, { rugosidade: 0.62, verniz: 0.05, ambiente: 0.5 });
 /** Mesmo cabelo em preto brilhante: vira a camada de brilho (só os reflexos, em branco translúcido). */
 const matCabeloBrilho = () => plastico('#000000', { rugosidade: 0.3, verniz: 1, rugosidadeVerniz: 0.18, ambiente: 1.1 });
 const matRoupa = () => plastico(NEUTRO, { rugosidade: 0.6, verniz: 0.2, ambiente: 0.5 });
 /** Sobrancelhas: cinza médio, tingidas com a cor do cabelo ficam um tom mais escuras que ele. */
-const matSobrancelha = () => plastico('#8a8a8a', { rugosidade: 0.7, verniz: 0, ambiente: 0.5 });
+const matSobrancelha = () => plastico('#6e6e6e', { rugosidade: 0.7, verniz: 0, ambiente: 0.5 });
 
 const matRecorte = new THREE.MeshBasicMaterial({
   color: 0x000000, transparent: true, opacity: 0, blending: THREE.NoBlending, depthWrite: true, toneMapped: false,
@@ -204,9 +204,10 @@ export function sobrancelhas(R, humor) {
   const g = new THREE.Group();
   const m = matSobrancelha();
   for (const lado of [-1, 1]) {
-    const sobe = { feliz: 0, torcendo: 0.05, surpreso: 0.085, pensando: lado < 0 ? 0.09 : 0.0 }[humor];
-    const s = arco(R * 0.12, R * 0.03, Math.PI * 0.55, m);
-    naSuperficie(s, R, lado * R * (OLHO_X + 0.01), R * (OLHO_Y + 0.27 + sobe), -R * 0.008);
+    const sobe = { feliz: 0, torcendo: 0.035, surpreso: 0.06, pensando: lado < 0 ? 0.06 : -0.01 }[humor];
+    const s = arco(R * 0.13, R * 0.038, Math.PI * 0.55, m);
+    // o arco fica 0,12 R acima do ponto de apoio: o alto da sobrancelha fica em OLHO_Y + 0,3 R
+    naSuperficie(s, R, lado * R * (OLHO_X + 0.01), R * (OLHO_Y + 0.185 + sobe), -R * 0.012);
     // pensando: a sobrancelha de baixo inclina para dentro
     const giro = humor === 'pensando' && lado > 0 ? 0.25 : humor === 'surpreso' ? 0 : -lado * 0.06;
     s.rotateZ(giro);
@@ -324,8 +325,10 @@ export function cabelo(R, menina, estilo, m) {
   const tras = new THREE.Group(), frente = new THREE.Group();
   const base = calota(R, m, menina ? {} : { abre: 0.5, inclina: -0.5, escala: 1.05 });
   frente.add(base);
-  const nuca = bola(R * (menina ? 1.05 : 1.0), m, 48);
-  em(nuca, 0, -R * 0.02, -R * (menina ? 0.12 : 0.2));
+  // nuca: atrás da cabeça e um pouco acima, para aparecer só dos lados de cima (não embaixo do queixo)
+  // (o alto dela fica por baixo da calota, que tem raio 1,05 a 1,06 R)
+  const nuca = bola(R * (menina ? 1.0 : 0.98), m, 48);
+  em(nuca, 0, R * 0.04, -R * (menina ? 0.16 : 0.2));
   tras.add(nuca);
   let pontasDasTrancas = [];
   if (estilo === 'liso') {
@@ -375,7 +378,7 @@ export function cabelo(R, menina, estilo, m) {
     frente.add(mechas(R, m, { curta: true }));
     const dirs = [[-0.62, 0.62], [-0.32, 0.86], [0.0, 0.95], [0.32, 0.86], [0.62, 0.62], [-0.16, 0.66], [0.16, 0.66]];
     for (const [x, y] of dirs) {
-      const p = ponta(R * 0.19, R * 0.42, m);
+      const p = ponta(R * 0.2, R * 0.36, m);
       naSuperficie(p, R * 0.98, x * R, y * R, 0);
       frente.add(p);
     }

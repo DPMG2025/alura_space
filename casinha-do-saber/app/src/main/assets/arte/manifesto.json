@@ -428,6 +428,120 @@
         "largura": 170
       }
     },
+    "crianca_cabelo_brilho_tras_menina_cacheado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_tras_menina_cacheado.webp",
+      "grupo": "cabeloBrilhoTras",
+      "largura": 340,
+      "ordem": 22,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_brilho_tras_menina_liso": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_tras_menina_liso.webp",
+      "grupo": "cabeloBrilhoTras",
+      "largura": 340,
+      "ordem": 22,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_brilho_tras_menina_trancas": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_tras_menina_trancas.webp",
+      "grupo": "cabeloBrilhoTras",
+      "largura": 340,
+      "ordem": 22,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_brilho_tras_menino_cacheado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_tras_menino_cacheado.webp",
+      "grupo": "cabeloBrilhoTras",
+      "largura": 340,
+      "ordem": 22,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_brilho_tras_menino_espetado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_tras_menino_espetado.webp",
+      "grupo": "cabeloBrilhoTras",
+      "largura": 340,
+      "ordem": 22,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_brilho_tras_menino_liso": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_tras_menino_liso.webp",
+      "grupo": "cabeloBrilhoTras",
+      "largura": 340,
+      "ordem": 22,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
     "crianca_cabelo_frente_menina_cacheado": {
       "altura": 520,
       "ancoras": {},
