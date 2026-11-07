@@ -1,54 +1,34 @@
 package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.unit.Dp
-import br.com.casinhadosaber.ui.componentes.caminhoEstrela
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-import kotlin.math.cos
-import kotlin.math.sin
-import br.com.casinhadosaber.ui.componentes.BotaoRedondo
-import br.com.casinhadosaber.ui.componentes.MaoGuia
-import androidx.compose.foundation.border
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -59,27 +39,43 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.Categoria
+import br.com.casinhadosaber.dominio.Crescimento
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Fase
-import br.com.casinhadosaber.dominio.Loja
-import br.com.casinhadosaber.dominio.Produto
+import br.com.casinhadosaber.dominio.Historia
 import br.com.casinhadosaber.dominio.ItemCasa
 import br.com.casinhadosaber.dominio.ItensDaCasa
+import br.com.casinhadosaber.dominio.Loja
+import br.com.casinhadosaber.dominio.ParteDaFala
 import br.com.casinhadosaber.dominio.Perfil
+import br.com.casinhadosaber.dominio.Produto
+import br.com.casinhadosaber.dominio.VozesDaFamilia
 import br.com.casinhadosaber.dominio.en
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.dominio.tirando
@@ -87,37 +83,55 @@ import br.com.casinhadosaber.dominio.usa
 import br.com.casinhadosaber.dominio.vestindo
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.BalaoDeFala
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
-import br.com.casinhadosaber.ui.componentes.Confete
-import br.com.casinhadosaber.ui.componentes.EnfeiteDoFundo
-import br.com.casinhadosaber.ui.componentes.ExplosaoDeEstrelas
-import br.com.casinhadosaber.ui.componentes.RaiosDeLuz
-import br.com.casinhadosaber.ui.componentes.FundoDecorado
-import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
-import br.com.casinhadosaber.ui.componentes.IconeDoItem
+import br.com.casinhadosaber.ui.componentes.BotaoRedondo
+import br.com.casinhadosaber.ui.componentes.ChuvaDeConfete
+import br.com.casinhadosaber.ui.componentes.Confete3D
 import br.com.casinhadosaber.ui.componentes.Crianca
+import br.com.casinhadosaber.ui.componentes.EstrelaDoPremio
+import br.com.casinhadosaber.ui.componentes.ExplosaoDeEstrelas
 import br.com.casinhadosaber.ui.componentes.Humor
+import br.com.casinhadosaber.ui.componentes.IconeDeCasaBranca
+import br.com.casinhadosaber.ui.componentes.IconeDoItem
 import br.com.casinhadosaber.ui.componentes.Irmaozinho
-import br.com.casinhadosaber.ui.componentes.Estrela
+import br.com.casinhadosaber.ui.componentes.LadoDaCauda
+import br.com.casinhadosaber.ui.componentes.MascoteAnimado
+import br.com.casinhadosaber.ui.componentes.NoPalco
+import br.com.casinhadosaber.ui.componentes.PROPORCAO_CRIANCA
+import br.com.casinhadosaber.ui.componentes.PROPORCAO_IRMAO
+import br.com.casinhadosaber.ui.componentes.PalcoDaFesta
+import br.com.casinhadosaber.ui.componentes.PersonagemDaArte
+import br.com.casinhadosaber.ui.componentes.PilulaDeMoedas
+import br.com.casinhadosaber.ui.componentes.PresenteQueAbre
+import br.com.casinhadosaber.ui.componentes.RaiosDeLuz
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import br.com.casinhadosaber.ui.componentes.apoioDoPresente
+import br.com.casinhadosaber.ui.componentes.caminhoEstrela
+import br.com.casinhadosaber.ui.componentes.proporcaoDoPresente
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import kotlinx.coroutines.delay
-import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.first
-import br.com.casinhadosaber.dominio.Crescimento
-import br.com.casinhadosaber.dominio.Historia
-import br.com.casinhadosaber.ui.componentes.MascoteAnimado
+
+/** Fundo do prêmio (maquete 3, `prototipo/premio.html`): roxo em cima, lilás no meio e rosa embaixo. */
+private val FUNDO_DO_PREMIO = Brush.verticalGradient(
+    0f to Color(0xFF8A6CFF),
+    0.4f to Color(0xFFB783FF),
+    0.85f to Color(0xFFFF9FCF),
+    1f to Color(0xFFFFC2DC),
+)
+
+/** Verde do botão "Pôr na casinha" (`--c`, `--c2` e `--b` do protótipo). */
+private val VERDE_DO_BOTAO = Color(0xFF34C46A)
+private val LABIO_DO_VERDE = Color(0xFF1C9552)
 
 /**
- * Comemoração ao vencer uma fase. Na primeira vitória, um presente aparece:
- * a criança toca para abrir e descobre a peça nova da casa. Depois das 40 peças,
- * o presente é um [brinde] da loja (já aplicado ao estado pelo domínio) e mais moedinhas.
+ * Comemoração ao vencer uma fase, como a maquete 3 (visual brinquedo 3D): fundo roxo com raios, "Parabéns" de
+ * contorno, três estrelas 3D, as moedas ganhas em pilhas que se contam e, num pódio, a criança e o irmãozinho
+ * torcendo dos lados do presente. Na primeira vitória o presente aparece: a criança toca, ele abre em quadros e a
+ * peça nova da casa (o item 3D) sobe de dentro da caixa. Depois das 40 peças, o presente é um [brinde] da loja (já
+ * aplicado ao estado pelo domínio) e mais moedinhas.
  */
 @Composable
 fun TelaPremio(
@@ -144,6 +158,7 @@ fun TelaPremio(
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
+    val contexto = LocalContext.current
     var estrelasVisiveis by remember { mutableIntStateOf(0) }
     var aberto by remember { mutableStateOf(false) }
     var confete by remember { mutableIntStateOf(0) }
@@ -191,10 +206,9 @@ fun TelaPremio(
         snapshotFlow { cenaDoChefao == null && !festaDoMascote }.first { it }
         sons.acerto()
         // A vitória é uma das frases que a família pode gravar (área dos pais); o resto é a voz do aparelho.
-        val parabens = if (mensagem != null) br.com.casinhadosaber.dominio.ParteDaFala(pt(mensagem))
-        else br.com.casinhadosaber.dominio.VozesDaFamilia.vitoria(nome, estrelas)
+        val parabens = if (mensagem != null) ParteDaFala(pt(mensagem)) else VozesDaFamilia.vitoria(nome, estrelas)
         narrador.falarPartes(
-            if (temPresente) listOf(parabens, br.com.casinhadosaber.dominio.ParteDaFala(pt("Toque no presente para abrir!"))) else listOf(parabens),
+            if (temPresente) listOf(parabens, ParteDaFala(pt("Toque no presente para abrir!"))) else listOf(parabens),
         )
         for (i in 1..estrelas) {
             delay(380)
@@ -217,7 +231,7 @@ fun TelaPremio(
     fun marcarCentro(c: LayoutCoordinates) {
         centroNaJanela = c.positionInRoot() + Offset(c.size.width / 2f, c.size.height / 2f)
     }
-    FundoDecorado(corDaTrilha, Modifier.fillMaxSize(), enfeite = EnfeiteDoFundo.Estrelas) {
+    Box(Modifier.fillMaxSize().background(FUNDO_DO_PREMIO)) {
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
@@ -227,49 +241,65 @@ fun TelaPremio(
                 tamanhoDaTela = Size(it.size.width.toFloat(), it.size.height.toFloat())
             },
     ) {
-        // Tela alta: a criança cresce e fica num "palco" (morrinho) que ocupa o terço de baixo.
+        // Tela alta: tudo um pouco maior (o pódio continua na mesma largura).
         val alta = maxHeight > 720.dp
+        val baixa = maxHeight < 600.dp
+        val larguraDaTela = maxWidth
         val centro = centroNaJanela
         val fracao = if (centro != null && tamanhoDaTela.width > 0f && tamanhoDaTela.height > 0f) {
             Offset((centro.x - origemDaTela.x) / tamanhoDaTela.width, (centro.y - origemDaTela.y) / tamanhoDaTela.height)
         } else {
-            Offset(0.5f, 0.42f)
+            Offset(0.5f, 0.5f)
         }
-        RaiosDeLuz(alfa = 0.32f, quantidade = 14, centroX = fracao.x, centroY = fracao.y)
+        RaiosDeLuz(alfa = 0.3f, quantidade = 16, centroX = fracao.x, centroY = fracao.y)
+        // Brilho quente atrás do presente (o `radial-gradient` do protótipo).
         Canvas(Modifier.fillMaxSize()) {
-            val topo = size.height * 0.80f
-            drawOval(corDaTrilha.copy(alpha = 0.16f), Offset(-size.width * 0.35f, topo - size.height * 0.04f), Size(size.width * 1.7f, size.height * 0.5f))
-            drawOval(corDaTrilha.copy(alpha = 0.22f), Offset(-size.width * 0.15f, topo), Size(size.width * 1.3f, size.height * 0.4f))
-            // Brilho do palco: luz no alto do morrinho, onde a criança comemora.
-            drawOval(
-                Brush.radialGradient(listOf(Color.White.copy(alpha = 0.35f), Color.Transparent), Offset(size.width / 2, topo + size.height * 0.04f), size.width * 0.5f),
-                Offset(0f, topo - size.height * 0.08f),
-                Size(size.width, size.height * 0.24f),
+            val c = Offset(size.width * fracao.x, size.height * fracao.y)
+            val r = size.minDimension * 0.62f
+            drawCircle(
+                Brush.radialGradient(
+                    0f to Color(0xF2FFF7C8),
+                    0.2f to Color(0x8CFFD678),
+                    1f to Color(0x00FFBEDC),
+                    center = c,
+                    radius = r,
+                ),
+                r,
+                c,
             )
         }
+        ChuvaDeConfete()
         Column(
             Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .heightIn(min = maxHeight)
-                .padding(20.dp),
+                .padding(horizontal = 12.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            // Três blocos (parabéns, presente, criança e botões) distribuídos na altura toda.
+            // Três blocos (parabéns, palco, botões) distribuídos na altura toda.
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
+                TextoComContorno(
                     if (nome.isBlank()) "Parabéns!" else "Parabéns, $nome!",
-                    style = MaterialTheme.typography.headlineLarge.copy(shadow = SOMBRA_DO_TITULO),
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
+                    estilo = MaterialTheme.typography.headlineLarge.let {
+                        if (alta) it.copy(fontSize = 40.sp, lineHeight = 44.sp) else it
+                    },
+                    maxLinhas = 2,
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(if (alta) 6.dp else 2.dp))
+                // Três estrelas 3D: a do meio maior e mais alta, as dos lados inclinadas para fora (maquete 3).
+                val lado = if (alta) 84.dp else if (baixa) 58.dp else 70.dp
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = if (!temPresente) Modifier.onGloballyPositioned(::marcarCentro) else Modifier,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.Bottom,
+                    modifier = Modifier.semantics(mergeDescendants = true) {
+                        contentDescription = "$estrelas de 3 estrelas"
+                    }.then(if (!temPresente) Modifier.onGloballyPositioned(::marcarCentro) else Modifier),
                 ) {
                     for (i in 1..3) {
+                        val meio = i == 2
+                        val tamanho = if (meio) lado * 1.22f else lado
                         val escala = remember { Animatable(0.6f) }
                         LaunchedEffect(estrelasVisiveis >= i) {
                             if (estrelasVisiveis >= i) {
@@ -278,11 +308,15 @@ fun TelaPremio(
                             }
                         }
                         // Cada estrela que pousa estoura em faíscas (o estouro passa por fora da estrela).
-                        Box(contentAlignment = Alignment.Center) {
-                            Estrela(
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.offset(y = if (meio) (-lado * 0.16f) else 0.dp)) {
+                            EstrelaDoPremio(
                                 estrelasVisiveis >= i,
-                                Modifier.graphicsLayer { scaleX = escala.value; scaleY = escala.value },
-                                tamanho = 64.dp,
+                                tamanho,
+                                Modifier.graphicsLayer {
+                                    scaleX = escala.value
+                                    scaleY = escala.value
+                                    rotationZ = when (i) { 1 -> -12f; 3 -> 12f; else -> 0f }
+                                },
                             )
                             ExplosaoDeEstrelas(
                                 disparo = if (estrelasVisiveis >= i) i else 0,
@@ -296,124 +330,151 @@ fun TelaPremio(
                     }
                 }
                 if (moedas > 0) {
-                    Spacer(Modifier.height(6.dp))
-                    Text("+$moedas 🪙", style = MaterialTheme.typography.headlineMedium, color = Color.White)
+                    Spacer(Modifier.height(4.dp))
+                    PilulaDeMoedas(moedas)
                 }
             }
 
-            // Meio: o presente (ou o recado, quando a fase já tinha dado presente).
+            // Meio: o nome do que ganhou (ou o convite para abrir) e o palco com o presente e os irmãos.
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (item != null) {
-                    Text(
-                        if (aberto) "Você ganhou:" else "Um presente para a sua casa!",
-                        style = MaterialTheme.typography.titleLarge,
-                        textAlign = TextAlign.Center,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Presente(
-                        modifier = Modifier.onGloballyPositioned(::marcarCentro),
-                        nomeAberto = item.nome,
-                        aberto = aberto,
-                        onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
-                        onAbrir = ::abrir,
-                    ) { m -> IconeDoItem(item, 130.dp, m) }
-                    if (aberto) {
-                        Text(item.nome, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
-                        Text("Em inglês: ${item.nomeEn}", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)
+                val estiloDoConvite = MaterialTheme.typography.titleLarge
+                when {
+                    item != null -> if (aberto) {
+                        TextoComContorno(item.nome, estilo = MaterialTheme.typography.headlineMedium)
+                        Text(
+                            "Em inglês: ${item.nomeEn}",
+                            style = MaterialTheme.typography.titleMedium.copy(shadow = SOMBRA_DO_TITULO),
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                        )
+                    } else {
+                        TextoComContorno("Um presente para a sua casa!", estilo = estiloDoConvite, espessura = 3.dp, profundidade = 2.dp, maxLinhas = 2)
                     }
-                } else if (brindeDaLoja != null) {
-                    Text(
-                        if (aberto) "Você ganhou:" else "Um presente da lojinha!",
-                        style = MaterialTheme.typography.titleLarge,
-                        textAlign = TextAlign.Center,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Presente(
-                        modifier = Modifier.onGloballyPositioned(::marcarCentro),
-                        nomeAberto = brindeDaLoja.nome,
-                        aberto = aberto,
-                        onToque = { sons.chacoalhar(); vibracao.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
-                        onAbrir = ::abrir,
-                    ) { m -> DesenhoDoBrinde(brindeDaLoja, 130.dp, m, perfil) }
-                    if (aberto) {
-                        Text(brindeDaLoja.nome, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
-                        Spacer(Modifier.height(6.dp))
-                        // As moedinhas extras do brinde, num selo dourado.
-                        Row(
-                            Modifier
-                                .background(Cores.Estrela, RoundedCornerShape(50))
-                                .border(3.dp, Color(0xFFE0A800), RoundedCornerShape(50))
-                                .padding(horizontal = 16.dp, vertical = 4.dp)
-                                .semantics(mergeDescendants = true) { contentDescription = "Mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas" },
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text("+${EstadoJogo.MOEDAS_DO_BRINDE} 🪙", style = MaterialTheme.typography.headlineMedium)
+                    brindeDaLoja != null -> if (aberto) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextoComContorno(brindeDaLoja.nome, estilo = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f, fill = false), maxLinhas = 2)
+                            // As moedinhas extras do brinde, em pilhas que se contam.
+                            PilulaDeMoedas(EstadoJogo.MOEDAS_DO_BRINDE, descricao = "Mais ${EstadoJogo.MOEDAS_DO_BRINDE} moedinhas")
                         }
+                    } else {
+                        TextoComContorno("Um presente da lojinha!", estilo = estiloDoConvite, espessura = 3.dp, profundidade = 2.dp, maxLinhas = 2)
                     }
-                } else {
-                    Text(
+                    else -> BalaoDeFala(
                         "Você já ganhou o presente desta fase.\nJogue uma fase nova para ganhar mais!",
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center,
+                        modifier = Modifier.widthIn(max = 340.dp),
+                        cauda = LadoDaCauda.Nenhum,
                     )
                 }
-            }
+                Spacer(Modifier.height(4.dp))
 
-            // Embaixo: a criança comemorando no morrinho e, depois de abrir, os botões.
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                perfil?.let {
-                    // O chapéu, a roupa ou o acessório ganho aparece na criança só depois de abrir (surpresa).
-                    val gaveta = brindeDaLoja?.let { b -> Loja.gavetaDe(b) }
-                    val vestido = when {
+                // O chapéu, a roupa ou o acessório ganho aparece na criança só depois de abrir (surpresa).
+                val gaveta = brindeDaLoja?.let { b -> Loja.gavetaDe(b) }
+                val vestido = perfil?.let {
+                    when {
                         brindeDaLoja == null || gaveta == null -> it
                         aberto -> it.vestindo(brindeDaLoja)
                         it.usa(brindeDaLoja) -> it.tirando(gaveta)
                         else -> it
                     }
-                    // Com o irmãozinho e o mascote juntos, os três encolhem um pouco para caber lado a lado.
-                    val fator = if (it.irmao.ligado && mascote?.especie != null) 0.82f else 1f
-                    val alturaCheia = when {
-                        !temPresente -> if (alta) 210.dp else 170.dp
-                        aberto -> if (alta) 124.dp else 110.dp
-                        else -> if (alta) 210.dp else 160.dp
+                }
+                val comIrmao = perfil?.irmao?.ligado == true
+                // Com o irmãozinho e o mascote juntos, todos encolhem um pouco para caber no pódio.
+                val fator = if (comIrmao && mascote?.especie != null) 0.86f else 1f
+                val alturaDaCrianca = (if (alta) 150.dp else if (baixa) 100.dp else 124.dp) * fator
+                val alturaDoIrmao = alturaDaCrianca * 0.8f
+                val larguraDoPresente = if (alta) 206.dp else if (baixa) 150.dp else 180.dp
+                val larguraDoPalco = minOf(larguraDaTela - 24.dp, if (alta) 360.dp else 330.dp)
+                val apoio = remember { apoioDoPresente(contexto) }
+                val proporcao = remember { proporcaoDoPresente(contexto) }
+                val pecas = buildList {
+                    if (temPresente) {
+                        add(
+                            NoPalco("centro", larguraDoPresente, larguraDoPresente * proporcao, apoio.first, apoio.second, acima = 16.dp) { m ->
+                                PresenteQueAbre(
+                                    aberto = aberto,
+                                    largura = larguraDoPresente,
+                                    modifier = m
+                                        .onGloballyPositioned(::marcarCentro)
+                                        .semantics { contentDescription = if (aberto) (item?.nome ?: brindeDaLoja?.nome.orEmpty()) else "Presente. Toque para abrir." }
+                                        .clickable(enabled = !aberto, role = Role.Button, onClick = ::abrir),
+                                    reserva = { r -> Box(r, contentAlignment = Alignment.Center) { CaixaDePresente(Modifier.size(larguraDoPresente * 0.6f)) } },
+                                ) { p ->
+                                    if (item != null) IconeDoItem(item, larguraDoPresente * 0.52f, p)
+                                    else if (brindeDaLoja != null) DesenhoDoBrinde(brindeDaLoja, larguraDoPresente * 0.52f, p, perfil)
+                                }
+                            },
+                        )
                     }
-                    val altura = alturaCheia * fator
-                    Spacer(Modifier.height(12.dp))
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Crianca(vestido, Modifier.height(altura), acenando = true)
-                        // O irmãozinho comemora junto, com os bracinhos para cima.
-                        if (it.irmao.ligado) {
-                            Irmaozinho(it, Modifier.height(altura * 0.66f), humor = Humor.TORCENDO)
+                    if (vestido != null) {
+                        add(
+                            NoPalco("esquerda", alturaDaCrianca * PROPORCAO_CRIANCA, alturaDaCrianca, apoioY = PersonagemDaArte.CRIANCA.apoioNaCaixa) { m ->
+                                Crianca(vestido, m, humor = Humor.TORCENDO)
+                            },
+                        )
+                        if (comIrmao) {
+                            add(
+                                NoPalco("direita", alturaDoIrmao * PROPORCAO_IRMAO, alturaDoIrmao, apoioY = PersonagemDaArte.IRMAO.apoioNaCaixa) { m ->
+                                    Irmaozinho(vestido, m, humor = Humor.TORCENDO)
+                                },
+                            )
                         }
-                        // O mascote comemora ao lado da criança, do tamanho do estágio dele.
+                        // O mascote comemora junto, do tamanho do estágio dele: no lugar do irmãozinho, ou na
+                        // frente, entre a criança e o presente, quando o irmãozinho também está.
                         mascote?.especie?.let { e ->
-                            MascoteAnimado(e, Crescimento.estagio(fasesDepois), Modifier.size(altura * 0.62f), mascote.acessorioEmUso, mascote.nomeParaMostrar, pulando = true)
+                            val lado = alturaDaCrianca * 0.62f
+                            add(
+                                NoPalco(
+                                    if (comIrmao) "esquerda" else "direita", lado, lado, apoioY = 0.94f,
+                                    desvioX = if (comIrmao) 0.16f else 0f, desvioY = if (comIrmao) 0.3f else 0f,
+                                ) { m ->
+                                    MascoteAnimado(e, Crescimento.estagio(fasesDepois), m, mascote.acessorioEmUso, mascote.nomeParaMostrar, pulando = true)
+                                },
+                            )
                         }
                     }
                 }
-                Spacer(Modifier.height(16.dp))
+                PalcoDaFesta(larguraDoPalco, pecas)
+            }
+
+            // Embaixo: depois de abrir (ou logo, sem presente), "Pôr na casinha" e os botões redondos.
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 AnimatedVisibility(visible = !temPresente || aberto, enter = fadeIn() + scaleIn()) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         if (temPresente) {
-                            val texto = if (item != null) "🏠 Colocar na casa" else "🏠 Ver na casa"
-                            BotaoFofo(onClick = onColocarNaCasa, cor = Cores.Certo, modifier = Modifier.pulsando(), descricao = texto.removePrefix("🏠 ")) {
-                                Text(
-                                    texto,
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
-                                )
+                            // "Colocar na casa" e "Ver na casa" continuam sendo o nome do botão (os testes no emulador procuram).
+                            val texto = if (item != null) "Pôr na casinha" else "Ver na casinha"
+                            BotaoFofo(
+                                onClick = onColocarNaCasa,
+                                cor = VERDE_DO_BOTAO,
+                                corBase = LABIO_DO_VERDE,
+                                modifier = Modifier.fillMaxWidth().widthIn(max = 340.dp).padding(horizontal = 16.dp).pulsando(),
+                                descricao = if (item != null) "Colocar na casa" else "Ver na casa",
+                            ) {
+                                Row(
+                                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    IconeDeCasaBranca(VERDE_DO_BOTAO, Modifier.size(36.dp))
+                                    Spacer(Modifier.size(10.dp))
+                                    TextoComContorno(texto, estilo = MaterialTheme.typography.headlineMedium, corDoContorno = Cores.ContornoEscuro)
+                                }
                             }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                            BotaoRedondo("🗺️", "Voltar para o caminho", onVoltar, tamanho = 60.dp)
+                            BotaoRedondo("⬅️", "Voltar para o caminho", onVoltar, tamanho = 56.dp)
                             if (temProxima) {
                                 if (!temPresente) {
                                     BotaoFofo(onClick = onProxima, cor = corDaTrilha, corBase = Color(fase.trilha.corEscuraArgb), modifier = Modifier.pulsando(), descricao = "Próxima fase") {
-                                        Text("Próxima ▶", style = MaterialTheme.typography.headlineMedium, color = Color.White, modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp))
+                                        TextoComContorno(
+                                            "Próxima",
+                                            estilo = MaterialTheme.typography.headlineMedium,
+                                            corDoContorno = Cores.ContornoEscuro,
+                                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
+                                        )
                                     }
                                 } else {
-                                    BotaoRedondo("▶️", "Próxima fase", onProxima, tamanho = 60.dp)
+                                    BotaoRedondo("▶️", "Próxima fase", onProxima, tamanho = 56.dp)
                                 }
                             }
                         }
@@ -421,7 +482,7 @@ fun TelaPremio(
                 }
             }
         }
-        Confete(confete)
+        Confete3D(confete)
         cenaDoChefao?.let { texto -> CenaDaHistoria(fase, texto, chefao = true) { cenaDoChefao = null } }
         if (cenaDoChefao == null && festaDoMascote && mascote != null && fasesAntes != null) {
             FestaDoMascote(mascote, fasesAntes, fasesDepois) { festaDoMascote = false }
@@ -522,98 +583,12 @@ private fun DesenhoDoBrinde(p: Produto, lado: Dp, modifier: Modifier = Modifier,
     }
 }
 
-@Composable
-private fun Presente(
-    modifier: Modifier = Modifier,
-    nomeAberto: String,
-    aberto: Boolean,
-    onToque: () -> Unit,
-    onAbrir: () -> Unit,
-    conteudo: @Composable (Modifier) -> Unit,
-) {
-    var toques by remember { mutableIntStateOf(0) }
-    val escala = remember { Animatable(1f) }
-    val giro = remember { Animatable(0f) }
-    val escopo = rememberCoroutineScope()
-    val raios = rememberInfiniteTransition(label = "raios")
-    val anguloRaios by raios.animateFloat(0f, 360f, infiniteRepeatable(tween(9000, easing = LinearEasing)), label = "angulo")
-    // Mesmo sem tocar, a caixa dá pulinhos chamando a criança.
-    val chamar by raios.animateFloat(-4f, 4f, infiniteRepeatable(tween(260), RepeatMode.Reverse), label = "chamar")
-
-    LaunchedEffect(aberto) {
-        if (aberto) {
-            escala.snapTo(0.2f)
-            escala.animateTo(1f, spring(dampingRatio = 0.35f, stiffness = Spring.StiffnessLow))
-        }
-    }
-
-    fun tocar() {
-        if (aberto) return
-        // Um toque só abre o presente.
-        toques++
-        onAbrir()
-    }
-
-    Box(
-        modifier
-            .size(230.dp)
-            .semantics { contentDescription = if (aberto) nomeAberto else "Presente. Toque para abrir." }
-            .clickable(enabled = !aberto, role = Role.Button, onClick = ::tocar),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (aberto) {
-            Canvas(Modifier.fillMaxSize()) {
-                val c = center
-                val r = size.minDimension / 2
-                rotate(anguloRaios, c) {
-                    for (k in 0 until 12) {
-                        val a1 = Math.toRadians(k * 30.0)
-                        val a2 = Math.toRadians(k * 30.0 + 14)
-                        val raio = Path().apply {
-                            moveTo(c.x, c.y)
-                            lineTo(c.x + (cos(a1) * r).toFloat(), c.y + (sin(a1) * r).toFloat())
-                            lineTo(c.x + (cos(a2) * r).toFloat(), c.y + (sin(a2) * r).toFloat())
-                            close()
-                        }
-                        drawPath(raio, Color(0x66FFE680))
-                    }
-                }
-                drawCircle(Color.White.copy(alpha = 0.9f), r * 0.68f, c)
-            }
-            conteudo(Modifier.graphicsLayer { scaleX = escala.value; scaleY = escala.value })
-        } else {
-            MaoGuia(Modifier.align(Alignment.BottomEnd), espera = 1200)
-            Box(
-                Modifier
-                    .size(170.dp)
-                    .drawBehind { drawCircle(Cores.Sombra, size.minDimension / 2, center.copy(y = center.y + 5.dp.toPx())) }
-                    .clip(CircleShape)
-                    .background(Brush.verticalGradient(listOf(Color.White, Color(0xFFF1ECFF))))
-                    .border(3.dp, Color.White, CircleShape),
-            )
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // Caixa desenhada (e não o emoji, que ficava borrado ao crescer): nítida em qualquer tamanho.
-                CaixaDePresente(
-                    Modifier
-                        .size(112.dp)
-                        .graphicsLayer {
-                            rotationZ = giro.value + if (toques == 0) chamar else 0f
-                            scaleX = escala.value
-                            scaleY = escala.value
-                        },
-                )
-            }
-        }
-    }
-    Spacer(Modifier.fillMaxWidth().height(8.dp))
-}
-
-/** Sombra ameixa suave do título branco. */
+/** Sombra ameixa suave do texto branco. */
 private val SOMBRA_DO_TITULO = Shadow(Color(0x553D2C5E), Offset(0f, 4f), 8f)
 
 /**
  * A caixa de presente desenhada: corpo rosa com fita dourada, tampa mais larga, laço de duas alças,
- * brilho no alto e contorno ameixa (mesmo traço dos botões). Vetorial, então não borra ao crescer.
+ * brilho no alto e contorno ameixa (mesmo traço dos botões). Reserva do presente 3D, quando a arte falta.
  */
 @Composable
 private fun CaixaDePresente(modifier: Modifier = Modifier) {
