@@ -89,7 +89,7 @@ class CapturasInterface3DTest {
         regra.mainClock.advanceTimeBy(600)
     }
 
-    /** Nenhum texto visível foi cortado nem virou reticências (cabe na largura de 360 dp). */
+    /** Nenhum texto visível foi cortado na largura nem virou reticências (cabe em 360 dp). Só a largura conta: a altura da linha varia com a fonte. */
     private fun conferirTextosInteiros() {
         val comTexto = SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult)
         val nos = regra.onAllNodes(comTexto, useUnmergedTree = true).fetchSemanticsNodes()
@@ -98,7 +98,7 @@ class CapturasInterface3DTest {
             val resultados = mutableListOf<TextLayoutResult>()
             no.config[SemanticsActions.GetTextLayoutResult].action?.invoke(resultados)
             val r = resultados.firstOrNull() ?: continue
-            assertFalse("texto cortado: '${r.layoutInput.text}'", r.hasVisualOverflow)
+            assertFalse("texto cortado: '${r.layoutInput.text}'", r.didOverflowWidth)
         }
     }
 
@@ -119,7 +119,7 @@ class CapturasInterface3DTest {
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                TextoComContorno("Casinha do Saber", estilo = MaterialTheme.typography.displaySmall)
+                TextoComContorno("Casinha do Saber", estilo = MaterialTheme.typography.headlineLarge)
                 // Botões redondos da barra: ícones 3D no lugar dos emojis.
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     for ((emoji, descricao) in daBarra.take(5)) BotaoRedondo(emoji, descricao, {}, tamanho = 52.dp)
