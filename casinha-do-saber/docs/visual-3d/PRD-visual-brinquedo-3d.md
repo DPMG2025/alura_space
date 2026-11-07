@@ -118,6 +118,15 @@ Figuras das perguntas: hoje são emojis. Substituir por modelos 3D começando pe
 
 Cada fase termina com: CI verde (testes, capturas, lint, emuladores), capturas novas commitadas pelo CI, nota do revisor independente e `ESTADO.md` atualizado. Só se passa de fase com a anterior verde.
 
+**Fase 0A. Tela cheia de verdade, também no tablet (fazer primeiro).** Pedido do dono do produto: a criança joga num **tablet Samsung** e, como o app não fica em tela cheia, ela vive tocando nos atalhos da barra de tarefas do One UI (os ícones de apps embaixo). No celular a tela cheia já parece funcionar. Causa encontrada: `MainActivity` só chama `enableEdgeToEdge()`, que desenha por baixo das barras, mas não as esconde; no tablet a barra de tarefas continua visível e tocável. Fazer:
+* modo imersivo com `WindowInsetsControllerCompat`: esconder `WindowInsetsCompat.Type.systemBars()` (barra de status e barra de navegação, o que também recolhe a barra de tarefas do tablet no Android 12L ou mais novo) com `BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE`, para as barras só voltarem com um deslize da borda e sumirem sozinhas de novo;
+* reaplicar ao voltar para o app e quando a janela recupera o foco (`onResume` e `onWindowFocusChanged`), porque teclado, diálogos do sistema e a troca de apps devolvem as barras;
+* conferir que as telas continuam respeitando o recorte da câmera (`displayCutout`) depois que os insets das barras zerarem; nada pode ficar embaixo da câmera frontal;
+* vale para celular e tablet, deitado e em pé;
+* na área dos pais, uma dica curta de como **fixar o app** no Android (Configurações, Segurança, Fixar janelas), para quem quiser impedir que a criança saia do jogo;
+* teste no emulador com perfil de tablet (Android 14): com o app aberto, as barras do sistema não estão visíveis (`WindowInsets.isVisible(systemBars())` falso); e o mesmo teste no perfil de celular.
+Aceite: no tablet Samsung da criança, nenhuma barra nem atalho aparece durante o jogo; o dono do produto confirma no aparelho. Esta fase não depende da arte e pode ser feita antes da Fase 0, numa tarefa só.
+
 **Fase 0. Fundação do pipeline.** Criar `arte3d/` a partir do protótipo; script de render em lote com manifesto; formato e pasta das imagens no app; carregador de imagens no Compose com cache e redução de tamanho para aparelhos antigos; um teste que confere se toda imagem do manifesto existe e cabe no orçamento de tamanho. Aceite: uma imagem de teste aparece numa captura do CI.
 
 **Fase 1. Personagens.** Criança e irmão em camadas (seção 3.2), poses, humores e piscar; `Crianca` e `Irmaozinho` com a mesma API; animações (respirar, pulo com amassar e esticar, tchau, comemorar). Adaptar o teste dos chapéus (captura 56) para a âncora da cabeça do manifesto. Aceite: capturas 01, 05, 11, 70 com os personagens novos; teste dos chapéus verde.
@@ -136,12 +145,13 @@ Cada fase termina com: CI verde (testes, capturas, lint, emuladores), capturas n
 
 **Fase 8. Demais telas.** Trilha e mapa, perfil, quem vai jogar, boas vindas, mascote, ateliê, piano, livrinhos, história, álbum, diplomas, relembrar, áreas novas da casa, dormir, as 17 atividades novas. Pode ser dividida por grupos de telas, um subagente por grupo, em paralelo.
 
-**Fase 9. Acabamento.** Desempenho em API 24 (memória e tempo de abertura), tamanho do APK, emojis restantes, revisão final com nota, teste com a criança (ver seção 7).
+**Fase 9. Acabamento.** Desempenho em API 24 (memória e tempo de abertura), conferir que o APK ficou abaixo de 150 MB, emojis restantes, revisão final com nota, teste com a criança (ver seção 7).
 
 ## 7. Qualidade e verificação
 
 * **Sem SDK do Android local**: o ambiente da nuvem não baixa do `dl.google.com`. A verificação do app é pelo CI, que roda testes de unidade, capturas (Robolectric e Roborazzi), lint, APK e emuladores com Android 14, 7.0 e 8.0, e publica o APK testado em Releases (`casinha-teste`). O pipeline de arte roda localmente (Chromium e npm funcionam).
-* **Orçamento:** APK final até 40 MB (hoje 12 MB). Imagens em WebP com perda, qualidade perto de 85, no dobro do maior tamanho em que aparecem. Nenhuma imagem acima de 1024 px de lado sem justificativa.
+* **Tamanho do app:** o limite é **150 MB** (definido pelo dono do produto; hoje o APK tem 12 MB). Não é uma preocupação central: a prioridade é a qualidade da arte. Ainda assim, usar WebP (com perda, qualidade perto de 85) e gerar cada imagem no dobro do maior tamanho em que aparece, para não pesar na memória dos aparelhos antigos.
+* **Tela cheia:** em todas as telas, celular e tablet, deitado e em pé, as barras do sistema ficam escondidas (Fase 0A). Toda captura de tablet e todo teste de emulador com perfil de tablet confirmam isso.
 * **Régua do revisor** (nota de 0 a 10 por tela): fidelidade às maquetes; personagens expressivos e consistentes entre telas; nada cortado ou sobreposto em 360 dp, 393 dp e tablet deitado; contraste do texto; nenhum emoji de sistema na barra; nenhum número abstrato para a criança; coerência de luz e sombra entre imagens.
 * **Teste com a criança** ao fim das fases 1, 4 e 5: dez minutos de observação, anotar onde ela sorri, onde toca, onde desiste. O resultado entra no `ESTADO.md` e pode mudar a ordem das fases seguintes.
 * **Não quebrar o que existe:** progresso salvo, cópia do progresso, irmãozinho (`Perfil.irmao`), narração, limite de tempo, área dos pais. Saves antigos abrem sem perda.
