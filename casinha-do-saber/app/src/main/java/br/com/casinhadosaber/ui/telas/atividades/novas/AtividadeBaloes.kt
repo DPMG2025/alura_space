@@ -87,8 +87,8 @@ private class Revoada(n: Int) {
     fun centroX(i: Int, t: Float, balanco: Float) = colunaX[i] + balanco * sin(0.8f * t + i * 1.3f)
 }
 
-private val CeuAlto = Color(0xFF8FD3FF)
-private val CeuBaixo = Color(0xFFDDF3FF)
+private val CeuAlto = Color(0xFF7CC4FA)
+private val CeuBaixo = Color(0xFFFFE6D6)
 
 /**
  * Estourar balões: os balões sobem devagar, cada um com uma resposta, e quem chega no alto volta por

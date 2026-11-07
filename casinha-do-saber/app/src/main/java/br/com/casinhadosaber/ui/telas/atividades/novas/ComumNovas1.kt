@@ -40,8 +40,11 @@ import br.com.casinhadosaber.dominio.Opcao
 import br.com.casinhadosaber.dominio.Trecho
 import br.com.casinhadosaber.dominio.Visual
 import br.com.casinhadosaber.dominio.pt
+import br.com.casinhadosaber.ui.componentes.CorDaConta
 import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
 import br.com.casinhadosaber.ui.componentes.SetaDesenhada
+import br.com.casinhadosaber.ui.componentes.pilula
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.figurasDe
 import br.com.casinhadosaber.ui.telas.atividades.nomeDaFigura
@@ -231,6 +234,8 @@ internal fun N1Figura(o: Opcao, lado: Dp, modifier: Modifier = Modifier, corText
                     maxLines = 1,
                     softWrap = false,
                     textAlign = TextAlign.Center,
+                    // Letras e números na fonte dos títulos (Baloo 2), como nas respostas do jogo.
+                    style = androidx.compose.material3.MaterialTheme.typography.headlineLarge,
                 )
             }
             is Visual.Cor -> Box(
@@ -262,11 +267,12 @@ internal fun N1Figura(o: Opcao, lado: Dp, modifier: Modifier = Modifier, corText
 @Composable
 internal fun N1BarraDeAchados(total: Int, achados: List<Opcao>, cor: Color, larguraMax: Dp, modifier: Modifier = Modifier) {
     val lado = minOf(54.dp, (larguraMax - 12.dp) / total.coerceAtLeast(1) - 6.dp).coerceAtLeast(26.dp)
+    // Pílula de brinquedo (maquete 2): o que já foi achado aparece num círculo branco de borda verde; o que falta
+    // é uma conta perolada 3D (`conta_vazia`), como as contas do progresso.
     Row(
         modifier
             .testTag("barra_achados")
-            .background(Color.White.copy(alpha = 0.95f), CircleShape)
-            .border(3.dp, cor.copy(alpha = 0.5f), CircleShape)
+            .pilula()
             .size(width = (lado + 6.dp) * total + 12.dp, height = lado + 12.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -283,13 +289,15 @@ internal fun N1BarraDeAchados(total: Int, achados: List<Opcao>, cor: Color, larg
                         contentAlignment = Alignment.Center,
                     ) { N1Figura(o, lado * 0.86f) }
                 } else {
-                    Canvas(Modifier.size(lado)) {
-                        drawCircle(cor.copy(alpha = 0.12f))
-                        drawCircle(
-                            cor.copy(alpha = 0.55f),
-                            style = Stroke(2.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx()))),
-                            radius = size.minDimension / 2f - 2.dp.toPx(),
-                        )
+                    ImagemDeArte(CorDaConta.VAZIA, Modifier.size(lado * 0.8f)) {
+                        Canvas(Modifier.size(lado)) {
+                            drawCircle(cor.copy(alpha = 0.12f))
+                            drawCircle(
+                                cor.copy(alpha = 0.55f),
+                                style = Stroke(2.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx()))),
+                                radius = size.minDimension / 2f - 2.dp.toPx(),
+                            )
+                        }
                     }
                 }
             }

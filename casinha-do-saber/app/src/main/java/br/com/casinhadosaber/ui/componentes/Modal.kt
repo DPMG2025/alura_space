@@ -247,14 +247,15 @@ fun FitaDoTitulo(titulo: String, cor: Color, modifier: Modifier = Modifier) {
             .padding(horizontal = 24.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
+        // Título de brinquedo: branco com contorno e lábio da cor escura da fita (até duas linhas).
+        TextoComContorno(
             titulo,
-            style = MaterialTheme.typography.headlineSmall.copy(
-                color = Color.White,
-                shadow = Shadow(escurecer(cor, 0.55f), Offset(0f, 3f), 0f),
-            ),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.semantics { heading() },
+            modifier = Modifier.semantics(mergeDescendants = true) { heading() },
+            estilo = MaterialTheme.typography.headlineSmall,
+            corDoContorno = escurecer(cor, 0.55f),
+            espessura = 4.dp,
+            profundidade = 2.dp,
+            maxLinhas = 2,
         )
     }
 }

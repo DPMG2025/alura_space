@@ -44,8 +44,13 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.CenaDaArea
-import br.com.casinhadosaber.ui.componentes.IconeDoItem
-import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.componentes.EstrelasDeProgresso
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.IconeDaCoisa
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.ProgressoVisivel
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import androidx.compose.foundation.layout.BoxWithConstraints
 
 /**
  * Cômodos novos da casa que cresce, dentro da casa por dentro: uma portinha por cômodo já construído
@@ -90,8 +95,8 @@ fun BoxScope.ComodosNovosDaCasa(
                     modifier = Modifier.testTag("comodo_novo_${c.id}"),
                 ) {
                     Column(Modifier.padding(horizontal = 6.dp, vertical = 2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("🚪", fontSize = 22.sp)
-                        Text(c.icone, fontSize = 22.sp)
+                        ImagemDeArte("icone_avancar", Modifier.size(26.dp)) { Text("🚪", fontSize = 22.sp) }
+                        FiguraDaPergunta(c.icone, 28.dp) { Text(c.icone, fontSize = 22.sp) }
                     }
                 }
             }
@@ -104,14 +109,31 @@ fun BoxScope.ComodosNovosDaCasa(
     Column(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFFB9E4FF), Color(0xFFDDF3D0))))
+            // Céu do mundo de brinquedo (maquete 1): azul em cima, pêssego e rosa embaixo.
+            .background(
+                Brush.verticalGradient(
+                    0f to Color(0xFF7CC4FA), 0.38f to Color(0xFFB8E2FF), 0.70f to Color(0xFFFFE6D6), 1f to Color(0xFFFFD0DC),
+                ),
+            )
             .testTag("comodo_aberto_${area.id}"),
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             BotaoRedondo("⬅️", "Voltar para a casa", { sons.toque(); aberto = null }, tamanho = 52.dp)
-            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(area.nome, style = MaterialTheme.typography.headlineMedium, color = Cores.Texto, maxLines = 1, textAlign = TextAlign.Center)
-                Text(CasaQueCresce.progresso(estado, area).let { "${it.colocadas} de ${it.total} coisas" }, style = MaterialTheme.typography.titleMedium, color = Cores.Texto)
+            BoxWithConstraints(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                // Nome com contorno, que diminui para caber (360 dp), e o progresso em estrelas (sem "x de y coisas").
+                val base = MaterialTheme.typography.headlineMedium
+                val cabe = ((maxWidth.value - 8f) / (area.nome.length.coerceAtLeast(1) * 0.55f)).coerceIn(16f, base.fontSize.value)
+                val progresso = CasaQueCresce.progresso(estado, area)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    TextoComContorno(area.nome, estilo = base.copy(fontSize = cabe.sp, lineHeight = (cabe * 1.15f).sp), espessura = 4.dp, profundidade = 2.dp)
+                    EstrelasDeProgresso(
+                        ProgressoVisivel.estrelasAcesas(progresso.colocadas, progresso.total, 5),
+                        total = 5,
+                        tamanho = 20.dp,
+                        brilharUltima = progresso.colocadas >= progresso.total,
+                        descricao = "${progresso.colocadas} de ${progresso.total} coisas",
+                    )
+                }
             }
             Spacer(Modifier.size(52.dp))
         }
@@ -151,7 +173,7 @@ fun BoxScope.ComodosNovosDaCasa(
                         corBase = Color(0xFF8E5A34),
                         descricao = "${item.nome}. Toque para colocar no cômodo.",
                     ) {
-                        Box(Modifier.padding(8.dp).width(64.dp), contentAlignment = Alignment.Center) { IconeDoItem(item, 56.dp) }
+                        Box(Modifier.padding(8.dp).width(64.dp), contentAlignment = Alignment.Center) { IconeDaCoisa(item, 56.dp) }
                     }
                 }
             }

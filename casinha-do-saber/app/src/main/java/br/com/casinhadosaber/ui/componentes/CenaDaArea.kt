@@ -15,6 +15,11 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import br.com.casinhadosaber.dominio.TipoDeArea
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -87,8 +92,18 @@ fun CenaDaArea(
         val unidade = minOf(larguraPx, alturaPx / ItensDaCasa.PROPORCAO_DA_CENA)
         // O fundo parado fica numa camada própria (só redesenha quando a área, a obra ou a noite mudam);
         // por cima, só o que mexe (estrelas, água, luzes da pista).
+        // Nuvens 3D da casa de fora (as mesmas da tela inicial) passeando no céu das áreas abertas, de dia.
+        val contexto = LocalContext.current
+        val manifesto = remember { ArteDoApp.manifesto(contexto) }
+        val ceuAberto = area.tipo == TipoDeArea.FORA && !noite && area.id != "observatorio"
+        val nuvensDaArte = ceuAberto && ID_NUVEM_1 in manifesto.imagens && ID_NUVEM_2 in manifesto.imagens
         FundoParadoDaArea(area, obra, noite)
-        Canvas(Modifier.fillMaxSize()) { desenharFundoAnimado(area, obra.value, t, noite) }
+        Canvas(Modifier.fillMaxSize()) { desenharFundoAnimado(area, obra.value, t, noite, nuvensDesenhadas = !nuvensDaArte) }
+        if (nuvensDaArte) {
+            val volta = 2f * Math.PI.toFloat()
+            NuvemDaArte(ID_NUVEM_1, larguraPx, alturaPx, 0.06f, 0.03f, 0.30f) { 0.04f * sin(t * volta) }
+            NuvemDaArte(ID_NUVEM_2, larguraPx, alturaPx, 0.62f, 0.10f, 0.24f) { -0.03f * sin(t * volta) }
+        }
         if (evento != null) EnfeitesDoEvento(evento, Modifier.fillMaxSize())
 
         // Do fundo para a frente: quem está mais embaixo (mais perto) é desenhado por último.
@@ -96,6 +111,9 @@ fun CenaDaArea(
             estado.colocados[item.id]?.let { g -> item to Posicao(g.x.coerceIn(0.03f, 0.97f), g.y.coerceIn(0.08f, 1f)) }
         }.sortedBy { it.second.y }
         for ((item, pos) in presentes) {
+            // A coisa em 3D quando a arte existe (o bicho, o item igual ao da casa ou a figura do emoji).
+            val arte = remember(item.id) { ArteDasAreas.para(manifesto, item) }
+            val infoDoItem = if (arte?.comoItem == true) manifesto.imagens[arte.id] else null
             val bichoDesenhado = bichoDesenhadoDe(item.id)
             val passeia = CasaQueCresce.passeia(item.id)
             val semente = item.id.hashCode()
@@ -107,8 +125,8 @@ fun CenaDaArea(
             val jeito = (semente xor (semente ushr 16)) and 0x7FFFFFFF
             val inclinacao = if (passeia || bichoDesenhado != null) 0f else ((jeito % 9) - 4) * 0.9f
             val desvio = if (passeia) 0f else (((jeito / 9) % 7) - 3) / 3f * larguraRelativa * larguraPx * 0.06f
-            // Sombra de contato só no chão (o que está no céu ou na parede não tem chão embaixo).
-            val noChao = pos.y > CasaQueCresce.HORIZONTE + 0.03f && bichoDesenhado == null
+            // Sombra de contato só no chão (o que está no céu ou na parede não tem chão embaixo); o item 3D já tem a dele.
+            val noChao = pos.y > CasaQueCresce.HORIZONTE + 0.03f && bichoDesenhado == null && infoDoItem == null
             key(item.id) {
                 ObjetoNaCena(
                     item = item,
@@ -137,22 +155,52 @@ fun CenaDaArea(
                             destino
                         }
                     },
+                    // O item 3D escurece sozinho de noite (filtro) e desenha além da caixa (sombra e folga da arte).
+                    escurecerDeNoite = infoDoItem == null,
                 ) { w ->
+                    // O desenho antigo (emoji ou bicho desenhado): reserva quando a arte não existe ou não abre.
+                    val antigo: @Composable () -> Unit = {
+                        when {
+                            bichoDesenhado != null -> BichoDesenhado(bichoDesenhado.first, bichoDesenhado.second, { Passeio.em(relogio.value.toLong(), semente) })
+                            passeia -> Box(
+                                Modifier.graphicsLayer {
+                                    val p = Passeio.em(relogio.value.toLong(), semente)
+                                    transformOrigin = TransformOrigin(0.5f, 1f)
+                                    // Os emojis de bicho olham para a esquerda: vira quando anda para a direita.
+                                    scaleX = if (p.paraDireita) -1f else 1f
+                                    if (p.gesto == br.com.casinhadosaber.dominio.Gesto.SENTADO) scaleY = 0.9f
+                                    if (p.gesto == br.com.casinhadosaber.dominio.Gesto.ANDANDO) {
+                                        translationY = -kotlin.math.abs(sin(p.passada * 2f * Math.PI.toFloat())) * w * 0.08f
+                                    }
+                                },
+                            ) { ConteudoDoItem(item, w) }
+                            else -> ConteudoDoItem(item, w)
+                        }
+                    }
                     when {
-                        bichoDesenhado != null -> BichoDesenhado(bichoDesenhado.first, bichoDesenhado.second, { Passeio.em(relogio.value.toLong(), semente) })
-                        passeia -> Box(
-                            Modifier.graphicsLayer {
-                                val p = Passeio.em(relogio.value.toLong(), semente)
-                                transformOrigin = TransformOrigin(0.5f, 1f)
-                                // Os emojis de bicho olham para a esquerda: vira quando anda para a direita.
-                                scaleX = if (p.paraDireita) -1f else 1f
-                                if (p.gesto == br.com.casinhadosaber.dominio.Gesto.SENTADO) scaleY = 0.9f
-                                if (p.gesto == br.com.casinhadosaber.dominio.Gesto.ANDANDO) {
-                                    translationY = -kotlin.math.abs(sin(p.passada * 2f * Math.PI.toFloat())) * w * 0.08f
-                                }
-                            },
-                        ) { ConteudoDoItem(item, w) }
-                        else -> ConteudoDoItem(item, w)
+                        infoDoItem != null -> ItemDaArte(
+                            infoDoItem,
+                            w,
+                            noite,
+                            passo = if (arte?.bicho == true) ({ Passeio.em(relogio.value.toLong(), semente) }) else null,
+                            reserva = antigo,
+                        )
+                        arte != null -> Box(
+                            Modifier
+                                .fillMaxSize()
+                                .graphicsLayer {
+                                    // A figura 3D não vira de lado (a luz ficaria trocada): só dá pulinhos ao andar.
+                                    if (passeia) {
+                                        val p = Passeio.em(relogio.value.toLong(), semente)
+                                        transformOrigin = TransformOrigin(0.5f, 1f)
+                                        if (p.gesto == br.com.casinhadosaber.dominio.Gesto.SENTADO) scaleY = 0.92f
+                                        if (p.gesto == br.com.casinhadosaber.dominio.Gesto.ANDANDO) {
+                                            translationY = -kotlin.math.abs(sin(p.passada * 2f * Math.PI.toFloat())) * w * 0.08f
+                                        }
+                                    }
+                                },
+                        ) { ImagemDeArte(arte.id, Modifier.fillMaxSize(), reserva = antigo) }
+                        else -> antigo()
                     }
                 }
             }
@@ -177,6 +225,42 @@ fun CenaDaArea(
                 ) { EmojiGrande(if (i == 1) "🚧" else "🔨", lado) }
             }
         }
+    }
+}
+
+private const val ID_NUVEM_1 = "ceu_nuvem_1"
+private const val ID_NUVEM_2 = "ceu_nuvem_2"
+
+/**
+ * Uma nuvem 3D no céu da área: canto de cima à esquerda em ([x], [y]) frações da cena, [largura] fração da largura
+ * (a altura segue a proporção da imagem). [vaivem] (fração da largura) é lido só na hora de posicionar.
+ */
+@Composable
+private fun NuvemDaArte(id: String, larguraPx: Float, alturaPx: Float, x: Float, y: Float, largura: Float, vaivem: () -> Float) {
+    val densidade = LocalDensity.current
+    val lado = with(densidade) { (larguraPx * largura).toDp() }
+    ImagemDeArte(
+        id,
+        Modifier
+            .offset { IntOffset(((x + vaivem()) * larguraPx).roundToInt(), (y * alturaPx).roundToInt()) }
+            .width(lado)
+            .aspectRatio(1.6f),
+        escala = androidx.compose.ui.layout.ContentScale.Fit,
+    )
+}
+
+/**
+ * Ícone de uma coisa no baú (e nos cômodos novos): a arte 3D das coisas de área quando existe ([ArteDasAreas]),
+ * senão o [IconeDoItem] de sempre (que já mostra o `item_<id>` das 40 peças).
+ */
+@Composable
+fun IconeDaCoisa(item: ItemCasa, lado: Dp, modifier: Modifier = Modifier) {
+    val contexto = LocalContext.current
+    val arte = remember(item.id) { ArteDasAreas.para(ArteDoApp.manifesto(contexto), item) }
+    if (arte == null) {
+        IconeDoItem(item, lado, modifier)
+    } else {
+        ImagemDeArte(arte.id, modifier.size(lado), reserva = { IconeDoItem(item, lado) })
     }
 }
 

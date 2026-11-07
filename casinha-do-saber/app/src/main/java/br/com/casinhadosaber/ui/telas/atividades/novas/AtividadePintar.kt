@@ -58,6 +58,7 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.tema.Baloo2
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import br.com.casinhadosaber.ui.telas.atividades.MaoQueSegue
@@ -287,6 +288,7 @@ internal fun AtividadePintar(
                         fontSize = tamanho.sp,
                         lineHeight = (tamanho * 1.1f).sp,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = Baloo2,
                         color = Cores.Texto.copy(alpha = sumirRotulos),
                         maxLines = 1,
                     )
@@ -356,6 +358,7 @@ internal fun AtividadePintar(
                     fontSize = tam.sp,
                     lineHeight = (tam * 1.1f).sp,
                     fontWeight = FontWeight.Bold,
+                    fontFamily = Baloo2,
                     color = Cores.Texto,
                     maxLines = 1,
                     modifier = Modifier.padding(top = (ladoPote / densidade.density * 0.2f).dp),

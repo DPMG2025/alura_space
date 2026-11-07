@@ -68,7 +68,7 @@ import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import br.com.casinhadosaber.ui.telas.atividades.GestoDeArrastar
-import br.com.casinhadosaber.ui.tema.Fredoka
+import br.com.casinhadosaber.ui.tema.Baloo2
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -289,8 +289,8 @@ internal fun AtividadeRelogio(
                     horaDigitalN3(relogio.hora, relogio.minuto),
                     fontSize = 36.sp,
                     lineHeight = 40.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = Fredoka,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = Baloo2,
                     color = Color(0xFF7CF29B),
                 )
             }
@@ -477,7 +477,7 @@ private fun DrawScope.desenharMostrador(c: Offset, raio: Float, medidor: android
         )
     }
     // números das horas
-    val estilo = TextStyle(fontFamily = Fredoka, fontSize = (raio * 0.17f / density).sp, fontWeight = FontWeight.Bold, color = Color(0xFF3D2C5E))
+    val estilo = TextStyle(fontFamily = Baloo2, fontSize = (raio * 0.17f / density).sp, fontWeight = FontWeight.Bold, color = Color(0xFF3D2C5E))
     for (n in 1..12) {
         val texto = medidor.measure("$n", estilo)
         val p = pontoNoAngulo(c, raio * 0.66f, n * 30f)

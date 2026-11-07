@@ -6,7 +6,14 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import br.com.casinhadosaber.ui.componentes.escurecer
+import br.com.casinhadosaber.ui.componentes.faceDeBrinquedo
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -216,6 +223,18 @@ internal fun Modifier.brilhoN4(ativo: Boolean, raio: Dp = 20.dp): Modifier {
             style = Stroke(3.dp.toPx()),
         )
     }
+}
+
+/**
+ * Botão redondo de ouvir das telas novas (ditado, escrever, montar a frase) no visual de brinquedo: lábio escuro
+ * embaixo, face em degradê com brilho e borda branca ([faceDeBrinquedo]) e o alto-falante branco por cima.
+ * Só o desenho: o toque, a descrição e a testTag ficam na caixa de quem chama.
+ */
+@Composable
+internal fun BoxScope.BotaoDeOuvirN4(cor: Color, tocando: Boolean, ladoDoIcone: Dp) {
+    Box(Modifier.matchParentSize().offset(y = 5.dp).background(escurecer(cor), CircleShape))
+    Box(Modifier.matchParentSize().clip(CircleShape).faceDeBrinquedo(cor, CircleShape))
+    AltoFalanteN4(tocando = tocando, modifier = Modifier.size(ladoDoIcone))
 }
 
 /** Alto-falante desenhado em Canvas; as ondinhas se mexem quando [tocando]. */

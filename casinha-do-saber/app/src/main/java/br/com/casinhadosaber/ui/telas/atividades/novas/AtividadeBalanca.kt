@@ -63,6 +63,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.tema.Baloo2
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import br.com.casinhadosaber.ui.telas.atividades.GestoDeArrastar
@@ -409,7 +410,8 @@ internal fun AtividadeBalanca(
                     Text(
                         "$valor",
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontFamily = Baloo2,
                         color = if (passou || igual) Color.White else Cores.Texto,
                     )
                 }
@@ -492,7 +494,8 @@ private fun PesoDesenhado(valor: Int, figura: String, numeros: Boolean, ladoDp: 
                 "$valor",
                 fontSize = (ladoDp * (if (valor >= 10) 0.36f else 0.44f)).sp,
                 lineHeight = (ladoDp * 0.5f).sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold,
+                fontFamily = Baloo2,
                 color = Color.White,
                 modifier = Modifier.offset(y = (ladoDp * 0.1f).dp),
             )

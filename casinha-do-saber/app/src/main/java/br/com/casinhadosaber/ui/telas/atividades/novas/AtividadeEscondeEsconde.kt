@@ -291,12 +291,12 @@ internal fun AtividadeEscondeEsconde(
         }
 
         // ---------------------------------------------------------------- fundo: gramado com cerquinha
-        val fundo = remember(h) { Brush.verticalGradient(listOf(Color(0xFFBDE8FF), Color(0xFFE9F8FF)), endY = h * 0.38f) }
+        val fundo = remember(h) { Brush.verticalGradient(listOf(Color(0xFF7CC4FA), Color(0xFFFFE6D6)), endY = h * 0.38f) }
         Canvas(Modifier.matchParentSize()) {
             drawRect(fundo)
-            drawRect(Color(0xFF9BD77E), Offset(0f, h * 0.36f), Size(w, h))
-            drawOval(Color(0xFF8BCB6E), Offset(-w * 0.2f, h * 0.3f), Size(w * 0.8f, h * 0.16f))
-            drawOval(Color(0xFF8BCB6E), Offset(w * 0.45f, h * 0.31f), Size(w * 0.8f, h * 0.14f))
+            drawRect(Color(0xFFA9E56F), Offset(0f, h * 0.36f), Size(w, h))
+            drawOval(Color(0xFF96D862), Offset(-w * 0.2f, h * 0.3f), Size(w * 0.8f, h * 0.16f))
+            drawOval(Color(0xFF96D862), Offset(w * 0.45f, h * 0.31f), Size(w * 0.8f, h * 0.14f))
             // Cerquinha de madeira no horizonte.
             val passo = 26f * d
             var x = passo / 2f

@@ -59,7 +59,9 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.escurecer
+import br.com.casinhadosaber.ui.componentes.faceDeBrinquedo
 import br.com.casinhadosaber.ui.componentes.pulsando
+import androidx.compose.ui.draw.clip
 import br.com.casinhadosaber.ui.telas.atividades.festejo
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
@@ -314,13 +316,16 @@ private fun CartaN4(carta: CartaVirada, aberta: Boolean, brilhar: Boolean, cor: 
             }
             .festejo(carta.achada)
             .shadow(if (carta.achada) 2.dp else 4.dp, forma)
-            .background(
+            // Carta de brinquedo: face em degradê com brilho no alto (verso na cor do caminho).
+            .clip(forma)
+            .faceDeBrinquedo(
                 when {
                     !mostrandoFrente -> cor
                     carta.achada -> Color(0xFFDFF7E7)
                     else -> Color.White
                 },
                 forma,
+                bordaBranca = false,
             )
             .border(
                 if (brilhar) 5.dp else 3.dp,

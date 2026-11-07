@@ -70,6 +70,8 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.escurecer
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.faceDeBrinquedo
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
@@ -328,9 +330,7 @@ internal fun AtividadeEscrever(
                         },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Box(Modifier.matchParentSize().offset(y = 5.dp).background(escurecer(cor), CircleShape))
-                    Box(Modifier.matchParentSize().background(cor, CircleShape))
-                    AltoFalanteN4(tocando = narrador.falando, modifier = Modifier.size(ladoTopo * 0.58f))
+                    BotaoDeOuvirN4(cor, narrador.falando, ladoTopo * 0.58f)
                 }
                 if (tentativas >= ERROS_PARA_AJUDA || ajudaInicial) {
                     Box(
@@ -346,7 +346,8 @@ internal fun AtividadeEscrever(
                                 }
                             }
                             .pulsando(parada)
-                            .background(Cores.Estrela, CircleShape),
+                            .clip(CircleShape)
+                            .faceDeBrinquedo(Cores.Estrela, CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text("💡", fontSize = (ladoTopo.value * 0.45f).sp)
@@ -491,11 +492,13 @@ internal fun AtividadeEscrever(
                                 apagar()
                             }
                         }
-                        .background(Color.White, RoundedCornerShape(20.dp))
+                        // Botão claro de brinquedo com a borracha 3D do ateliê.
+                        .clip(RoundedCornerShape(20.dp))
+                        .faceDeBrinquedo(Color.White, RoundedCornerShape(20.dp), redonda = true)
                         .border(3.dp, Color(0xFFD9CFF0), RoundedCornerShape(20.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("🧽", fontSize = 30.sp)
+                    ImagemDeArte("tela_borracha", Modifier.size(44.dp)) { Text("🧽", fontSize = 30.sp) }
                 }
             }
         }

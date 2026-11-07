@@ -318,9 +318,7 @@ internal fun AtividadeDitado(
                 .then(if (!terminou && ativa && interacoes == 0) Modifier.pulsando() else Modifier),
             contentAlignment = Alignment.Center,
         ) {
-            Box(Modifier.matchParentSize().offset(y = 5.dp).background(escurecer(cor), CircleShape))
-            Box(Modifier.matchParentSize().background(cor, CircleShape))
-            AltoFalanteN4(tocando = narrador.falando, modifier = Modifier.size((ladoOuvir * 0.58f).paraDp()))
+            BotaoDeOuvirN4(cor, narrador.falando, (ladoOuvir * 0.58f).paraDp())
         }
 
         // ---------------------------------------------------------------- casinhas

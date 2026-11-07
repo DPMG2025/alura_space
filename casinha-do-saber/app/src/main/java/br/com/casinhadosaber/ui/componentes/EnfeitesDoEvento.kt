@@ -429,6 +429,7 @@ fun PrateleiraDePresentes(presentes: List<PresenteEspecial>, modifier: Modifier 
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        for (p in presentes.takeLast(5)) Text(p.emoji, fontSize = 26.sp)
+        // A figura 3D do presente quando existe (o emoji fica de reserva).
+        for (p in presentes.takeLast(5)) FiguraDaPergunta(p.emoji, 32.dp) { Text(p.emoji, fontSize = 26.sp) }
     }
 }

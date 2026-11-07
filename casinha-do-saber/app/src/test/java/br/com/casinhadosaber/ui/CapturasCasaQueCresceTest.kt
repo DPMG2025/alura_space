@@ -143,15 +143,21 @@ class CapturasCasaQueCresceTest {
         assertTrue("a boia foi para cima e para a esquerda", depois.x < antes.x && depois.y < antes.y)
     }
 
-    /** Tocar no lugar leva até ele: o título mostra o progresso da área. */
+    /**
+     * Tocar no lugar leva até ele: o título passa a ser o nome da área e as estrelas do cabeçalho contam o
+     * progresso dela (o "x/y" fica só na descrição, visual 3D: nada de número abstrato para a criança).
+     */
     @Test
     fun lugaresDaCasa() {
         montar { TelaCasa(estado(340), {}, {}, {}) }
         regra.mainClock.advanceTimeBy(1500)
         regra.onAllNodesWithTag("lugar_quarto2").onFirst().performClick()
         regra.mainClock.advanceTimeBy(1500)
-        val progresso = CasaQueCresce.progresso(estado(340), CasaQueCresce.porId.getValue("quarto2"))
-        assertTrue(regra.onAllNodes(androidx.compose.ui.test.hasText(progresso.rotulo)).fetchSemanticsNodes().isNotEmpty())
+        val area = CasaQueCresce.porId.getValue("quarto2")
+        val progresso = CasaQueCresce.progresso(estado(340), area)
+        assertTrue(regra.onAllNodes(androidx.compose.ui.test.hasText(area.nome)).fetchSemanticsNodes().isNotEmpty())
+        // A pílula do lugar e as estrelas do cabeçalho dizem o progresso para a acessibilidade.
+        assertTrue(regra.onAllNodes(hasContentDescription(progresso.rotulo)).fetchSemanticsNodes().size >= 2)
         foto("s8_13_quarto_novo_pelo_lugar")
     }
 
