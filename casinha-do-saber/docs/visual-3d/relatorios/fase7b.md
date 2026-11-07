@@ -3,7 +3,7 @@
 Data: 2026-11-07. Commit local, sem push.
 Worktree: `/home/user/alura_space/.claude/worktrees/agent-a58e7642880f49fa4`, branch
 `worktree-agent-a58e7642880f49fa4` (zerada antes em `ccr-162c6a70-urxpmq`, `f824f97`, com toda a arte integrada).
-Hash do commit: ver `git log -1` na branch (anotado no relatório de entrega).
+Commit do trabalho: `c1be7b4` (este relatório recebeu o hash num commit seguinte, só de documentação).
 
 ## O que mudou
 
