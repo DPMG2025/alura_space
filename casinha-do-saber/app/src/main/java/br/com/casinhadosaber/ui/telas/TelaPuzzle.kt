@@ -30,6 +30,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +52,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -74,6 +77,7 @@ import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
 import br.com.casinhadosaber.ui.componentes.desenharObra
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.Raios
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 private enum class TipoDeJogo { MONTAR, DESLIZAR }
@@ -382,16 +386,20 @@ private fun JogarPuzzle(
                             }
 
                             val soltasNaBorda = m.pecas.any { !it.colocada && Puzzle.ehBorda(m, it.id) }
-                            for (peca in m.pecas) {
-                                val emArrasto = arrasto?.takeIf { it.first == peca.id }
-                                val x = emArrasto?.second?.x ?: peca.x
-                                val y = emArrasto?.second?.y ?: peca.y
+                            for (peca in m.pecas) key(peca.id) {
+                                // Só "está sendo arrastada" é lido na composição; a posição é lida na fase de layout
+                                // (como nas outras atividades de arrastar), para não recompor a tela a cada movimento do dedo.
+                                val emArrasto by remember { derivedStateOf { arrasto?.first == peca.id } }
                                 val apagada = bordas && soltasNaBorda && !peca.colocada && !Puzzle.ehBorda(m, peca.id)
                                 Box(
                                     Modifier
-                                        .offset(lado * x, lado * y)
+                                        .offset {
+                                            val a = arrasto
+                                            val pos = if (a != null && a.first == peca.id) a.second else Offset(peca.x, peca.y)
+                                            IntOffset((pos.x * ladoPx).roundToInt(), (pos.y * ladoPx).roundToInt())
+                                        }
                                         .size(larguraPeca, alturaPeca)
-                                        .zIndex(if (emArrasto != null) 20f else if (peca.colocada) 0f else 5f)
+                                        .zIndex(if (emArrasto) 20f else if (peca.colocada) 0f else 5f)
                                         .alpha(if (apagada) 0.3f else 1f)
                                         .then(
                                             if (peca.colocada) Modifier

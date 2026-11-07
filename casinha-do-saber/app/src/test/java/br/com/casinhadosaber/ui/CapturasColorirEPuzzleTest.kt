@@ -197,14 +197,9 @@ class CapturasColorirEPuzzleTest {
         val todasAntes = todas()
         val de = peca.center
         val delta = Offset(alvo.x - de.x, alvo.y - de.y)
-        regra.onNodeWithTag("peca_$id").performTouchInput {
-            down(center)
-            moveTo(center + delta * 0.3f)
-            moveTo(center + delta * 0.7f)
-            moveTo(center + delta)
-            up()
-        }
-        regra.mainClock.advanceTimeBy(800)
+        // No nível da raiz, com coordenadas da tela, como os outros testes de arrastar do projeto.
+        regra.onRoot().performTouchInput { swipe(de, Offset(de.x + delta.x, de.y + delta.y), durationMillis = 450) }
+        regra.mainClock.advanceTimeBy(1200)
         val depois = regra.onAllNodesWithTag("peca_$id").fetchSemanticsNodes().firstOrNull()?.boundsInRoot
         val texto = regra.onNodeWithTag("puzzle_faltam").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
         assertEquals("peça $id: antes=$peca alvo=$alvo depois=$depois moldura=$moldura todasAntes=$todasAntes todasDepois=${todas()}", "Faltam 3", texto)
