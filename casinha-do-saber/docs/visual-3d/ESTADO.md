@@ -62,20 +62,15 @@ Roteiro em `roteiro-aceite.md`. Pendentes:
 
 * 2026-11-07, execução 134 (commit fc8d356, com K1, K2, arte da rodada 3 e polimento): build COMPLETO verde (testes de unidade, capturas, lint, APK, guarda de 150 MB), tablet verde, Android 7 e 8 verdes (desempenho: abertura 3,1 s, memória máx 113 a 134 MB). Celular em 4 emuladores: o job falhou com "device offline" em dois passos; o passo 1 levou 14 min (travou) e o passo 4 perdeu o emulador após 2 min, logo depois do teste de voz (TTS). Hipótese em prova: o motor de voz do emulador antecede quase todas as quedas (121 a 134). Decisão: tirar os dois testes que sintetizam voz (VozesGravadasTest e JogoNoEmuladorTest#vozesEmPortuguesEIngles) dos passos normais e rodá-los isolados num 5º emulador, informativo (não derruba o job).
 
-## Problemas abertos
+## Problemas abertos (reconciliado em 2026-11-07, origem: leitura do CI e dos relatórios)
 
-* Emulador de celular caindo em abrirMapaEAlbum desde a Fase 2B (ver acima). Bloqueia marcar as Fases 0A a 2 como provadas.
-
-* Pedidos de arte da 2B: glifo branco (casa) para o botão verde; ícones de mapa, álbum, espelho, sol, lua, repetir, desfazer, ouvir, parar, gravar e lixeira.
-
-* Memória das camadas (690 KB cada decodificada): recortar pelo contorno na Fase 9.
-
-* Dúvida da Fase 0: o Robolectric pode não decodificar WebP; se a captura `v3d_00` falhar com "não decodificou", trocar o formato nos testes ou usar PNG nas capturas.
-* Job de CI que confere imagens desatualizadas ainda não existe (opcional).
-
-* Sem Android SDK na nuvem: nada de Fase 0A foi compilado nem testado localmente. Quem prova é o CI.
-* Aceite da Fase 0A depende do dono do produto confirmar no tablet Samsung (One UI) que nenhuma barra aparece.
-* O CI não rodou ainda nesta branch.
+* Emulador de celular: continua sem ficar verde no CI (some com "device offline" após 6 a 8 min). Todos os testes que rodaram passaram; o app não vaza memória. Correção em prova: vários emuladores seguidos e testes de voz isolados. Sem Android SDK na nuvem, só o CI prova.
+* Memória das camadas (690 KB cada decodificada): NÃO recortada. Decisão: deixar, pois a medição (113 a 134 MB de 384 MB no Android 7 e 8) não pede; mexer sem compilar local arriscaria desalinhar as camadas. Reabrir só se aparecer despejo de cache em aparelho de 128 MB de heap.
+* Pedidos de arte da 2B (glifo da casa e ícones de mapa, álbum, espelho etc.): atendidos pelo lote 3 (57 `icone_*`) e pelos ícones da barra em 3D. Fechado.
+* Dúvida do WebP no Robolectric: resolvida, as capturas v3d rodam verdes no CI. Fechado.
+* Job que confere imagens desatualizadas: não existe (opcional).
+* Aceites do dono: tela cheia no Samsung e teste de dez minutos com a criança, pendentes.
+* Pendências sem arte: ver RELATORIO-FINAL.md e revisao-fase9-rodada2.md (terceira rodada, fora por decisão do dono).
 
 ## Próxima tarefa a delegar
 
