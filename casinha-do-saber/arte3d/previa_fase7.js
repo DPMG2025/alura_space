@@ -106,6 +106,13 @@ const FOLHAS = {
     { titulo: 'chuva, mochila', perfil: P(true, 1, 1, 0, 5), pose: { bracos: 'tchau2' }, vestir: { traje: 'chuva', COSTAS: 'mochila' } },
     { titulo: 'sem traje: asas, tiara, sol', perfil: P(true, 0, 2, 1, 1), pose: { humor: 'feliz', bracos: 'parado' }, vestir: { COSTAS: 'asas', CABELO: 'tiara', ROSTO: 'oculosdesol', PESCOCO: 'cachecol' } },
   ],
+  // conferência do rosto: cada linha uma peça em menino e menina, pele clara e escura, cabelo espetado e cacheado
+  rostos: [
+    ['boné', { chapeu: 'bone' }], ['coroa', { chapeu: 'coroa' }], ['cartola', { chapeu: 'cartola' }], ['flor', { chapeu: 'flor' }],
+    ['máscara', { ROSTO: 'mascara' }], ['fada', { traje: 'fada' }],
+  ].flatMap(([nome, vestir]) => [
+    P(false, 0, 2, 2, 0), P(false, 3, 1, 1, 2), P(true, 0, 3, 1, 4), P(true, 3, 0, 1, 1), P(true, 2, 1, 2, 5), P(false, 1, 0, 0, 3),
+  ].map((perfil, i) => ({ titulo: nome, perfil, pose: i % 3 === 2 ? { humor: 'torcendo', bracos: 'torcendo' } : {}, vestir }))),
 };
 
 async function main() {

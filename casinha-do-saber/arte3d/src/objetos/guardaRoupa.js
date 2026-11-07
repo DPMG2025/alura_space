@@ -546,10 +546,12 @@ function trajeFada() {
   estampa.add(sobre(corpo, 0, 1.56, gema, 0.01));
   // asas de fada: duas grandes em cima, duas menores embaixo, transparentes com borda prateada
   const tras = new THREE.Group();
-  const matAsa = vidro('#e6d2ff', 0.6);
-  const matAsa2 = vidro('#ffd2ef', 0.6);
+  // saem por trás dos ombros para os lados, quase de frente para a câmera: aparecem de frente (Fase 9)
+  const matAsa = plastico('#9f6bff', { rugosidade: 0.3, verniz: 0.8, opacidade: 0.88 });
+  const matAsa2 = plastico('#ff6fc0', { rugosidade: 0.3, verniz: 0.8, opacidade: 0.88 });
+  for (const m of [matAsa, matAsa2]) { m.side = THREE.DoubleSide; m.depthWrite = false; }
   for (const lado of [-1, 1]) {
-    for (const [dy, esc, giro, mat] of [[0.28, 0.5, 0.75, matAsa], [-0.12, 0.36, 2.1, matAsa2]]) {
+    for (const [dy, esc, giro, mat] of [[0.32, 0.8, 1.65, matAsa], [-0.06, 0.56, 2.3, matAsa2]]) {
       const s = new THREE.Shape();
       s.moveTo(0, 0);
       s.bezierCurveTo(0.2, 0.25, 0.9, 0.35, 1.0, 0.0);
@@ -557,8 +559,8 @@ function trajeFada() {
       const geo = new THREE.ShapeGeometry(s, 24);
       const asa = new THREE.Mesh(geo, mat);
       asa.scale.set(lado * esc * 1.25, esc * 1.25, 1);
-      asa.position.set(lado * 0.2, 1.36 + dy * 0.6, -0.36);
-      asa.rotation.set(0, lado * 0.3, lado * (giro - 0.75) * 0.5);
+      asa.position.set(lado * 0.22, 1.36 + dy * 0.6, -0.4);
+      asa.rotation.set(0, lado * 0.12, lado * (giro - 0.75) * 0.5);
       tras.add(asa);
       const pts = s.getPoints(40).map((p) => new THREE.Vector3(p.x, p.y, 0));
       const borda = malha(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 80, 0.02, 8, true), plastico('#f4f0ff', { rugosidade: 0.2, verniz: 1 }));
@@ -1190,11 +1192,13 @@ function mascara() {
       const ph = phi0 + (i / cv.width) * dPhi;
       const x = -Math.cos(ph) * Math.sin(th), y = Math.cos(th);
       const ax = Math.abs(x);
-      const yc = -0.03 + 0.1 * ax * ax;
-      const h = 0.3 - 0.12 * ax * ax;
-      let dentro = ax < 0.86 && Math.abs(y - yc) < h;
+      // faixa fina (Fase 9): da sobrancelha até o meio do olho, desce só no meio (sobre o nariz) e sobe nas
+      // pontas, sem chegar às bochechas
+      const topo = 0.17 + 0.16 * ax * ax;
+      const base = -0.15 + 0.24 * ax;
+      let dentro = ax < 0.76 && y < topo && y > base;
       for (const lado of [-1, 1]) {
-        const dx = (x - lado * OLHO_X) / 0.19, dy = (y - (OLHO_Y - 0.01)) / 0.235;
+        const dx = (x - lado * OLHO_X) / 0.205, dy = (y - (OLHO_Y - 0.01)) / 0.25;
         if (dx * dx + dy * dy < 1) dentro = false;
       }
       const k = (j * cv.width + i) * 4;
@@ -1214,7 +1218,7 @@ function mascara() {
   g.add(m2);
   // fitinhas amarradas atrás (aparecem dos lados)
   for (const lado of [-1, 1]) {
-    for (const [dy, giro] of [[0.05, -0.5], [-0.12, -1.0]]) {
+    for (const [dy, giro] of [[0.12, -0.5], [-0.02, -1.0]]) {
       const f = capsula(R * 0.05, R * 0.3, brilho('#3052d8'));
       f.scale.set(1, 1, 0.4);
       f.rotation.z = lado * giro;
@@ -1592,12 +1596,13 @@ function bone() {
   const copa = new THREE.Group();
   copa.add(malha(new THREE.SphereGeometry(R * 1.1, 64, 32, 0, Math.PI * 2, 0, Math.PI * 0.5), azul));
   const pala = new THREE.Shape();
-  pala.absellipse(0, 0, R * 0.78, R * 0.62, 0, Math.PI, false, 0);
+  pala.absellipse(0, 0, R * 0.8, R * 0.7, 0, Math.PI, false, 0);
   const geo = new THREE.ExtrudeGeometry(pala, { depth: R * 0.04, bevelEnabled: true, bevelThickness: R * 0.02, bevelSize: R * 0.02, bevelSegments: 3, curveSegments: 32 });
   geo.rotateX(Math.PI / 2);
   const p = malha(geo, amarelo);
-  p.position.set(0, R * 0.02, R * 0.72);
-  p.rotation.x = 0.8;
+  // pala para cima (Fase 9): a borda de baixo fica acima das sobrancelhas, os olhos aparecem
+  p.position.set(0, R * 0.05, R * 0.74);
+  p.rotation.x = -0.2;
   copa.add(p);
   copa.add(em(bola(R * 0.1, amarelo, 16), 0, R * 1.1, 0));
   // faixas da copa
@@ -1610,8 +1615,8 @@ function bone() {
   const e = estrela3D(R * 0.17, R * 0.05, brilho('#ffffff'));
   naSuperficie(e, R * 1.1, 0, R * 0.42, R * 0.01);
   copa.add(e);
-  copa.rotation.x = -0.35;
-  copa.position.y = R * 0.06;
+  copa.rotation.x = -0.42;
+  copa.position.y = R * 0.16;
   g.add(copa);
   return naCabeca(g);
 }
