@@ -4,19 +4,23 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 
 ## Fases
 
-| Fase | Situação | Data | Prova no CI |
+Situação em 2026-11-07, 17:00 UTC. "Provada" = CI verde completo (build, tablet, celular, Android 7 e 8) naquele commit.
+
+| Fase | Código e arte | Prova no CI | Revisor independente |
 |---|---|---|---|
-| 0A. Tela cheia (celular e tablet) | código feito, aguardando CI e confirmação no tablet | 2026-11-07 | pendente |
-| 0. Fundação do pipeline (`arte3d/`) | código feito, aguardando CI (captura `v3d_00_arte_de_teste`) | 2026-11-07 | pendente |
-| 1. Personagens | feita; revisor deu 7 aos personagens (relatorios/revisao-fase1.md); CI 117 testes e lint verdes, emuladores pendentes | 2026-11-07 | execução 117 |
-| 2. Sistema de interface | arte (2A) e Kotlin (2B) feitos, aguardando CI | 2026-11-07 | pendente |
-| 3. Início e casa de fora | arte (3A) pronta e integrada ao manifesto único (relatorios/integracao-arte.md); Kotlin pendente | 2026-11-07 | pendente |
-| 4. Jogo | arte (4A) pronta e integrada ao manifesto único, com `emojis` e `lugar` lidos por `InfoDaArte` (relatorios/fase4a.md, relatorios/integracao-arte.md); Kotlin pendente | 2026-11-07 | pendente |
-| 5. Prêmio e Quase | arte (5A) pronta e integrada ao manifesto único (relatorios/integracao-arte.md); Kotlin pendente | 2026-11-07 | pendente |
-| 6. Casa por dentro | arte (6A) pronta e integrada ao manifesto único, com `iso` lido por `InfoDaArte` (relatorios/fase6a.md, relatorios/integracao-arte.md); Kotlin pendente | 2026-11-07 | pendente |
-| 7. Guarda roupa | arte (7A) pronta e integrada ao manifesto único, com `esconde` lido por `InfoDaArte` (relatorios/integracao-arte.md); Kotlin pendente | 2026-11-07 | pendente |
-| 8. Demais telas | pendente | | |
-| 9. Acabamento | pendente | | |
+| 0A. Tela cheia | feito | tablet verde (execuções 121, 122, 123, 125); celular e confirmação no Samsung pendentes | n/a |
+| 0. Pipeline de arte | feito | build verde | n/a |
+| 1. Personagens | feito | build verde; emulador de celular pendente | 7 (revisao-fase1.md) |
+| 2. Interface | feito | build verde; emulador de celular pendente | 8 (revisao-fases-2-3-5-7.md) |
+| 3. Início e casa de fora | feito | build verde (execução 128); celular pendente | 6 |
+| 4. Jogo | feito (4A arte, 4B Kotlin) | build verde (128); celular pendente | pendente (revisão final) |
+| 5. Prêmio e Quase | feito | build verde; celular pendente | 8 |
+| 6. Casa por dentro | feito (6A, 6B) | build verde (128); celular pendente | pendente (revisão final) |
+| 7. Guarda roupa | feito (7A, 7B, polimento de arte) | build verde; celular pendente | 6 |
+| 8. Demais telas | feito (8A arte; 8B grupos A, B, C) | build verde (128); celular pendente | pendente (revisão final) |
+| 9. Acabamento | polimento visual e medição feitos, locais/enviados; revisão final pendente | build verde; Android 7 e 8 (desempenho) rodando na 128 | pendente |
+
+Pendências que não são do código: confirmação da tela cheia no tablet Samsung (dono do produto) e os testes de dez minutos com a criança (fases 1, 4 e 5).
 
 ## Decisões
 
