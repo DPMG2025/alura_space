@@ -114,6 +114,9 @@ android {
         compose = true
     }
     testOptions {
+        // Cada teste do emulador roda no seu próprio processo: o emulador de celular do CI morria depois de uns 12 testes
+        // num único processo (execuções 121 a 125), por acúmulo de recurso gráfico; o app em si não vaza memória.
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
         unitTests {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
@@ -155,6 +158,7 @@ dependencies {
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test.services:storage:1.5.0")
     androidTestUtil("androidx.test.services:test-services:1.5.0")
+    androidTestUtil("androidx.test:orchestrator:1.5.0")
     // Capturas de tela das telas na JVM (Robolectric + Roborazzi)
     testImplementation("org.robolectric:robolectric:4.14.1")
     testImplementation("io.github.takahirom.roborazzi:roborazzi:1.36.0")

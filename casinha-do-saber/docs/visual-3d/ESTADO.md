@@ -35,6 +35,8 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 
 * 2026-11-07, execução 122 (commit 724782a, + Fase 3B): build verde; tablet, Android 7 e 8 verdes; celular falhou de novo, mas em outro teste (areaDosPaisDesafioDoDia; na 121 foi abrirMapaEAlbum), ~7 min depois do início. Conclusão: o emulador de celular morre por falta de recurso, não por um teste específico. Decisão: RAM 4096M, heap 512M e 4 núcleos no job emulador do CI.
 
+* 2026-11-07, execução 125 (bisseção): DiagnosticoTelasTest sozinha PASSA; areaDosPaisDesafioDoDia sozinho PASSA; JogoNoEmuladorTest inteiro FALHA; o registro MEM mostrou heap Java 20 a 43 MB (limite 192) e nativo até 59 MB, sem crescimento: NÃO é vazamento do app. Conclusão: o emulador de celular (SwiftShader) não aguenta ~12 testes no mesmo processo; decisão: AndroidX Test Orchestrator (um processo por teste) em app/build.gradle.kts. Job emulador-diag removido.
+
 ## Problemas abertos
 
 * Emulador de celular caindo em abrirMapaEAlbum desde a Fase 2B (ver acima). Bloqueia marcar as Fases 0A a 2 como provadas.
