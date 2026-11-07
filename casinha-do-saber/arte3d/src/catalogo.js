@@ -7,7 +7,8 @@
 //   montar devolve o THREE.Object3D; âncoras são marcadas no modelo com ancora() (kit/formas.js)
 //
 // Camadas de personagem (camadas.js) têm ainda: grupo, tingir ('pele' | 'cabelo' | 'roupa' | null),
-// ordem (de trás para a frente) e personagem ('crianca' | 'irmao'), que vão para o manifesto.
+// ordem (de trás para a frente) e personagem ('crianca' | 'irmao'), que vão para o manifesto; as peças
+// do guarda-roupa (catalogo_fase7.js) têm ainda esconde (grupos da criança que a peça substitui).
 import { estrelaDourada } from './objetos/estrela3D.js';
 import { moedaDoPlacar } from './objetos/moeda.js';
 import { patinhoDaLagoa } from './objetos/patinho.js';
@@ -15,6 +16,8 @@ import { camadasDosPersonagens } from './camadas.js';
 import { icones } from './objetos/icones.js';
 import * as ui from './objetos/interface.js';
 import { camadasDaCasa, itensDaCasa } from './casa.js';
+import { catalogoFase5 } from './catalogo_fase5.js';
+import { catalogo as catalogoFase7 } from './catalogo_fase7.js';
 
 // Fase 2: ícones dos caminhos (ids pelos nomes de dominio/Trilha) e peças da interface.
 const icone = (id, montar, uso = 48) => ({ id, tipo: 'item', uso: { largura: uso, altura: uso }, montar });
@@ -47,4 +50,8 @@ export const catalogo = [
   // Fase 3: a casa de fora (casa.js)
   ...camadasDaCasa,
   ...itensDaCasa,
+  // Fase 5: o Prêmio e o Quase (catalogo_fase5.js)
+  ...catalogoFase5,
+  // Fase 7: o guarda-roupa, camadas da criança com o campo esconde (catalogo_fase7.js)
+  ...catalogoFase7,
 ];

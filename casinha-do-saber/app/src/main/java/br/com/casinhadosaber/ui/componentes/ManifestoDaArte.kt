@@ -43,6 +43,7 @@ class ManifestoDaArte(
                 tingir = m["tingir"] as? String,
                 ordem = (m["ordem"] as? Number)?.toInt() ?: 0,
                 personagem = m["personagem"] as? String,
+                esconde = (m["esconde"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
             )
         }
 
@@ -67,6 +68,8 @@ data class PontoDaArte(val x: Int, val y: Int)
  * Camadas dos personagens (Fase 1): [grupo] (parte do corpo), [tingir] (`"pele"`, `"cabelo"`, `"roupa"` ou
  * nulo: a camada sai em neutro claro e o app tinge por multiplicação), [ordem] (de trás para a frente:
  * desenhar da menor para a maior) e [personagem] (`"crianca"` ou `"irmao"`). Nos objetos ficam vazios.
+ * Peças do guarda-roupa (Fase 7): [esconde] lista os grupos das camadas da criança que a peça substitui
+ * (o app não desenha esses grupos enquanto a peça estiver vestida); vazio nas demais imagens.
  */
 data class InfoDaArte(
     val id: String,
@@ -82,6 +85,7 @@ data class InfoDaArte(
     val tingir: String? = null,
     val ordem: Int = 0,
     val personagem: String? = null,
+    val esconde: List<String> = emptyList(),
 ) {
     /** [ponto] como fração da imagem (0 a 1), para posicionar em qualquer tamanho de exibição. */
     fun fracao(ponto: PontoDaArte): Pair<Float, Float> = ponto.x.toFloat() / largura to ponto.y.toFloat() / altura
