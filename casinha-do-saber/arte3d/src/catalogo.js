@@ -22,6 +22,7 @@ import { catalogoDaFase4 } from './catalogo_fase4.js';
 import { catalogoFase5 } from './catalogo_fase5.js';
 import { catalogo as catalogoFase6 } from './catalogo_fase6.js';
 import { catalogo as catalogoFase7 } from './catalogo_fase7.js';
+import { catalogo as catalogoFase8 } from './catalogo_fase8.js';
 
 // Fase 2: ícones dos caminhos (ids pelos nomes de dominio/Trilha) e peças da interface.
 const icone = (id, montar, uso = 48) => ({ id, tipo: 'item', uso: { largura: uso, altura: uso }, montar });
@@ -62,4 +63,6 @@ export const catalogo = [
   ...catalogoFase6,
   // Fase 7: o guarda-roupa, camadas da criança com o campo esconde (catalogo_fase7.js)
   ...catalogoFase7,
+  // Fase 8: ícones da barra, mascotes e enfeites das demais telas (catalogo_fase8.js)
+  ...catalogoFase8,
 ];
