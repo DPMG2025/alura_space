@@ -1,9 +1,6 @@
 package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -12,13 +9,18 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,9 +29,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.Role
@@ -37,46 +41,31 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.GeradorDeFases
-import br.com.casinhadosaber.dominio.ItensDaCasa
 import br.com.casinhadosaber.dominio.Trilha
+import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
+import br.com.casinhadosaber.ui.componentes.CenaDaCasa
+import br.com.casinhadosaber.ui.componentes.Estrela
+import br.com.casinhadosaber.ui.componentes.EstrelasDeProgresso
+import br.com.casinhadosaber.ui.componentes.ID_ESTRELA_CHEIA
 import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
-import br.com.casinhadosaber.ui.componentes.TextoComContorno
 import br.com.casinhadosaber.ui.componentes.IconesDaBarra
 import br.com.casinhadosaber.ui.componentes.ImagemDeArte
-import br.com.casinhadosaber.ui.componentes.faceDeBrinquedo
-import br.com.casinhadosaber.ui.componentes.CenaDaCasa
 import br.com.casinhadosaber.ui.componentes.MaoGuia
+import br.com.casinhadosaber.ui.componentes.PilulaDeValor
+import br.com.casinhadosaber.ui.componentes.ProgressoVisivel
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import br.com.casinhadosaber.ui.componentes.faceDeBrinquedo
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.Dp
-import br.com.casinhadosaber.ui.componentes.PROPORCAO_CENA
-import br.com.casinhadosaber.ui.componentes.FundoDecorado
-import br.com.casinhadosaber.ui.tema.Formas
 
 /** Conta as chegadas ao início (só enquanto o app está aberto) para variar a saudação sem sorteio. */
 private var chegadasNoInicio = 0
@@ -117,7 +106,8 @@ fun TelaInicio(
         narrador.falarPartes(br.com.casinhadosaber.dominio.VozesDaFamilia.saudacao(oi) + br.com.casinhadosaber.dominio.ParteDaFala(pt(resto)))
     }
 
-    FundoDecorado(Cores.Ceu, Modifier.fillMaxSize()) {
+    // Maquete 1: céu em degradê (azul em cima, pêssego e rosa embaixo) com a casa na ilha de grama, sem moldura.
+    Box(Modifier.fillMaxSize().background(CeuDoInicio)) {
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
@@ -125,8 +115,12 @@ fun TelaInicio(
     ) {
     // Tela deitada (tablet em paisagem): a casa à esquerda e os quatro caminhos numa coluna à direita.
     val deitada = maxWidth > maxHeight * 1.15f
+    // Tela baixa (celular pequeno, tablet deitado): o título vai na linha dos botões, sem a pílula das estrelas.
+    val baixa = deitada || maxHeight < 700.dp
+    val tituloGrande = maxWidth >= 380.dp
+    val totalDeEstrelas = estado.estrelas.values.sum()
     Column(Modifier.fillMaxSize()) {
-        // Cabeçalho
+        // Cabeçalho: ajustes (área dos pais), as estrelas ganhas numa pílula e o som; o título embaixo.
         Row(
             Modifier
                 .fillMaxWidth()
@@ -134,17 +128,17 @@ fun TelaInicio(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             BotaoAdulto(onAreaDosPais)
-            Spacer(Modifier.width(8.dp))
-            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                // Título de brinquedo: Baloo 2 branca com contorno roxo e lábio embaixo (maquete 1).
-                TextoComContorno("Casinha do Saber", estilo = MaterialTheme.typography.headlineMedium, espessura = 5.dp)
-                TextoContornado(
-                    "🏠 ${estado.itensGanhos.size} de ${br.com.casinhadosaber.dominio.CasaQueCresce.metaAtual(estado.fasesVencidas)} coisas",
-                    MaterialTheme.typography.titleMedium,
-                    contorno = 4.dp,
-                )
+            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                if (baixa) {
+                    TextoComContorno("Casinha do Saber", estilo = MaterialTheme.typography.headlineMedium, espessura = 5.dp)
+                } else {
+                    PilulaDeValor(
+                        ID_ESTRELA_CHEIA,
+                        "$totalDeEstrelas",
+                        descricao = "Você já ganhou $totalDeEstrelas estrelas",
+                    ) { Estrela(true, tamanho = 26.dp) }
+                }
             }
-            Spacer(Modifier.width(8.dp))
             BotaoRedondo(
                 emoji = if (somLigado) "🔊" else "🔇",
                 descricao = if (somLigado) "Desligar som" else "Ligar som",
@@ -152,21 +146,21 @@ fun TelaInicio(
                 tamanho = 48.dp,
             )
         }
+        if (!baixa) {
+            // Título de brinquedo: Baloo 2 branca com contorno roxo e lábio embaixo (maquete 1).
+            TextoComContorno(
+                "Casinha do Saber",
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                estilo = if (tituloGrande) MaterialTheme.typography.headlineLarge.copy(fontSize = 38.sp, lineHeight = 42.sp) else MaterialTheme.typography.headlineLarge,
+                espessura = 6.dp,
+            )
+        }
 
-        // A casinha (toque para montar)
+        // A casinha na ilha (toque para montar): a cena sem céu (o céu é o da tela) e sem moldura.
         @Composable
         fun Casinha(modifier: Modifier) {
-        Box(
-            modifier.padding(horizontal = 12.dp),
-            contentAlignment = Alignment.BottomCenter,
-        ) {
             Box(
-                Modifier
-                    .fillMaxSize()
-                    .shadow(10.dp, Formas.Enorme, ambientColor = Cores.Sombra, spotColor = Cores.Sombra)
-                    .clip(Formas.Enorme)
-                    // Moldura branquinha por cima da cena: um cartão, e não um recorte.
-                    .border(3.dp, Color.White.copy(alpha = 0.85f), Formas.Enorme)
+                modifier
                     .semantics {
                         contentDescription = "Minha casinha. Toque para montar."
                         role = Role.Button
@@ -174,8 +168,17 @@ fun TelaInicio(
                     }
                     .clickable { sons.toque(); onAbrirCasa() },
             ) {
-                CenaDaCasa(estado, Modifier.fillMaxSize(), preencherAltura = true)
-                BrumaDoHorizonte(Modifier.fillMaxSize())
+                CenaDaCasa(estado, Modifier.fillMaxSize(), preencherAltura = true, semCeu = true)
+                if (!deitada) {
+                    // A grama se desfaz no rosado do céu de baixo, onde ficam os caminhos (como na maquete).
+                    Spacer(
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .height(28.dp)
+                            .background(Brush.verticalGradient(listOf(Color.Transparent, RosaDoChao))),
+                    )
+                }
                 Column(
                     Modifier
                         .align(Alignment.TopStart)
@@ -238,12 +241,10 @@ fun TelaInicio(
             }
         }
 
-        }
-
         @Composable
-        fun Caminho(t: Trilha, modifier: Modifier) {
+        fun Caminho(t: Trilha, modifier: Modifier, alto: Boolean) {
             Box(modifier) {
-                BotaoTrilha(t, estado.vencidasNa(t), Modifier.fillMaxSize()) {
+                BotaoTrilha(t, estado.vencidasNa(t), Modifier.fillMaxSize(), alto) {
                     sons.toque()
                     onAbrirTrilha(t)
                 }
@@ -261,21 +262,22 @@ fun TelaInicio(
                     Modifier.width(LARGURA_DOS_CAMINHOS_DEITADA).fillMaxHeight().padding(end = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    for (t in Trilha.entries) Caminho(t, Modifier.weight(1f).fillMaxWidth())
+                    for (t in Trilha.entries) Caminho(t, Modifier.weight(1f).fillMaxWidth(), alto = false)
                 }
             }
         } else {
             Casinha(Modifier.weight(1f).fillMaxWidth())
             // Caminhos
             // Em telas altas, os botões dos caminhos crescem (mais fáceis de acertar com o dedo).
-            val alturaBotao = if (LocalConfiguration.current.screenHeightDp > 760) 118.dp else 88.dp
+            val alto = LocalConfiguration.current.screenHeightDp > 760
+            val alturaBotao = if (alto) 118.dp else 88.dp
             Column(
-                Modifier.padding(12.dp),
+                Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 for (linha in Trilha.entries.chunked(2)) {
                     Row(Modifier.height(alturaBotao), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        for (t in linha) Caminho(t, Modifier.weight(1f).fillMaxHeight())
+                        for (t in linha) Caminho(t, Modifier.weight(1f).fillMaxHeight(), alto)
                     }
                 }
             }
@@ -285,12 +287,31 @@ fun TelaInicio(
     }
 }
 
+/** Céu da tela inicial (maquete 1): azul em cima, clarinho no meio, pêssego e rosa embaixo. */
+private val CeuDoInicio = Brush.verticalGradient(
+    0f to Color(0xFF7CC4FA),
+    0.38f to Color(0xFFB8E2FF),
+    0.66f to Color(0xFFFFE6D6),
+    1f to Color(0xFFFFD0DC),
+)
+
+/** O rosado de baixo, onde a grama se desfaz atrás dos caminhos. */
+private val RosaDoChao = Color(0xFFFFDCDC)
+
+/** Quantas estrelas cada caminho mostra (a última acende só com o caminho inteiro). */
+private const val ESTRELAS_DO_CAMINHO = 5
+
 /** Largura da coluna dos caminhos quando a tela está deitada. */
 private val LARGURA_DOS_CAMINHOS_DEITADA = 320.dp
 
+/**
+ * O bloco do caminho (maquete 1): o ícone 3D grande no canto de cima, o nome em branco com contorno e o progresso
+ * em estrelas que se veem (5 por caminho), nunca "3/250". O número fica só na descrição, para o leitor de tela.
+ */
 @Composable
-private fun BotaoTrilha(trilha: Trilha, vencidas: Int, modifier: Modifier, onClick: () -> Unit) {
+private fun BotaoTrilha(trilha: Trilha, vencidas: Int, modifier: Modifier, alto: Boolean, onClick: () -> Unit) {
     val total = GeradorDeFases.FASES_POR_TRILHA
+    val acesas = ProgressoVisivel.estrelasAcesas(vencidas, total, ESTRELAS_DO_CAMINHO)
     BotaoFofo(
         onClick = onClick,
         modifier = modifier,
@@ -299,34 +320,25 @@ private fun BotaoTrilha(trilha: Trilha, vencidas: Int, modifier: Modifier, onCli
         descricao = "Caminho ${trilha.titulo}, $vencidas de $total fases",
         preencher = true,
     ) {
-        Row(
-            Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // Ícone 3D do caminho (blocos 1 2 3, A B C, globo, argolas), no lugar do emoji e do mesmo tamanho.
-            IconeDeTrilha(trilha, Modifier.size(40.dp))
-            Spacer(Modifier.width(6.dp))
-            Column(Modifier.weight(1f)) {
-                Text(trilha.titulo, style = MaterialTheme.typography.titleMedium.copy(fontSize = 19.sp), color = Color.White, maxLines = 1, softWrap = false)
-                Spacer(Modifier.height(4.dp))
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(10.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(Color(0x40FFFFFF)),
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth(vencidas / total.toFloat())
-                            .height(10.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(Color.White),
-                    )
-                }
-                Text("$vencidas/$total", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+        BoxWithConstraints(Modifier.fillMaxSize().padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 8.dp)) {
+            // O ícone cresce com o bloco, sem passar de metade da largura (o nome precisa caber ao lado).
+            val icone = minOf(maxHeight * 0.66f, maxWidth * 0.48f)
+            IconeDeTrilha(trilha, Modifier.align(Alignment.TopEnd).size(icone))
+            Column(Modifier.align(Alignment.BottomStart)) {
+                TextoComContorno(
+                    trilha.titulo,
+                    estilo = MaterialTheme.typography.headlineMedium.copy(fontSize = if (alto) 23.sp else 19.sp, lineHeight = if (alto) 27.sp else 22.sp),
+                    corDoContorno = Cores.ContornoEscuro,
+                    espessura = 3.dp,
+                    profundidade = 2.dp,
+                    alinhamento = TextAlign.Start,
+                )
+                EstrelasDeProgresso(
+                    cheias = acesas,
+                    total = ESTRELAS_DO_CAMINHO,
+                    tamanho = if (alto) 20.dp else 15.dp,
+                    espaco = 1.dp,
+                )
             }
         }
     }
@@ -368,62 +380,3 @@ private fun BotaoAdulto(onAbrir: () -> Unit) {
 
 /** Base lilás dos botões brancos (a mesma do `BotaoRedondo`). */
 private val BASE_DO_BOTAO = Cores.LabioLilas
-
-/**
- * Texto branco com contorno e sombra ameixa (o título sobre o céu claro). O contorno é uma cópia do texto
- * desenhada só com o traço, por baixo, e fica fora da acessibilidade (o leitor de tela lê uma vez só).
- */
-@Composable
-private fun TextoContornado(texto: String, estilo: TextStyle, contorno: Dp) {
-    val ameixa = Cores.Texto
-    Box(contentAlignment = Alignment.Center) {
-        Text(
-            texto,
-            style = estilo.copy(
-                color = ameixa.copy(alpha = 0.8f),
-                drawStyle = Stroke(width = with(LocalDensity.current) { contorno.toPx() }, join = StrokeJoin.Round),
-                shadow = Shadow(ameixa.copy(alpha = 0.35f), Offset(0f, 6f), 6f),
-            ),
-            maxLines = 1,
-            modifier = Modifier.clearAndSetSemantics { },
-        )
-        Text(texto, style = estilo, color = Color.White, maxLines = 1)
-    }
-}
-
-/**
- * Bruma do horizonte na cena da casa: uma faixa branquinha onde o céu encontra os morros, mais forte nas
- * pontas (longe) e quase nada no meio (onde fica a casa, para ela não ficar desbotada).
- * A conta da altura segue a da `CenaDaCasa` com `preencherAltura` (morros a 68% da cena, céu extra a 35% da sobra).
- */
-@Composable
-private fun BrumaDoHorizonte(modifier: Modifier) {
-    Spacer(
-        modifier
-            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-            .drawWithCache {
-                val alturaCena = minOf(size.width * PROPORCAO_CENA, size.height)
-                val ceuExtra = (size.height - alturaCena) * 0.35f
-                val horizonte = ceuExtra + alturaCena * 0.70f
-                val meia = alturaCena * 0.16f
-                val faixa = Brush.verticalGradient(
-                    0f to Color.Transparent,
-                    0.6f to Color.White.copy(alpha = 0.55f),
-                    1f to Color.Transparent,
-                    startY = horizonte - meia * 1.4f,
-                    endY = horizonte + meia * 0.6f,
-                )
-                val pontas = Brush.horizontalGradient(
-                    0f to Color.Black,
-                    0.3f to Color.Black.copy(alpha = 0.25f),
-                    0.5f to Color.Black.copy(alpha = 0.12f),
-                    0.7f to Color.Black.copy(alpha = 0.25f),
-                    1f to Color.Black,
-                )
-                onDrawBehind {
-                    drawRect(faixa, topLeft = Offset(0f, horizonte - meia * 1.4f), size = Size(size.width, meia * 2f))
-                    drawRect(pontas, blendMode = BlendMode.DstIn)
-                }
-            },
-    )
-}

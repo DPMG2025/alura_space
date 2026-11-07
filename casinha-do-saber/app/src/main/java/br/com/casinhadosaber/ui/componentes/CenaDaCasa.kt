@@ -45,6 +45,7 @@ import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -54,6 +55,7 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -169,8 +171,19 @@ fun CenaDaCasa(
             val jardim = sobra * 0.65f
             val temJardimExtra = jardim > 70.dp
             val corteDoChao = alturaCena * 0.22f + jardim
+            val contexto = LocalContext.current
+            val emCamadas = remember(contexto) { CamadasDaCasa.disponivel(ArteDoApp.manifesto(contexto)) }
             Canvas(Modifier.fillMaxSize()) {
-                drawRect(Brush.verticalGradient(coresDoCeu(noite), endY = size.height - corteDoChao.toPx()))
+                if (emCamadas) {
+                    // Casa em camadas 3D: o chão da arte já traz o jardim de baixo (até meia largura abaixo da cena);
+                    // aqui só o céu e a grama lisa da arte para o que sobrar embaixo e dos lados (tela larga), a partir
+                    // da metade da cena, onde a grama da arte já cobre tudo.
+                    val topoChao = (ceuExtra + alturaCena * 0.5f).toPx()
+                    if (!semCeu) drawRect(Brush.verticalGradient(coresDoCeu(noite), endY = topoChao))
+                    drawRect(if (noite) GramaDaArteDeNoite else GramaDaArte, Offset(0f, topoChao), Size(size.width, size.height - topoChao))
+                    return@Canvas
+                }
+                if (!semCeu) drawRect(Brush.verticalGradient(coresDoCeu(noite), endY = size.height - corteDoChao.toPx()))
                 // Grama: dos lados da casa e o jardim que continua para baixo, com tufinhos e flores.
                 val chao = if (noite) listOf(Color(0xFF3F7A45), Color(0xFF2F5E35)) else listOf(Color(0xFF7CC56B), Color(0xFF4F9B44))
                 val topoChao = size.height - corteDoChao.toPx()
@@ -331,6 +344,10 @@ private fun CenaPlana(
         val alturaPx = larguraPx * PROPORCAO_CENA
         // Degradês da cena guardados (só mudam com o tamanho e com a noite), para não criar a cada quadro.
         val pinceis = remember(larguraPx, noite) { PinceisDaCasa(alturaPx, noite) }
+        // A casa em camadas 3D (composta uma vez por aparência e tamanho); nula = desenho antigo, inteiro.
+        val aparencia = AparenciaDaCasa.de(estado, noite)
+        val casa3d = lembrarCasaEmCamadas(aparencia, estado.clima, novaEstrutura, larguraPx.roundToInt())
+        val contexto = LocalContext.current
 
         Canvas(
             Modifier
@@ -348,7 +365,11 @@ private fun CenaPlana(
                     },
                 ),
         ) {
-            desenharCasa(estado, t, novaEstrutura, progresso(), noite, pinceis, semCeu)
+            if (casa3d != null) {
+                desenharCasaEmCamadas(casa3d, estado, t, novaEstrutura, progresso(), noite, pinceis, semCeu)
+            } else {
+                desenharCasa(estado, t, novaEstrutura, progresso(), noite, pinceis, semCeu)
+            }
         }
 
         // Enfeites do evento do dia: no fundo (atrás das coisas, da criança e dos botões), no beiral do telhado.
@@ -415,6 +436,10 @@ private fun CenaPlana(
                 dentroDaCasa(pos, estado) -> 1.4f
                 else -> 1.9f
             }
+            // O item pela arte 3D (`item_<id>`, a lua de noite no lugar do sol); sem ela, o desenho antigo.
+            val arte = ArteDoApp.info(contexto, CamadasDaCasa.idDoItem(item.id, noite))
+            val passoDoBicho: (() -> br.com.casinhadosaber.dominio.Passo)? =
+                if (bicho == null) null else ({ Passeio.em(relogio.value.toLong(), semente) })
             key(item.id) { ObjetoNaCena(
                 item = item,
                 pos = pos,
@@ -429,7 +454,9 @@ private fun CenaPlana(
                 noite = noite,
                 deriva = if (bicho == null) null else ({ Passeio.em(relogio.value.toLong(), semente).deslocamento * alcance * larguraPx }),
                 pularAoTocar = bicho != null,
-                sombra = bicho == null && temSombraDeContato(item.id),
+                // A arte 3D já traz a sombra de contato (no que pisa no chão) e escurece de noite pelo filtro.
+                sombra = arte == null && bicho == null && temSombraDeContato(item.id),
+                escurecerDeNoite = arte == null,
                 onTocar = { onTocarItem(item) },
                 onSoltar = { nova ->
                     if (nova.y > jardim.limiteDoBau) {
@@ -455,11 +482,14 @@ private fun CenaPlana(
                     }
                 },
             ) { w ->
-                when {
-                    bicho != null -> BichoDesenhado(bicho.first, bicho.second, { Passeio.em(relogio.value.toLong(), semente) })
-                    noite && item.id == "sol" -> EmojiGrande("🌙", w)
-                    else -> ConteudoDoItem(item, w)
+                val antigo: @Composable () -> Unit = {
+                    when {
+                        bicho != null -> BichoDesenhado(bicho.first, bicho.second, { Passeio.em(relogio.value.toLong(), semente) })
+                        noite && item.id == "sol" -> EmojiGrande("🌙", w)
+                        else -> ConteudoDoItem(item, w)
+                    }
                 }
+                if (arte != null) ItemDaArte(arte, w, noite, passoDoBicho, antigo) else antigo()
             } }
         }
 
@@ -523,6 +553,15 @@ private fun CenaPlana(
             ) { _ ->
                 Crianca(perfil, Modifier.fillMaxSize(), acenando = true)
             }
+        }
+
+        // Chuva ou neve da arte 3D: por cima de tudo (itens e crianças também), nunca dentro de casa.
+        val chuva = casa3d?.clima
+        if (chuva != null) {
+            val paredes = estado.temEstrutura(Estrutura.PAREDES)
+            val telhado = estado.temEstrutura(Estrutura.TELHADO)
+            val velocidade = if (estado.clima == 1) 2f else 1f
+            Canvas(Modifier.fillMaxSize()) { desenharClimaEmCamadas(chuva, t, velocidade, paredes, telhado, alturaPx) }
         }
     }
 }
@@ -677,6 +716,11 @@ internal fun ObjetoNaCena(
     inclinacao: Float = 0f,
     /** Pequeno desvio para o lado, em pixels, também fixo por objeto (quebra a cara de grade). */
     desvioX: Float = 0f,
+    /**
+     * De noite, azular o conteúdo numa camada própria (que recorta na caixa). false para quem escurece sozinho e
+     * desenha além da caixa (os itens da arte 3D, com a sombra e a folga deles).
+     */
+    escurecerDeNoite: Boolean = true,
     conteudo: @Composable (larguraPx: Float) -> Unit,
 ) {
     val faisca = remember { Animatable(1f) }
@@ -826,12 +870,19 @@ internal fun ObjetoNaCena(
         Box(
             Modifier
                 .size(with(densidade) { w.toDp() }, with(densidade) { h.toDp() })
-                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-                .drawWithContent {
-                    drawContent()
-                    // À noite tudo fica azulado, menos o que brilha (as janelas, desenhadas na cena).
-                    if (noite) drawRect(Color(0x70142045), blendMode = BlendMode.SrcAtop)
-                },
+                .then(
+                    if (escurecerDeNoite) {
+                        Modifier
+                            .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                            .drawWithContent {
+                                drawContent()
+                                // À noite tudo fica azulado, menos o que brilha (as janelas, desenhadas na cena).
+                                if (noite) drawRect(Color(0x70142045), blendMode = BlendMode.SrcAtop)
+                            }
+                    } else {
+                        Modifier
+                    },
+                ),
             contentAlignment = Alignment.BottomCenter,
         ) {
             conteudo(w)
@@ -864,10 +915,17 @@ fun ConteudoDoItem(item: ItemCasa, larguraPx: Float, modifier: Modifier = Modifi
     if (bicho != null) {
         // O cachorrinho e o gatinho de corpo inteiro também no baú e no prêmio (parados, abanando o rabo).
         BichoDesenhado(bicho.first, bicho.second, { PARADO_NO_BAU }, modifier)
-    } else if (desenho != null) {
-        Canvas(modifier.fillMaxSize()) { desenharMovel(desenho) }
     } else {
-        EmojiGrande(item.icone, larguraPx, modifier)
+        val antigo: @Composable () -> Unit = {
+            if (desenho != null) {
+                Canvas(modifier.fillMaxSize()) { desenharMovel(desenho) }
+            } else {
+                EmojiGrande(item.icone, larguraPx, modifier)
+            }
+        }
+        // No baú e no prêmio também a arte 3D do item (a imagem inteira cabe na caixa); sem ela, o desenho antigo.
+        val arte = ArteDoApp.info(LocalContext.current, CamadasDaCasa.idDoItem(item.id, noite = false))
+        if (arte != null) ImagemDeArte(arte.id, modifier.fillMaxSize(), reserva = antigo) else antigo()
     }
 }
 
@@ -912,7 +970,120 @@ private val CorLuz = Color(0xFFFFE08A)
 
 /** Cores do céu (forte no alto, clarinho no horizonte), iguais na cena e na faixa de céu de cima. */
 private fun coresDoCeu(noite: Boolean) =
-    if (noite) listOf(Color(0xFF0E1638), Color(0xFF22306A), Color(0xFF3B4C8C)) else listOf(Color(0xFF5FB2F2), Color(0xFF9AD3FF), Color(0xFFDDF1FF))
+    if (noite) listOf(Color(0xFF0E1638), Color(0xFF22306A), Color(0xFF3B4C8C)) else listOf(Color(0xFF7CC4FA), Color(0xFFB8E2FF), Color(0xFFFFE6D6))
+
+/** A grama lisa da arte 3D (a última linha do chão), para continuar o jardim de baixo nas telas muito altas. */
+private val GramaDaArte = Color(0xFFA9E56F)
+private val GramaDaArteDeNoite = Color(CamadasDaCasa.multiplicar(0xFFA9E56F, CamadasDaCasa.NOITE))
+
+/**
+ * A casa em camadas 3D ([CasaEmCamadas]): céu, estrelas que piscam, nuvens que passeiam, a nuvem de chuva, a pilha
+ * da casa composta (ou partida em três enquanto a estrutura [nova] cai), a fumaça da chaminé e o contorno pontilhado
+ * do terreno vazio. Os itens, as crianças e o clima que cai vêm por cima, fora daqui.
+ */
+private fun DrawScope.desenharCasaEmCamadas(
+    c: CasaEmCamadas,
+    e: EstadoJogo,
+    t: Float,
+    nova: Estrutura?,
+    progresso: Float,
+    noite: Boolean,
+    pinceis: PinceisDaCasa,
+    semCeu: Boolean,
+) {
+    val W = size.width
+    val H = size.height
+    fun X(v: Float) = v * W
+    fun Y(v: Float) = v * H
+    val volta = 2f * Math.PI.toFloat()
+
+    if (!semCeu) drawRect(pinceis.ceu)
+    // As duas camadas de estrelas se revezam: umas acendem enquanto as outras apagam.
+    if (c.estrelas.isNotEmpty()) {
+        val s = kotlin.math.sin(t * volta)
+        c.estrelas.forEachIndexed { i, img -> camadaDaCena(img, alfa = 0.6f + 0.4f * (if (i % 2 == 0) s else -s)) }
+    }
+    if (!noite) {
+        // Nuvens de enfeite indo e voltando pela metade direita do céu (o sol e o arco-íris ficam à esquerda).
+        c.nuvens.take(2).forEachIndexed { k, img ->
+            val x = 0.62f + 0.14f * (1f + kotlin.math.sin((t + k * 0.5f) * volta))
+            imagemEm(img, X(x - 0.07f), Y(0.07f + k * 0.06f), X(0.15f - k * 0.03f), alfa = 0.92f)
+        }
+        // Passarinhos de enfeite (a arte 3D não tem): os mesmos risquinhos de antes.
+        for (k in 0 until 3) {
+            val bx = X(((t + k * 0.31f) % 1f) * 1.1f - 0.05f)
+            val by = Y(0.22f + k * 0.03f) + kotlin.math.sin((t * 6f + k) * Math.PI.toFloat()) * X(0.006f)
+            val asa = X(0.012f)
+            drawLine(Color(0xFF3D2C5E), Offset(bx - asa, by - asa * 0.5f), Offset(bx, by), 3f)
+            drawLine(Color(0xFF3D2C5E), Offset(bx, by), Offset(bx + asa, by - asa * 0.5f), 3f)
+        }
+    }
+    c.nuvemDeChuva?.let {
+        imagemEm(it, X(0.56f), Y(0.03f), X(0.36f))
+        imagemEm(it, X(0.02f), Y(0.07f), X(0.28f))
+    }
+
+    val partida = c.nova
+    if (partida != null && nova != null && progresso < 1f) {
+        // Estrutura nova caindo do céu com um quique, entre o que fica atrás e o que fica na frente dela.
+        partida.abaixo?.let { camadaDaCena(it) }
+        partida.nova?.let { camadaDaCena(it, dy = -(1f - progresso) * H * 0.25f) }
+        partida.acima?.let { camadaDaCena(it) }
+    } else {
+        camadaDaCena(c.casa)
+    }
+
+    // Fumaça da chaminé (a arte 3D não tem): bolinhas brancas subindo, como antes.
+    if (e.temEstrutura(Estrutura.TELHADO) && e.temEstrutura(Estrutura.CHAMINE)) {
+        for (i in 0 until 3) {
+            val fase = (t + i / 3f) % 1f
+            drawCircle(
+                Color.White.copy(alpha = 0.85f * (1f - fase)),
+                radius = X(0.018f + 0.025f * fase),
+                center = Offset(X(0.715f + 0.08f * fase), Y(0.095f - 0.09f * fase)),
+            )
+        }
+    }
+
+    // Terreno ainda vazio: o contorno pontilhado da casa que vai nascer ali.
+    if (!e.temEstrutura(Estrutura.PAREDES)) {
+        val tracejado = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(X(0.025f), X(0.018f)))
+        val contorno = Path().apply {
+            moveTo(X(Planta.ESQ), Y(Planta.BASE)); lineTo(X(Planta.ESQ), Y(Planta.TOPO)); lineTo(X(0.04f), Y(0.315f))
+            lineTo(X(0.5f), Y(0.075f)); lineTo(X(0.96f), Y(0.315f)); lineTo(X(Planta.DIR), Y(Planta.TOPO)); lineTo(X(Planta.DIR), Y(Planta.BASE))
+        }
+        drawPath(contorno, Color.White.copy(alpha = 0.75f), style = Stroke(X(0.008f), pathEffect = tracejado, join = StrokeJoin.Round))
+    }
+}
+
+/**
+ * A chuva ou a neve da arte 3D ([img], emendável na vertical) caindo por toda a caixa, [velocidade] imagens por
+ * volta do relógio [t] (um número inteiro, para a volta emendar). Paredes e telhado são recortados um de cada vez,
+ * como no desenho antigo, e nunca chove dentro de casa. [alturaDaCena] é a altura da cena em px.
+ */
+private fun DrawScope.desenharClimaEmCamadas(img: ImageBitmap, t: Float, velocidade: Float, paredes: Boolean, telhado: Boolean, alturaDaCena: Float) {
+    val W = size.width
+    val H = alturaDaCena
+    val semParedes = Path().apply {
+        if (paredes) addRect(Rect(W * Planta.ESQ, H * Planta.TOPO, W * Planta.DIR, H * Planta.BASE))
+    }
+    val semTelhado = Path().apply {
+        if (telhado) {
+            moveTo(W * 0.04f, H * 0.315f); lineTo(W * 0.5f, H * 0.075f); lineTo(W * 0.96f, H * 0.315f); close()
+        }
+    }
+    val passo = (W * img.height / img.width).roundToInt().coerceAtLeast(1)
+    val desce = ((t * velocidade) % 1f) * passo
+    clipPath(semParedes, clipOp = androidx.compose.ui.graphics.ClipOp.Difference) {
+        clipPath(semTelhado, clipOp = androidx.compose.ui.graphics.ClipOp.Difference) {
+            var y = desce - passo
+            while (y < size.height) {
+                camadaDaCena(img, dy = y)
+                y += passo
+            }
+        }
+    }
+}
 
 /** Degradês da cena da casa, montados uma vez por tamanho (a cena redesenha a cada quadro). */
 private class PinceisDaCasa(H: Float, noite: Boolean) {

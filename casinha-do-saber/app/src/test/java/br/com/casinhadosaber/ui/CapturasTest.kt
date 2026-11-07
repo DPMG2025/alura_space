@@ -278,6 +278,8 @@ class CapturasTest {
      * 1,15) e as três cabem juntas na largura da tela (360 de 393 dp). Cada uma é capturada
      * sozinha, pelo seu testTag, e comparada pixel a pixel com a cena sem clima só dentro da casa
      * (paredes e telhado, com margem para o contorno). Qualquer diferença ali é chuva ou neve.
+     * Com a casa em camadas 3D, a chuva e a neve caem por cima de tudo (itens também), recortadas nas mesmas
+     * paredes e no mesmo telhado; a neve parada no telhado (camada da arte) é descontada pelo alfa dela.
      */
     @Test fun chuvaNuncaCaiDentroDeCasa() {
         val narrador = Narrador(RuntimeEnvironment.getApplication()).apply { ativo = false }
@@ -329,6 +331,24 @@ class CapturasTest {
             val linhaDaNeve = 0.095f + (0.318f - 0.095f) * (kotlin.math.abs(fx - 0.5f) / 0.43f)
             return y > (linhaDaNeve * h) + m && fx > 0.07f && fx < 0.93f
         }
+        // Casa em camadas 3D (Fase 3): a neve no telhado é uma camada da arte (`casa_neve_no_telhado`) que cobre
+        // a cumeeira e desce um pouco nos beirais. Onde ela tem cor (com a mesma margem) não conta como "dentro":
+        // é a neve parada em cima do telhado, não neve caindo. A camada tem o quadro da cena (alinhada no topo).
+        val neveNoTelhado: android.graphics.Bitmap? = runCatching {
+            RuntimeEnvironment.getApplication().assets.open("arte/casa_neve_no_telhado.webp").use {
+                android.graphics.BitmapFactory.decodeStream(it)
+            }?.let { android.graphics.Bitmap.createScaledBitmap(it, w, h, true) }
+        }.getOrNull()
+        fun naNeveDoTelhado(x: Int, y: Int): Boolean {
+            val neve = neveNoTelhado ?: return false
+            val k = m.toInt()
+            for (dy in -k..k step k) for (dx in -k..k step k) {
+                val px = (x + dx).coerceIn(0, w - 1)
+                val py = (y + dy).coerceIn(0, h - 1)
+                if (android.graphics.Color.alpha(neve.getPixel(px, py)) > 0) return true
+            }
+            return false
+        }
         val referencia = cenas[0]
         for (c in 1..2) {
             val img = cenas[c]
@@ -336,7 +356,8 @@ class CapturasTest {
             var fora = 0
             for (y in 0 until h) for (x in 0 until w) {
                 if (img.getPixel(x, y) == referencia.getPixel(x, y)) continue
-                if (dentroDasParedes(x, y) || dentroDoTelhado(x, y)) dentro++ else fora++
+                val naCasa = dentroDasParedes(x, y) || dentroDoTelhado(x, y)
+                if (naCasa && !(c == 2 && naNeveDoTelhado(x, y))) dentro++ else fora++
             }
             // Sem isto o teste passaria à toa se o clima não fosse desenhado.
             org.junit.Assert.assertTrue("clima $c não desenhou nada do lado de fora", fora > 50)
