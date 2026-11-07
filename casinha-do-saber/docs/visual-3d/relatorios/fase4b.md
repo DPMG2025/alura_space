@@ -105,4 +105,5 @@ manifesto; nenhuma imagem nova.
 
 ## Commit
 
-Código, testes e este relatório: ver `git log -1` na branch `worktree-agent-a43e99d1facc7c943`.
+Código, testes e este relatório: `787bfe1` (branch `worktree-agent-a43e99d1facc7c943`, sem push); o hash entrou
+neste relatório num segundo commit.
