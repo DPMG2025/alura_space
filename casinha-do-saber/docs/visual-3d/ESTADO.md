@@ -31,7 +31,11 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 * 2026-11-07: o teste dos chapéus (captura 56) passou a rodar em tela larga; a fila de chapéus não cabia em 393 dp com a criança 3D.
 * Regra de processo: push cancela o CI em andamento (concurrency); só enviar depois que a execução anterior fechar.
 
+* 2026-11-07, execução 121 (commit b4659bc, Fases 0A a 2): build verde (testes, capturas, lint, APK, aab); emulador de TABLET verde (TelaCheiaTest passou, tela cheia confirmada no CI); Android 7 e 8 verdes; emulador de CELULAR falhou: o instrumento morreu durante JogoNoEmuladorTest.abrirMapaEAlbum (12 de 22 testes; "esperava 22, recebeu 11"; emulador some 4 s depois). Causa desconhecida (suspeita: memória/GPU com as imagens novas, ou queda do emulador). O CI agora registra as linhas do TestRunner no logcat para identificar o teste.
+
 ## Problemas abertos
+
+* Emulador de celular caindo em abrirMapaEAlbum desde a Fase 2B (ver acima). Bloqueia marcar as Fases 0A a 2 como provadas.
 
 * Pedidos de arte da 2B: glifo branco (casa) para o botão verde; ícones de mapa, álbum, espelho, sol, lua, repetir, desfazer, ouvir, parar, gravar e lixeira.
 
