@@ -122,4 +122,4 @@ feitas uma vez por bitmap guardado.
 
 ## Commit
 
-Código, testes e este relatório: ver o hash no fim (segundo commit só com o hash).
+Código, testes e este relatório: `ce6d820` (branch `worktree-agent-a5074200178713d04`, sem push); o hash entrou aqui num segundo commit.
