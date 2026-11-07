@@ -14,6 +14,7 @@ import { patinhoDaLagoa } from './objetos/patinho.js';
 import { camadasDosPersonagens } from './camadas.js';
 import { icones } from './objetos/icones.js';
 import * as ui from './objetos/interface.js';
+import { camadasDaCasa, itensDaCasa } from './casa.js';
 
 // Fase 2: ícones dos caminhos (ids pelos nomes de dominio/Trilha) e peças da interface.
 const icone = (id, montar, uso = 48) => ({ id, tipo: 'item', uso: { largura: uso, altura: uso }, montar });
@@ -43,4 +44,7 @@ export const catalogo = [
   { id: 'patinho', tipo: 'objeto', uso: { largura: 120, altura: 120 }, montar: patinhoDaLagoa },
   ...pecasDaInterface,
   ...camadasDosPersonagens,
+  // Fase 3: a casa de fora (casa.js)
+  ...camadasDaCasa,
+  ...itensDaCasa,
 ];

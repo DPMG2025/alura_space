@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "render": "node render.js",
-    "previa": "node previa.js"
+    "previa": "node previa.js",
+    "previa:casa": "node previa_casa.js"
   },
   "dependencies": {
     "sharp": "0.35.5",

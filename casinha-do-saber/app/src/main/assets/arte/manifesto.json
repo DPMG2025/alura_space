@@ -2,6 +2,678 @@
   "versao": 1,
   "escala": 2,
   "imagens": {
+    "casa_caminho": {
+      "altura": 1320,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_caminho.webp",
+      "grupo": "caminho",
+      "largura": 800,
+      "ordem": 13,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 660,
+        "largura": 400
+      }
+    },
+    "casa_cerca": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_cerca.webp",
+      "grupo": "cerca",
+      "largura": 800,
+      "ordem": 14,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_chamine": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_chamine.webp",
+      "grupo": "chamine",
+      "largura": 800,
+      "ordem": 18,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_comodo_banheiro": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_comodo_banheiro.webp",
+      "grupo": "comodo",
+      "largura": 800,
+      "ordem": 20,
+      "tingir": "banheiro",
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_comodo_cozinha": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_comodo_cozinha.webp",
+      "grupo": "comodo",
+      "largura": 800,
+      "ordem": 20,
+      "tingir": "cozinha",
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_comodo_quarto": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_comodo_quarto.webp",
+      "grupo": "comodo",
+      "largura": 800,
+      "ordem": 20,
+      "tingir": "quarto",
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_comodo_sala": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_comodo_sala.webp",
+      "grupo": "comodo",
+      "largura": 800,
+      "ordem": 20,
+      "tingir": "sala",
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_escada": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_escada.webp",
+      "grupo": "escada",
+      "largura": 800,
+      "ordem": 32,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_0_vazio": {
+      "altura": 1320,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_0_vazio.webp",
+      "grupo": "chao",
+      "largura": 800,
+      "ordem": 10,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 660,
+        "largura": 400
+      }
+    },
+    "casa_etapa_1_terreno": {
+      "altura": 1320,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_1_terreno.webp",
+      "grupo": "chao",
+      "largura": 800,
+      "ordem": 10,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 660,
+        "largura": 400
+      }
+    },
+    "casa_etapa_2_paredes": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_2_paredes.webp",
+      "grupo": "paredes",
+      "largura": 800,
+      "ordem": 30,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_3_telhado_0": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_3_telhado_0.webp",
+      "grupo": "telhado",
+      "largura": 800,
+      "ordem": 40,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_3_telhado_1": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_3_telhado_1.webp",
+      "grupo": "telhado",
+      "largura": 800,
+      "ordem": 40,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_3_telhado_2": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_3_telhado_2.webp",
+      "grupo": "telhado",
+      "largura": 800,
+      "ordem": 40,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_3_telhado_3": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_3_telhado_3.webp",
+      "grupo": "telhado",
+      "largura": 800,
+      "ordem": 40,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_3_telhado_4": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_3_telhado_4.webp",
+      "grupo": "telhado",
+      "largura": 800,
+      "ordem": 40,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_3_telhado_5": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_3_telhado_5.webp",
+      "grupo": "telhado",
+      "largura": 800,
+      "ordem": 40,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_4_porta_0": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_4_porta_0.webp",
+      "grupo": "porta",
+      "largura": 800,
+      "ordem": 26,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_4_porta_1": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_4_porta_1.webp",
+      "grupo": "porta",
+      "largura": 800,
+      "ordem": 26,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_4_porta_2": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_4_porta_2.webp",
+      "grupo": "porta",
+      "largura": 800,
+      "ordem": 26,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_4_porta_3": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_4_porta_3.webp",
+      "grupo": "porta",
+      "largura": 800,
+      "ordem": 26,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_etapa_4_porta_4": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_etapa_4_porta_4.webp",
+      "grupo": "porta",
+      "largura": 800,
+      "ordem": 26,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_janela_do_telhado_noite": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_janela_do_telhado_noite.webp",
+      "grupo": "janelaDoTelhado",
+      "largura": 800,
+      "ordem": 41,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_janelas": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_janelas.webp",
+      "grupo": "janelas",
+      "largura": 800,
+      "ordem": 24,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_janelas_noite": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_janelas_noite.webp",
+      "grupo": "janelas",
+      "largura": 800,
+      "ordem": 24,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_lago": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_lago.webp",
+      "grupo": "lago",
+      "largura": 800,
+      "ordem": 12,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_neve_no_telhado": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_neve_no_telhado.webp",
+      "grupo": "neveNoTelhado",
+      "largura": 800,
+      "ordem": 42,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_papel_1": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_papel_1.webp",
+      "grupo": "papel",
+      "largura": 800,
+      "ordem": 22,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_papel_2": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_papel_2.webp",
+      "grupo": "papel",
+      "largura": 800,
+      "ordem": 22,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "casa_papel_3": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "casa_papel_3.webp",
+      "grupo": "papel",
+      "largura": 800,
+      "ordem": 22,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "ceu_chuva": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "ceu_chuva.webp",
+      "grupo": "clima",
+      "largura": 800,
+      "ordem": 90,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "ceu_estrelas_1": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "ceu_estrelas_1.webp",
+      "grupo": "estrelas",
+      "largura": 800,
+      "ordem": 2,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "ceu_estrelas_2": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "ceu_estrelas_2.webp",
+      "grupo": "estrelas",
+      "largura": 800,
+      "ordem": 2,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "ceu_neve": {
+      "altura": 920,
+      "ancoras": {},
+      "apoio": {
+        "x": 400,
+        "y": 730
+      },
+      "arquivo": "ceu_neve.webp",
+      "grupo": "clima",
+      "largura": 800,
+      "ordem": 90,
+      "tingir": null,
+      "tipo": "casa",
+      "uso": {
+        "altura": 460,
+        "largura": 400
+      }
+    },
+    "ceu_nuvem_1": {
+      "altura": 200,
+      "ancoras": {},
+      "apoio": {
+        "x": 160,
+        "y": 166
+      },
+      "arquivo": "ceu_nuvem_1.webp",
+      "largura": 320,
+      "tipo": "item",
+      "uso": {
+        "altura": 100,
+        "largura": 160
+      }
+    },
+    "ceu_nuvem_2": {
+      "altura": 160,
+      "ancoras": {},
+      "apoio": {
+        "x": 120,
+        "y": 136
+      },
+      "arquivo": "ceu_nuvem_2.webp",
+      "largura": 240,
+      "tipo": "item",
+      "uso": {
+        "altura": 80,
+        "largura": 120
+      }
+    },
+    "ceu_nuvem_3": {
+      "altura": 180,
+      "ancoras": {},
+      "apoio": {
+        "x": 140,
+        "y": 149
+      },
+      "arquivo": "ceu_nuvem_3.webp",
+      "largura": 280,
+      "tipo": "item",
+      "uso": {
+        "altura": 90,
+        "largura": 140
+      }
+    },
+    "ceu_nuvem_chuva": {
+      "altura": 200,
+      "ancoras": {},
+      "apoio": {
+        "x": 160,
+        "y": 166
+      },
+      "arquivo": "ceu_nuvem_chuva.webp",
+      "largura": 320,
+      "tipo": "item",
+      "uso": {
+        "altura": 100,
+        "largura": 160
+      }
+    },
     "conta_amarela": {
       "altura": 64,
       "ancoras": {
@@ -2471,6 +3143,639 @@
       "uso": {
         "altura": 196,
         "largura": 130
+      }
+    },
+    "item_abajur": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 120,
+        "y": 247
+      },
+      "arquivo": "item_abajur.webp",
+      "largura": 240,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 120
+      }
+    },
+    "item_arcoiris": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 200,
+        "y": 232
+      },
+      "arquivo": "item_arcoiris.webp",
+      "largura": 400,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 200
+      }
+    },
+    "item_arvore": {
+      "altura": 400,
+      "ancoras": {},
+      "apoio": {
+        "x": 200,
+        "y": 329
+      },
+      "arquivo": "item_arvore.webp",
+      "largura": 400,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "item_banheira": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 283,
+          "y": 105
+        },
+        "topoDaCabeca": {
+          "x": 284,
+          "y": 85
+        }
+      },
+      "apoio": {
+        "x": 200,
+        "y": 274
+      },
+      "arquivo": "item_banheira.webp",
+      "largura": 400,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "item_bicicleta": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 180,
+        "y": 230
+      },
+      "arquivo": "item_bicicleta.webp",
+      "largura": 360,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 180
+      }
+    },
+    "item_bola": {
+      "altura": 240,
+      "ancoras": {},
+      "apoio": {
+        "x": 120,
+        "y": 170
+      },
+      "arquivo": "item_bola.webp",
+      "largura": 240,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 120,
+        "largura": 120
+      }
+    },
+    "item_bolo": {
+      "altura": 240,
+      "ancoras": {},
+      "apoio": {
+        "x": 120,
+        "y": 185
+      },
+      "arquivo": "item_bolo.webp",
+      "largura": 240,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 120,
+        "largura": 120
+      }
+    },
+    "item_borboleta": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 142,
+        "y": 253
+      },
+      "arquivo": "item_borboleta.webp",
+      "largura": 280,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 140
+      }
+    },
+    "item_cachorro": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 160,
+        "y": 224
+      },
+      "arquivo": "item_cachorro.webp",
+      "largura": 320,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 160
+      }
+    },
+    "item_cama": {
+      "altura": 400,
+      "ancoras": {},
+      "apoio": {
+        "x": 200,
+        "y": 267
+      },
+      "arquivo": "item_cama.webp",
+      "largura": 400,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "item_caminho": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 160,
+        "y": 156
+      },
+      "arquivo": "item_caminho.webp",
+      "largura": 320,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 160
+      }
+    },
+    "item_cerca": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 180,
+        "y": 184
+      },
+      "arquivo": "item_cerca.webp",
+      "largura": 360,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 180
+      }
+    },
+    "item_chamine": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 120,
+        "y": 301
+      },
+      "arquivo": "item_chamine.webp",
+      "largura": 240,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 120
+      }
+    },
+    "item_escada": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 160,
+        "y": 281
+      },
+      "arquivo": "item_escada.webp",
+      "largura": 320,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 160
+      }
+    },
+    "item_escorregador": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 180,
+        "y": 251
+      },
+      "arquivo": "item_escorregador.webp",
+      "largura": 360,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 180
+      }
+    },
+    "item_espelho": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 120,
+        "y": 307
+      },
+      "arquivo": "item_espelho.webp",
+      "largura": 240,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 120
+      }
+    },
+    "item_estrela": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 142,
+        "y": 261
+      },
+      "arquivo": "item_estrela.webp",
+      "largura": 280,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 140
+      }
+    },
+    "item_flores": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 140,
+        "y": 233
+      },
+      "arquivo": "item_flores.webp",
+      "largura": 280,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 140
+      }
+    },
+    "item_fogao": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 120,
+        "y": 240
+      },
+      "arquivo": "item_fogao.webp",
+      "largura": 240,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 120
+      }
+    },
+    "item_gato": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 140,
+        "y": 221
+      },
+      "arquivo": "item_gato.webp",
+      "largura": 280,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 140
+      }
+    },
+    "item_geladeira": {
+      "altura": 400,
+      "ancoras": {},
+      "apoio": {
+        "x": 96,
+        "y": 304
+      },
+      "arquivo": "item_geladeira.webp",
+      "largura": 192,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 200,
+        "largura": 96
+      }
+    },
+    "item_janelas": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 140,
+        "y": 225
+      },
+      "arquivo": "item_janelas.webp",
+      "largura": 280,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 140
+      }
+    },
+    "item_lago": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 198,
+        "y": 154
+      },
+      "arquivo": "item_lago.webp",
+      "largura": 400,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 200
+      }
+    },
+    "item_livros": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 144,
+        "y": 212
+      },
+      "arquivo": "item_livros.webp",
+      "largura": 280,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 140
+      }
+    },
+    "item_mesa": {
+      "altura": 252,
+      "ancoras": {},
+      "apoio": {
+        "x": 180,
+        "y": 161
+      },
+      "arquivo": "item_mesa.webp",
+      "largura": 360,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 126,
+        "largura": 180
+      }
+    },
+    "item_nuvem": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 200,
+        "y": 241
+      },
+      "arquivo": "item_nuvem.webp",
+      "largura": 400,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 200
+      }
+    },
+    "item_paredes": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 160,
+        "y": 234
+      },
+      "arquivo": "item_paredes.webp",
+      "largura": 320,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 160
+      }
+    },
+    "item_pato": {
+      "altura": 240,
+      "ancoras": {
+        "cabeca": {
+          "x": 146,
+          "y": 75
+        },
+        "topoDaCabeca": {
+          "x": 147,
+          "y": 16
+        }
+      },
+      "apoio": {
+        "x": 102,
+        "y": 217
+      },
+      "arquivo": "item_pato.webp",
+      "largura": 240,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 120,
+        "largura": 120
+      }
+    },
+    "item_pipa": {
+      "altura": 360,
+      "ancoras": {},
+      "apoio": {
+        "x": 116,
+        "y": 353
+      },
+      "arquivo": "item_pipa.webp",
+      "largura": 240,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 180,
+        "largura": 120
+      }
+    },
+    "item_planta": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 140,
+        "y": 222
+      },
+      "arquivo": "item_planta.webp",
+      "largura": 280,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 140
+      }
+    },
+    "item_porta": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 120,
+        "y": 311
+      },
+      "arquivo": "item_porta.webp",
+      "largura": 240,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 120
+      }
+    },
+    "item_quadro": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 139,
+        "y": 243
+      },
+      "arquivo": "item_quadro.webp",
+      "largura": 280,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 140
+      }
+    },
+    "item_sofa": {
+      "altura": 400,
+      "ancoras": {},
+      "apoio": {
+        "x": 200,
+        "y": 257
+      },
+      "arquivo": "item_sofa.webp",
+      "largura": 400,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "item_sol": {
+      "altura": 400,
+      "ancoras": {},
+      "apoio": {
+        "x": 200,
+        "y": 382
+      },
+      "arquivo": "item_sol.webp",
+      "largura": 400,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "item_sol_noite": {
+      "altura": 400,
+      "ancoras": {},
+      "apoio": {
+        "x": 187,
+        "y": 399
+      },
+      "arquivo": "item_sol_noite.webp",
+      "largura": 400,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "item_telhado": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 160,
+        "y": 203
+      },
+      "arquivo": "item_telhado.webp",
+      "largura": 320,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 160
+      }
+    },
+    "item_terreno": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 160,
+        "y": 181
+      },
+      "arquivo": "item_terreno.webp",
+      "largura": 320,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 160
+      }
+    },
+    "item_trem": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 160,
+        "y": 225
+      },
+      "arquivo": "item_trem.webp",
+      "largura": 320,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 160
+      }
+    },
+    "item_tv": {
+      "altura": 320,
+      "ancoras": {},
+      "apoio": {
+        "x": 160,
+        "y": 279
+      },
+      "arquivo": "item_tv.webp",
+      "largura": 320,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 160,
+        "largura": 160
+      }
+    },
+    "item_ursinho": {
+      "altura": 280,
+      "ancoras": {},
+      "apoio": {
+        "x": 140,
+        "y": 249
+      },
+      "arquivo": "item_ursinho.webp",
+      "largura": 280,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 140,
+        "largura": 140
+      }
+    },
+    "item_violao": {
+      "altura": 360,
+      "ancoras": {},
+      "apoio": {
+        "x": 100,
+        "y": 331
+      },
+      "arquivo": "item_violao.webp",
+      "largura": 200,
+      "tipo": "casaItem",
+      "uso": {
+        "altura": 180,
+        "largura": 100
       }
     },
     "moeda": {

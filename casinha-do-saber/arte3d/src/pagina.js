@@ -5,6 +5,7 @@ import { THREE, palco, luzes } from './kit.js';
 import { tiposDeCamera, filtroFinal } from './cameras.js';
 import { catalogo } from './catalogo.js';
 import { carregarFonte } from './objetos/icones.js';
+import { CENA } from './objetos/cenaDaCasa.js';
 
 /** Fundo preto vira transparente e os reflexos viram branco translúcido (camadas de brilho do cabelo). */
 function soOBrilho(ctx, L, A) {
@@ -79,6 +80,22 @@ function verticesDoMundo(obj) {
 }
 
 function enquadrar(cam, cfg, caixa, pontos, largura, altura, pxPorDp) {
+  if (cfg.enquadrar === 'cena') {
+    // Câmera olhando na horizontal, deslocamento de lente: o plano z = 0 vira a cena do app, com
+    // [CENA.larguraMundo] unidades na largura da imagem e o topo da imagem em y = CENA.topo.
+    const k = largura / CENA.larguraMundo; // pixels por unidade no plano z = 0
+    const cheia = 2 * CENA.D * Math.tan(THREE.MathUtils.degToRad(cfg.fov) / 2) * k;
+    cam.fov = cfg.fov;
+    cam.aspect = 1;
+    cam.near = 1;
+    cam.far = 120;
+    cam.position.set(0, CENA.YC, CENA.D);
+    cam.lookAt(0, CENA.YC, 0);
+    cam.updateMatrixWorld();
+    cam.setViewOffset(cheia, cheia, cheia / 2 - (CENA.larguraMundo / 2) * k, cheia / 2 - (CENA.topo - CENA.YC) * k, largura, altura);
+    cam.updateProjectionMatrix();
+    return;
+  }
   if (cfg.enquadrar === 'fixo') {
     cam.position.set(...cfg.posicao);
     cam.lookAt(new THREE.Vector3(...cfg.alvo));
@@ -142,7 +159,7 @@ window.renderizar = (id, escala, superamostra) => {
   const raio = caixa.getSize(new THREE.Vector3()).length() / 2;
 
   const pontos = verticesDoMundo(obj);
-  if (cfg.sombraDeContato) {
+  if (item.sombraDeContato ?? cfg.sombraDeContato) {
     const s = sombraDeContato(caixa);
     p.cena.add(s.plano);
     pontos.push(...s.pontos);
@@ -168,7 +185,10 @@ window.renderizar = (id, escala, superamostra) => {
   // pontos no tamanho final
   const reduz = (q) => ({ x: Math.round(q.x / superamostra), y: Math.round(q.y / superamostra) });
   // câmera fixa: o apoio é a origem (os pés da figura), igual em todas as camadas
-  const pontoDeApoio = cfg.enquadrar === 'fixo' ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(centro.x, caixa.min.y, centro.z);
+  // câmera da casa: o apoio é o meio da base da casa (o mesmo pixel em todas as camadas da cena)
+  const pontoDeApoio = cfg.enquadrar === 'fixo' ? new THREE.Vector3(0, 0, 0)
+    : cfg.enquadrar === 'cena' ? new THREE.Vector3(...CENA.apoio)
+      : new THREE.Vector3(centro.x, caixa.min.y, centro.z);
   // Peças finas e giradas (glifos da barra) podem projetar o meio da base da caixa um pouco fora do
   // recorte; o apoio fica preso à imagem (o manifesto exige pontos dentro dela).
   const apoioBruto = reduz(paraPixel(p.cam, pontoDeApoio, L, A));

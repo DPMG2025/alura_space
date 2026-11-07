@@ -47,6 +47,29 @@ export const tiposDeCamera = {
     luzes: { sol: [4, 10, 9], forca: 2.6, area: 3.2, amb: 0.8 },
     sombraDeContato: false,
   },
+  casa: {
+    // Diorama da casa de fora (Fase 3): câmera fixa que olha na horizontal, de um pouco acima da casa, com
+    // deslocamento de lente (setViewOffset), então as verticais ficam retas e o plano z = 0 (a frente da
+    // casa) cai exatamente nas frações da cena do app (CenaDaCasa: x da largura, y da altura, altura =
+    // 1,15 x largura). Todas as camadas da casa saem com o mesmo quadro e a mesma luz: o app só empilha.
+    // Camadas mais altas que o quadro (o chão, que continua no jardim de baixo) estendem o quadro para baixo.
+    // Medidas do mundo em src/objetos/cenaDaCasa.js (CENA).
+    enquadrar: 'cena',
+    fov: 40,
+    luzes: { sol: [3.5, 12, 10], forca: 2.4, area: 12, amb: 1.0 },
+    centro: [0, 2.6, -1.2],
+    sombraDeContato: false,
+  },
+  casaItem: {
+    // Itens da casa (os 40 prêmios) soltos, no mesmo ângulo da câmera 'casa' (de frente, um pouco de cima).
+    // Sombra de contato por item (entrada do catálogo): só no que pisa no chão.
+    enquadrar: 'ajustar',
+    fov: 30,
+    direcao: [0.0, 0.3, 1.0],
+    margem: 1.05,
+    luzes: { sol: [3, 6, 5], forca: 2.4, area: 3, amb: 0.9 },
+    sombraDeContato: false,
+  },
 };
 
 /** Ajuste final de cor do protótipo (ui2.css: canvas.cena). */
