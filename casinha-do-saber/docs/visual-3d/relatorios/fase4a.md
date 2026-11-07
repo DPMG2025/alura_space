@@ -107,3 +107,7 @@ peru, zebra, girafa, cobra, cabra, coruja, papagaio, jacaré, e as comidas e rou
   refeita (o tubo torcia as listras) e o focinho do porco virou para a frente.
 * Pendências para a parte B (Kotlin): montar `cenarioDoJogo` com as camadas, trocar emojis por `fig_*` pelo campo
   `emojis` (com o emoji como reserva) e o teste que lista os emojis com modelo (PRD, seção 5).
+
+## Commit
+
+Arte, código e este relatório: `f4410a1` (branch `worktree-agent-ac8ef9faa61f7388b`, sem push).
