@@ -156,6 +156,10 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_6
+          # O emulador de celular morria depois de uns 7 minutos de testes (execuções 121 e 122): mais memória e núcleos.
+          ram-size: 4096M
+          heap-size: 512M
+          cores: 4
           disable-animations: false
           working-directory: casinha-do-saber
           script: |

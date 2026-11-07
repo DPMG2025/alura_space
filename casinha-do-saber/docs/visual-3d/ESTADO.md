@@ -33,6 +33,8 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 
 * 2026-11-07, execução 121 (commit b4659bc, Fases 0A a 2): build verde (testes, capturas, lint, APK, aab); emulador de TABLET verde (TelaCheiaTest passou, tela cheia confirmada no CI); Android 7 e 8 verdes; emulador de CELULAR falhou: o instrumento morreu durante JogoNoEmuladorTest.abrirMapaEAlbum (12 de 22 testes; "esperava 22, recebeu 11"; emulador some 4 s depois). Causa desconhecida (suspeita: memória/GPU com as imagens novas, ou queda do emulador). O CI agora registra as linhas do TestRunner no logcat para identificar o teste.
 
+* 2026-11-07, execução 122 (commit 724782a, + Fase 3B): build verde; tablet, Android 7 e 8 verdes; celular falhou de novo, mas em outro teste (areaDosPaisDesafioDoDia; na 121 foi abrirMapaEAlbum), ~7 min depois do início. Conclusão: o emulador de celular morre por falta de recurso, não por um teste específico. Decisão: RAM 4096M, heap 512M e 4 núcleos no job emulador do CI.
+
 ## Problemas abertos
 
 * Emulador de celular caindo em abrirMapaEAlbum desde a Fase 2B (ver acima). Bloqueia marcar as Fases 0A a 2 como provadas.
