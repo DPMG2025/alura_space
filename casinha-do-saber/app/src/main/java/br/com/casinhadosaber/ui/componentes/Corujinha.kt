@@ -7,7 +7,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -25,23 +27,31 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 
-/** A Corujinha Professora (narradora da história), desenhada em Canvas: óculos, capelo e um livrinho. */
+/**
+ * A Corujinha Professora (narradora da história): óculos, capelo e um livrinho. Com a arte 3D
+ * (`mascote_coruja_<pose>`, Fase 8), a pose falando (bico aberto, asa gesticulando) enquanto [falando], ou a [pose]
+ * pedida; sem a arte, o desenho em Canvas de antes (reserva).
+ */
 @Composable
-fun Corujinha(modifier: Modifier = Modifier, falando: Boolean = false) {
+fun Corujinha(modifier: Modifier = Modifier, falando: Boolean = false, pose: PoseDoMascote? = null) {
     val transicao = rememberInfiniteTransition(label = "coruja")
     val respiro by transicao.animateFloat(1f, 1.03f, infiniteRepeatable(tween(1500), RepeatMode.Reverse), label = "respiro")
     val piscar by transicao.animateFloat(0f, 1f, infiniteRepeatable(tween(3600, easing = LinearEasing)), label = "piscar")
     val bico by transicao.animateFloat(0f, 1f, infiniteRepeatable(tween(180), RepeatMode.Reverse), label = "bico")
-    Canvas(
-        modifier
-            .aspectRatio(0.9f)
-            .semantics { contentDescription = "Corujinha Professora" }
-            .graphicsLayer {
-                scaleY = respiro
-                transformOrigin = TransformOrigin(0.5f, 1f)
-            },
-    ) {
-        desenharCorujinha(olhosFechados = piscar > 0.96f, bicoAberto = falando && bico > 0.5f)
+    val corpo = modifier
+        .aspectRatio(0.9f)
+        .semantics { contentDescription = "Corujinha Professora" }
+        .graphicsLayer {
+            scaleY = respiro
+            transformOrigin = TransformOrigin(0.5f, 1f)
+        }
+    val desenho: @Composable () -> Unit = {
+        Canvas(Modifier.fillMaxSize()) {
+            desenharCorujinha(olhosFechados = piscar > 0.96f, bicoAberto = falando && bico > 0.5f)
+        }
+    }
+    Box(corpo) {
+        ImagemDeArte(PecasDoMascote.idDaCoruja(pose ?: PoseDoMascote.de(falando = falando)), Modifier.matchParentSize(), reserva = desenho)
     }
 }
 

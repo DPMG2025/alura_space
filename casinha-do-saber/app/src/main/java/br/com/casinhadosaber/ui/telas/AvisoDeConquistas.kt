@@ -1,5 +1,11 @@
 package br.com.casinhadosaber.ui.telas
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.PecasDasTelas
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.Conquistas
@@ -86,21 +91,37 @@ fun AvisoDeConquistas(
         descricao = if (diploma != null) "Diploma novo! Toque para ver" else "Figurinha nova! Toque para ver o álbum",
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                if (diploma != null) "📜" else novas.figurinhas.take(3).joinToString(" ") { it.emoji },
-                fontSize = 34.sp,
-                modifier = Modifier.pulsando(),
-                maxLines = 1,
-            )
+            // O rolo do diploma ou a figurinha nova (o desenho dela no meio do quadrinho 3D), pulsando.
+            Box(Modifier.size(width = 52.dp, height = 60.dp).pulsando(), contentAlignment = Alignment.Center) {
+                val figurinha = novas.figurinhas.firstOrNull()
+                if (diploma != null || figurinha == null) {
+                    ImagemDeArte(PecasDasTelas.DIPLOMA_ROLO, Modifier.size(56.dp)) { Text("📜", fontSize = 34.sp) }
+                } else {
+                    ImagemDeArte(PecasDasTelas.figurinha(figurinha.trilha, figurinha.dourada, ganha = true), Modifier.size(width = 50.dp, height = 60.dp))
+                    Text(figurinha.emoji, fontSize = 24.sp, maxLines = 1)
+                }
+                if (diploma == null && novas.figurinhas.size > 1) {
+                    // Mais de uma: um selinho com quantas são.
+                    Text(
+                        "+${novas.figurinhas.size - 1}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.White,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .background(Cores.Roxo, CircleShape)
+                            .padding(horizontal = 5.dp),
+                    )
+                }
+            }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
                     if (diploma != null) "Diploma novo!" else if (novas.figurinhas.size == 1) "Figurinha nova!" else "${novas.figurinhas.size} figurinhas novas!",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
+                    color = Cores.Texto,
                 )
                 Text(
-                    if (diploma != null) "${Mundos.todos[diploma.mundo].emoji} ${Mundos.todos[diploma.mundo].titulo}" else "Toque para ver o álbum 📒",
+                    if (diploma != null) "${Mundos.todos[diploma.mundo].emoji} ${Mundos.todos[diploma.mundo].titulo}" else "Toque para ver o álbum",
                     style = MaterialTheme.typography.titleSmall,
                     color = Cores.TextoSuave,
                     maxLines = 1,

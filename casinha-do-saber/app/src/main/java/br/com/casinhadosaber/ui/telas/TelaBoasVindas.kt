@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -19,26 +20,21 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.CenaDaCasa
 import br.com.casinhadosaber.ui.componentes.Crianca
-import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.componentes.TituloDeBrinquedo
+import br.com.casinhadosaber.ui.componentes.CeuDaEntrada
 import kotlinx.coroutines.delay
 
 /**
@@ -66,7 +62,7 @@ fun TelaBoasVindas(estado: EstadoJogo, onFim: () -> Unit) {
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .background(Cores.Ceu)
+            .background(CeuDaEntrada)
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { onFim() },
     ) {
@@ -83,17 +79,13 @@ fun TelaBoasVindas(estado: EstadoJogo, onFim: () -> Unit) {
                 .graphicsLayer { translationY = if (andando) -10f * bob * density else 0f },
             acenando = !andando,
         )
-        Text(
+        // Título do brinquedo (branco com contorno), como na maquete 1: sem a faixa branca de antes.
+        TituloDeBrinquedo(
             "Vamos construir a sua casinha!",
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center,
-            color = Cores.Texto,
-            modifier = Modifier
+            Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 24.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.White.copy(alpha = 0.9f))
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .fillMaxWidth()
+                .padding(top = 20.dp, start = 16.dp, end = 16.dp),
         )
     }
 }

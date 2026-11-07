@@ -57,6 +57,19 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.platform.LocalContext
+import br.com.casinhadosaber.ui.componentes.ArteDoApp
+import br.com.casinhadosaber.ui.componentes.ContasDeProgresso
+import br.com.casinhadosaber.ui.componentes.CorDaConta
+import br.com.casinhadosaber.ui.componentes.IconeDaBarra
+import br.com.casinhadosaber.ui.componentes.IconeDeArteDaBarra
+import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.PecasDasTelas
+import br.com.casinhadosaber.ui.componentes.PilulaDeValor
+import br.com.casinhadosaber.ui.componentes.TituloDeBrinquedo
 import br.com.casinhadosaber.ui.tema.Cores
 
 /**
@@ -105,15 +118,14 @@ fun TelaAlbum(
             Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 BotaoRedondo("⬅️", "Voltar", onVoltar, tamanho = 52.dp)
                 Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("📒 Álbum", style = MaterialTheme.typography.headlineMedium, color = Color.White, maxLines = 1)
-                    Text(
-                        "${ganhas.size} de ${Conquistas.totalDeFigurinhas} figurinhas",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = Color.White,
-                        maxLines = 1,
-                    )
-                }
+                IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.ALBUM), Modifier.size(40.dp)) { Text("📒", fontSize = 28.sp) }
+                TituloDeBrinquedo("Álbum", Modifier.weight(1f).padding(horizontal = 4.dp), estilo = MaterialTheme.typography.headlineMedium, maxLinhas = 1)
+                // Quantas figurinhas já tem: a figurinha dourada e o número, numa pílula (o total fica na descrição).
+                PilulaDeValor(
+                    PecasDasTelas.FIGURINHA_DOURADA,
+                    "${ganhas.size}",
+                    descricao = "${ganhas.size} de ${Conquistas.totalDeFigurinhas} figurinhas",
+                )
             }
             // Um separador por caminho
             Row(
@@ -137,7 +149,7 @@ fun TelaAlbum(
                         profundidade = 4.dp,
                     ) {
                         Row(Modifier.height(48.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(t.emoji, fontSize = 22.sp)
+                            IconeDeTrilha(t, Modifier.size(30.dp))
                             Spacer(Modifier.width(4.dp))
                             Text(t.titulo, style = MaterialTheme.typography.titleMedium, color = if (escolhido) Cores.Texto else Color.White, maxLines = 1)
                         }
@@ -158,11 +170,20 @@ fun TelaAlbum(
                     BotaoRedondo("◀️", "Página anterior", { irPara(pagina - 1) }, cor = if (pagina > 0) Color.White else Color(0xFFEDEDED), tamanho = 52.dp)
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("${Mundos.todos[p.mundo].emoji} ${p.titulo}", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center, maxLines = 2)
-                        Text(
-                            if (p.completa) "Página completa! ✨" else "${p.quantasGanhas} de ${p.figurinhas.size} figurinhas",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = Cores.TextoSuave,
-                        )
+                        if (p.completa) {
+                            Text("Página completa! ✨", style = MaterialTheme.typography.titleSmall, color = Cores.TextoSuave)
+                        } else {
+                            // As figurinhas da página como contas: as coladas na cor do caminho (nada de "3 de 11").
+                            ContasDeProgresso(
+                                p.quantasGanhas,
+                                p.figurinhas.size,
+                                Modifier.padding(top = 4.dp),
+                                cor = corDasContas(trilha),
+                                tamanho = 18.dp,
+                                comAtual = false,
+                                descricao = "${p.quantasGanhas} de ${p.figurinhas.size} figurinhas",
+                            )
+                        }
                     }
                     BotaoRedondo("▶️", "Próxima página", { irPara(pagina + 1) }, cor = if (pagina < paginas.lastIndex) Color.White else Color(0xFFEDEDED), tamanho = 52.dp)
                 }
@@ -206,24 +227,33 @@ fun TelaAlbum(
     }
 }
 
-/** Figurinha colada (colorida, com a borda do caminho ou dourada) ou o lugar dela, com a silhueta. */
+/** A cor das contas de cada caminho (perto da cor do caminho). */
+private fun corDasContas(t: Trilha): CorDaConta = when (t) {
+    Trilha.MATEMATICA -> CorDaConta.LARANJA
+    Trilha.PORTUGUES -> CorDaConta.VERDE
+    Trilha.INGLES -> CorDaConta.ROXA
+    Trilha.LOGICA -> CorDaConta.VERMELHA
+}
+
+/**
+ * Figurinha colada (o quadrinho 3D com a borda do caminho, ou o dourado do chefão) ou o lugar dela (o quadrinho
+ * pontilhado), com o desenho no meio da janelinha (âncora `centro` da arte): colorido se ganhou, silhueta se falta.
+ * Sem a arte, o cartão desenhado de antes.
+ */
 @Composable
 private fun CartaoDeFigurinha(f: Figurinha, ganha: Boolean, corDoCaminho: Color, onClick: () -> Unit) {
     val borda = if (f.dourada) Cores.Estrela else corDoCaminho
-    // Figurinha colada fica um tiquinho torta (sempre igual para a mesma fase) e com sombra, como no papel.
+    // Figurinha colada fica um tiquinho torta (sempre igual para a mesma fase), como no papel.
     val torta = if (ganha && !f.dourada) ((f.fase * 37) % 7 - 3) * 0.9f else 0f
+    val id = PecasDasTelas.figurinha(f.trilha, f.dourada, ganha)
+    val contexto = LocalContext.current
+    val info = remember(id) { ArteDoApp.info(contexto, id) }
+    // O meio da janelinha, em relação ao meio do quadro (a arte tem a mesma proporção do quadro).
+    val (cx, cy) = info?.ancoras?.get("centro")?.let(info::fracao) ?: (0.5f to 0.5f)
     Box(
         Modifier
-            .size(width = 72.dp, height = 88.dp)
+            .size(width = 72.dp, height = 86.dp)
             .graphicsLayer { rotationZ = torta }
-            .shadow(if (ganha) 4.dp else 0.dp, RoundedCornerShape(12.dp))
-            .background(
-                if (!ganha) Brush.verticalGradient(listOf(Color(0xFFEDE7DA), Color(0xFFE2DACB)))
-                else if (f.dourada) Brush.verticalGradient(listOf(Color(0xFFFFF3B0), Color(0xFFFFC93C)))
-                else Brush.verticalGradient(listOf(Color.White, Color(0xFFF4F0FF))),
-                RoundedCornerShape(12.dp),
-            )
-            .border(if (ganha) 3.dp else 2.dp, if (ganha) borda else Color(0x33000000), RoundedCornerShape(12.dp))
             .testTag(if (ganha) "figurinha_ganha" else "figurinha_falta")
             .semantics {
                 contentDescription = if (ganha) {
@@ -235,23 +265,43 @@ private fun CartaoDeFigurinha(f: Figurinha, ganha: Boolean, corDoCaminho: Color,
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
+        ImagemDeArte(id, Modifier.matchParentSize()) {
+            Box(
+                Modifier
+                    .shadow(if (ganha) 4.dp else 0.dp, RoundedCornerShape(12.dp))
+                    .background(
+                        if (!ganha) Brush.verticalGradient(listOf(Color(0xFFEDE7DA), Color(0xFFE2DACB)))
+                        else if (f.dourada) Brush.verticalGradient(listOf(Color(0xFFFFF3B0), Color(0xFFFFC93C)))
+                        else Brush.verticalGradient(listOf(Color.White, Color(0xFFF4F0FF))),
+                        RoundedCornerShape(12.dp),
+                    )
+                    .border(if (ganha) 3.dp else 2.dp, if (ganha) borda else Color(0x33000000), RoundedCornerShape(12.dp)),
+            )
+        }
         Text(
             f.emoji,
-            fontSize = 36.sp,
-            // A silhueta: o próprio desenho pintado de uma cor só (dá para adivinhar o que vem).
-            modifier = if (ganha) Modifier else Modifier
-                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-                .drawWithContent {
-                    drawContent()
-                    drawRect(Color(0x66534A6B), blendMode = BlendMode.SrcIn)
-                },
+            fontSize = 32.sp,
+            modifier = Modifier
+                .offset(x = 72.dp * (cx - 0.5f), y = 86.dp * (cy - 0.5f))
+                .then(
+                    // A silhueta: o próprio desenho pintado de uma cor só (dá para adivinhar o que vem).
+                    if (ganha) Modifier else Modifier
+                        .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                        .drawWithContent {
+                            drawContent()
+                            drawRect(Color(0x66534A6B), blendMode = BlendMode.SrcIn)
+                        },
+                ),
         )
-        Text(
-            if (f.dourada) "👑" else "${f.fase + 1}",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (ganha) Cores.Texto else Cores.TextoSuave,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 2.dp),
-        )
+        if (!f.dourada) {
+            // O número da fase, pequenininho no pé da figurinha (para o adulto achar a fase).
+            Text(
+                "${f.fase + 1}",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (ganha) Cores.Texto else Cores.TextoSuave,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp),
+            )
+        }
     }
 }

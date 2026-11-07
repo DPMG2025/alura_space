@@ -81,6 +81,16 @@ import br.com.casinhadosaber.ui.componentes.Confete
 import br.com.casinhadosaber.ui.componentes.VeuDoModal
 import br.com.casinhadosaber.ui.componentes.MascoteAnimado
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.componentes.ContasDeProgresso
+import br.com.casinhadosaber.ui.componentes.CorDaConta
+import br.com.casinhadosaber.ui.componentes.IconeDaBarra
+import br.com.casinhadosaber.ui.componentes.IconeDeArteDaBarra
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.LabioDoVerde
+import br.com.casinhadosaber.ui.componentes.PoseDoMascote
+import br.com.casinhadosaber.ui.componentes.TextoDoBotao
+import br.com.casinhadosaber.ui.componentes.VerdeDoPronto
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
 import br.com.casinhadosaber.ui.tema.Cores
 import kotlinx.coroutines.delay
 
@@ -100,9 +110,9 @@ private fun CartaoDoAviso(modifier: Modifier = Modifier, conteudo: @Composable (
             .padding(16.dp)
             .widthIn(max = 520.dp)
             .fillMaxWidth()
-            .shadow(10.dp, RoundedCornerShape(32.dp))
-            .background(Cores.Fundo, RoundedCornerShape(32.dp))
-            .border(4.dp, Color.White, RoundedCornerShape(32.dp))
+            // Cartão do brinquedo: corpo claro em degradê, lábio lilás embaixo, borda branca e sombra macia.
+            .cartaoFofo(cor = Cores.Fundo, raio = 32.dp, labio = Cores.LabioClaro, profundidade = 6.dp)
+            .clip(RoundedCornerShape(32.dp))
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
     ) { conteudo() }
@@ -124,7 +134,7 @@ fun EscolhaDoMascote(onEscolher: (EspecieMascote, String) -> Unit) {
     FundoDoAviso {
         CartaoDoAviso {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text("Escolha o seu amiguinho!", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+                Text("Escolha o seu amiguinho!", style = MaterialTheme.typography.headlineMedium, color = Cores.Texto, textAlign = TextAlign.Center)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (e in EspecieMascote.entries) {
                         val sel = escolhida == e
@@ -165,7 +175,8 @@ fun EscolhaDoMascote(onEscolher: (EspecieMascote, String) -> Unit) {
                                 MascoteAnimado(
                                     e,
                                     EstagioMascote.BEBE,
-                                    Modifier
+                                    pose = if (sel) PoseDoMascote.FELIZ else PoseDoMascote.PARADO,
+                                    modifier = Modifier
                                         .fillMaxWidth()
                                         .graphicsLayer {
                                             scaleX = 1.5f
@@ -200,22 +211,15 @@ fun EscolhaDoMascote(onEscolher: (EspecieMascote, String) -> Unit) {
                     },
                     habilitado = escolhida != null,
                     // Sem escolha ainda o BotaoFofo clareia o próprio verde (e não um cinza que parece quebrado).
-                    cor = Cores.Certo,
+                    cor = VerdeDoPronto,
+                    corBase = LabioDoVerde,
                     descricao = "Pronto",
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("mascote_pronto")
                         .then(if (escolhida != null) Modifier.pulsando() else Modifier),
                 ) {
-                    Text(
-                        "✔ Pronto",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 14.dp),
-                    )
+                    TextoDoBotao("Pronto!", Modifier.fillMaxWidth().padding(vertical = 10.dp))
                 }
             }
         }
@@ -240,11 +244,18 @@ fun CantinhoDoMascote(
     val estagio = Crescimento.estagio(fasesVencidas)
     val liberados = Crescimento.acessoriosLiberados(fasesVencidas)
     var fala by remember { mutableIntStateOf(0) }
+    // Enquanto o mascote "fala" (logo ao abrir e a cada toque), a pose 3D é a de falar; depois, feliz.
+    var falando by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) { narrador.falar(Crescimento.fala(mascote, fasesVencidas, nomeDaCrianca, 0)) }
+    LaunchedEffect(fala) {
+        falando = true
+        delay(1800)
+        falando = false
+    }
     FundoDoAviso {
         CartaoDoAviso {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(mascote.nomeParaMostrar, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+                Text(mascote.nomeParaMostrar, style = MaterialTheme.typography.headlineMedium, color = Cores.Texto, textAlign = TextAlign.Center)
                 Text("${especie.nome} ${estagio.nome.lowercase()}", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)
                 Box(
                     Modifier
@@ -255,25 +266,20 @@ fun CantinhoDoMascote(
                             narrador.falar(Crescimento.fala(mascote, fasesVencidas, nomeDaCrianca, fala))
                         },
                 ) {
-                    MascoteAnimado(especie, estagio, Modifier.fillMaxSize(), mascote.acessorioEmUso, mascote.nomeParaMostrar, pulando = true)
-                }
-                // Barrinha até o próximo estágio.
-                val faltam = Crescimento.faltamParaCrescer(fasesVencidas)
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(22.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(Color(0xFFEDE6FF)),
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth(Crescimento.progressoNoEstagio(fasesVencidas).coerceIn(0.04f, 1f))
-                            .height(22.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(Cores.Certo),
+                    MascoteAnimado(
+                        especie,
+                        estagio,
+                        Modifier.fillMaxSize(),
+                        mascote.acessorioEmUso,
+                        mascote.nomeParaMostrar,
+                        pulando = true,
+                        pose = if (falando) PoseDoMascote.FALANDO else PoseDoMascote.FELIZ,
                     )
                 }
+                // Até o próximo estágio: 5 contas que se enchem (o número fica para o adulto, embaixo).
+                val faltam = Crescimento.faltamParaCrescer(fasesVencidas)
+                val cheias = if (faltam == 0) 5 else (Crescimento.progressoNoEstagio(fasesVencidas) * 5).toInt().coerceIn(0, 4)
+                ContasDeProgresso(cheias, 5, cor = CorDaConta.VERDE, tamanho = 30.dp, comAtual = faltam > 0)
                 Text(
                     when {
                         faltam == 0 -> "Já é campeão! 🏆"
@@ -311,7 +317,12 @@ fun CantinhoDoMascote(
                                     .padding(vertical = 8.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                Text(if (livre) a.emoji else "🔒", fontSize = 30.sp)
+                                if (livre) {
+                                    Text(a.emoji, fontSize = 30.sp)
+                                } else {
+                                    // Ainda guardado: o cadeado 3D da barra.
+                                    IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.PAIS), Modifier.size(36.dp)) { Text("🔒", fontSize = 30.sp) }
+                                }
                                 // O nome encolhe até caber no cartão ("Cachecol"), sempre com folga dos dois lados.
                                 RotuloQueCabe(
                                     if (livre) a.nome.substringBefore(' ') else "${a.fasesMinimas}",
@@ -323,16 +334,8 @@ fun CantinhoDoMascote(
                         }
                     }
                 }
-                BotaoFofo(onClick = { sons.toque(); onFechar() }, cor = Cores.Certo, descricao = "Fechar", modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        "✔ Pronto",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                    )
+                BotaoFofo(onClick = { sons.toque(); onFechar() }, cor = VerdeDoPronto, corBase = LabioDoVerde, descricao = "Fechar", modifier = Modifier.fillMaxWidth()) {
+                    TextoDoBotao("Pronto!", Modifier.fillMaxWidth().padding(vertical = 8.dp))
                 }
             }
         }
@@ -370,6 +373,7 @@ fun FestaDoMascote(mascote: Mascote, fasesAntes: Int, fasesDepois: Int, onFechar
                 Text(
                     if (cresceu) "$quem cresceu!" else "Presente para $quem!",
                     style = MaterialTheme.typography.headlineMedium,
+                    color = Cores.Texto,
                     textAlign = TextAlign.Center,
                 )
                 if (cresceu) {
@@ -385,6 +389,7 @@ fun FestaDoMascote(mascote: Mascote, fasesAntes: Int, fasesDepois: Int, onFechar
                         novos.lastOrNull() ?: mascote.acessorioEmUso,
                         quem,
                         pulando = true,
+                        pose = PoseDoMascote.FELIZ,
                     )
                 }
                 if (novos.isNotEmpty()) {
@@ -402,16 +407,8 @@ fun FestaDoMascote(mascote: Mascote, fasesAntes: Int, fasesDepois: Int, onFechar
                     Text("Enfeite novo! Escolha na casa.", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
                 }
                 Spacer(Modifier.height(4.dp))
-                BotaoFofo(onClick = { sons.toque(); onFechar() }, cor = Cores.Certo, descricao = "Oba!", modifier = Modifier.fillMaxWidth().pulsando()) {
-                    Text(
-                        "🎉 Oba!",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 14.dp),
-                    )
+                BotaoFofo(onClick = { sons.toque(); onFechar() }, cor = VerdeDoPronto, corBase = LabioDoVerde, descricao = "Oba!", modifier = Modifier.fillMaxWidth().pulsando()) {
+                    TextoDoBotao("Oba!", Modifier.fillMaxWidth().padding(vertical = 10.dp))
                 }
             }
         }

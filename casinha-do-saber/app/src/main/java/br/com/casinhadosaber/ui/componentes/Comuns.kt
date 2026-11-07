@@ -503,30 +503,37 @@ fun MaoGuia(modifier: Modifier = Modifier, ativa: Boolean = true, espera: Long =
             drawCircle(Color.White.copy(alpha = 0.8f * (1f - p)), radius = size.minDimension * (0.2f + 0.5f * p), style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx()))
         }
         val desce = if (fase < 0.25f) fase * 4f else if (fase < 0.5f) (0.5f - fase) * 4f else 0f
-        MaoDeArte(apertando = desce > 0.6f, deslocamentoY = (-8).dp + 8.dp * desce)
+        MaoDeToque(apertando = desce > 0.7f, subida = 8.dp * (1f - desce))
     }
 }
 
+/** Onde fica a ponta do dedo da mãozinha, a partir do canto de cima à esquerda da caixa de 64 dp. */
+private val PONTA_DA_MAO = 20.dp
+
 /**
- * A mãozinha 3D (`ui_mao_toque`, luva branca de punho roxo; `ui_mao_toque_apertando` com o dedo encostado) com a
- * ponta do dedo a 20 dp da esquerda e do topo (mais [deslocamentoY]), onde o círculo do toque "pinga". Sem a
- * arte, o 👆 de antes no mesmo lugar.
+ * A mãozinha 3D (`ui_mao_toque` ou, com o dedo encostado, `ui_mao_toque_apertando`): a âncora `ponta` do
+ * manifesto fica em [PONTA_DA_MAO], [subida] acima. Sem a arte, o emoji 👆 de antes. Decorativa.
  */
 @Composable
-private fun MaoDeArte(apertando: Boolean, deslocamentoY: Dp) {
-    // A ponta do dedo fica em (52, 23) de 144 px na arte (âncora `ponta`): com 60 dp, em (21,7; 9,6) dp.
-    ImagemDeArte(
-        if (apertando) "ui_mao_toque_apertando" else "ui_mao_toque",
-        Modifier
-            .offset(x = (-2).dp, y = 10.dp + deslocamentoY)
-            .size(60.dp),
-    ) {
-        Text(
-            "👆",
-            fontSize = 40.sp,
-            modifier = Modifier.padding(start = 14.dp, top = 4.dp),
-        )
+private fun MaoDeToque(apertando: Boolean, subida: Dp) {
+    val id = if (apertando) PecasDasTelas.MAO_APERTANDO else PecasDasTelas.MAO_TOQUE
+    val contexto = androidx.compose.ui.platform.LocalContext.current
+    val info = remember(id) { ArteDoApp.info(contexto, id) }
+    val emoji: @Composable () -> Unit = {
+        Text("👆", fontSize = 40.sp, modifier = Modifier.padding(start = 12.dp, top = 14.dp).offset(y = -subida))
     }
+    if (info == null) {
+        emoji()
+        return
+    }
+    val lado = 56.dp
+    val (fx, fy) = info.ancoras["ponta"]?.let(info::fracao) ?: (0.36f to 0.16f)
+    ImagemDeArte(
+        id,
+        Modifier
+            .offset(x = PONTA_DA_MAO - lado * fx, y = PONTA_DA_MAO - lado * fy - subida)
+            .size(lado),
+    )
 }
 
 /**
@@ -548,7 +555,7 @@ fun MaoQueArrasta(apertando: Boolean, modifier: Modifier = Modifier) {
                 drawCircle(Color.White.copy(alpha = 0.8f * (1f - pulso)), radius = size.minDimension * (0.2f + 0.5f * pulso), style = traco)
             }
         }
-        MaoDeArte(apertando = apertando, deslocamentoY = if (apertando) 0.dp else (-8).dp)
+        MaoDeToque(apertando = apertando, subida = if (apertando) 0.dp else 8.dp)
     }
 }
 
