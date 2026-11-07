@@ -1,0 +1,70 @@
+{
+  "versao": 1,
+  "escala": 2,
+  "imagens": {
+    "estrela3d": {
+      "altura": 240,
+      "ancoras": {
+        "centro": {
+          "x": 120,
+          "y": 118
+        }
+      },
+      "apoio": {
+        "x": 120,
+        "y": 227
+      },
+      "arquivo": "estrela3d.webp",
+      "largura": 240,
+      "tipo": "item",
+      "uso": {
+        "altura": 120,
+        "largura": 120
+      }
+    },
+    "moeda": {
+      "altura": 128,
+      "ancoras": {
+        "centro": {
+          "x": 62,
+          "y": 65
+        }
+      },
+      "apoio": {
+        "x": 62,
+        "y": 127
+      },
+      "arquivo": "moeda.webp",
+      "largura": 128,
+      "tipo": "item",
+      "uso": {
+        "altura": 64,
+        "largura": 64
+      }
+    },
+    "patinho": {
+      "altura": 240,
+      "ancoras": {
+        "cabeca": {
+          "x": 152,
+          "y": 65
+        },
+        "topoDaCabeca": {
+          "x": 153,
+          "y": 23
+        }
+      },
+      "apoio": {
+        "x": 120,
+        "y": 160
+      },
+      "arquivo": "patinho.webp",
+      "largura": 240,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 120,
+        "largura": 120
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "casinha-arte3d",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pipeline de arte 3D pré-renderizada da Casinha do Saber: modelos em código (three.js), render em lote no Chromium headless e WebP com manifesto em app/src/main/assets/arte/.",
+  "type": "commonjs",
+  "scripts": {
+    "render": "node render.js"
+  },
+  "dependencies": {
+    "sharp": "0.35.5",
+    "three": "0.160.0"
+  },
+  "peerDependencies": {
+    "playwright": ">=1.40.0"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true
+    }
+  }
+}
