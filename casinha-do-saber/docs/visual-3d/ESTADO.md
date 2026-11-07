@@ -57,6 +57,8 @@ Roteiro em `roteiro-aceite.md`. Pendentes:
 * Tela cheia no tablet Samsung (dono): pendente.
 * Teste de dez minutos com a criança (fases 1, 4 e 5): pendente.
 
+* 2026-11-07, execução 134 (commit fc8d356, com K1, K2, arte da rodada 3 e polimento): build COMPLETO verde (testes de unidade, capturas, lint, APK, guarda de 150 MB), tablet verde, Android 7 e 8 verdes (desempenho: abertura 3,1 s, memória máx 113 a 134 MB). Celular em 4 emuladores: o job falhou com "device offline" em dois passos; o passo 1 levou 14 min (travou) e o passo 4 perdeu o emulador após 2 min, logo depois do teste de voz (TTS). Hipótese em prova: o motor de voz do emulador antecede quase todas as quedas (121 a 134). Decisão: tirar os dois testes que sintetizam voz (VozesGravadasTest e JogoNoEmuladorTest#vozesEmPortuguesEIngles) dos passos normais e rodá-los isolados num 5º emulador, informativo (não derruba o job).
+
 ## Problemas abertos
 
 * Emulador de celular caindo em abrirMapaEAlbum desde a Fase 2B (ver acima). Bloqueia marcar as Fases 0A a 2 como provadas.
