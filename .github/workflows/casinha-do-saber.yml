@@ -386,24 +386,44 @@ jobs:
   # Versão PARCIAL (sob pedido do dono do produto): publica o APK de uma execução já concluída, sem exigir o emulador de
   # celular (que o CI derruba por limite do próprio emulador). Só roda no disparo manual com `run_id`.
   publicar-apk-parcial:
-    if: github.event_name == 'workflow_dispatch' && inputs.run_id != ''
+    if: (github.event_name == 'workflow_dispatch' && inputs.run_id != '') || (github.event_name == 'push' && contains(github.event.head_commit.message, '[publicar-parcial '))
     runs-on: ubuntu-latest
     permissions:
       contents: write
       actions: read
     steps:
+      # O alvo vem do disparo manual (run_id e sha) ou da mensagem do commit: "[publicar-parcial <id da execução> <sha>]".
+      - name: Ler o alvo
+        id: alvo
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+          ENTRADA_RUN: ${{ inputs.run_id }}
+          ENTRADA_SHA: ${{ inputs.sha }}
+        run: |
+          RUN="$ENTRADA_RUN"; SHA="$ENTRADA_SHA"
+          if [ -z "$RUN" ]; then
+            MARCA=$(printf '%s' "$MSG" | grep -oE '\[publicar-parcial [0-9]+ [0-9a-f]{7,40}\]' | head -1)
+            RUN=$(printf '%s' "$MARCA" | awk '{print $2}')
+            SHA=$(printf '%s' "$MARCA" | awk '{print $3}' | tr -d ']')
+          fi
+          echo "run=$RUN" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Alvo: execução $RUN, commit $SHA"
+          [ -n "$RUN" ] || { echo "ERRO: sem id de execução"; exit 1; }
+
       - name: Baixar o APK da execução escolhida
         uses: actions/download-artifact@v5
         with:
           name: casinha-do-saber-apk
           path: apk
-          run-id: ${{ inputs.run_id }}
+          run-id: ${{ steps.alvo.outputs.run }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publicar versão parcial (Releases)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SHA_ALVO: ${{ inputs.sha }}
+          SHA_ALVO: ${{ steps.alvo.outputs.sha }}
+          RUN_ALVO: ${{ steps.alvo.outputs.run }}
         run: |
           APK=$(find apk -path "*release*" -name "*.apk" | head -1)
           [ -f "$APK" ] || { echo "ERRO: APK de release não encontrado no artefato"; find apk; exit 1; }
@@ -416,7 +436,7 @@ jobs:
             --prerelease \
             --target "$ALVO" \
             --title "Casinha do Saber (versão PARCIAL, sem o polimento final)" \
-            --notes "Versão parcial do visual brinquedo 3D, do commit ${ALVO::7} (execução ${{ inputs.run_id }}).
+            --notes "Versão parcial do visual brinquedo 3D, do commit ${ALVO::7} (execução ${RUN_ALVO}).
 
           Passou nos testes de unidade (559), nas capturas de tela, no lint, na guarda de tamanho (limite de 150 MB), no emulador de tablet (tela cheia) e nos emuladores com Android 7.0 e 8.0 (abre em cerca de 3 segundos, uso de memória baixo). Ainda NÃO passou no emulador de celular do CI (o próprio emulador cai depois de uns 6 minutos), e ainda não tem o polimento visual final nem os ícones e figuras 3D da segunda rodada: a casa por dentro, as áreas novas, a trilha e o ateliê ainda mostram parte dos emojis antigos.
 
