@@ -76,6 +76,9 @@ async function main() {
       const arquivo = id + '.webp';
       fs.writeFileSync(path.join(DESTINO, arquivo), webp);
       imagens[id] = { arquivo, tipo: r.tipo, largura: r.largura, altura: r.altura, uso: r.uso, apoio: r.apoio, ancoras: r.ancoras };
+      if (r.grupo !== undefined) Object.assign(imagens[id], { grupo: r.grupo, tingir: r.tingir, ordem: r.ordem, personagem: r.personagem });
+      // camadas de câmera fixa não podem encostar na borda: seria parte da figura cortada
+      if (r.bordas.length) { falhou = true; console.log(`CORTADO ${id}: encosta em ${r.bordas.join(', ')}`); }
       console.log(`ok ${arquivo} ${r.largura}x${r.altura} ${(webp.length / 1024).toFixed(1)} KB (${Date.now() - t0} ms)`);
     }
 

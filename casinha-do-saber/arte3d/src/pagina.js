@@ -5,6 +5,33 @@ import { THREE, palco, luzes } from './kit.js';
 import { tiposDeCamera, filtroFinal } from './cameras.js';
 import { catalogo } from './catalogo.js';
 
+/** Fundo preto vira transparente e os reflexos viram branco translúcido (camadas de brilho do cabelo). */
+function soOBrilho(ctx, L, A) {
+  const img = ctx.getImageData(0, 0, L, A);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const lum = Math.max(d[i], d[i + 1], d[i + 2]);
+    const a = Math.max(0, Math.min(1, (lum - 40) / 190)) * d[i + 3];
+    d[i] = d[i + 1] = d[i + 2] = 255;
+    d[i + 3] = Math.round(a * 0.85);
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+/** Lados da imagem em que algo encosta (alfa > 0 na primeira ou na última linha ou coluna). */
+function bordasTocadas(ctx, L, A) {
+  const d = ctx.getImageData(0, 0, L, A).data;
+  const alfa = (x, y) => d[(y * L + x) * 4 + 3];
+  const lados = [];
+  const linha = (y) => { for (let x = 0; x < L; x++) if (alfa(x, y) > 8) return true; return false; };
+  const coluna = (x) => { for (let y = 0; y < A; y++) if (alfa(x, y) > 8) return true; return false; };
+  if (linha(0)) lados.push('cima');
+  if (linha(A - 1)) lados.push('baixo');
+  if (coluna(0)) lados.push('esquerda');
+  if (coluna(L - 1)) lados.push('direita');
+  return lados;
+}
+
 /** Mancha macia embaixo do objeto: a sombra de contato que "assenta" a peça em qualquer fundo do app. */
 function sombraDeContato(caixa) {
   const tam = caixa.getSize(new THREE.Vector3());
@@ -50,11 +77,17 @@ function verticesDoMundo(obj) {
   return pts;
 }
 
-function enquadrar(cam, cfg, caixa, pontos, largura, altura) {
+function enquadrar(cam, cfg, caixa, pontos, largura, altura, pxPorDp) {
   if (cfg.enquadrar === 'fixo') {
     cam.position.set(...cfg.posicao);
     cam.lookAt(new THREE.Vector3(...cfg.alvo));
     cam.updateMatrixWorld();
+    if (cfg.quadro) {
+      // recorte do quadro inteiro: centrado na horizontal e alinhado embaixo (mesma escala para todos)
+      const cheiaL = Math.round(cfg.quadro.largura * pxPorDp), cheiaA = Math.round(cfg.quadro.altura * pxPorDp);
+      cam.aspect = cheiaL / cheiaA;
+      cam.setViewOffset(cheiaL, cheiaA, (cheiaL - largura) / 2, cheiaA - altura, largura, altura);
+    }
     cam.updateProjectionMatrix();
     return;
   }
@@ -113,9 +146,12 @@ window.renderizar = (id, escala, superamostra) => {
     p.cena.add(s.plano);
     pontos.push(...s.pontos);
   }
-  const sol = cfg.luzes.sol.map((v, i) => v + centro.getComponent(i));
-  luzes(p.cena, { ...cfg.luzes, sol, alvo: centro.toArray(), area: Math.max(cfg.luzes.area, raio * 1.6) });
-  enquadrar(p.cam, cfg, caixa, pontos, L, A);
+  // câmera fixa: luz fixa também (o centro não pode depender do que está em cada camada)
+  const centroLuz = cfg.centro ? new THREE.Vector3(...cfg.centro) : centro;
+  const sol = cfg.luzes.sol.map((v, i) => v + centroLuz.getComponent(i));
+  const area = cfg.centro ? cfg.luzes.area : Math.max(cfg.luzes.area, raio * 1.6);
+  luzes(p.cena, { ...cfg.luzes, sol, alvo: centroLuz.toArray(), area });
+  enquadrar(p.cam, cfg, caixa, pontos, L, A, escala * superamostra);
   p.desenhar();
 
   // ajuste de cor final do protótipo, num canvas 2D
@@ -124,11 +160,15 @@ window.renderizar = (id, escala, superamostra) => {
   const ctx = saida.getContext('2d');
   ctx.filter = filtroFinal;
   ctx.drawImage(canvas, 0, 0);
+  if (item.posProcesso === 'brilho') soOBrilho(ctx, L, A);
+  const bordas = cfg.enquadrar === 'fixo' ? bordasTocadas(ctx, L, A) : [];
   const png = saida.toDataURL('image/png');
 
   // pontos no tamanho final
   const reduz = (q) => ({ x: Math.round(q.x / superamostra), y: Math.round(q.y / superamostra) });
-  const apoio = reduz(paraPixel(p.cam, new THREE.Vector3(centro.x, caixa.min.y, centro.z), L, A));
+  // câmera fixa: o apoio é a origem (os pés da figura), igual em todas as camadas
+  const pontoDeApoio = cfg.enquadrar === 'fixo' ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(centro.x, caixa.min.y, centro.z);
+  const apoio = reduz(paraPixel(p.cam, pontoDeApoio, L, A));
   const ancoras = {};
   obj.traverse((o) => {
     if (o.userData.ancora) ancoras[o.userData.ancora] = reduz(paraPixel(p.cam, o.getWorldPosition(new THREE.Vector3()), L, A));
@@ -136,7 +176,8 @@ window.renderizar = (id, escala, superamostra) => {
 
   p.r.dispose();
   p.r.forceContextLoss();
-  return { png, largura, altura, tipo: item.tipo, uso: item.uso, apoio, ancoras };
+  const extra = item.grupo === undefined ? {} : { grupo: item.grupo, tingir: item.tingir, ordem: item.ordem, personagem: item.personagem };
+  return { png, largura, altura, tipo: item.tipo, uso: item.uso, apoio, ancoras, bordas, ...extra };
 };
 
 window.catalogo = () => catalogo.map((c) => c.id);

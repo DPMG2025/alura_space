@@ -5,12 +5,17 @@
 //   tipo   câmera e luz (ver cameras.js)
 //   uso    maior tamanho em que a imagem aparece no app, em dp; o render sai no dobro (ESCALA em render.js)
 //   montar devolve o THREE.Object3D; âncoras são marcadas no modelo com ancora() (kit/formas.js)
+//
+// Camadas de personagem (camadas.js) têm ainda: grupo, tingir ('pele' | 'cabelo' | 'roupa' | null),
+// ordem (de trás para a frente) e personagem ('crianca' | 'irmao'), que vão para o manifesto.
 import { estrelaDourada } from './objetos/estrela3D.js';
 import { moedaDoPlacar } from './objetos/moeda.js';
 import { patinhoDaLagoa } from './objetos/patinho.js';
+import { camadasDosPersonagens } from './camadas.js';
 
 export const catalogo = [
   { id: 'estrela3d', tipo: 'item', uso: { largura: 120, altura: 120 }, montar: estrelaDourada },
   { id: 'moeda', tipo: 'item', uso: { largura: 64, altura: 64 }, montar: moedaDoPlacar },
   { id: 'patinho', tipo: 'objeto', uso: { largura: 120, altura: 120 }, montar: patinhoDaLagoa },
+  ...camadasDosPersonagens,
 ];

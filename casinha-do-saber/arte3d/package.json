@@ -5,7 +5,8 @@
   "description": "Pipeline de arte 3D pré-renderizada da Casinha do Saber: modelos em código (three.js), render em lote no Chromium headless e WebP com manifesto em app/src/main/assets/arte/.",
   "type": "commonjs",
   "scripts": {
-    "render": "node render.js"
+    "render": "node render.js",
+    "previa": "node previa.js"
   },
   "dependencies": {
     "sharp": "0.35.5",

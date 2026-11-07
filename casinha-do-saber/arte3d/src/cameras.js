@@ -34,12 +34,18 @@ export const tiposDeCamera = {
     sombraDeContato: false,
   },
   personagem: {
+    // criança e irmãozinho em camadas (PRD, seção 3.2): posição, alvo e lente fixos, sem recorte em volta
+    // do objeto, para todas as camadas ficarem alinhadas pixel a pixel. [quadro] é o quadro inteiro em dp
+    // (o da criança); uma camada com uso menor (o irmão) é um recorte do mesmo quadro, centrado e alinhado
+    // embaixo, na mesma escala. A luz é fixa (não depende do que está em cada camada).
     enquadrar: 'fixo',
-    fov: 28,
-    posicao: [0, 2.0, 13.5],
-    alvo: [0, 1.75, 0],
-    luzes: { sol: [4, 10, 9], forca: 2.6, area: 5, amb: 0.8 },
-    sombraDeContato: true,
+    fov: 26,
+    posicao: [0, 2.7, 9.6],
+    alvo: [0, 1.8, 0],
+    quadro: { largura: 170, altura: 260 },
+    centro: [0, 1.7, 0],
+    luzes: { sol: [4, 10, 9], forca: 2.6, area: 3.2, amb: 0.8 },
+    sombraDeContato: false,
   },
 };
 
