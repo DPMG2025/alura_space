@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.Cena
 import br.com.casinhadosaber.dominio.Perfil
 import br.com.casinhadosaber.ui.componentes.Crianca
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
+import br.com.casinhadosaber.ui.tema.Cores
 
 // Cenas desenhadas das perguntas (Canvas): tampinha do sudoku, material dourado e labirinto.
 
@@ -60,7 +62,7 @@ internal fun MaterialDourado(m: Cena.MaterialDourado) {
         val cubo = minOf((maxWidth - 40.dp) / larguraEmCubos, (maxHeight - 40.dp) / 10.9f, 30.dp)
         Box(
             Modifier
-                .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(28.dp))
+                .cartaoFofo(raio = 28.dp, labio = Cores.LabioClaro)
                 .padding(16.dp),
         ) {
             Canvas(Modifier.size(cubo * larguraEmCubos, cubo * 10.9f)) {
@@ -117,10 +119,10 @@ internal fun Labirinto(lab: Cena.Labirinto, perfil: Perfil?) {
     BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         val lado = minOf((maxWidth - 32.dp) / lab.colunas, (maxHeight - 32.dp) / lab.linhas, 104.dp)
         val caminho = lab.caminho.map { it / lab.colunas to it % lab.colunas }
+        // Tabuleiro de grama como um bloco de brinquedo: lábio verde-escuro embaixo e borda branca.
         Box(
             Modifier
-                .background(Color(0xFF7CC35A), RoundedCornerShape(24.dp))
-                .border(4.dp, Color(0xFF5DA243), RoundedCornerShape(24.dp))
+                .cartaoFofo(cor = Color(0xFF7CC35A), raio = 24.dp, labio = Color(0xFF4E9137), profundidade = 6.dp, contorno = Color.White)
                 .padding(10.dp),
         ) {
             Canvas(Modifier.size(lado * lab.colunas, lado * lab.linhas)) {

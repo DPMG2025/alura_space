@@ -79,6 +79,11 @@ import br.com.casinhadosaber.ui.componentes.Confete
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.componentes.Estrela
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
+import br.com.casinhadosaber.ui.componentes.desenharArte
+import br.com.casinhadosaber.ui.componentes.lembrarArteLeve
 import kotlinx.coroutines.delay
 
 /**
@@ -157,13 +162,16 @@ fun TelaPiano(
             Column(
                 Modifier
                     .fillMaxSize()
-                    .background(Brush.verticalGradient(listOf(Color(0xFFE3E0FF), Cores.Fundo)))
+                    .ceuDeBrinquedo(comGrama = false)
                     .windowInsetsPadding(WindowInsets.safeDrawing),
             ) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     BotaoRedondo("⬅️", "Voltar para a casa", onVoltar, tamanho = 52.dp)
-                    Spacer(Modifier.width(10.dp))
-                    Text("🎹 Piano", style = MaterialTheme.typography.headlineMedium, maxLines = 1, modifier = Modifier.weight(1f))
+                    Spacer(Modifier.width(6.dp))
+                    // O pianinho 3D no lugar do 🎹 e o título em branco com contorno, que diminui se não couber.
+                    ImagemDeArte("tela_piano", Modifier.size(width = 56.dp, height = 40.dp)) { Text("🎹", style = MaterialTheme.typography.headlineMedium) }
+                    Spacer(Modifier.width(2.dp))
+                    TituloQueCabe("Piano", Modifier.weight(1f), estilo = MaterialTheme.typography.headlineMedium)
                     val m = musica
                     if (m != null) {
                         BotaoRedondo(
@@ -294,7 +302,9 @@ private fun Tecla(nota: Nota, brilhando: Boolean, apertada: Boolean, onTocar: ()
     val cor = Color(nota.corArgb)
     val afundar by animateFloatAsState(if (apertada) 1f else 0f, tween(80), label = "tecla")
     val agudo = nota == Nota.DO_AGUDO
-    // Notinhas musicais que sobem da tecla a cada toque.
+    // Notinhas musicais que sobem da tecla a cada toque: a notinha 3D (um bitmap pequeno, o mesmo nas oito
+    // teclas), ou a desenhada se a arte faltar.
+    val notinha = lembrarArteLeve("tela_nota_musical", 40.dp)
     val subida = remember { Animatable(1f) }
     LaunchedEffect(apertada) {
         if (apertada) {
@@ -322,9 +332,15 @@ private fun Tecla(nota: Nota, brilhando: Boolean, apertada: Boolean, onTocar: ()
                 if (t < 1f) {
                     val alfa = (1f - t).coerceIn(0f, 1f)
                     val r = size.width * 0.16f
-                    desenharNotinha(Offset(size.width * 0.34f, -t * size.height * 0.28f + size.height * 0.03f), r, escurecer(cor, 0.75f).copy(alpha = alfa), colcheia = true)
-                    if (t > 0.15f) {
-                        desenharNotinha(Offset(size.width * 0.68f, -(t - 0.15f) * size.height * 0.24f + size.height * 0.05f), r * 0.8f, escurecer(cor, 0.75f).copy(alpha = alfa), colcheia = false)
+                    val primeira = Offset(size.width * 0.34f, -t * size.height * 0.28f + size.height * 0.03f)
+                    val segunda = Offset(size.width * 0.68f, -(t - 0.15f) * size.height * 0.24f + size.height * 0.05f)
+                    val img = notinha
+                    if (img != null) {
+                        desenharArte(img, primeira, r * 4f, alfa)
+                        if (t > 0.15f) desenharArte(img, segunda, r * 3.2f, alfa)
+                    } else {
+                        desenharNotinha(primeira, r, escurecer(cor, 0.75f).copy(alpha = alfa), colcheia = true)
+                        if (t > 0.15f) desenharNotinha(segunda, r * 0.8f, escurecer(cor, 0.75f).copy(alpha = alfa), colcheia = false)
                     }
                 }
             }
@@ -380,7 +396,7 @@ private fun Tecla(nota: Nota, brilhando: Boolean, apertada: Boolean, onTocar: ()
             contentAlignment = Alignment.BottomCenter,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(bottom = 12.dp)) {
-                if (brilhando) Text("⭐", fontSize = 22.sp, modifier = Modifier.scale(1.1f))
+                if (brilhando) Estrela(true, tamanho = 28.dp)
                 Text(nota.nome, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Cores.Texto, maxLines = 1)
             }
         }

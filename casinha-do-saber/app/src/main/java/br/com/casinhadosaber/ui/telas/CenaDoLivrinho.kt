@@ -30,6 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.CenarioDoLivrinho
 import br.com.casinhadosaber.ui.componentes.caminhoEstrela
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
+import br.com.casinhadosaber.ui.tema.Cores
 
 /**
  * A ilustração de uma página do livrinho: o cenário desenhado em Canvas (céu, chão e detalhes de cada lugar)
@@ -37,15 +40,17 @@ import br.com.casinhadosaber.ui.componentes.caminhoEstrela
  */
 @Composable
 fun CenaDoLivrinho(cenario: CenarioDoLivrinho, figuras: List<String>, modifier: Modifier = Modifier) {
+    // Moldura de brinquedo: lábio lilás embaixo e sombra macia desenhados (sem a sombra borrada de elevação).
     Box(
         modifier
-            .shadow(6.dp, RoundedCornerShape(28.dp))
+            .cartaoFofo(raio = 28.dp, labio = Cores.LabioLilas, profundidade = 6.dp)
             .clip(RoundedCornerShape(28.dp))
             .border(5.dp, Color.White, RoundedCornerShape(28.dp))
             .clearAndSetSemantics { },
     ) {
         Canvas(Modifier.fillMaxSize()) { desenharCenario(cenario) }
-        // Emojis grandes ficam borrados (são imagenzinhas ampliadas): o maior fica em 84 sp.
+        // As figuras em 3D quando têm modelo (as mesmas do jogo, já com a sombra de contato); as outras em emoji,
+        // que ficam borrados quando grandes (são imagenzinhas ampliadas): o maior fica em 84 sp.
         val tamanho = when (figuras.size) { 1 -> 84; 2 -> 72; 3 -> 62; else -> 52 }
         Row(
             Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(bottom = 14.dp, start = 12.dp, end = 12.dp),
@@ -53,15 +58,17 @@ fun CenaDoLivrinho(cenario: CenarioDoLivrinho, figuras: List<String>, modifier: 
             verticalAlignment = Alignment.Bottom,
         ) {
             for (f in figuras) {
-                // Cada figura pisa no chão: uma sombrinha oval embaixo dela.
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(f, fontSize = tamanho.sp, lineHeight = (tamanho * 1.1f).sp)
-                    Box(
-                        Modifier
-                            .offset(y = (-8).dp)
-                            .size(width = (tamanho * 0.75f).dp, height = 9.dp)
-                            .background(Color(0x2E000000), RoundedCornerShape(50)),
-                    )
+                FiguraDaPergunta(f, (tamanho * 1.25f).dp) {
+                    // Cada emoji pisa no chão: uma sombrinha oval embaixo dele.
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(f, fontSize = tamanho.sp, lineHeight = (tamanho * 1.1f).sp)
+                        Box(
+                            Modifier
+                                .offset(y = (-8).dp)
+                                .size(width = (tamanho * 0.75f).dp, height = 9.dp)
+                                .background(Color(0x2E000000), RoundedCornerShape(50)),
+                        )
+                    }
                 }
             }
         }

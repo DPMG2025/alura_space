@@ -48,6 +48,14 @@ import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Corujinha
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.componentes.ID_ESTRELA_CHEIA
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.LadoDaCauda
+import br.com.casinhadosaber.ui.componentes.Pilula
+import br.com.casinhadosaber.ui.componentes.PilulaDeValor
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import br.com.casinhadosaber.ui.componentes.balaoDeFala
+import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
 import br.com.casinhadosaber.ui.tema.Cores
 
 /**
@@ -67,8 +75,12 @@ fun ConviteDaCorujinha(
     botaoNao: String? = null,
     onNao: () -> Unit = {},
     marcaNao: String = "",
-    /** Algo pequeno embaixo do balão (moedinhas ganhas, mundo sugerido). */
+    /** Algo pequeno embaixo do balão (moedinhas ganhas, mundo sugerido), numa pílula. */
     destaque: String? = null,
+    /** Ícone da arte na pílula do [destaque] (por exemplo, `moeda`); com [destaque] vazio, só o ícone. */
+    destaqueIcone: String? = null,
+    /** Ícone ao lado do título (por exemplo, o ícone 3D do caminho). */
+    icone: (@Composable () -> Unit)? = null,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -76,7 +88,8 @@ fun ConviteDaCorujinha(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(cor.copy(alpha = 0.75f), Color(0xFFEDE6FF), Cores.Fundo)))
+            // O céu de brinquedo com a grama da ilha embaixo, onde ficam os botões.
+            .ceuDeBrinquedo()
             .clickable(remember { MutableInteractionSource() }, indication = null) { }
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
@@ -86,15 +99,25 @@ fun ConviteDaCorujinha(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text(titulo, style = MaterialTheme.typography.headlineMedium, color = Color.White, textAlign = TextAlign.Center)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                    if (icone != null) {
+                        Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) { icone() }
+                        Spacer(Modifier.width(6.dp))
+                    }
+                    TextoComContorno(
+                        titulo,
+                        Modifier.weight(1f, fill = false),
+                        estilo = MaterialTheme.typography.headlineMedium,
+                        maxLinhas = 2,
+                    )
+                }
+                // Balão de fala da Corujinha (o do sistema novo), com a ponta para ela, embaixo.
                 Box(
                     Modifier
                         .widthIn(max = 520.dp)
                         .fillMaxWidth()
-                        .shadow(6.dp, RoundedCornerShape(28.dp))
-                        .background(Color.White, RoundedCornerShape(28.dp))
-                        .border(4.dp, Color(0xFFEDE6FF), RoundedCornerShape(28.dp))
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                        .balaoDeFala(LadoDaCauda.Baixo)
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
                 ) {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -106,16 +129,14 @@ fun ConviteDaCorujinha(
                     }
                 }
                 Corujinha(Modifier.height(170.dp), falando = narrador.falando)
-                if (destaque != null) {
-                    Text(
-                        destaque,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Cores.Texto,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .background(Color.White, RoundedCornerShape(50))
-                            .padding(horizontal = 20.dp, vertical = 8.dp),
-                    )
+                when {
+                    destaqueIcone != null && destaque.isNullOrBlank() -> Pilula(descricao = "Estrela") {
+                        ImagemDeArte(destaqueIcone, Modifier.size(36.dp)) { Text("⭐", style = MaterialTheme.typography.headlineSmall) }
+                    }
+                    destaqueIcone != null -> PilulaDeValor(destaqueIcone, destaque!!, reserva = { Text("🪙", style = MaterialTheme.typography.titleLarge) })
+                    destaque != null -> Pilula {
+                        Text(destaque, style = MaterialTheme.typography.headlineSmall, color = Cores.TextoDaPilula, maxLines = 1)
+                    }
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -148,7 +169,7 @@ fun ConviteDaCorujinha(
 @Composable
 fun TelaConviteRelembrar(nome: String?, quantas: Int, onVamos: () -> Unit, onAgoraNao: () -> Unit) {
     ConviteDaCorujinha(
-        titulo = "🦉 Relembrar",
+        titulo = "Relembrar",
         texto = br.com.casinhadosaber.dominio.Relembrar.convite(nome, quantas),
         botaoSim = "Vamos!",
         onSim = onVamos,
@@ -156,7 +177,8 @@ fun TelaConviteRelembrar(nome: String?, quantas: Int, onVamos: () -> Unit, onAgo
         botaoNao = "Agora não",
         onNao = onAgoraNao,
         marcaNao = "relembrar_agora_nao",
-        destaque = "+${br.com.casinhadosaber.dominio.Relembrar.MOEDAS} 🪙",
+        destaque = "+${br.com.casinhadosaber.dominio.Relembrar.MOEDAS}",
+        destaqueIcone = "moeda",
     )
 }
 
@@ -170,12 +192,13 @@ fun TelaFimRelembrar(nome: String?, acertos: Int, total: Int, moedas: Int, onCon
         else -> "Que bom que você treinou! Daqui a uns dias a gente relembra de novo, juntinhos."
     }
     ConviteDaCorujinha(
-        titulo = "🦉 Relembrar",
+        titulo = "Relembrar",
         texto = texto,
         botaoSim = "Continuar",
         onSim = onContinuar,
         marcaSim = "relembrar_continuar",
-        destaque = if (moedas > 0) "+$moedas 🪙" else "⭐",
+        destaque = if (moedas > 0) "+$moedas" else "",
+        destaqueIcone = if (moedas > 0) "moeda" else ID_ESTRELA_CHEIA,
     )
 }
 

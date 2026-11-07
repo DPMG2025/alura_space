@@ -69,14 +69,28 @@ import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Crianca
 import br.com.casinhadosaber.ui.componentes.PROPORCAO_CRIANCA
-import br.com.casinhadosaber.ui.componentes.FileiraDeEstrelas
 import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.Raios
 import br.com.casinhadosaber.ui.componentes.cartaoFofo
 import br.com.casinhadosaber.ui.componentes.clarear
-import br.com.casinhadosaber.ui.componentes.FundoDecorado
+import br.com.casinhadosaber.ui.componentes.CamadasDaCasa
+import br.com.casinhadosaber.ui.componentes.EstrelasLeves
+import br.com.casinhadosaber.ui.componentes.GramaDaIlha
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.Pilula
+import br.com.casinhadosaber.ui.componentes.ProgressoVisivel
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
+import br.com.casinhadosaber.ui.componentes.desenharArte
+import br.com.casinhadosaber.ui.componentes.lembrarArteLeve
+import br.com.casinhadosaber.ui.tema.Baloo2
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.translate
@@ -159,9 +173,6 @@ private fun disposicaoDoCaminho(largura: Dp, altura: Dp): Disposicao {
     return Disposicao(largura, if (cabem < 3) 1 else cabem.coerceAtMost(6))
 }
 
-/** Sombra ameixa suave do título branco do cabeçalho (lê melhor sobre as cores claras). */
-private val SOMBRA_DO_TITULO = Shadow(Color(0x553D2C5E), Offset(0f, 3f), 6f)
-
 private fun ehMarco(fase: Fase): Boolean = (fase.numero + 1) % FASES_POR_MARCO == 0
 
 @Composable
@@ -214,7 +225,8 @@ fun TelaTrilha(
 
     // No tablet (também quando a tela é usada sozinha, como nas capturas) tudo cresce na mesma proporção.
     EscalaDeTablet {
-    FundoDecorado(cor, Modifier.fillMaxSize()) {
+    // Céu de brinquedo com a grama da ilha embaixo (vetor, parado): sem bolhas animadas nem bitmap de fundo.
+    Box(Modifier.fillMaxSize().ceuDeBrinquedo()) {
     Column(
         Modifier
             .fillMaxSize()
@@ -226,39 +238,30 @@ fun TelaTrilha(
                 Spacer(Modifier.width(8.dp))
                 BotaoRedondo("🗺️", "Mapa dos mundos", { sons.toque(); onMapa() }, tamanho = 52.dp)
             }
-            Spacer(Modifier.width(12.dp))
-            // Com o botão do mapa a barra fica cheia: o emoji do caminho sai (a cor e o nome já dizem qual é).
+            Spacer(Modifier.width(10.dp))
+            // Com o botão do mapa a barra fica cheia: o ícone do caminho sai (a cor e o nome já dizem qual é).
             if (onMapa == null) {
-                IconeDeTrilha(trilha, Modifier.size(40.dp))
-                Spacer(Modifier.width(8.dp))
+                IconeDeTrilha(trilha, Modifier.size(44.dp))
+                Spacer(Modifier.width(6.dp))
             }
-            // O nome nunca é cortado: se não couber (celular estreito), a letra diminui um pouco até caber.
-            val estilo = MaterialTheme.typography.headlineLarge
-            var escalaDoTitulo by remember(trilha) { mutableFloatStateOf(1f) }
-            Text(
-                trilha.titulo,
-                style = estilo.copy(fontSize = estilo.fontSize * escalaDoTitulo, shadow = SOMBRA_DO_TITULO),
-                color = Color.White,
-                maxLines = 1,
-                softWrap = false,
-                onTextLayout = { if (it.hasVisualOverflow && escalaDoTitulo > 0.6f) escalaDoTitulo -= 0.08f },
-                modifier = Modifier.weight(1f),
-            )
+            // O nome nunca é cortado: se não couber (celular estreito), a letra diminui até caber.
+            TituloQueCabe(trilha.titulo, Modifier.weight(1f))
             if (proximoPremio != null) {
-                // Próximo prêmio da casa, como um chip na barra (nada passa por baixo dele).
-                Row(
-                    Modifier
-                        .cartaoFofo(raio = 50.dp)
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                        .semantics(mergeDescendants = true) { contentDescription = "Próximo prêmio: ${proximoPremio.nome}" },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text("🎁", style = MaterialTheme.typography.titleLarge)
-                    Spacer(Modifier.width(4.dp))
-                    Text(proximoPremio.icone, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.pulsando())
+                // Próximo prêmio da casa numa pílula: o presente 3D e o item que vem (nada passa por baixo dela).
+                Pilula(descricao = "Próximo prêmio: ${proximoPremio.nome}") {
+                    ImagemDeArte("premio_presente_fechado", Modifier.size(28.dp)) {
+                        Text("🎁", style = MaterialTheme.typography.titleLarge)
+                    }
+                    ImagemDeArte(CamadasDaCasa.idDoItem(proximoPremio.id, noite = false), Modifier.size(32.dp).pulsando()) {
+                        Text(proximoPremio.icone, style = MaterialTheme.typography.headlineMedium)
+                    }
                 }
             } else {
-                Text("${estado.vencidasNa(trilha)}/${todas.size}", style = MaterialTheme.typography.titleLarge, color = Color.White)
+                // Tudo vencido: cinco estrelas acesas, nunca "250/250" (o número fica só para a acessibilidade).
+                val vencidas = estado.vencidasNa(trilha)
+                Pilula(descricao = "$vencidas de ${todas.size} fases vencidas") {
+                    EstrelasLeves(ProgressoVisivel.estrelasAcesas(vencidas, todas.size, 5), total = 5, tamanho = 18.dp)
+                }
             }
         }
 
@@ -307,17 +310,25 @@ fun TelaTrilha(
                         val topo = ALTURA_PASSO.toPx() * disposicao.linha(m.primeiraFase)
                         val fim = ALTURA_PASSO.toPx() * (disposicao.linha(minOf(m.ultimaFase, fases.lastIndex)) + 1)
                         val margem = 6.dp.toPx()
-                        // Faixa do mundo com a borda de cima clarinha (luz) e uma sombra suave por baixo.
+                        // Faixa do mundo como um tapete de brinquedo: corpo claro na cor do mundo, lábio mais
+                        // escuro embaixo e borda branca (só retângulos: nada de sombra borrada).
                         val canto = CornerRadius(Raios.Enorme.toPx())
-                        val faixa = Size(size.width - margem * 2, fim - topo - margem)
+                        val faixa = Size(size.width - margem * 2, fim - topo - margem - LABIO_DA_FAIXA.toPx())
+                        val corDoMundo = Color(m.corArgb)
                         drawRoundRect(
-                            Color(m.corArgb).copy(alpha = 0.40f),
+                            corDoMundo.copy(alpha = 0.38f),
+                            topLeft = Offset(margem, topo + margem / 2 + LABIO_DA_FAIXA.toPx()),
+                            size = faixa,
+                            cornerRadius = canto,
+                        )
+                        drawRoundRect(
+                            lerp(corDoMundo, Color.White, 0.55f).copy(alpha = 0.62f),
                             topLeft = Offset(margem, topo + margem / 2),
                             size = faixa,
                             cornerRadius = canto,
                         )
                         drawRoundRect(
-                            Color.White.copy(alpha = 0.45f),
+                            Color.White.copy(alpha = 0.8f),
                             topLeft = Offset(margem, topo + margem / 2),
                             size = faixa,
                             cornerRadius = canto,
@@ -436,16 +447,16 @@ fun TelaTrilha(
                 Modifier
                     .fillMaxWidth()
                     .height(44.dp)
-                    .background(Brush.verticalGradient(0f to cor.copy(alpha = 0.6f), 0.4f to cor.copy(alpha = 0.3f), 1f to cor.copy(alpha = 0f))),
+                    .background(Brush.verticalGradient(0f to CEU_DO_CABECALHO.copy(alpha = 0.75f), 0.4f to CEU_DO_CABECALHO.copy(alpha = 0.35f), 1f to CEU_DO_CABECALHO.copy(alpha = 0f))),
             )
             if (temBarra) {
-                // Esmaecido embaixo: as bolinhas que passam por trás do botão somem suavemente.
+                // Esmaecido embaixo: as bolinhas que passam por trás do botão somem na grama da ilha.
                 Box(
                     Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .height(ESPACO_DO_TREINO + 16.dp)
-                        .background(Brush.verticalGradient(listOf(Cores.Fundo.copy(alpha = 0f), Cores.Fundo.copy(alpha = 0.92f), Cores.Fundo))),
+                        .background(Brush.verticalGradient(listOf(GramaDaIlha.copy(alpha = 0f), GramaDaIlha.copy(alpha = 0.9f), GramaDaIlha))),
                 )
                 Row(
                     Modifier
@@ -603,30 +614,34 @@ private fun BolinhaDaFase(
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                             Text(fase.emoji, style = MaterialTheme.typography.headlineLarge)
-                            Text("${fase.numero + 1}", style = MaterialTheme.typography.titleMedium, color = corEscura)
+                            Text("${fase.numero + 1}", style = NUMERO_DA_FASE, color = corEscura)
                         }
                         if (estrelas > 0) {
-                            // Fase vencida: um "certinho" na cor do caminho.
+                            // Fase vencida: um "certinho" na cor do caminho, num selinho de borda branca.
                             Box(
                                 Modifier
                                     .align(Alignment.TopEnd)
                                     .size(26.dp)
-                                    .background(cor, CircleShape),
+                                    .background(cor, CircleShape)
+                                    .border(2.dp, Color.White, CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) { Text("✔", color = Color.White, style = MaterialTheme.typography.titleMedium) }
                         }
                     } else {
-                        // Fechada: mostra o desenho da fase apagadinho e um cadeado pequeno.
+                        // Fechada: mostra o desenho da fase apagadinho e o cadeado 3D pequeno (um bitmap só para
+                        // todas as fases fechadas, desenhado num Canvas).
                         if (marco) {
                             Canvas(Modifier.fillMaxSize()) { drawCircle(Cores.Estrela.copy(alpha = 0.45f), style = Stroke(6.dp.toPx())) }
                         }
                         Text(fase.emoji, style = MaterialTheme.typography.headlineLarge, modifier = Modifier.graphicsLayer { alpha = 0.3f })
-                        Text("🔒", style = MaterialTheme.typography.titleLarge, modifier = Modifier.align(Alignment.BottomEnd))
+                        IconeLeve(IconesDaBarra.PAIS, 26.dp, Modifier.align(Alignment.BottomEnd)) {
+                            Text("🔒", style = MaterialTheme.typography.titleLarge)
+                        }
                     }
                 }
             }
             if (marco) {
-                // Bandeirinha do marco; vira troféu quando a fase é vencida.
+                // Bandeirinha do marco; vira o troféu 3D quando a fase é vencida.
                 Box(
                     Modifier
                         .align(Alignment.TopStart)
@@ -636,7 +651,11 @@ private fun BolinhaDaFase(
                         .border(3.dp, Cores.Estrela, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(if (estrelas > 0) "🏆" else "🚩", style = MaterialTheme.typography.titleMedium)
+                    if (estrelas > 0) {
+                        IconeLeve("premio_trofeu", 26.dp) { Text("🏆", style = MaterialTheme.typography.titleMedium) }
+                    } else {
+                        Text("🚩", style = MaterialTheme.typography.titleMedium)
+                    }
                 }
             }
         }
@@ -658,7 +677,44 @@ private fun BolinhaDaFase(
                 textAlign = TextAlign.Center,
                 color = if (liberada) Cores.Texto else Cores.TextoSuave,
             )
-            if (estrelas > 0) FileiraDeEstrelas(estrelas, tamanho = 14.dp)
+            // Estrelas 3D num Canvas só (até 20 plaquinhas na tela: 60 estrelas, dois bitmaps).
+            if (estrelas > 0) EstrelasLeves(estrelas, total = 3, tamanho = 15.dp)
         }
     }
 }
+
+/** Um ícone pequeno da arte desenhado num Canvas (bitmap dividido pelo cache), ou [reserva] se faltar. */
+@Composable
+internal fun IconeLeve(id: String, tamanho: Dp, modifier: Modifier = Modifier, alfa: Float = 1f, reserva: @Composable () -> Unit) {
+    val imagem = lembrarArteLeve(id, tamanho)
+    if (imagem == null) {
+        Box(modifier, contentAlignment = Alignment.Center) { reserva() }
+    } else {
+        Canvas(modifier.size(tamanho)) { desenharArte(imagem, center, size.minDimension, alfa) }
+    }
+}
+
+/**
+ * Nome do caminho em branco com contorno roxo (Baloo 2), que diminui até caber na largura dada (medido antes de
+ * desenhar, sem depender do `hasVisualOverflow`, que no Robolectric acusa a Baloo 2 sem motivo).
+ */
+@Composable
+internal fun TituloQueCabe(texto: String, modifier: Modifier = Modifier, estilo: TextStyle = MaterialTheme.typography.headlineLarge) {
+    val medidor = rememberTextMeasurer()
+    BoxWithConstraints(modifier, contentAlignment = Alignment.CenterStart) {
+        val folga = with(LocalDensity.current) { 8.dp.roundToPx() }
+        val largura = remember(texto, estilo) { medidor.measure(texto, estilo, maxLines = 1, softWrap = false).size.width }
+        val cabe = if (constraints.hasBoundedWidth) constraints.maxWidth - folga else Int.MAX_VALUE
+        val escala = if (largura <= 0 || largura <= cabe) 1f else (cabe.toFloat() / largura).coerceIn(0.5f, 1f)
+        TextoComContorno(texto, estilo = estilo.copy(fontSize = estilo.fontSize * escala), alinhamento = TextAlign.Start)
+    }
+}
+
+/** Número da fase dentro da bolinha: Baloo 2 bem gordinha. */
+private val NUMERO_DA_FASE = TextStyle(fontFamily = Baloo2, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, lineHeight = 20.sp)
+
+/** Altura do lábio embaixo da faixa de cada mundo. */
+private val LABIO_DA_FAIXA = 5.dp
+
+/** Céu logo abaixo do cabeçalho (o esmaecido do alto usa esta cor). */
+private val CEU_DO_CABECALHO = Color(0xFF8CCDFB)

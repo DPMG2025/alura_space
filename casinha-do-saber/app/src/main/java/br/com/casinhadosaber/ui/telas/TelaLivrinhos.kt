@@ -68,6 +68,28 @@ import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Confete
 import br.com.casinhadosaber.ui.componentes.Corujinha
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.componentes.ContasLeves
+import br.com.casinhadosaber.ui.componentes.CorDaConta
+import br.com.casinhadosaber.ui.componentes.EstrelasLeves
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.IconeDaBarra
+import br.com.casinhadosaber.ui.componentes.IconeDeArteDaBarra
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.LadoDaCauda
+import br.com.casinhadosaber.ui.componentes.ProgressoVisivel
+import br.com.casinhadosaber.ui.componentes.balaoDeFala
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
+import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
+import br.com.casinhadosaber.ui.componentes.pilula
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.unit.em
 import br.com.casinhadosaber.ui.tema.Cores
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -104,15 +126,25 @@ fun TelaEstante(estado: EstadoJogo, onAbrir: (Livrinho) -> Unit, onVoltar: () ->
     Column(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFFFFE3C2), Cores.Fundo)))
+            .ceuDeBrinquedo(comGrama = false)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             BotaoRedondo("⬅️", "Voltar", onVoltar, Modifier.testTag("estante_voltar"), tamanho = 52.dp)
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(8.dp))
+            ImagemDeArte("tela_livro_fechado", Modifier.size(48.dp)) { Text("📚", style = MaterialTheme.typography.headlineMedium) }
+            Spacer(Modifier.width(4.dp))
             Column(Modifier.weight(1f)) {
-                Text("📚 Minha estante", style = MaterialTheme.typography.headlineMedium, color = Cores.Texto)
-                Text("${lidos.size} de ${livros.size} livrinhos lidos", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)
+                TituloQueCabe("Minha estante", estilo = MaterialTheme.typography.headlineMedium)
+                // Quantos já leu, como estrelas que acendem (o número fica só para a acessibilidade).
+                Row(
+                    Modifier
+                        .clearAndSetSemantics { contentDescription = "${lidos.size} de ${livros.size} livrinhos lidos" }
+                        .pilula()
+                        .padding(horizontal = 10.dp, vertical = 3.dp),
+                ) {
+                    EstrelasLeves(ProgressoVisivel.estrelasAcesas(lidos.size, livros.size, 5), total = 5, tamanho = 18.dp)
+                }
             }
         }
         Column(
@@ -125,10 +157,10 @@ fun TelaEstante(estado: EstadoJogo, onAbrir: (Livrinho) -> Unit, onVoltar: () ->
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .semantics(mergeDescendants = true) { contentDescription = "Marcadores: ${lidos.size}" }
+                    .cartaoFofo(raio = 20.dp, labio = Cores.LabioClaro)
                     .heightIn(min = 64.dp)
-                    .background(Color.White, RoundedCornerShape(20.dp))
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                    .semantics(mergeDescendants = true) { contentDescription = "Marcadores: ${lidos.size}" },
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("🔖", style = MaterialTheme.typography.headlineMedium)
@@ -255,7 +287,9 @@ private fun CapaDoLivrinho(
                     fontSize = 22.sp,
                     modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).background(Color.White, CircleShape).padding(4.dp),
                 )
-                !aberto -> Text("🔒", fontSize = 22.sp, modifier = Modifier.align(Alignment.TopEnd).padding(6.dp))
+                !aberto -> IconeLeve(IconesDaBarra.PAIS, 26.dp, Modifier.align(Alignment.TopEnd).padding(5.dp)) {
+                    Text("🔒", fontSize = 22.sp)
+                }
             }
         }
     }
@@ -304,23 +338,34 @@ fun TelaLivrinho(
     Column(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(cor.copy(alpha = 0.55f), Papel)))
+            .background(Brush.verticalGradient(listOf(lerp(cor, Color(0xFFB8E2FF), 0.55f), Papel)))
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             BotaoRedondo("✖️", "Fechar o livrinho", { narrador.parar(); onVoltar() }, tamanho = 48.dp)
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(6.dp))
+            ImagemDeArte("tela_livro_aberto", Modifier.size(width = 44.dp, height = 34.dp))
+            Spacer(Modifier.width(4.dp))
             Text(
                 livro.titulo,
                 style = MaterialTheme.typography.titleLarge,
                 color = Cores.Texto,
-                maxLines = 1,
+                maxLines = 2,
                 modifier = Modifier.weight(1f),
             )
             val p = parte
             if (p is Parte.Pagina) {
-                Text("${p.n + 1}/${livro.paginas.size}", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)
+                // As páginas como contas (a da vez amarela), nunca "2/5".
+                ContasLeves(
+                    feitas = p.n,
+                    total = livro.paginas.size,
+                    tamanho = 14.dp,
+                    cor = CorDaConta.AZUL,
+                    comAtual = true,
+                    descricao = "Página ${p.n + 1} de ${livro.paginas.size}",
+                    modifier = Modifier.pilula().padding(horizontal = 8.dp, vertical = 4.dp),
+                )
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -364,8 +409,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.PaginaAberta(
     FlowRow(
         Modifier
             .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(24.dp))
-            .background(Color.White, RoundedCornerShape(24.dp))
+            .cartaoFofo(raio = 24.dp, labio = Cores.LabioClaro)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -386,7 +430,9 @@ private fun androidx.compose.foundation.layout.ColumnScope.PaginaAberta(
             habilitado = n > 0,
             modifier = Modifier.testTag("pagina_anterior").alpha(if (n > 0) 1f else 0.35f),
         ) {
-            Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) { Text("⬅️", fontSize = 28.sp) }
+            Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.VOLTAR), Modifier.size(36.dp)) { Text("⬅️", fontSize = 28.sp) }
+            }
         }
         BotaoFofo(
             onClick = { narrador.falar(pagina.texto) },
@@ -396,7 +442,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.PaginaAberta(
             modifier = Modifier.weight(1f).testTag("ler_para_mim"),
         ) {
             Row(Modifier.heightIn(min = 64.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("🔊", fontSize = 26.sp)
+                IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.SOM_LIGADO), Modifier.size(32.dp)) { Text("🔊", fontSize = 26.sp) }
                 Spacer(Modifier.width(6.dp))
                 Text("Ler para mim", style = MaterialTheme.typography.titleLarge, color = Cores.Roxo, maxLines = 1)
             }
@@ -407,7 +453,9 @@ private fun androidx.compose.foundation.layout.ColumnScope.PaginaAberta(
             descricao = "Virar a página",
             modifier = Modifier.testTag("pagina_seguinte"),
         ) {
-            Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) { Text("➡️", fontSize = 28.sp) }
+            Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                IconeDeArteDaBarra(IconeDaBarra("icone_avancar"), Modifier.size(36.dp)) { Text("➡️", fontSize = 28.sp) }
+            }
         }
     }
 }
@@ -477,13 +525,21 @@ private fun androidx.compose.foundation.layout.ColumnScope.PerguntaAberta(livro:
                 Box(
                     Modifier
                         .weight(1f)
-                        .shadow(4.dp, RoundedCornerShape(22.dp))
-                        .background(Color.White, RoundedCornerShape(22.dp))
                         .semantics(mergeDescendants = true) { onClick(label = "Ouvir de novo") { narrador.falar(q.pergunta); true } }
                         .pointerInput(q.pergunta) { detectTapGestures(onTap = { narrador.falar(q.pergunta) }) }
+                        .balaoDeFala(LadoDaCauda.Esquerda)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
-                    Text("🔊 " + q.pergunta, style = MaterialTheme.typography.titleLarge, color = Cores.Texto)
+                    // O alto-falante é o ícone 3D em linha; o texto alternativo continua "🔊" (mesma semântica).
+                    Text(
+                        buildAnnotatedString {
+                            appendInlineContent(ID_DO_SOM, "🔊")
+                            append(" " + q.pergunta)
+                        },
+                        inlineContent = somEmLinha,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Cores.Texto,
+                    )
                 }
             }
             for (f in opcoes) {
@@ -502,15 +558,16 @@ private fun androidx.compose.foundation.layout.ColumnScope.PerguntaAberta(livro:
                         .widthIn(max = 420.dp)
                         .fillMaxWidth()
                         .testTag(if (certa) "resposta_certa" else "resposta")
-                        .then(if (brilha && !acertou) Modifier.pulsando() else Modifier)
-                        .border(if (brilha) 4.dp else 0.dp, if (brilha) Cores.Certo else Color.Transparent, RoundedCornerShape(24.dp)),
+                        .then(if (brilha && !acertou) Modifier.pulsando() else Modifier),
                 ) {
                     Row(
                         Modifier.fillMaxWidth().heightIn(min = 96.dp).padding(horizontal = 18.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(f.emoji, fontSize = 52.sp, lineHeight = 60.sp, modifier = Modifier.alpha(if (f.emoji in erradas) 0.45f else 1f))
+                        FiguraDaPergunta(f.emoji, 64.dp, Modifier.alpha(if (f.emoji in erradas) 0.45f else 1f)) {
+                            Text(f.emoji, fontSize = 52.sp, lineHeight = 60.sp)
+                        }
                     }
                 }
             }
@@ -534,25 +591,41 @@ private fun androidx.compose.foundation.layout.ColumnScope.FimDoLivrinho(livro: 
     Box(Modifier.fillMaxWidth().weight(1f)) {
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)) {
             Text(if (genero == Genero.MENINA) "Você leu sozinha!" else "Você leu sozinho!", style = MaterialTheme.typography.headlineMedium, color = Cores.Texto, textAlign = TextAlign.Center)
-            // O marcador de página ganho, grande, numa fitinha.
-            Box(
-                Modifier
-                    .size(width = 140.dp, height = 190.dp)
-                    .shadow(8.dp, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                    .background(Brush.verticalGradient(listOf(Color(0xFFFFE08A), Color(0xFFFFB84D))), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                    .semantics { contentDescription = "Marcador ${livro.titulo}" },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(livro.marcador, fontSize = 72.sp, modifier = Modifier.pulsando())
+            // O marcador de página ganho, grande, saindo do livro aberto 3D.
+            Box(Modifier.semantics { contentDescription = "Marcador ${livro.titulo}" }, contentAlignment = Alignment.BottomCenter) {
+                ImagemDeArte("tela_livro_aberto", Modifier.size(width = 220.dp, height = 165.dp))
+                Box(
+                    Modifier
+                        .padding(bottom = 70.dp)
+                        .size(width = 110.dp, height = 140.dp)
+                        .cartaoFofo(cor = Color(0xFFFFD166), raio = 16.dp, labio = Color(0xFFE59A2F)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(livro.marcador, fontSize = 64.sp, modifier = Modifier.pulsando())
+                }
             }
-            Text("🔖 Novo marcador na estante", style = MaterialTheme.typography.titleLarge, color = Cores.Roxo)
+            Text("🔖 Novo marcador na estante", style = MaterialTheme.typography.titleLarge, color = Cores.Roxo, textAlign = TextAlign.Center)
             BotaoFofo(onClick = { narrador.parar(); sons.toque(); onVoltar() }, cor = Cores.Certo, descricao = "Ver a estante", modifier = Modifier.testTag("livrinho_estante")) {
-                Text("📚 Ver a estante", style = MaterialTheme.typography.headlineSmall, color = Color.White, modifier = Modifier.padding(horizontal = 26.dp, vertical = 16.dp))
+                Row(Modifier.padding(horizontal = 22.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.ESTANTE), Modifier.size(36.dp)) { Text("📚", fontSize = 26.sp) }
+                    Spacer(Modifier.width(8.dp))
+                    Text("Ver a estante", style = MaterialTheme.typography.headlineSmall, color = Color.White)
+                }
             }
         }
         Confete(confete, Modifier.fillMaxSize())
     }
 }
+
+/** Id do alto-falante em linha no balão da pergunta. */
+private const val ID_DO_SOM = "som"
+
+/** O alto-falante 3D (`icone_som_ligado`) em linha com o texto, do tamanho de uma letra grande. */
+private val somEmLinha = mapOf(
+    ID_DO_SOM to InlineTextContent(Placeholder(1.3.em, 1.3.em, PlaceholderVerticalAlign.TextCenter)) {
+        IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.SOM_LIGADO), Modifier.fillMaxSize()) { Text("🔊") }
+    },
+)
 
 /** Botão da estante (no início e no caminho das Letras). */
 @Composable
