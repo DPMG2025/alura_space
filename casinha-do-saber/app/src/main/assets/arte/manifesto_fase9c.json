@@ -1,0 +1,1146 @@
+{
+  "versao": 1,
+  "escala": 2,
+  "imagens": {
+    "icone_alfinete": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 93
+      },
+      "arquivo": "icone_alfinete.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_aquario": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 41,
+          "y": 52
+        }
+      },
+      "apoio": {
+        "x": 44,
+        "y": 78
+      },
+      "arquivo": "icone_area_aquario.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_arvore": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 51
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_area_arvore.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_biblioteca": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 45
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 86
+      },
+      "arquivo": "icone_area_biblioteca.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_brinquedos": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 52
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 93
+      },
+      "arquivo": "icone_area_brinquedos.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_cinema": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 53
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 91
+      },
+      "arquivo": "icone_area_cinema.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_estudio": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 43,
+          "y": 53
+        }
+      },
+      "apoio": {
+        "x": 44,
+        "y": 95
+      },
+      "arquivo": "icone_area_estudio.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_estufa": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 52
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 92
+      },
+      "arquivo": "icone_area_estufa.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_fazendinha": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 90
+      },
+      "arquivo": "icone_area_fazendinha.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_festa": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 90
+      },
+      "arquivo": "icone_area_festa.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_flores": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 51,
+        "y": 95
+      },
+      "arquivo": "icone_area_flores.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_gourmet": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 49,
+        "y": 95
+      },
+      "arquivo": "icone_area_gourmet.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_horta": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 42,
+        "y": 95
+      },
+      "arquivo": "icone_area_horta.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_laboratorio": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 90
+      },
+      "arquivo": "icone_area_laboratorio.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_lago": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 93
+      },
+      "arquivo": "icone_area_lago.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_observatorio": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 58
+        }
+      },
+      "apoio": {
+        "x": 45,
+        "y": 89
+      },
+      "arquivo": "icone_area_observatorio.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_parquinho": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 44,
+          "y": 40
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 89
+      },
+      "arquivo": "icone_area_parquinho.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_pet": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 95
+      },
+      "arquivo": "icone_area_pet.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_piscina": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_area_piscina.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_quadra": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 49,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 49,
+        "y": 94
+      },
+      "arquivo": "icone_area_quadra.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_quarto2": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 43
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 81
+      },
+      "arquivo": "icone_area_quarto2.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_bau": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 49,
+          "y": 40
+        }
+      },
+      "apoio": {
+        "x": 49,
+        "y": 84
+      },
+      "arquivo": "icone_bau.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_broto": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 46
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 92
+      },
+      "arquivo": "icone_broto.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_bussola": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 53
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_bussola.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_cabelo": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 42
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 82
+      },
+      "arquivo": "icone_cabelo.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_certo": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 51
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 89
+      },
+      "arquivo": "icone_certo.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_certo_branco": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 51
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 89
+      },
+      "arquivo": "icone_certo_branco.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_chapeus": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 45
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 89
+      },
+      "arquivo": "icone_chapeus.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_congelador": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_congelador.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_cor_do_cabelo": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 43
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 85
+      },
+      "arquivo": "icone_cor_do_cabelo.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_costas": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 90
+      },
+      "arquivo": "icone_costas.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_descer": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_descer.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_dica": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 56
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_dica.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_escrever": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 35,
+          "y": 60
+        }
+      },
+      "apoio": {
+        "x": 45,
+        "y": 95
+      },
+      "arquivo": "icone_escrever.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_frutas": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 54
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_frutas.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_leite": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 49,
+          "y": 44
+        }
+      },
+      "apoio": {
+        "x": 49,
+        "y": 89
+      },
+      "arquivo": "icone_leite.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_mao": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_mao.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_marcador": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 91
+      },
+      "arquivo": "icone_marcador.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_martelo": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 51,
+          "y": 53
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_martelo.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_bloqueado": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 93
+      },
+      "arquivo": "icone_no_bloqueado.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_chefao": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 82
+      },
+      "arquivo": "icone_no_chefao.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_desafio": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_no_desafio.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_fase": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 90
+      },
+      "arquivo": "icone_no_fase.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_marco": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 41,
+          "y": 51
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_no_marco.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_novidade": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 90
+      },
+      "arquivo": "icone_no_novidade.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_revisao": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_no_revisao.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_treino": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 78
+      },
+      "arquivo": "icone_no_treino.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_trofeu": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 91
+      },
+      "arquivo": "icone_no_trofeu.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_pele": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 86
+      },
+      "arquivo": "icone_pele.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_penteado": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 93
+      },
+      "arquivo": "icone_penteado.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_pes": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 46
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 74
+      },
+      "arquivo": "icone_pes.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_pescoco": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 92
+      },
+      "arquivo": "icone_pescoco.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_rosto": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 75
+      },
+      "arquivo": "icone_rosto.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_roupa": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 90
+      },
+      "arquivo": "icone_roupa.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_roupas": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 90
+      },
+      "arquivo": "icone_roupas.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_subir": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 94
+      },
+      "arquivo": "icone_subir.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_vassoura": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 50,
+          "y": 46
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 94
+      },
+      "arquivo": "icone_vassoura.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    }
+  }
+}
