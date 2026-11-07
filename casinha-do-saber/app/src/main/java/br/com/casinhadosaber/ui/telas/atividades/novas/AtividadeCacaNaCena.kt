@@ -85,8 +85,8 @@ private class Cenario(
 
 private fun cenarioDo(mundo: Int): Cenario {
     val tom = Color(Mundos.todos[mundo.coerceIn(0, Mundos.todos.lastIndex)].corArgb)
-    val ceu = Color(0xFF8FD3FF)
-    val verde = Cenario(ceu, lerp(Color(0xFFDDF3FF), tom, 0.5f), Color(0xFF7CC56B), Color(0xFF9BD77E), Color(0xFF4CAF50), Color(0xFFB0A8B9))
+    val ceu = Color(0xFF7CC4FA) // o azul do céu das maquetes
+    val verde = Cenario(ceu, lerp(Color(0xFFFFE6D6), tom, 0.35f), Color(0xFF96D862), Color(0xFFA9E56F), Color(0xFF4CAF50), Color(0xFFB0A8B9))
     return when (mundo) {
         2, 10, 14, 22 -> Cenario(ceu, lerp(Color(0xFFFFF6DA), tom, 0.4f), Color(0xFFF3D9A4), Color(0xFFEBCB8B), Color(0xFF6DBE5B), Color(0xFFC9A27A))
         3, 8 -> Cenario(Color(0xFFA9DBFF), Color(0xFFEAF6FF), Color(0xFFF4F9FF), Color(0xFFDDEBF7), Color(0xFF7FB8A4), Color(0xFFA8B4C4))

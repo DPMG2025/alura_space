@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -280,6 +281,9 @@ internal fun VisitanteAndando(
     val salto = remember { Animatable(0f) }
     val escopo = rememberCoroutineScope()
     val corpo = remember(emoji) { Passeio.corpoInteiro(emoji) }
+    // O bicho em 3D quando há figura dele (as das perguntas); sem ela, o emoji de corpo inteiro.
+    val contexto = LocalContext.current
+    val figura = remember(corpo) { FigurasDaPergunta.idPara(ArteDoApp.manifesto(contexto), corpo) ?: FigurasDaPergunta.idPara(ArteDoApp.manifesto(contexto), emoji) }
     val toque = maxOf(tamanho, with(densidade) { 48.dp.toPx() })
     Box(
         Modifier
@@ -302,8 +306,9 @@ internal fun VisitanteAndando(
             .graphicsLayer {
                 val p = Passeio.em(relogio.value.toLong(), semente)
                 transformOrigin = TransformOrigin(0.5f, 1f)
-                // Os emojis de bicho olham para a esquerda: virar quando anda para a direita.
-                scaleX = if (p.paraDireita) -1f else 1f
+                // Os emojis de bicho olham para a esquerda: virar quando anda para a direita (a figura 3D não
+                // vira, para a luz não trocar de lado).
+                scaleX = if (p.paraDireita && figura == null) -1f else 1f
                 when (p.gesto) {
                     Gesto.ANDANDO -> translationY = -abs(sin(p.passada * 2f * PI.toFloat())) * tamanho * 0.1f
                     Gesto.SENTADO -> scaleY = 0.9f
@@ -313,6 +318,12 @@ internal fun VisitanteAndando(
             },
         contentAlignment = Alignment.BottomCenter,
     ) {
-        Box(Modifier.size(with(densidade) { tamanho.toDp() })) { EmojiGrande(corpo, tamanho) }
+        Box(Modifier.size(with(densidade) { tamanho.toDp() })) {
+            if (figura == null) {
+                EmojiGrande(corpo, tamanho)
+            } else {
+                ImagemDeArte(figura, Modifier.fillMaxSize(), alinhamento = Alignment.BottomCenter) { EmojiGrande(corpo, tamanho) }
+            }
+        }
     }
 }

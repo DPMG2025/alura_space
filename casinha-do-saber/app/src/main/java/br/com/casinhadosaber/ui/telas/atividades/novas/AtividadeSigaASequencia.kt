@@ -55,6 +55,12 @@ import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.escurecer
+import br.com.casinhadosaber.ui.componentes.ContasDeProgresso
+import br.com.casinhadosaber.ui.componentes.CorDaConta
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.faceDeBrinquedo
+import androidx.compose.ui.draw.clip
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import kotlinx.coroutines.delay
@@ -205,11 +211,13 @@ internal fun AtividadeSigaASequencia(
                             rodada++
                         }
                         .graphicsLayer { alpha = if (mostrando || terminou) 0.45f else 1f }
-                        .background(Color.White, CircleShape)
+                        // Botão redondo claro de brinquedo, com o ícone 3D de repetir.
+                        .clip(CircleShape)
+                        .faceDeBrinquedo(Color.White, CircleShape, redonda = true)
                         .border(3.dp, cor, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("🔁", fontSize = 30.sp)
+                    ImagemDeArte(IconesDaBarra.REPETIR, Modifier.size(38.dp)) { Text("🔁", fontSize = 30.sp) }
                 }
             }
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -254,24 +262,20 @@ internal fun AtividadeSigaASequencia(
 private fun ProgressoN4(total: Int, feitos: Int, mostrando: Boolean, cor: Color) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Box(
-            Modifier.size(44.dp).background(if (mostrando) Cores.Estrela else Color.White, CircleShape),
+            Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .faceDeBrinquedo(if (mostrando) Cores.Estrela else Color.White, CircleShape, redonda = true),
             contentAlignment = Alignment.Center,
         ) {
-            Text(if (mostrando) "👀" else "👆", fontSize = 22.sp)
-        }
-        Canvas(Modifier.size(width = (18 * total + 6 * (total - 1)).dp, height = 20.dp)) {
-            val r = 9.dp.toPx()
-            for (k in 0 until total) {
-                val c = Offset(r + k * (2 * r + 6.dp.toPx()), size.height / 2f)
-                if (k < feitos) {
-                    drawCircle(Cores.Certo, r, c)
-                    drawCircle(Color.White.copy(alpha = 0.5f), r * 0.35f, c + Offset(-r * 0.3f, -r * 0.3f))
-                } else {
-                    drawCircle(Color.White, r, c)
-                    drawCircle(escurecer(cor, 0.9f).copy(alpha = 0.6f), r, c, style = Stroke(2.5f.dp.toPx()))
-                }
+            if (mostrando) {
+                Text("👀", fontSize = 22.sp)
+            } else {
+                ImagemDeArte("ui_mao_toque", Modifier.size(32.dp)) { Text("👆", fontSize = 22.sp) }
             }
         }
+        // As contas 3D da sequência (maquete 2): verdes as já repetidas e a da vez amarela (não enquanto mostra).
+        ContasDeProgresso(feitos, total, cor = CorDaConta.VERDE, tamanho = 22.dp, comAtual = !mostrando && feitos < total)
     }
 }
 

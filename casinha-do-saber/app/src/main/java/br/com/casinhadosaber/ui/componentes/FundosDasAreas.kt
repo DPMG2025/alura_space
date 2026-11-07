@@ -58,11 +58,11 @@ fun DrawScope.desenharFundoDaArea(area: AreaDaCasa, progresso: Float, t: Float, 
 fun DrawScope.desenharFundoParado(area: AreaDaCasa, progresso: Float, noite: Boolean) {
     val ceuDeNoite = noite || area.id == "observatorio"
     if (area.tipo == TipoDeArea.FORA) {
-        // Céu mais forte no alto e clarinho no horizonte.
+        // Céu do mundo de brinquedo (maquete 1): azul no alto, clarinho e pêssego no horizonte.
         val ceu = if (ceuDeNoite) {
             listOf(Color(0xFF0E1638), Color(0xFF22306A), Color(0xFF3B4C8C))
         } else {
-            listOf(Color(0xFF5FB2F2), Color(0xFF9AD3FF), Color(0xFFDDF1FF))
+            listOf(Color(0xFF7CC4FA), Color(0xFFB8E2FF), Color(0xFFFFE6D6))
         }
         drawRect(Brush.verticalGradient(ceu, endY = size.height * H), size = s(1f, H + 0.01f))
         if (ceuDeNoite) {
@@ -82,9 +82,15 @@ fun DrawScope.desenharFundoParado(area: AreaDaCasa, progresso: Float, noite: Boo
         val chao = when (area.id) {
             "observatorio" -> listOf(Color(0xFFB5654A), Color(0xFF8E4A35))
             "gourmet" -> listOf(Color(0xFFD9A46C), Color(0xFFB98552))
-            else -> if (noite) listOf(Color(0xFF3F7A45), Color(0xFF2F5E35)) else listOf(Color(0xFF8CD17A), Color(0xFF5BA84C))
+            // A grama lisa e viva da arte 3D (a mesma da casa de fora), um pouco mais escura perto da gente.
+            else -> if (noite) listOf(Color(0xFF3F7A45), Color(0xFF2F5E35)) else listOf(GramaDaIlha, Color(0xFF86CF57))
         }
         drawRect(Brush.verticalGradient(chao, startY = size.height * H, endY = size.height), p(0f, H), s(1f, 1f - H))
+        // Luz do sol no topo da grama (o "verniz" da massinha), logo abaixo do horizonte.
+        drawRect(
+            Brush.verticalGradient(listOf(Color.White.copy(alpha = if (noite) 0.06f else 0.22f), Color.Transparent), startY = size.height * H, endY = size.height * (H + 0.12f)),
+            p(0f, H), s(1f, 0.12f),
+        )
         when (area.id) {
             "observatorio" -> for (i in 0 until 9) {
                 val y = H + i * 0.075f
@@ -100,11 +106,12 @@ fun DrawScope.desenharFundoParado(area: AreaDaCasa, progresso: Float, noite: Boo
             else -> for (i in 0 until 22) {
                 val x = (i * 0.137f + 0.03f) % 1f
                 val y = H + 0.03f + ((i * 0.29f) % 1f) * (0.95f - H)
-                drawOval(if (noite) Color(0xFF356B3B) else Color(0xFF6BB85C), p(x - 0.025f, y), s(0.05f, 0.012f))
+                drawOval(if (noite) Color(0xFF356B3B) else Color(0xFF7CC64E), p(x - 0.025f, y), s(0.05f, 0.012f))
             }
         }
         // Sombra suave logo abaixo do horizonte (o chão "entra" embaixo da paisagem).
         drawRect(Brush.verticalGradient(listOf(Color(0x22000000), Color.Transparent), startY = size.height * H, endY = size.height * (H + 0.03f)), p(0f, H), s(1f, 0.03f))
+        bordaDaIlha(noite)
     } else {
         val parede = paredeDe(area.id)
         drawRect(Brush.verticalGradient(listOf(parede, escurecida(parede, 0.93f)), endY = size.height * H), size = s(1f, H + 0.01f))
@@ -130,6 +137,7 @@ fun DrawScope.desenharFundoParado(area: AreaDaCasa, progresso: Float, noite: Boo
         drawRect(Color(0x1F000000), p(0f, H - 0.022f), s(1f, 0.004f))
         drawRect(Color(0x26000000), p(0f, H + 0.0f), s(1f, 0.004f))
         if (area.id != "cinema" && area.id != "aquario") janelaDaArea(0.80f, 0.06f, noite)
+        baseDaCasinha()
         if (noite) drawRect(Color(0x55142045), size = s(1f, 1f))
     }
     // O miolo de cada área, que cresce na hora da obra.
@@ -137,18 +145,65 @@ fun DrawScope.desenharFundoParado(area: AreaDaCasa, progresso: Float, noite: Boo
     if (escala > 0f) {
         scale(escala, escala, p(0.5f, CasaQueCresce.MIOLO_BASE + 0.04f)) { miolo(area.id, noite) }
     }
-    // Cantos um pouco mais escuros: a cena fica "emoldurada" e o olho vai para o meio.
+    // Cantos um pouquinho mais escuros (bem leve, como a luz macia das maquetes): o olho vai para o meio.
     drawRect(
         Brush.radialGradient(
-            listOf(Color.Transparent, Color.Transparent, Color(0x2E1B1035)),
+            listOf(Color.Transparent, Color.Transparent, Color(0x1F1B1035)),
             center = center,
             radius = maxOf(size.width, size.height) * 0.72f,
         ),
     )
 }
 
-/** A parte que mexe: estrelas piscando, nuvens passeando e o miolo animado (água, balanço, luzes da pista). */
-fun DrawScope.desenharFundoAnimado(area: AreaDaCasa, progresso: Float, t: Float, noite: Boolean) {
+/** Grama clara da ilha (a `A9E56F` da arte 3D da casa, um tico mais viva no alto). */
+private val GramaDaIlha = Color(0xFFB0EA74)
+
+/**
+ * A beirada da ilha de grama embaixo da cena (o mundo de brinquedo em ilhas): a grama faz uma borda redondinha
+ * sobre a terra de massinha, que mostra uma faixa com sombra e um brilho no alto. Fica bem rente ao pé da
+ * cena, para não roubar lugar das coisas.
+ */
+private fun DrawScope.bordaDaIlha(noite: Boolean) {
+    val topoDaTerra = 0.972f
+    val terra = if (noite) listOf(Color(0xFF6B4A33), Color(0xFF4A3121)) else listOf(Color(0xFFC98E5E), Color(0xFF9A6239))
+    drawRect(Brush.verticalGradient(terra, startY = size.height * topoDaTerra, endY = size.height), p(0f, topoDaTerra), s(1f, 1f - topoDaTerra))
+    // Pedrinhas na terra.
+    for (i in 0 until 9) {
+        val x = (i * 0.113f + 0.04f) % 1f
+        drawOval(Color(0x2E3A1E0E), p(x, topoDaTerra + 0.01f + (i % 3) * 0.004f), s(0.02f, 0.007f))
+    }
+    // Grama que sobra por cima da terra, em bolinhas (a borda macia da ilha), com a sombrinha que ela faz.
+    val grama = if (noite) Color(0xFF2F5E35) else Color(0xFF86CF57)
+    val r = size.width * 0.03f
+    var x = -r * 0.5f
+    while (x < size.width + r) {
+        drawCircle(Color(0x33000000), r, Offset(x, size.height * topoDaTerra + r * 0.25f))
+        x += r * 1.6f
+    }
+    x = -r * 0.5f
+    while (x < size.width + r) {
+        drawCircle(grama, r, Offset(x, size.height * topoDaTerra - r * 0.15f))
+        x += r * 1.6f
+    }
+    drawRect(grama, p(0f, topoDaTerra - 0.02f), s(1f, 0.02f))
+}
+
+/**
+ * A base da casinha de bonecas nos cômodos novos: rodapé largo de madeira de brinquedo no pé da cena, com brilho
+ * no alto e sombra embaixo (o cômodo é uma caixinha aberta, como a casa por dentro).
+ */
+private fun DrawScope.baseDaCasinha() {
+    val topo = 0.968f
+    drawRect(Brush.verticalGradient(listOf(Color(0xFFF2D3A6), Color(0xFFC98B5A)), startY = size.height * topo, endY = size.height), p(0f, topo), s(1f, 1f - topo))
+    drawRect(Color.White.copy(alpha = 0.45f), p(0f, topo), s(1f, 0.004f))
+    drawRect(Color(0x33000000), p(0f, topo - 0.006f), s(1f, 0.006f))
+}
+
+/**
+ * A parte que mexe: estrelas piscando, nuvens passeando e o miolo animado (água, balanço, luzes da pista).
+ * Sem [nuvensDesenhadas], as nuvens são as 3D, postas por cima pela [CenaDaArea].
+ */
+fun DrawScope.desenharFundoAnimado(area: AreaDaCasa, progresso: Float, t: Float, noite: Boolean, nuvensDesenhadas: Boolean = true) {
     val ceuDeNoite = noite || area.id == "observatorio"
     if (area.tipo == TipoDeArea.FORA) {
         if (ceuDeNoite) {
@@ -158,7 +213,7 @@ fun DrawScope.desenharFundoAnimado(area: AreaDaCasa, progresso: Float, t: Float,
                 val brilho = 0.5f + 0.5f * sin((t + i * 0.13f) * 2f * PI.toFloat())
                 drawCircle(Color.White.copy(alpha = 0.4f + 0.5f * brilho), size.width * (0.003f + (i % 3) * 0.002f), p(x, y))
             }
-        } else {
+        } else if (nuvensDesenhadas) {
             nuvem(0.18f + 0.04f * sin(t * 2f * PI.toFloat()), 0.10f, 0.05f)
             nuvem(0.74f - 0.03f * sin(t * 2f * PI.toFloat()), 0.18f, 0.04f)
         }

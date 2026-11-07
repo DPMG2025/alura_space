@@ -17,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -65,8 +68,10 @@ internal fun Modifier.painelDaCena(): Modifier =
         .border(3.dp, ContornoDoJogo, FormaDoPainel)
 
 /**
- * Ladrilho do jogo: corpo [fundo] (branco), um lábio de [labio] embaixo na cor [cor] e um contorno fino.
- * O lábio fica dentro do tamanho do ladrilho (não muda o layout de quem usa).
+ * Ladrilho do jogo, no visual de bloco de brinquedo (`.bloco` do protótipo, como o [BotaoFofo]): corpo [fundo]
+ * em degradê (mais claro em cima, um tico lilás embaixo), brilho macio no alto, borda branca por dentro, um lábio
+ * de [labio] embaixo na cor [cor] e um contorno fino. O lábio fica dentro do tamanho do ladrilho (não muda o
+ * layout de quem usa). Montado uma vez por tamanho (drawWithCache).
  */
 internal fun Modifier.ladrilho(
     cor: Color,
@@ -75,26 +80,52 @@ internal fun Modifier.ladrilho(
     labio: Dp = 4.dp,
     contorno: Color = ContornoDoJogo,
     larguraContorno: Dp = 1.5.dp,
-): Modifier = drawBehind {
+): Modifier = drawWithCache {
     val r = CornerRadius(raio.toPx())
     val l = labio.toPx()
-    drawRoundRect(cor, cornerRadius = r)
-    drawRoundRect(fundo, size = Size(size.width, size.height - l), cornerRadius = r)
-    // Brilho de cima: uma faixa clarinha no terço de cima.
-    drawRoundRect(
-        Color.White.copy(alpha = 0.6f),
-        topLeft = Offset(size.width * 0.08f, size.height * 0.07f),
-        size = Size(size.width * 0.84f, size.height * 0.16f),
-        cornerRadius = CornerRadius(size.height * 0.08f),
+    // Sem tamanho ainda (ou mais baixo que o lábio): nada para desenhar (degradê de altura zero não vale).
+    if (size.width <= 0f || size.height <= l + 1f) return@drawWithCache onDrawBehind { }
+    val alturaDaFace = size.height - l
+    val corpo = Brush.verticalGradient(
+        0f to lerp(fundo, Color.White, 0.45f),
+        0.55f to fundo,
+        1f to lerp(fundo, Color(0xFFE6DCFF), 0.22f),
+        endY = alturaDaFace,
     )
+    // Brilho: elipse achatada no alto à esquerda (o radial-gradient do protótipo).
+    val brilho = Brush.radialGradient(
+        0f to Color.White.copy(alpha = 0.7f), 0.55f to Color.White.copy(alpha = 0.18f), 1f to Color.Transparent,
+        center = Offset(size.width * 0.32f, alturaDaFace * 0.12f),
+        radius = maxOf(size.width * 0.55f, 1f),
+    )
+    val borda = minOf(2.dp.toPx(), size.minDimension * 0.05f)
     val meia = larguraContorno.toPx() / 2f
-    drawRoundRect(
-        contorno,
-        topLeft = Offset(meia, meia),
-        size = Size(size.width - 2 * meia, size.height - 2 * meia),
-        cornerRadius = CornerRadius((raio.toPx() - meia).coerceAtLeast(0f)),
-        style = Stroke(larguraContorno.toPx()),
-    )
+    onDrawBehind {
+        drawRoundRect(cor, cornerRadius = r)
+        // Fio de sombra onde a face encontra o lábio.
+        drawRoundRect(escurecer(cor, 0.82f), topLeft = Offset(0f, alturaDaFace - l * 0.4f), size = Size(size.width, l * 0.8f), cornerRadius = r)
+        drawRoundRect(corpo, size = Size(size.width, alturaDaFace), cornerRadius = r)
+        drawRoundRect(
+            brilho,
+            topLeft = Offset(size.width * 0.06f, alturaDaFace * 0.04f),
+            size = Size(size.width * 0.88f, alturaDaFace * 0.42f),
+            cornerRadius = CornerRadius(alturaDaFace * 0.2f),
+        )
+        drawRoundRect(
+            Color.White.copy(alpha = 0.85f),
+            topLeft = Offset(borda / 2f + meia, borda / 2f + meia),
+            size = Size(size.width - borda - 2 * meia, alturaDaFace - borda - 2 * meia),
+            cornerRadius = CornerRadius((raio.toPx() - borda).coerceAtLeast(0f)),
+            style = Stroke(borda),
+        )
+        drawRoundRect(
+            contorno,
+            topLeft = Offset(meia, meia),
+            size = Size(size.width - 2 * meia, size.height - 2 * meia),
+            cornerRadius = CornerRadius((raio.toPx() - meia).coerceAtLeast(0f)),
+            style = Stroke(larguraContorno.toPx()),
+        )
+    }
 }
 
 /** Cor um pouco mais escura (para lábios e sombras). */

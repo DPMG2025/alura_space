@@ -59,6 +59,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.tema.Baloo2
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import br.com.casinhadosaber.ui.telas.atividades.GestoDeArrastar
@@ -353,7 +354,7 @@ internal fun AtividadeMercadinho(
             Text(
                 reaisN3(mercadinho.preco),
                 fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold, fontFamily = Baloo2,
                 color = Color(0xFFB3261E),
                 modifier = Modifier.padding(start = 14.dp),
             )
@@ -410,7 +411,7 @@ internal fun AtividadeMercadinho(
                 Text(
                     reaisN3(total),
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold, fontFamily = Baloo2,
                     color = if (terminou) Color.White else Cores.Texto,
                 )
             }
@@ -547,7 +548,7 @@ private fun DinheiroDesenhado(valor: Int, escalaTexto: Float) {
                 "${valor / 100}",
                 fontSize = (30 * escalaTexto).sp,
                 lineHeight = (32 * escalaTexto).sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold, fontFamily = Baloo2,
                 color = Color.White,
                 modifier = Modifier.align(Alignment.CenterStart).padding(start = (10 * escalaTexto).dp, bottom = (14 * escalaTexto).dp),
             )
@@ -580,7 +581,7 @@ private fun DinheiroDesenhado(valor: Int, escalaTexto: Float) {
                     if (valor == 100) "1" else "$valor",
                     fontSize = ((if (valor == 100) 28 else 22) * escalaTexto).sp,
                     lineHeight = ((if (valor == 100) 28 else 22) * escalaTexto).sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold, fontFamily = Baloo2,
                     color = escurecer(borda, 0.55f),
                 )
                 Text(

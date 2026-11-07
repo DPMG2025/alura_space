@@ -114,6 +114,22 @@ import androidx.compose.runtime.rememberCoroutineScope
 import br.com.casinhadosaber.dominio.AreaDaCasa
 import br.com.casinhadosaber.dominio.CasaQueCresce
 import br.com.casinhadosaber.ui.componentes.CenaDaArea
+import br.com.casinhadosaber.ui.componentes.Crianca
+import br.com.casinhadosaber.ui.componentes.EstiloDaPilula
+import br.com.casinhadosaber.ui.componentes.EstrelasDeProgresso
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.IconeDaCoisa
+import br.com.casinhadosaber.ui.componentes.IconeDeArteDaBarra
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.Pilula
+import br.com.casinhadosaber.ui.componentes.ProgressoVisivel
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import br.com.casinhadosaber.ui.componentes.miniaturaVestindo
+import br.com.casinhadosaber.ui.componentes.pilula
+import br.com.casinhadosaber.dominio.Perfil
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
 import kotlinx.coroutines.launch
 
 @Composable
@@ -328,7 +344,7 @@ fun TelaCasa(
                 }
                 if (estado.temEstrutura(Estrutura.PORTA)) {
                     AtalhoGrande(
-                        "🚪",
+                        "🏠",
                         "Entrar",
                         "Entrar na casa",
                         Modifier.weight(1f),
@@ -351,15 +367,7 @@ fun TelaCasa(
                     .fillMaxWidth()
                     .then(if (bau.isEmpty()) Modifier.pulsando() else Modifier),
             ) {
-                Text(
-                    "🎮 Jogar",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                )
+                RotuloDoJogar(Modifier.fillMaxWidth().padding(vertical = 10.dp))
             }
         }
     }
@@ -422,7 +430,7 @@ fun TelaCasa(
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Cores.Ceu, Cores.Fundo)))
+            .background(CeuDaCasa)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         // Tela deitada (tablet em paisagem): a casa à esquerda e o baú numa coluna à direita.
@@ -439,17 +447,18 @@ fun TelaCasa(
             ) {
                 BotaoRedondo("⬅️", "Voltar", onVoltar, tamanho = 52.dp)
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        if (nome.isBlank()) "Minha casinha" else "Casa de $nome",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White,
-                        maxLines = 1,
-                    )
-                    Text(
-                        areaNaTela?.let { CasaQueCresce.progresso(estado, it).rotulo } ?: "$pecasDaCasa de ${ItensDaCasa.totalDaCasa} coisas",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        maxLines = 1,
+                    // Título branco com contorno (o nome da área quando ela está na tela) e o progresso em
+                    // estrelas que se veem: nada de "x de 40 coisas" para a criança (o número fica na descrição).
+                    TituloQueCabe(areaNaTela?.nome ?: if (nome.isBlank()) "Minha casinha" else "Casa de $nome")
+                    val progressoNaTela = areaNaTela?.let { CasaQueCresce.progresso(estado, it) }
+                    val feitas = progressoNaTela?.colocadas ?: pecasDaCasa
+                    val total = progressoNaTela?.total ?: ItensDaCasa.totalDaCasa
+                    EstrelasDeProgresso(
+                        ProgressoVisivel.estrelasAcesas(feitas, total, ESTRELAS_DA_CASA),
+                        total = ESTRELAS_DA_CASA,
+                        tamanho = 20.dp,
+                        brilharUltima = feitas >= total,
+                        descricao = progressoNaTela?.rotulo ?: "A casa tem $pecasDaCasa de ${ItensDaCasa.totalDaCasa} coisas",
                     )
                 }
                 BotaoRedondo(
@@ -460,7 +469,8 @@ fun TelaCasa(
                         sons.colocar()
                         narrador.falar(if (noite) listOf(pt("Boa noite!"), en("Good night!")) else listOf(pt("Bom dia!"), en("Good morning!")))
                     },
-                    cor = if (noite) Color(0xFF3B4C8C) else Color.White,
+                    // De noite, um azul-lavanda claro: o glifo roxo do sol 3D continua lendo bem.
+                    cor = if (noite) Color(0xFFC9CCFF) else Color.White,
                     tamanho = 52.dp,
                 )
                 Spacer(Modifier.width(8.dp))
@@ -652,9 +662,9 @@ fun TelaCasa(
                             .padding(10.dp)
                             .pulsando(),
                     ) {
-                        Row(Modifier.padding(horizontal = 14.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("🚪", fontSize = 34.sp)
-                            Text("👉", fontSize = 26.sp)
+                        Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            ImagemDeArte(IconesDaBarra.CASA, Modifier.size(40.dp)) { Text("🚪", fontSize = 34.sp) }
+                            ImagemDeArte(ID_ICONE_AVANCAR, Modifier.size(30.dp)) { Text("👉", fontSize = 26.sp) }
                         }
                     }
                 }
@@ -665,14 +675,18 @@ fun TelaCasa(
             }
 
             if (pintando) {
-                Text(
-                    "🎨 👆 🏠",
-                    style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
+                // Dica sem palavras: o pincel, o dedo e a casa.
+                Row(
+                    Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp),
-                )
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    ImagemDeArte(IconesDaBarra.PINTAR, Modifier.size(36.dp)) { Text("🎨", style = MaterialTheme.typography.headlineMedium) }
+                    ImagemDeArte(ID_MAO_TOQUE, Modifier.size(36.dp)) { Text("👆", style = MaterialTheme.typography.headlineMedium) }
+                    ImagemDeArte(IconesDaBarra.CASA, Modifier.size(36.dp)) { Text("🏠", style = MaterialTheme.typography.headlineMedium) }
+                }
             }
 
             if (!deitada) BauDaCasa(Modifier.fillMaxWidth(), lateral = false)
@@ -712,7 +726,7 @@ private fun AvisoDoPresente(p: PresenteEspecial, evento: String, modifier: Modif
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Text(p.emoji, fontSize = 40.sp)
+        FiguraDaPergunta(p.emoji, 46.dp) { Text(p.emoji, fontSize = 40.sp) }
         Column {
             Text("Presente de $evento!", style = MaterialTheme.typography.titleMedium, color = Cores.TextoSuave)
             Text(p.nome, style = MaterialTheme.typography.titleLarge)
@@ -726,6 +740,24 @@ private fun preposicao(c: Comodo) = when (c) {
     Comodo.SALA -> "na sala"
     Comodo.COZINHA -> "na cozinha"
 }
+
+/** Céu da casa (maquete 1): azul em cima, clarinho, pêssego e rosa embaixo, como na tela inicial. */
+private val CeuDaCasa = Brush.verticalGradient(
+    0f to Color(0xFF7CC4FA),
+    0.38f to Color(0xFFB8E2FF),
+    0.70f to Color(0xFFFFE6D6),
+    1f to Color(0xFFFFD0DC),
+)
+
+/** Quantas estrelas mostram o quanto a casa (ou a área na tela) já está pronta. */
+private const val ESTRELAS_DA_CASA = 5
+
+// Ids da arte 3D usados aqui (Fases 2, 5 e 8A).
+private const val ID_ICONE_AVANCAR = "icone_avancar"
+private const val ID_MAO_TOQUE = "ui_mao_toque"
+private const val ID_TROFEU = "premio_trofeu"
+private const val ID_PRESENTE = "premio_presente_fechado"
+private const val ID_MOEDA = "moeda"
 
 /** Altura mínima da tela deitada para a coluna do baú ter também os atalhos grandes. */
 private val ALTURA_PARA_ATALHOS = 460.dp
@@ -764,9 +796,13 @@ private fun Bau(
         // Abas: baú de presentes e lojinha. Cada toque também diz em voz alta o que a aba é.
         Row(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Aba(
-                "🎁" + if (itens.isNotEmpty()) " ${itens.size}" else "",
                 if (itens.isEmpty()) "Baú de presentes, vazio" else "Baú de presentes, ${itens.size} para colocar na casa",
                 selecionada = !naLoja,
+                conteudo = {
+                    ImagemDeArte(ID_PRESENTE, Modifier.size(34.dp)) { Text("🎁") }
+                    // Quantos presentes esperam: poucos, contáveis (como as moedas), e só quando há algum.
+                    if (itens.isNotEmpty()) Text("${itens.size}", maxLines = 1)
+                },
             ) {
                 naLoja = false
                 sons.toque()
@@ -778,7 +814,15 @@ private fun Bau(
                     },
                 )
             }
-            Aba("🛒 🪙 ${estado.moedas}", "Lojinha, você tem ${estado.moedas} moedinhas", selecionada = naLoja) {
+            Aba(
+                "Lojinha, você tem ${estado.moedas} moedinhas",
+                selecionada = naLoja,
+                conteudo = {
+                    ImagemDeArte(IconesDaBarra.LOJA, Modifier.size(30.dp)) { Text("🛒") }
+                    ImagemDeArte(ID_MOEDA, Modifier.size(26.dp)) { Text("🪙") }
+                    Text("${estado.moedas}", maxLines = 1)
+                },
+            ) {
                 naLoja = true
                 sons.toque()
                 narrador.falar("Lojinha! Você tem ${estado.moedas} moedinhas. Toque numa coisa para ver como fica na casa.")
@@ -862,7 +906,7 @@ private fun Bau(
                                 .border(2.dp, Cores.Estrela, CircleShape),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text("🔒", fontSize = 15.sp)
+                            ImagemDeArte(IconesDaBarra.PAIS, Modifier.size(20.dp)) { Text("🔒", fontSize = 15.sp) }
                         }
                     }
                 } else {
@@ -883,20 +927,18 @@ private fun Bau(
                             Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Text("🏆", fontSize = 40.sp)
-                            Text("🏠 ✔", style = MaterialTheme.typography.titleMedium, color = Cores.Certo)
+                            ImagemDeArte(ID_TROFEU, Modifier.size(52.dp)) { Text("🏆", fontSize = 40.sp) }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                ImagemDeArte(IconesDaBarra.CASA, Modifier.size(24.dp)) { Text("🏠", style = MaterialTheme.typography.titleMedium) }
+                                Text(" ✔", style = MaterialTheme.typography.titleMedium, color = Cores.Certo)
+                            }
                         }
                     }
                 }
             }
             val jogar: @Composable () -> Unit = {
                 BotaoFofo(onClick = onJogar, cor = Cores.Certo, descricao = "Jogar", modifier = Modifier.pulsando()) {
-                    Text(
-                        "🎮 Jogar",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White,
-                        modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp),
-                    )
+                    RotuloDoJogar(Modifier.padding(horizontal = 18.dp, vertical = 10.dp))
                 }
             }
             if (lateral) {
@@ -977,37 +1019,56 @@ private fun Bau(
     }
 }
 
-/** Barrinha de progresso da casa (quantas das coisas a casa já tem), com a casinha na ponta. */
+/**
+ * Quanto da casa já está pronto, numa pílula: a casinha 3D e estrelas que acendem (nunca "x/40"; o número fica
+ * só na descrição de acessibilidade).
+ */
 @Composable
 private fun BarraDaCasa(tem: Int, total: Int) {
-    val fracao = if (total > 0) tem.toFloat() / total else 0f
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .semantics(mergeDescendants = true) { contentDescription = "A casa tem $tem de $total coisas" },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier
-                .weight(1f)
-                .height(18.dp)
-                .clip(RoundedCornerShape(50))
-                .background(Color(0x33000000)),
-        ) {
-            Box(
-                Modifier
-                    .fillMaxWidth(fracao)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(50))
-                    .background(Brush.horizontalGradient(listOf(Cores.Estrela, Color(0xFFFFA000)))),
-            )
-        }
-        Spacer(Modifier.width(8.dp))
-        Text("🏠 $tem/$total", style = MaterialTheme.typography.titleMedium, color = Cores.Texto, maxLines = 1)
+    Pilula(descricao = "A casa tem $tem de $total coisas") {
+        ImagemDeArte(IconesDaBarra.CASA, Modifier.size(30.dp)) { Text("🏠") }
+        EstrelasDeProgresso(
+            ProgressoVisivel.estrelasAcesas(tem, total, ESTRELAS_DA_CASA),
+            total = ESTRELAS_DA_CASA,
+            tamanho = 24.dp,
+            brilharUltima = tem >= total,
+        )
     }
 }
 
-/** Atalho grande da coluna lateral (paisagem): emoji e uma palavra, do tamanho da mão da criança. */
+/** Título branco com contorno que diminui para caber numa linha (nomes longos de áreas e crianças em 360 dp). */
+@Composable
+private fun TituloQueCabe(texto: String) {
+    BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        val base = MaterialTheme.typography.headlineMedium
+        // Baloo 2 negrito: cerca de 0,55 em por letra; a folga é o contorno de 4 dp dos dois lados.
+        val cabe = ((maxWidth.value - 8f) / (texto.length.coerceAtLeast(1) * 0.55f)).coerceIn(16f, base.fontSize.value)
+        TextoComContorno(
+            texto,
+            estilo = base.copy(fontSize = cabe.sp, lineHeight = (cabe * 1.15f).sp),
+            espessura = 4.dp,
+            profundidade = 2.dp,
+        )
+    }
+}
+
+/** "Jogar" no botão verde: o triângulo de tocar num círculo branco e a palavra com contorno escuro (maquete 3). */
+@Composable
+private fun RotuloDoJogar(modifier: Modifier = Modifier) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            Modifier
+                .size(38.dp)
+                .background(Color.White, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            ImagemDeArte(IconesDaBarra.TOCAR, Modifier.size(28.dp)) { Text("🎮", fontSize = 22.sp) }
+        }
+        TextoComContorno("Jogar", estilo = MaterialTheme.typography.headlineMedium, corDoContorno = Cores.ContornoEscuro, espessura = 4.dp, profundidade = 2.dp)
+    }
+}
+
+/** Atalho grande da coluna lateral (paisagem): ícone 3D (ou emoji) e uma palavra, do tamanho da mão da criança. */
 @Composable
 private fun AtalhoGrande(
     emoji: String,
@@ -1026,7 +1087,9 @@ private fun AtalhoGrande(
                 .padding(vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(emoji, fontSize = 34.sp, maxLines = 1)
+            val icone = remember(emoji) { IconesDaBarra.para(emoji) }
+            val doEmoji: @Composable () -> Unit = { Text(emoji, fontSize = 34.sp, maxLines = 1) }
+            if (icone == null) doEmoji() else IconeDeArteDaBarra(icone, Modifier.size(40.dp), reserva = doEmoji)
             Text(rotulo, style = MaterialTheme.typography.titleMedium, color = Cores.Texto, maxLines = 1)
         }
     }
@@ -1047,25 +1110,36 @@ private fun CartaoDaLoja(produto: Produto, estado: EstadoJogo, previa: Produto?,
         modifier = Modifier.graphicsLayer { alpha = if (podeComprar) 1f else 0.5f },
     ) {
         Column(Modifier.width(92.dp).padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            MiniaturaDoProduto(produto, Modifier.size(52.dp))
-            Text(
-                when {
-                    usando -> "✔ usando"
-                    tem -> "✔ é seu"
-                    previa?.id == produto.id -> "👆 🪙 $preco"
-                    else -> "🪙 $preco"
-                },
-                style = MaterialTheme.typography.titleMedium,
-                color = if (tem) Cores.Certo else Cores.Texto,
-            )
+            MiniaturaDoProduto(produto, estado, Modifier.size(52.dp))
+            if (tem) {
+                Text(
+                    if (usando) "✔ usando" else "✔ é seu",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Cores.Certo,
+                    maxLines = 1,
+                )
+            } else {
+                // O preço como no placar das maquetes: a moeda 3D e o número (com a mãozinha na prévia).
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    if (previa?.id == produto.id) ImagemDeArte(ID_MAO_TOQUE, Modifier.size(22.dp)) { Text("👆", style = MaterialTheme.typography.titleMedium) }
+                    ImagemDeArte(ID_MOEDA, Modifier.size(22.dp)) { Text("🪙", style = MaterialTheme.typography.titleMedium) }
+                    Text("$preco", style = EstiloDaPilula.copy(fontSize = 20.sp, lineHeight = 22.sp), maxLines = 1)
+                }
+            }
         }
     }
 }
 
-/** Desenho pequeno do produto: telhado ou porta na cor certa, amostra do papel de parede, ou o emoji. */
+/**
+ * Desenho pequeno do produto: telhado ou porta na cor certa, amostra do papel de parede, o chapéu na cabeça da
+ * criança (camadas 3D, miniatura parada) ou a figura 3D do emoji (o emoji fica de reserva).
+ */
 @Composable
-private fun MiniaturaDoProduto(p: Produto, modifier: Modifier) {
+private fun MiniaturaDoProduto(p: Produto, estado: EstadoJogo, modifier: Modifier) {
     when (p.categoria) {
+        Categoria.CHAPEU -> Box(modifier, contentAlignment = Alignment.BottomCenter) {
+            Crianca(miniaturaVestindo(estado.perfil ?: Perfil(), p), Modifier.fillMaxHeight(), animado = false)
+        }
         Categoria.TELHADO -> androidx.compose.foundation.Canvas(modifier) {
             val cor = Color(Loja.coresDoTelhado[p.valor.toInt()])
             drawRect(Color(0xFFFFE9C7), androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height * 0.5f), androidx.compose.ui.geometry.Size(size.width * 0.6f, size.height * 0.45f))
@@ -1091,26 +1165,36 @@ private fun MiniaturaDoProduto(p: Produto, modifier: Modifier) {
                 }
             }
         }
-        else -> Text(p.icone, fontSize = 34.sp, maxLines = 1, modifier = modifier.wrapContentSize())
+        else -> Box(modifier, contentAlignment = Alignment.Center) {
+            FiguraDaPergunta(p.icone, 48.dp) { Text(p.icone, fontSize = 34.sp, maxLines = 1) }
+        }
     }
 }
 
+/**
+ * Aba do baú (presentes, lojinha): pílula de brinquedo com ícones 3D e um número curto; a escolhida fica amarela
+ * com o lábio dourado. Um nó só para a acessibilidade, com a [descricao].
+ */
 @Composable
-private fun Aba(texto: String, descricao: String, selecionada: Boolean, onClick: () -> Unit) {
-    Text(
-        texto,
-        style = MaterialTheme.typography.titleLarge,
-        color = Cores.Texto,
-        modifier = Modifier
-            .heightIn(min = TOQUE_MINIMO)
-            .clip(RoundedCornerShape(50))
-            .background(if (selecionada) Cores.Estrela else Color(0xFFFFF6E3))
-            .border(if (selecionada) 3.dp else 2.dp, if (selecionada) Color(0xFFE0A800) else Color(0xFFD9B184), RoundedCornerShape(50))
-            .semantics { contentDescription = descricao }
-            .clickable(onClick = onClick)
-            .wrapContentHeight(Alignment.CenterVertically)
-            .padding(horizontal = 18.dp, vertical = 6.dp),
-    )
+private fun Aba(descricao: String, selecionada: Boolean, conteudo: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .semantics {
+                contentDescription = descricao
+                selected = selecionada
+            }
+            .clickable(role = Role.Tab, onClick = onClick)
+            .pilula(
+                corDoCorpo = if (selecionada) Cores.Estrela else Color.White,
+                corDoLabio = if (selecionada) Color(0xFFE0A800) else Color(0xFFD9B184),
+            )
+            .heightIn(min = TOQUE_MINIMO - 5.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        androidx.compose.material3.ProvideTextStyle(EstiloDaPilula) { conteudo() }
+    }
 }
 
 @Composable
@@ -1129,7 +1213,7 @@ private fun ItemDoBau(item: ItemCasa, primeiro: Boolean, onClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
-                IconeDoItem(item, 60.dp)
+                IconeDaCoisa(item, 60.dp)
                 if (item.ehEstrutura) {
                     Text("🔨", style = MaterialTheme.typography.titleMedium, modifier = Modifier.align(Alignment.BottomEnd))
                 }
@@ -1141,7 +1225,8 @@ private fun ItemDoBau(item: ItemCasa, primeiro: Boolean, onClick: () -> Unit) {
 }
 
 /**
- * Lugares da casa que cresce: a casa e cada área construída, com quantas coisas já estão lá ("🏊 3/44").
+ * Lugares da casa que cresce: a casa e cada área construída, com estrelinhas de quanto já está arrumado
+ * (o "3/44" fica só na descrição de acessibilidade).
  * Tocar leva até o lugar (também dá para arrastar o fundo para o lado). No fim, a próxima área, trancada,
  * diz quantas fases faltam para ela chegar: sempre há um objetivo à vista.
  */
@@ -1164,38 +1249,40 @@ private fun LugaresDaCasa(estado: EstadoJogo, areas: List<AreaDaCasa>, paginaAtu
         items(areas.size + 1) { i ->
             val area = areas.getOrNull(i - 1)
             val selecionado = i == paginaAtual
-            val texto = if (area == null) "🏠" else {
-                val p = CasaQueCresce.progresso(estado, area)
-                "${area.icone} ${p.colocadas}/${p.total}"
-            }
-            Text(
-                texto,
-                style = MaterialTheme.typography.titleMedium,
-                color = Cores.Texto,
-                maxLines = 1,
-                modifier = Modifier
-                    .heightIn(min = TOQUE_MINIMO)
-                    .clip(RoundedCornerShape(50))
-                    .background(if (selecionado) Cores.Estrela else Color.White.copy(alpha = 0.75f))
-                    .border(if (selecionado) 3.dp else 0.dp, if (selecionado) Color(0xFFE0A800) else Color.Transparent, RoundedCornerShape(50))
-                    .semantics { contentDescription = area?.let { CasaQueCresce.progresso(estado, it).rotulo } ?: "Casa" }
+            val progresso = area?.let { CasaQueCresce.progresso(estado, it) }
+            // Pílula do lugar: o ícone e, nas áreas, três estrelinhas de quanto já está arrumado (nunca "3/44").
+            Row(
+                Modifier
+                    .semantics { contentDescription = progresso?.rotulo ?: "Casa" }
                     .testTag(if (area == null) "lugar_casa" else "lugar_${area.id}")
                     .clickable { onIr(i) }
-                    .wrapContentHeight(Alignment.CenterVertically)
-                    .padding(horizontal = 14.dp, vertical = 4.dp),
-            )
+                    .pilula(
+                        corDoCorpo = if (selecionado) Cores.Estrela else Color.White,
+                        corDoLabio = if (selecionado) Color(0xFFE0A800) else Cores.LabioClaro,
+                    )
+                    .heightIn(min = TOQUE_MINIMO - 10.dp)
+                    .padding(horizontal = 12.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                if (area == null) {
+                    ImagemDeArte(IconesDaBarra.CASA, Modifier.size(34.dp)) { Text("🏠", style = MaterialTheme.typography.titleLarge) }
+                } else {
+                    FiguraDaPergunta(area.icone, 30.dp) { Text(area.icone, style = MaterialTheme.typography.titleLarge, maxLines = 1) }
+                    EstrelasDeProgresso(
+                        ProgressoVisivel.estrelasAcesas(progresso!!.colocadas, progresso.total, 3),
+                        total = 3,
+                        tamanho = 15.dp,
+                        espaco = 0.dp,
+                    )
+                }
+            }
         }
         if (proxima != null) {
             item {
                 val (area, faltam) = proxima
-                Text(
-                    "🔒 ${area.icone}",
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    modifier = Modifier
-                        .heightIn(min = TOQUE_MINIMO)
-                        .clip(RoundedCornerShape(50))
-                        .background(Color.White.copy(alpha = 0.35f))
+                Row(
+                    Modifier
                         .semantics { contentDescription = "${area.nome}: faltam $faltam fases" }
                         .clickable {
                             sons.toque()
@@ -1204,9 +1291,16 @@ private fun LugaresDaCasa(estado: EstadoJogo, areas: List<AreaDaCasa>, paginaAtu
                                 else "Faltam $faltam fases para a casa ganhar ${area.comArtigo}!",
                             )
                         }
-                        .wrapContentHeight(Alignment.CenterVertically)
-                        .padding(horizontal = 14.dp, vertical = 4.dp),
-                )
+                        .graphicsLayer { alpha = 0.75f }
+                        .pilula(corDoCorpo = Color(0xFFEDE7FF))
+                        .heightIn(min = TOQUE_MINIMO - 10.dp)
+                        .padding(horizontal = 12.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    ImagemDeArte(IconesDaBarra.PAIS, Modifier.size(24.dp)) { Text("🔒", style = MaterialTheme.typography.titleMedium) }
+                    FiguraDaPergunta(area.icone, 30.dp) { Text(area.icone, style = MaterialTheme.typography.titleLarge, maxLines = 1) }
+                }
             }
         }
     }

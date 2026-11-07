@@ -362,9 +362,7 @@ internal fun AtividadeMontarFrase(
                 },
             contentAlignment = Alignment.Center,
         ) {
-            Box(Modifier.matchParentSize().offset(y = 5.dp).background(escurecer(cor), CircleShape))
-            Box(Modifier.matchParentSize().background(cor, CircleShape))
-            AltoFalanteN4(tocando = narrador.falando, modifier = Modifier.size((ladoOuvir * 0.58f).paraDp()))
+            BotaoDeOuvirN4(cor, narrador.falando, (ladoOuvir * 0.58f).paraDp())
         }
 
         // ---------------------------------------------------------------- a linha da frase (caderno)

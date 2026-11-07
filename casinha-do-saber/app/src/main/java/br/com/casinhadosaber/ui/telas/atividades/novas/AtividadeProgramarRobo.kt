@@ -79,7 +79,11 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.MaoGuia
 import br.com.casinhadosaber.ui.componentes.SetaDesenhada
 import br.com.casinhadosaber.ui.componentes.escurecer
+import br.com.casinhadosaber.ui.componentes.faceDeBrinquedo
+import br.com.casinhadosaber.ui.componentes.pilula
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.tema.Baloo2
+import androidx.compose.ui.draw.clip
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.telas.atividades.ERROS_PARA_AJUDA
 import br.com.casinhadosaber.ui.telas.atividades.GestoDeArrastar
@@ -411,7 +415,8 @@ internal fun AtividadeProgramarRobo(
                                     areaFila = Rect(o, Size(c.size.width.toFloat(), c.size.height.toFloat()))
                                 }
                             }
-                            .background(Color.White.copy(alpha = 0.55f), RoundedCornerShape(16.dp))
+                            // A fila de comandos numa pílula de brinquedo (maquete 2).
+                            .pilula()
                             .padding(5.dp),
                         horizontalArrangement = Arrangement.spacedBy(vaoFila),
                     ) {
@@ -459,7 +464,7 @@ internal fun AtividadeProgramarRobo(
                                                 .background(Cores.Roxo, CircleShape)
                                                 .padding(horizontal = 5.dp, vertical = 1.dp),
                                         ) {
-                                            Text("2×", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                                            Text("2×", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold, fontFamily = Baloo2)
                                         }
                                     }
                                 } else if (piscar) {
@@ -663,8 +668,15 @@ private fun BotaoDeSeta(
             .graphicsLayer { alpha = if (habilitado) 1f else 0.55f },
         contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.matchParentSize().padding(top = 4.dp).background(escurecer(cor, 0.85f).copy(alpha = 0.5f), RoundedCornerShape(16.dp)))
-        Box(Modifier.matchParentSize().padding(bottom = 4.dp).background(if (destacar) Color(0xFFFFF3C4) else Color.White, RoundedCornerShape(16.dp)).border(3.dp, if (destacar) Cores.Estrela else cor, RoundedCornerShape(16.dp)))
+        // Bloco de brinquedo claro: lábio da cor do caminho e face com brilho e borda branca.
+        Box(Modifier.matchParentSize().padding(top = 4.dp).background(if (destacar) Cores.Estrela else escurecer(cor, 0.85f), RoundedCornerShape(16.dp)))
+        Box(
+            Modifier
+                .matchParentSize()
+                .padding(bottom = 4.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .faceDeBrinquedo(if (destacar) Color(0xFFFFF3C4) else Color.White, RoundedCornerShape(16.dp)),
+        )
         SetaDesenhada(d, Modifier.padding(bottom = 4.dp).size(lado * 0.74f))
     }
 }
@@ -696,7 +708,13 @@ private fun BotaoDoRobo(
     ) {
         // Base escura embaixo (efeito 3D) sem sair do tamanho do botão.
         Box(Modifier.matchParentSize().padding(top = 5.dp).background(escurecer(corBotao), RoundedCornerShape(lado * 0.3f)))
-        Box(Modifier.matchParentSize().padding(bottom = 5.dp).background(corBotao, RoundedCornerShape(lado * 0.3f)))
+        Box(
+            Modifier
+                .matchParentSize()
+                .padding(bottom = 5.dp)
+                .clip(RoundedCornerShape(lado * 0.3f))
+                .faceDeBrinquedo(corBotao, RoundedCornerShape(lado * 0.3f)),
+        )
         Box(Modifier.padding(bottom = 5.dp)) { conteudo() }
     }
 }
