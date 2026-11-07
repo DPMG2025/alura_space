@@ -100,7 +100,7 @@ class CapturasInterface3DTest {
         val raiz = regra.onRoot().fetchSemanticsNode().boundsInRoot
         for (no in nos) {
             val r = no.boundsInRoot
-            val texto = no.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text)?.joinToString { it.text } ?: "?"
+            val texto = no.config.getOrElse(androidx.compose.ui.semantics.SemanticsProperties.Text) { emptyList() }.joinToString { it.text }
             assertTrue("texto fora da tela: '$texto' em $r (tela $raiz)", r.left >= raiz.left - 1f && r.right <= raiz.right + 1f)
         }
     }
