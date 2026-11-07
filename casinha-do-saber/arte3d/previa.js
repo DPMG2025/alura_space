@@ -26,7 +26,7 @@ function camadasDaCrianca(m, perfil, { humor = 'feliz', bracos = 'parado', pisca
   const estilo = ESTILOS[g][perfil.estilo];
   const olhos = piscando ? 'fechado' : { feliz: 'aberto', torcendo: 'alegre', pensando: 'pensando', surpreso: 'surpreso' }[humor];
   const ids = [
-    'crianca_sombra', `crianca_cabelo_tras_${g}_${estilo}`, 'crianca_corpo', `crianca_pes_${g}`,
+    'crianca_sombra', `crianca_cabelo_tras_${g}_${estilo}`, `crianca_cabelo_brilho_tras_${g}_${estilo}`, 'crianca_corpo', `crianca_pes_${g}`,
     `crianca_roupa_${g}`, `crianca_roupa_${g}_estampa`, 'crianca_cabeca', `crianca_boca_${humor}`,
     `crianca_olhos_${olhos}${perfil.menina ? '_cilios' : ''}`, `crianca_sobrancelhas_${humor}`,
     `crianca_cabelo_frente_${g}_${estilo}`, `crianca_cabelo_brilho_${g}_${estilo}`, `crianca_bracos_${bracos}`,

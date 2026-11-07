@@ -15,6 +15,7 @@ export const QUADRO_IRMAO = { largura: 130, altura: 196 };
 export const ORDEM = {
   sombra: 10,
   cabeloTras: 20,
+  cabeloBrilhoTras: 22,
   enfeiteCabelo: 25,
   corpo: 30,
   pes: 35,
@@ -73,6 +74,7 @@ function entradas(quem) {
       ESTILOS[g].forEach((estilo) => {
         const o = { ...base, menina: g === 'menina', estilo };
         add(`cabelo_tras_${g}_${estilo}`, 'cabeloTras', 'cabelo', () => camada(o, { ver: ['cabeloTras'], sombra: ['cabeloFrente'] }));
+        add(`cabelo_brilho_tras_${g}_${estilo}`, 'cabeloBrilhoTras', null, () => camada(o, { ver: ['cabeloTras'], brilho: true }));
         add(`cabelo_frente_${g}_${estilo}`, 'cabeloFrente', 'cabelo', () => camada(o, { ver: ['cabeloFrente'], capta: ['cabeca'] }));
         add(`cabelo_brilho_${g}_${estilo}`, 'cabeloBrilho', null, () => camada(o, { ver: ['cabeloFrente'], recorte: ['cabeca'], brilho: true }));
       });
@@ -88,7 +90,7 @@ function entradas(quem) {
     add('laco', 'laco', null, () => camada({ ...base, menina: true }, { ver: ['laco'], recorte: ['calota', 'cabeca'] }));
   }
   // camadas de brilho: o render tira o fundo preto e deixa só os reflexos em branco translúcido
-  for (const e of L) if (e.grupo === 'cabeloBrilho') e.posProcesso = 'brilho';
+  for (const e of L) if (e.grupo === 'cabeloBrilho' || e.grupo === 'cabeloBrilhoTras') e.posProcesso = 'brilho';
   return L;
 }
 

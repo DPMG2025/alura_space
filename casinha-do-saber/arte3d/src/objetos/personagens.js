@@ -164,7 +164,7 @@ export function olhos(R, estado, cilios) {
     }
     const surpreso = estado === 'surpreso';
     const pensando = estado === 'pensando';
-    const lx = R * (surpreso ? 0.155 : 0.145), ly = R * (surpreso ? 0.2 : 0.19);
+    const lx = R * (surpreso ? 0.165 : 0.155), ly = R * (surpreso ? 0.215 : 0.2);
     const yo = y + (pensando ? R * 0.015 : 0);
     const olho = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 24), matOlho);
     olho.scale.set(lx, ly, R * 0.08);
@@ -224,7 +224,7 @@ export function boca(R, humor) {
   const matDente = plastico('#ffffff', { rugosidade: 0.25, verniz: 0.4 });
   const yBoca = -R * 0.33;
   if (humor === 'feliz' || humor === 'torcendo') {
-    const larg = R * (humor === 'torcendo' ? 0.21 : 0.165), fundo = R * (humor === 'torcendo' ? 0.27 : 0.19);
+    const larg = R * (humor === 'torcendo' ? 0.24 : 0.19), fundo = R * (humor === 'torcendo' ? 0.28 : 0.2);
     const s = new THREE.Shape();
     s.moveTo(-larg, 0);
     s.quadraticCurveTo(0, R * 0.03, larg, 0);
@@ -239,9 +239,9 @@ export function boca(R, humor) {
     l.scale.set(larg * 0.62, fundo * 0.36, R * 0.03);
     naSuperficie(l, R, 0, yBoca - fundo * 0.66, -R * 0.0);
     g.add(l);
-    const d = caixa(larg * 1.25, R * 0.045, R * 0.03, R * 0.012, matDente);
+    const d = caixa(larg * 1.1, R * 0.038, R * 0.03, R * 0.012, matDente);
     d.castShadow = false;
-    naSuperficie(d, R, 0, yBoca - R * 0.025, -R * 0.004);
+    naSuperficie(d, R, 0, yBoca - R * 0.03, -R * 0.006);
     g.add(d);
   } else if (humor === 'surpreso') {
     const s = new THREE.Shape();
@@ -282,7 +282,7 @@ function mechas(R, m, { curta = false } = {}) {
   for (let k = -2; k <= 2; k++) {
     const mecha = bola(R * 0.25, m, 24);
     mecha.scale.set(1.25, 0.95, 0.65);
-    naSuperficie(mecha, R, k * R * 0.27, R * ((curta ? 0.68 : 0.6) - Math.abs(k) * 0.06), -R * 0.06);
+    naSuperficie(mecha, R, k * R * 0.27, R * ((curta ? 0.6 : 0.52) - Math.abs(k) * 0.07), -R * 0.06);
     g.add(mecha);
   }
   return g;
@@ -296,7 +296,7 @@ function tiaraTrancada(R, m) {
     const t = -1 + (2 * i) / (n - 1);
     const conta = bola(R * 0.15, m, 20);
     conta.scale.set(1.35, 0.85, 0.7);
-    naSuperficie(conta, R * 1.02, t * R * 0.8, R * (0.6 - 0.28 * t * t), -R * 0.05);
+    naSuperficie(conta, R * 1.02, t * R * 0.8, R * (0.52 - 0.24 * t * t), -R * 0.05);
     conta.rotateZ((i % 2 ? 0.55 : -0.55) - t * 0.5);
     g.add(conta);
   }
@@ -352,7 +352,7 @@ export function cabelo(R, menina, estilo, m) {
     for (let i = 0; i < n; i++) {
       const t = -1 + (2 * i) / (n - 1);
       const c = bola(R * (menina ? 0.21 : 0.19), m, 24);
-      naSuperficie(c, R * 1.02, t * R * 0.72, R * (0.62 - 0.2 * t * t), -R * 0.03);
+      naSuperficie(c, R * 1.02, t * R * 0.72, R * (0.55 - 0.2 * t * t), -R * 0.03);
       frente.add(c);
     }
     for (const [x, y] of [[-0.42, 0.86], [0.0, 0.92], [0.42, 0.86], [-0.2, 0.98], [0.22, 0.98]]) {
@@ -369,7 +369,7 @@ export function cabelo(R, menina, estilo, m) {
         em(conta, lado * R * (0.98 + k * 0.05), -R * (0.05 + k * 0.36), -R * 0.1);
         tras.add(conta);
       }
-      pontasDasTrancas.push([lado * R * 1.13, -R * 1.42, -R * 0.1]);
+      pontasDasTrancas.push([lado * R * 1.105, -R * 0.95, -R * 0.1]);
     }
   } else if (estilo === 'espetado') {
     frente.add(mechas(R, m, { curta: true }));
@@ -466,10 +466,19 @@ export function partes({ quem = 'crianca', menina = true, estilo = 'liso', pose 
   P.mangas = grupo();
   if (!irmao) {
     if (menina) {
-      const pts = [[0.0, 0.6], [0.7, 0.62], [0.74, 0.7], [0.62, 1.05], [0.46, 1.42], [0.42, 1.62], [0.3, 1.72], [0.0, 1.74]].map(([x, y]) => new THREE.Vector2(x, y));
+      const perfil = [[0.0, 0.6], [0.7, 0.62], [0.74, 0.7], [0.62, 1.05], [0.46, 1.42], [0.42, 1.62], [0.3, 1.72], [0.0, 1.74]];
+      const pts = perfil.map(([x, y]) => new THREE.Vector2(x, y));
       P.roupa.add(malha(new THREE.LatheGeometry(pts, 64), mRoupa));
-      for (const [a, y] of [[-0.55, 0.9], [0, 0.95], [0.55, 0.9], [-0.28, 1.22], [0.28, 1.22], [-0.95, 1.05], [0.95, 1.05]]) {
-        const raio = 0.66 - (y - 0.7) * 0.5;
+      // raio do vestido na altura y (entre os pontos do perfil)
+      const raioDoVestido = (y) => {
+        for (let i = 2; i < 5; i++) {
+          const [r0, y0] = perfil[i], [r1, y1] = perfil[i + 1];
+          if (y >= y0 && y <= y1) return r0 + ((y - y0) / (y1 - y0)) * (r1 - r0);
+        }
+        return 0.6;
+      };
+      for (const [a, y] of [[-0.5, 0.86], [0, 0.92], [0.5, 0.86], [-0.27, 1.2], [0.27, 1.2], [-0.95, 1.02], [0.95, 1.02], [0, 1.42]]) {
+        const raio = raioDoVestido(y) + 0.012;
         const p = bola(0.06, plastico('#ffffff', { rugosidade: 0.4, verniz: 0.3 }), 16);
         p.castShadow = false;
         p.scale.set(1, 1, 0.35);
@@ -577,9 +586,9 @@ export function partes({ quem = 'crianca', menina = true, estilo = 'liso', pose 
     P.calota = naCabeca(c.base.clone());
     P.enfeite = grupo();
     for (const pt of c.pontasDasTrancas) {
-      const elastico = bola(R * 0.11, plastico('#ff4f8b', { rugosidade: 0.25, verniz: 1 }), 20);
-      elastico.scale.set(1.15, 0.7, 1.15);
-      em(elastico, pt[0], pt[1] + R * 0.18, pt[2]);
+      const elastico = bola(R * 0.13, plastico('#ff4f8b', { rugosidade: 0.25, verniz: 1 }), 24);
+      elastico.scale.set(1.6, 0.65, 1.6);
+      em(elastico, pt[0], pt[1], pt[2]);
       P.enfeite.add(elastico);
     }
     P.enfeite = naCabeca(P.enfeite);
@@ -602,10 +611,10 @@ export function partes({ quem = 'crianca', menina = true, estilo = 'liso', pose 
       frente.add(tufo, tufo2, tufo3);
     } else {
       // cachinho no alto
-      const geo = new THREE.TorusGeometry(R * 0.15, R * 0.06, 12, 28, Math.PI * 1.55);
+      const geo = new THREE.TorusGeometry(R * 0.12, R * 0.07, 14, 28, Math.PI * 1.45);
       const cacho = malha(geo, mCab);
-      em(cacho, R * 0.02, R * 1.12, R * 0.05);
-      cacho.rotation.set(0, 0.25, -0.6);
+      em(cacho, R * 0.04, R * 1.1, R * 0.12);
+      cacho.rotation.set(-0.2, 0.15, -0.9);
       frente.add(cacho);
     }
     P.cabeloTras = grupo();

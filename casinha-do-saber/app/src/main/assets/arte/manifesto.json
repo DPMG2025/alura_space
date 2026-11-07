@@ -2,6 +2,1116 @@
   "versao": 1,
   "escala": 2,
   "imagens": {
+    "crianca_boca_feliz": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_boca_feliz.webp",
+      "grupo": "boca",
+      "largura": 340,
+      "ordem": 60,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_boca_pensando": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_boca_pensando.webp",
+      "grupo": "boca",
+      "largura": 340,
+      "ordem": 60,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_boca_surpreso": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_boca_surpreso.webp",
+      "grupo": "boca",
+      "largura": 340,
+      "ordem": 60,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_boca_torcendo": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_boca_torcendo.webp",
+      "grupo": "boca",
+      "largura": 340,
+      "ordem": 60,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_bracos_parado": {
+      "altura": 520,
+      "ancoras": {
+        "maoDireita": {
+          "x": 256,
+          "y": 363
+        },
+        "maoEsquerda": {
+          "x": 84,
+          "y": 363
+        }
+      },
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_bracos_parado.webp",
+      "grupo": "bracos",
+      "largura": 340,
+      "ordem": 80,
+      "personagem": "crianca",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_bracos_pensando": {
+      "altura": 520,
+      "ancoras": {
+        "maoDireita": {
+          "x": 207,
+          "y": 276
+        },
+        "maoEsquerda": {
+          "x": 84,
+          "y": 363
+        }
+      },
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_bracos_pensando.webp",
+      "grupo": "bracos",
+      "largura": 340,
+      "ordem": 80,
+      "personagem": "crianca",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_bracos_tchau1": {
+      "altura": 520,
+      "ancoras": {
+        "maoDireita": {
+          "x": 253,
+          "y": 249
+        },
+        "maoEsquerda": {
+          "x": 84,
+          "y": 363
+        }
+      },
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_bracos_tchau1.webp",
+      "grupo": "bracos",
+      "largura": 340,
+      "ordem": 80,
+      "personagem": "crianca",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_bracos_tchau2": {
+      "altura": 520,
+      "ancoras": {
+        "maoDireita": {
+          "x": 263,
+          "y": 246
+        },
+        "maoEsquerda": {
+          "x": 84,
+          "y": 363
+        }
+      },
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_bracos_tchau2.webp",
+      "grupo": "bracos",
+      "largura": 340,
+      "ordem": 80,
+      "personagem": "crianca",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_bracos_tchau3": {
+      "altura": 520,
+      "ancoras": {
+        "maoDireita": {
+          "x": 273,
+          "y": 246
+        },
+        "maoEsquerda": {
+          "x": 84,
+          "y": 363
+        }
+      },
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_bracos_tchau3.webp",
+      "grupo": "bracos",
+      "largura": 340,
+      "ordem": 80,
+      "personagem": "crianca",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_bracos_tchau4": {
+      "altura": 520,
+      "ancoras": {
+        "maoDireita": {
+          "x": 283,
+          "y": 249
+        },
+        "maoEsquerda": {
+          "x": 84,
+          "y": 363
+        }
+      },
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_bracos_tchau4.webp",
+      "grupo": "bracos",
+      "largura": 340,
+      "ordem": 80,
+      "personagem": "crianca",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_bracos_torcendo": {
+      "altura": 520,
+      "ancoras": {
+        "maoDireita": {
+          "x": 277,
+          "y": 240
+        },
+        "maoEsquerda": {
+          "x": 63,
+          "y": 240
+        }
+      },
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_bracos_torcendo.webp",
+      "grupo": "bracos",
+      "largura": 340,
+      "ordem": 80,
+      "personagem": "crianca",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabeca": {
+      "altura": 520,
+      "ancoras": {
+        "boca": {
+          "x": 170,
+          "y": 227
+        },
+        "cabeca": {
+          "x": 170,
+          "y": 187
+        },
+        "olhoDireito": {
+          "x": 206,
+          "y": 194
+        },
+        "olhoEsquerdo": {
+          "x": 134,
+          "y": 194
+        },
+        "topoDaCabeca": {
+          "x": 170,
+          "y": 87
+        }
+      },
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabeca.webp",
+      "grupo": "cabeca",
+      "largura": 340,
+      "ordem": 50,
+      "personagem": "crianca",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_brilho_menina_cacheado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_menina_cacheado.webp",
+      "grupo": "cabeloBrilho",
+      "largura": 340,
+      "ordem": 72,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_brilho_menina_liso": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_menina_liso.webp",
+      "grupo": "cabeloBrilho",
+      "largura": 340,
+      "ordem": 72,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_brilho_menina_trancas": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_menina_trancas.webp",
+      "grupo": "cabeloBrilho",
+      "largura": 340,
+      "ordem": 72,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_brilho_menino_cacheado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_menino_cacheado.webp",
+      "grupo": "cabeloBrilho",
+      "largura": 340,
+      "ordem": 72,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_brilho_menino_espetado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_menino_espetado.webp",
+      "grupo": "cabeloBrilho",
+      "largura": 340,
+      "ordem": 72,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_brilho_menino_liso": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_brilho_menino_liso.webp",
+      "grupo": "cabeloBrilho",
+      "largura": 340,
+      "ordem": 72,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_frente_menina_cacheado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_frente_menina_cacheado.webp",
+      "grupo": "cabeloFrente",
+      "largura": 340,
+      "ordem": 70,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_frente_menina_liso": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_frente_menina_liso.webp",
+      "grupo": "cabeloFrente",
+      "largura": 340,
+      "ordem": 70,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_frente_menina_trancas": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_frente_menina_trancas.webp",
+      "grupo": "cabeloFrente",
+      "largura": 340,
+      "ordem": 70,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_frente_menino_cacheado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_frente_menino_cacheado.webp",
+      "grupo": "cabeloFrente",
+      "largura": 340,
+      "ordem": 70,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_frente_menino_espetado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_frente_menino_espetado.webp",
+      "grupo": "cabeloFrente",
+      "largura": 340,
+      "ordem": 70,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_frente_menino_liso": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_frente_menino_liso.webp",
+      "grupo": "cabeloFrente",
+      "largura": 340,
+      "ordem": 70,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_tras_menina_cacheado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_tras_menina_cacheado.webp",
+      "grupo": "cabeloTras",
+      "largura": 340,
+      "ordem": 20,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_tras_menina_liso": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_tras_menina_liso.webp",
+      "grupo": "cabeloTras",
+      "largura": 340,
+      "ordem": 20,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_tras_menina_trancas": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_tras_menina_trancas.webp",
+      "grupo": "cabeloTras",
+      "largura": 340,
+      "ordem": 20,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_tras_menino_cacheado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_tras_menino_cacheado.webp",
+      "grupo": "cabeloTras",
+      "largura": 340,
+      "ordem": 20,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_tras_menino_espetado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_tras_menino_espetado.webp",
+      "grupo": "cabeloTras",
+      "largura": 340,
+      "ordem": 20,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_cabelo_tras_menino_liso": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_cabelo_tras_menino_liso.webp",
+      "grupo": "cabeloTras",
+      "largura": 340,
+      "ordem": 20,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_corpo": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_corpo.webp",
+      "grupo": "corpo",
+      "largura": 340,
+      "ordem": 30,
+      "personagem": "crianca",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_enfeite_trancas": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_enfeite_trancas.webp",
+      "grupo": "enfeiteCabelo",
+      "largura": 340,
+      "ordem": 25,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_laco": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_laco.webp",
+      "grupo": "laco",
+      "largura": 340,
+      "ordem": 74,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_olhos_aberto": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_olhos_aberto.webp",
+      "grupo": "olhos",
+      "largura": 340,
+      "ordem": 62,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_olhos_aberto_cilios": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_olhos_aberto_cilios.webp",
+      "grupo": "olhos",
+      "largura": 340,
+      "ordem": 62,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_olhos_alegre": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_olhos_alegre.webp",
+      "grupo": "olhos",
+      "largura": 340,
+      "ordem": 62,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_olhos_alegre_cilios": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_olhos_alegre_cilios.webp",
+      "grupo": "olhos",
+      "largura": 340,
+      "ordem": 62,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_olhos_fechado": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_olhos_fechado.webp",
+      "grupo": "olhos",
+      "largura": 340,
+      "ordem": 62,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_olhos_fechado_cilios": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_olhos_fechado_cilios.webp",
+      "grupo": "olhos",
+      "largura": 340,
+      "ordem": 62,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_olhos_pensando": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_olhos_pensando.webp",
+      "grupo": "olhos",
+      "largura": 340,
+      "ordem": 62,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_olhos_pensando_cilios": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_olhos_pensando_cilios.webp",
+      "grupo": "olhos",
+      "largura": 340,
+      "ordem": 62,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_olhos_surpreso": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_olhos_surpreso.webp",
+      "grupo": "olhos",
+      "largura": 340,
+      "ordem": 62,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_olhos_surpreso_cilios": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_olhos_surpreso_cilios.webp",
+      "grupo": "olhos",
+      "largura": 340,
+      "ordem": 62,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_pes_menina": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_pes_menina.webp",
+      "grupo": "pes",
+      "largura": 340,
+      "ordem": 35,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_pes_menino": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_pes_menino.webp",
+      "grupo": "pes",
+      "largura": 340,
+      "ordem": 35,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_roupa_menina": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_roupa_menina.webp",
+      "grupo": "roupa",
+      "largura": 340,
+      "ordem": 40,
+      "personagem": "crianca",
+      "tingir": "roupa",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_roupa_menina_estampa": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_roupa_menina_estampa.webp",
+      "grupo": "estampa",
+      "largura": 340,
+      "ordem": 45,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_roupa_menino": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_roupa_menino.webp",
+      "grupo": "roupa",
+      "largura": 340,
+      "ordem": 40,
+      "personagem": "crianca",
+      "tingir": "roupa",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_roupa_menino_estampa": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_roupa_menino_estampa.webp",
+      "grupo": "estampa",
+      "largura": 340,
+      "ordem": 45,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_sobrancelhas_feliz": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_sobrancelhas_feliz.webp",
+      "grupo": "sobrancelhas",
+      "largura": 340,
+      "ordem": 64,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_sobrancelhas_pensando": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_sobrancelhas_pensando.webp",
+      "grupo": "sobrancelhas",
+      "largura": 340,
+      "ordem": 64,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_sobrancelhas_surpreso": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_sobrancelhas_surpreso.webp",
+      "grupo": "sobrancelhas",
+      "largura": 340,
+      "ordem": 64,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_sobrancelhas_torcendo": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_sobrancelhas_torcendo.webp",
+      "grupo": "sobrancelhas",
+      "largura": 340,
+      "ordem": 64,
+      "personagem": "crianca",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "crianca_sombra": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "crianca_sombra.webp",
+      "grupo": "sombra",
+      "largura": 340,
+      "ordem": 10,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
     "estrela3d": {
       "altura": 240,
       "ancoras": {
@@ -20,6 +1130,793 @@
       "uso": {
         "altura": 120,
         "largura": 120
+      }
+    },
+    "irmao_boca_feliz": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_boca_feliz.webp",
+      "grupo": "boca",
+      "largura": 260,
+      "ordem": 60,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_boca_pensando": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_boca_pensando.webp",
+      "grupo": "boca",
+      "largura": 260,
+      "ordem": 60,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_boca_surpreso": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_boca_surpreso.webp",
+      "grupo": "boca",
+      "largura": 260,
+      "ordem": 60,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_boca_torcendo": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_boca_torcendo.webp",
+      "grupo": "boca",
+      "largura": 260,
+      "ordem": 60,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_bracos_parado": {
+      "altura": 392,
+      "ancoras": {
+        "maoDireita": {
+          "x": 197,
+          "y": 270
+        },
+        "maoEsquerda": {
+          "x": 63,
+          "y": 270
+        }
+      },
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_bracos_parado.webp",
+      "grupo": "bracos",
+      "largura": 260,
+      "ordem": 80,
+      "personagem": "irmao",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_bracos_pensando": {
+      "altura": 392,
+      "ancoras": {
+        "maoDireita": {
+          "x": 161,
+          "y": 210
+        },
+        "maoEsquerda": {
+          "x": 63,
+          "y": 270
+        }
+      },
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_bracos_pensando.webp",
+      "grupo": "bracos",
+      "largura": 260,
+      "ordem": 80,
+      "personagem": "irmao",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_bracos_tchau1": {
+      "altura": 392,
+      "ancoras": {
+        "maoDireita": {
+          "x": 194,
+          "y": 189
+        },
+        "maoEsquerda": {
+          "x": 63,
+          "y": 270
+        }
+      },
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_bracos_tchau1.webp",
+      "grupo": "bracos",
+      "largura": 260,
+      "ordem": 80,
+      "personagem": "irmao",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_bracos_tchau2": {
+      "altura": 392,
+      "ancoras": {
+        "maoDireita": {
+          "x": 201,
+          "y": 187
+        },
+        "maoEsquerda": {
+          "x": 63,
+          "y": 270
+        }
+      },
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_bracos_tchau2.webp",
+      "grupo": "bracos",
+      "largura": 260,
+      "ordem": 80,
+      "personagem": "irmao",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_bracos_tchau3": {
+      "altura": 392,
+      "ancoras": {
+        "maoDireita": {
+          "x": 208,
+          "y": 187
+        },
+        "maoEsquerda": {
+          "x": 63,
+          "y": 270
+        }
+      },
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_bracos_tchau3.webp",
+      "grupo": "bracos",
+      "largura": 260,
+      "ordem": 80,
+      "personagem": "irmao",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_bracos_tchau4": {
+      "altura": 392,
+      "ancoras": {
+        "maoDireita": {
+          "x": 215,
+          "y": 189
+        },
+        "maoEsquerda": {
+          "x": 63,
+          "y": 270
+        }
+      },
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_bracos_tchau4.webp",
+      "grupo": "bracos",
+      "largura": 260,
+      "ordem": 80,
+      "personagem": "irmao",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_bracos_torcendo": {
+      "altura": 392,
+      "ancoras": {
+        "maoDireita": {
+          "x": 211,
+          "y": 184
+        },
+        "maoEsquerda": {
+          "x": 49,
+          "y": 184
+        }
+      },
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_bracos_torcendo.webp",
+      "grupo": "bracos",
+      "largura": 260,
+      "ordem": 80,
+      "personagem": "irmao",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_cabeca": {
+      "altura": 392,
+      "ancoras": {
+        "boca": {
+          "x": 130,
+          "y": 177
+        },
+        "cabeca": {
+          "x": 130,
+          "y": 139
+        },
+        "olhoDireito": {
+          "x": 160,
+          "y": 150
+        },
+        "olhoEsquerdo": {
+          "x": 100,
+          "y": 150
+        },
+        "topoDaCabeca": {
+          "x": 130,
+          "y": 55
+        }
+      },
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_cabeca.webp",
+      "grupo": "cabeca",
+      "largura": 260,
+      "ordem": 50,
+      "personagem": "irmao",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_cabelo_brilho_menina": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_cabelo_brilho_menina.webp",
+      "grupo": "cabeloBrilho",
+      "largura": 260,
+      "ordem": 72,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_cabelo_brilho_menino": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_cabelo_brilho_menino.webp",
+      "grupo": "cabeloBrilho",
+      "largura": 260,
+      "ordem": 72,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_cabelo_menina": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_cabelo_menina.webp",
+      "grupo": "cabeloFrente",
+      "largura": 260,
+      "ordem": 70,
+      "personagem": "irmao",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_cabelo_menino": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_cabelo_menino.webp",
+      "grupo": "cabeloFrente",
+      "largura": 260,
+      "ordem": 70,
+      "personagem": "irmao",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_corpo": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_corpo.webp",
+      "grupo": "corpo",
+      "largura": 260,
+      "ordem": 30,
+      "personagem": "irmao",
+      "tingir": "pele",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_laco": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_laco.webp",
+      "grupo": "laco",
+      "largura": 260,
+      "ordem": 74,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_olhos_aberto": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_olhos_aberto.webp",
+      "grupo": "olhos",
+      "largura": 260,
+      "ordem": 62,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_olhos_aberto_cilios": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_olhos_aberto_cilios.webp",
+      "grupo": "olhos",
+      "largura": 260,
+      "ordem": 62,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_olhos_alegre": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_olhos_alegre.webp",
+      "grupo": "olhos",
+      "largura": 260,
+      "ordem": 62,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_olhos_alegre_cilios": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_olhos_alegre_cilios.webp",
+      "grupo": "olhos",
+      "largura": 260,
+      "ordem": 62,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_olhos_fechado": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_olhos_fechado.webp",
+      "grupo": "olhos",
+      "largura": 260,
+      "ordem": 62,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_olhos_fechado_cilios": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_olhos_fechado_cilios.webp",
+      "grupo": "olhos",
+      "largura": 260,
+      "ordem": 62,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_olhos_pensando": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_olhos_pensando.webp",
+      "grupo": "olhos",
+      "largura": 260,
+      "ordem": 62,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_olhos_pensando_cilios": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_olhos_pensando_cilios.webp",
+      "grupo": "olhos",
+      "largura": 260,
+      "ordem": 62,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_olhos_surpreso": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_olhos_surpreso.webp",
+      "grupo": "olhos",
+      "largura": 260,
+      "ordem": 62,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_olhos_surpreso_cilios": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_olhos_surpreso_cilios.webp",
+      "grupo": "olhos",
+      "largura": 260,
+      "ordem": 62,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_pes_menina": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_pes_menina.webp",
+      "grupo": "pes",
+      "largura": 260,
+      "ordem": 35,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_pes_menino": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_pes_menino.webp",
+      "grupo": "pes",
+      "largura": 260,
+      "ordem": 35,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_roupa_menina": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_roupa_menina.webp",
+      "grupo": "roupa",
+      "largura": 260,
+      "ordem": 40,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_roupa_menino": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_roupa_menino.webp",
+      "grupo": "roupa",
+      "largura": 260,
+      "ordem": 40,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_sobrancelhas_feliz": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_sobrancelhas_feliz.webp",
+      "grupo": "sobrancelhas",
+      "largura": 260,
+      "ordem": 64,
+      "personagem": "irmao",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_sobrancelhas_pensando": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_sobrancelhas_pensando.webp",
+      "grupo": "sobrancelhas",
+      "largura": 260,
+      "ordem": 64,
+      "personagem": "irmao",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_sobrancelhas_surpreso": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_sobrancelhas_surpreso.webp",
+      "grupo": "sobrancelhas",
+      "largura": 260,
+      "ordem": 64,
+      "personagem": "irmao",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_sobrancelhas_torcendo": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_sobrancelhas_torcendo.webp",
+      "grupo": "sobrancelhas",
+      "largura": 260,
+      "ordem": 64,
+      "personagem": "irmao",
+      "tingir": "cabelo",
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
+      }
+    },
+    "irmao_sombra": {
+      "altura": 392,
+      "ancoras": {},
+      "apoio": {
+        "x": 130,
+        "y": 338
+      },
+      "arquivo": "irmao_sombra.webp",
+      "grupo": "sombra",
+      "largura": 260,
+      "ordem": 10,
+      "personagem": "irmao",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 196,
+        "largura": 130
       }
     },
     "moeda": {
