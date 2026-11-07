@@ -47,6 +47,17 @@ jobs:
         timeout-minutes: 35
         run: ./gradlew --no-daemon testDebugUnitTest
 
+      # Mostra no próprio log qual teste falhou e por quê (o log do Gradle só lista "STARTED" em ordem embaralhada).
+      - name: Resumo dos testes que falharam
+        if: failure()
+        run: |
+          for f in app/build/test-results/testDebugUnitTest/*.xml; do
+            if grep -q "<failure" "$f"; then
+              echo "=== $(basename "$f")"
+              grep -B1 -A4 "<failure" "$f" | cut -c1-500 | head -30
+            fi
+          done
+
       - name: Publicar capturas de tela
         if: always()
         uses: actions/upload-artifact@v5

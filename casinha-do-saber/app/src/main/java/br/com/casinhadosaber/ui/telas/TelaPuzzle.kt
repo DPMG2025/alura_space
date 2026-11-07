@@ -250,22 +250,23 @@ private fun EscolherPuzzle(
                     color = Cores.Texto,
                 )
 
-                val fonte = (if (comMinhaPintura && temPintura) "obra:" else "modelo:") + d.id
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    BotaoFofo(
-                        onClick = { sons.colocar(); onJogar(Partida(fonte, nivel, TipoDeJogo.MONTAR, semente ?: Random.nextLong())) },
-                        cor = Cores.Roxo,
-                        modifier = Modifier.weight(1f).testTag("puzzle_montar"),
-                        descricao = "Montar o quebra cabeça",
-                    ) { Text("🧩 Montar", color = Color.White, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp)) }
-                    BotaoFofo(
-                        onClick = { sons.colocar(); onJogar(Partida(fonte, nivel, TipoDeJogo.DESLIZAR, semente ?: Random.nextLong())) },
-                        cor = Cores.Certo,
-                        modifier = Modifier.weight(1f).testTag("puzzle_deslizar"),
-                        descricao = "Deslizar as peças",
-                    ) { Text("🔀 Deslizar", color = Color.White, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp)) }
-                }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(8.dp))
+            }
+            // Os botões de jogar ficam fixos embaixo: a criança não precisa rolar a lista para achar.
+            val fonte = (if (comMinhaPintura && temPintura) "obra:" else "modelo:") + d.id
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                BotaoFofo(
+                    onClick = { sons.colocar(); onJogar(Partida(fonte, nivel, TipoDeJogo.MONTAR, semente ?: Random.nextLong())) },
+                    cor = Cores.Roxo,
+                    modifier = Modifier.weight(1f).testTag("puzzle_montar"),
+                    descricao = "Montar o quebra cabeça",
+                ) { Text("🧩 Montar", color = Color.White, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp)) }
+                BotaoFofo(
+                    onClick = { sons.colocar(); onJogar(Partida(fonte, nivel, TipoDeJogo.DESLIZAR, semente ?: Random.nextLong())) },
+                    cor = Cores.Certo,
+                    modifier = Modifier.weight(1f).testTag("puzzle_deslizar"),
+                    descricao = "Deslizar as peças",
+                ) { Text("🔀 Deslizar", color = Color.White, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp)) }
             }
         }
     }
