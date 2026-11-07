@@ -1015,6 +1015,7 @@ fun TelaCasaPorDentro(
                 BotoesDoCantinho(
                     estado, cantinho.onAtelie, cantinho.onPiano, cantinho.onDiplomas, cantinho.onAlbum,
                     Modifier.align(Alignment.CenterHorizontally).padding(bottom = 10.dp),
+                    onColorir = cantinho.onColorir, onPuzzle = cantinho.onPuzzle,
                 )
             }
             if (cena.geladeiraAberta) {

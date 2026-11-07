@@ -135,6 +135,9 @@ class CantinhoDaSala(
     val onPiano: () -> Unit,
     val onDiplomas: () -> Unit,
     val onAlbum: () -> Unit,
+    /** Livro de Colorir e quebra cabeças (Fases 10 e 11): uma segunda fileira de botões, se vierem. */
+    val onColorir: (() -> Unit)? = null,
+    val onPuzzle: (() -> Unit)? = null,
 )
 
 /**
@@ -149,9 +152,22 @@ fun BotoesDoCantinho(
     onDiplomas: () -> Unit,
     onAlbum: () -> Unit,
     modifier: Modifier = Modifier,
+    onColorir: (() -> Unit)? = null,
+    onPuzzle: (() -> Unit)? = null,
 ) {
     val diplomas = Conquistas.diplomas(estado.estrelas).size
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    if (onColorir != null || onPuzzle != null) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+            if (onColorir != null) {
+                BotaoDoCantinho("🖍️", "Colorir", "Livro de colorir", Color(0xFFFFE5D0), onColorir, Modifier.testTag("abrir_colorir"))
+            }
+            if (onPuzzle != null) {
+                BotaoDoCantinho("🧩", "Peças", "Quebra cabeças", Color(0xFFD9F0FF), onPuzzle, Modifier.testTag("abrir_puzzle"))
+            }
+        }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
         BotaoDoCantinho("🎨", "Ateliê", "Ateliê de pintura", Color(0xFFFFE0EC), onAtelie, Modifier.testTag("abrir_atelie"))
         BotaoDoCantinho("🎹", "Piano", "Piano", Color(0xFFE3E0FF), onPiano, Modifier.testTag("abrir_piano"))
         BotaoDoCantinho(
@@ -160,6 +176,7 @@ fun BotoesDoCantinho(
             Modifier.testTag("abrir_diplomas"),
         )
         BotaoDoCantinho("📒", "Álbum", "Álbum de figurinhas", Color(0xFFDDF5E3), onAlbum, Modifier.testTag("abrir_album"))
+    }
     }
 }
 

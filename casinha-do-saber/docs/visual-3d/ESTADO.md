@@ -19,8 +19,8 @@ Situação final em 2026-11-07 (entrega pedida pelo dono do produto, sem terceir
 | 7. Guarda roupa | feito | 6 | build verde |
 | 8. Demais telas | feito | 6 | build verde |
 | 9. Acabamento | feito (duas rodadas de arte e Kotlin) | 6; geral do app 7 | build verde; terceira rodada NÃO feita |
-| 10. Livro de Colorir | NOVA, não começada | a fazer | desenho abaixo, seção "Fases novas" |
-| 11. Quebra-cabeças | NOVA, não começada | a fazer | desenho abaixo, seção "Fases novas" |
+| 10. Livro de Colorir | feito em 2026-11-07 (domínio com 18 testes na JVM, telas, 24 desenhos); falta o CI provar as telas | a fazer | ver "Execução das fases 10 e 11" |
+| 11. Quebra cabeças | feito em 2026-11-07 (domínio com 17 testes na JVM, telas de montar e deslizar); falta o CI provar as telas | a fazer | ver "Execução das fases 10 e 11" |
 
 ## O que ficou de fora (dono decidiu entregar assim)
 * Terceira rodada de acabamento: 30 figuras de emoji (🏊 😴 🧚 👧 🦸 ⛱ 🐞 🎾 📖), casinha de cachorro 3D, composição das áreas novas (adesivos em pares), nós da trilha todos iguais, números soltos em 33 e no v3d_15 (Álbum 14, Diplomas 1), refinamentos de layout. Lista completa em relatorios/revisao-fase9-rodada2.md.
@@ -58,23 +58,23 @@ Não confundir com o ateliê atual (`TelaAtelie`, `Pintura`, quadradinhos em gra
 
 **Aceite.** Capturas do CI: escolha de desenho, pintura em andamento, tela de prêmio, galeria. Teste de unidade: balde enche só a região, pincel preso dentro da linha, desfazer, prêmios por marco, salvar e abrir. Memória: máscara de região em 8 bits (cada desenho ocupa menos de 1 MB decodificado), abre em 3,5 s no Android 7. Aceite do dono: criança colore 3 desenhos em 10 minutos sem pedir ajuda.
 
-### Fase 11. Quebra-cabeças
+### Fase 11. Quebra cabeças
 
 **Tipos, do mais fácil ao mais difícil (o jogo escolhe o tipo e o tamanho pela idade e pelo que a criança já venceu, e deixa trocar):**
 1. **Encaixar a peça grande** (2 a 3 anos): 2 a 4 peças com formas bem diferentes, a peça gruda sozinha quando chega perto, com som de "plim". Sem como errar.
-2. **Quebra-cabeça de imagem** (4 a 8 anos): imagem cortada em grade de 2x2 até 6x8 (4, 6, 9, 12, 16, 24, 36, 48 peças). A peça é arrastada, gira só nos níveis difíceis, e gruda na casa certa com ímã. Moldura mostra uma sombra do desenho (some nos níveis difíceis, volta com o botão de dica).
+2. **Quebra cabeça de imagem** (4 a 8 anos): imagem cortada em grade de 2x2 até 6x8 (4, 6, 9, 12, 16, 24, 36, 48 peças). A peça é arrastada, gira só nos níveis difíceis, e gruda na casa certa com ímã. Moldura mostra uma sombra do desenho (some nos níveis difíceis, volta com o botão de dica).
 3. **Peças de formato livre** (tipo jigsaw, com saliências), de 6 em diante, com as bordas separadas primeiro (botão "só as bordas").
-4. **Quebra-cabeças de lógica** (7 anos em diante): deslizar peças (quebra-cabeça de 8 com um espaço vazio, 3x3 até 4x4), montar a figura pelo espelho, completar a sequência de formas. Cada um com dificuldade crescente.
+4. **Quebra cabeças de lógica** (7 anos em diante): deslizar peças (quebra cabeça de 8 com um espaço vazio, 3x3 até 4x4), montar a figura pelo espelho, completar a sequência de formas. Cada um com dificuldade crescente.
 5. **Sombras**: arrastar o bicho/objeto para a silhueta certa (4 anos em diante, seis níveis).
 
-**Imagens.** Pelo menos 60 imagens em 10 coleções (as mesmas do Livro de Colorir mais cenas da casinha, dos mascotes e dos mundos do jogo), cortadas em tempo de execução a partir de uma imagem só (nada de uma imagem por peça). **Ligação com o Livro de Colorir:** a criança pode montar o quebra-cabeça da própria obra pintada (a foto do desenho dela vira puzzle, e é por isso que os dois estão juntos).
+**Imagens.** Pelo menos 60 imagens em 10 coleções (as mesmas do Livro de Colorir mais cenas da casinha, dos mascotes e dos mundos do jogo), cortadas em tempo de execução a partir de uma imagem só (nada de uma imagem por peça). **Ligação com o Livro de Colorir:** a criança pode montar o quebra cabeça da própria obra pintada (a foto do desenho dela vira puzzle, e é por isso que os dois estão juntos).
 
 **Dificuldade crescente.** Trilha de 8 níveis por coleção; passa de nível ao montar, sem tempo e sem perder nada ao errar. Auxílios que a criança pode ligar: sombra, dica (acende a peça certa), "bordas primeiro" e ímã largo. Usar auxílio não tira a estrela, mas a 3ª estrela exige sem dica. Nível adaptativo: se a criança monta 3 seguidas sem dica, o próximo salta um nível; se trava 2 minutos, o jogo oferece uma dica e baixa um degrau na próxima.
 
 **Prêmios.**
-* Por quebra-cabeça: moedinhas, 1 a 3 estrelas (montou; sem dica; sem dica e rápido sem tempo na tela, só o relógio de areia opcional) e a **figurinha da cena** no álbum.
+* Por quebra cabeça: moedinhas, 1 a 3 estrelas (montou; sem dica; sem dica e rápido sem tempo na tela, só o relógio de areia opcional) e a **figurinha da cena** no álbum.
 * Por nível de dificuldade vencido: **peças douradas** que se colecionam e trocam por itens da casa (uma "caixa de peças" na loja).
-* Marcos: 1º, 10º, 25º, 50º quebra-cabeça dão um mascote, um chapéu, uma moldura para as obras e o diploma "Mestre dos quebra-cabeças".
+* Marcos: 1º, 10º, 25º, 50º quebra cabeça dão um mascote, um chapéu, uma moldura para as obras e o diploma "Mestre dos quebra cabeças".
 * Coleção inteira vencida: diploma da coleção e uma imagem extra secreta.
 
 **Arquivos e módulos previstos.** `dominio/QuebraCabeca.kt` (cortes, formas de peça, ímã, dificuldade, nível adaptativo, prêmios, testes de unidade), `ui/telas/TelaQuebraCabeca.kt`, `TelaEscolherQuebraCabeca.kt`, `ui/componentes/PecaArrastavel.kt`, `arte3d/puzzle/` (imagens, silhuetas e máscaras de encaixe). Gestos com `pointerInput` (sem bibliotecas novas).
@@ -83,6 +83,24 @@ Não confundir com o ateliê atual (`TelaAtelie`, `Pintura`, quadradinhos em gra
 
 ### Ordem sugerida
 Fase 10 antes da 11 (a 11 usa as obras da 10). Dentro de cada uma: (a) arte e manifesto, (b) domínio com testes, (c) telas, (d) prêmios e ligação com álbum, casa e pais, (e) revisão independente e CI. Os dois ganham um botão na casa e no mapa, no mesmo lugar do ateliê e do piano.
+
+### Execução das fases 10 e 11 (2026-11-07, pedido do dono: "cumpra o quebra cabeça e a pintura enquanto o CI roda")
+
+Decisão de desenho: a arte dos desenhos é **vetorial em código** (regiões como elipses e polígonos num quadrado de 0 a 1), desenhada pelo Compose, em vez de WebP do pipeline `arte3d/`. Motivo: o balde, o pincel preso à região e o quebra cabeça viram lógica pura, testável na JVM sem Android; o APK não ganha imagens; e o mesmo desenho colorido serve de imagem do quebra cabeça. Pode ser trocado por arte 3D depois sem mexer na lógica (só a função de desenho muda).
+
+Feito e testado aqui (251 testes do pacote `dominio` na JVM, compilador Kotlin 2.0.21 isolado; 41 deles novos):
+* `dominio/Colorir.kt`, `DesenhosDeColorir.kt` (24 desenhos em 6 coleções de 4), `Puzzle.kt` (8 níveis de 4 a 36 peças, montar com ímã, deslizar com solução garantida, nível adaptativo, prêmios e marcos), `ProgressoCriativo.kt` (liga ao `EstadoJogo`: moedinhas, estrelas, obra guardada, peças douradas). Estado salvo em chaves novas do `Repositorio` e da `Copia` (saves antigos ficam com o padrão).
+* Telas `TelaColorir` e `TelaPuzzle`, componente `DesenhoNoCanvas`, botões "Colorir" e "Peças" no cantinho criativo da casa por dentro, rotas `Tela.Colorir` e `Tela.Puzzle`. Prêmio do Colorir leva ao quebra cabeça da própria pintura.
+* Testes de captura e gesto em `CapturasColorirEPuzzleTest` (balde, pincel, pronto paga, arrastar peça encaixa), a provar no CI.
+* Nomes que colidiam com código existente (`QuebraCabeca` da atividade das fases, `Ponto` da escrita, `Desenho` dos itens da casa) foram evitados: `Puzzle`, `PontoDoDesenho`, `DesenhoDeColorir`.
+
+NÃO provado: as telas de Compose nunca foram compiladas aqui (sem Android SDK; o Google Maven está bloqueado). Quem prova é o CI.
+
+Ficou de fora do plano (a fazer):
+* Fase 10: 36 dos 60 desenhos; carimbos e fundos; modo mágico de 2 a 3 anos; galeria das obras na parede; figurinha e diploma da coleção; "pintor do dia"; salvar a obra como imagem; item da casa pelo marco. Cores especiais: 8 (dourado, prata, cobre, arco íris e 4 brilhos), com marcos em 1, 2, 3, 5, 8, 12, 18 e 25 desenhos.
+* Fase 11: peças de formato livre (jigsaw), espelho e sequência, sombras (arrastar para a silhueta), rotação nos níveis difíceis, detecção de "travou" (o domínio já sabe descer de nível, a tela ainda não avisa), bandeja em casas sem sobreposição, trocar peças douradas por itens, mascote e moldura por marco, diploma "Mestre dos quebra cabeças".
+* Área dos pais mostrar o que a criança pintou e montou.
+* Ao tocar numa região, o desenho não mostra o nome dela por voz.
 
 ## Decisões
 

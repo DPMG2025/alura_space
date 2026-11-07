@@ -58,6 +58,8 @@ import br.com.casinhadosaber.ui.telas.AvisoDeConquistas
 import br.com.casinhadosaber.ui.telas.NovasConquistas
 import br.com.casinhadosaber.ui.telas.TelaAlbum
 import br.com.casinhadosaber.ui.telas.TelaAtelie
+import br.com.casinhadosaber.ui.telas.TelaColorir
+import br.com.casinhadosaber.ui.telas.TelaPuzzle
 import br.com.casinhadosaber.ui.telas.TelaDiplomas
 import br.com.casinhadosaber.ui.telas.TelaMapa
 import br.com.casinhadosaber.ui.telas.TelaPiano
@@ -125,6 +127,9 @@ sealed interface Tela {
     // ---- Modo criativo e conquistas (ateliê, piano, mapa, diplomas e álbum)
     data object Atelie : Tela
     data object Piano : Tela
+    /** Livro de Colorir (Fase 10) e quebra cabeças (Fase 11); [Puzzle.fonte] = "obra:id" ou "modelo:id" para abrir já numa imagem. */
+    data object Colorir : Tela
+    data class Puzzle(val fonte: String? = null) : Tela
     data class Mapa(val trilha: Trilha) : Tela
     data class Diplomas(val voltar: Tela) : Tela
     data class Album(val trilha: Trilha, val mundo: Int, val voltar: Tela) : Tela
@@ -308,7 +313,7 @@ class MainActivity : ComponentActivity() {
                     is Tela.Treino -> Tela.Caminho(t.trilha)
                     is Tela.Espelho -> t.voltar
                     Tela.CasaPorDentro -> Tela.Casa()
-                    Tela.Atelie, Tela.Piano -> Tela.CasaPorDentro
+                    Tela.Atelie, Tela.Piano, Tela.Colorir, is Tela.Puzzle -> Tela.CasaPorDentro
                     is Tela.Mapa -> Tela.Caminho(t.trilha)
                     is Tela.Diplomas -> t.voltar
                     is Tela.Album -> t.voltar
@@ -511,6 +516,8 @@ class MainActivity : ComponentActivity() {
                         cantinho = CantinhoDaSala(
                             onAtelie = { irPara(Tela.Atelie) },
                             onPiano = { irPara(Tela.Piano) },
+                            onColorir = { irPara(Tela.Colorir) },
+                            onPuzzle = { irPara(Tela.Puzzle()) },
                             onDiplomas = { irPara(Tela.Diplomas(Tela.CasaPorDentro)) },
                             onAlbum = { irPara(Tela.Album(Trilha.entries.maxBy { estado.vencidasNa(it) }, -1, Tela.CasaPorDentro)) },
                         ),
@@ -520,6 +527,20 @@ class MainActivity : ComponentActivity() {
                     Tela.Atelie -> TelaAtelie(estado, repo::atualizar, onVoltar = { irPara(Tela.CasaPorDentro) })
 
                     Tela.Piano -> TelaPiano(onVoltar = { irPara(Tela.CasaPorDentro) })
+
+                    Tela.Colorir -> TelaColorir(
+                        estado = estado,
+                        onAtualizar = repo::atualizar,
+                        onVoltar = { irPara(Tela.CasaPorDentro) },
+                        onMontarPuzzle = { fonte -> irPara(Tela.Puzzle(fonte)) },
+                    )
+
+                    is Tela.Puzzle -> TelaPuzzle(
+                        estado = estado,
+                        onAtualizar = repo::atualizar,
+                        onVoltar = { irPara(Tela.CasaPorDentro) },
+                        fonteInicial = atual.fonte,
+                    )
 
                     is Tela.Mapa -> TelaMapa(
                         trilha = atual.trilha,
