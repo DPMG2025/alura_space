@@ -4,9 +4,9 @@
 //   npm run render              renderiza o catálogo inteiro e apaga imagens órfãs
 //   npm run render -- moeda     renderiza só os ids dados (o resto do manifesto fica como está)
 //   CATALOGO=fase5 npm run render [-- ids]
-//                               renderiza só src/catalogo_fase5.js (ou fase7...), de modo incremental, e grava
+//                               renderiza só src/catalogo_fase5.js (ou fase4, fase6, fase7...), de modo incremental, e grava
 //                               um manifesto à parte (manifesto_fase5.json) para revisão, sem apagar nada.
-//                               O catálogo principal (src/catalogo.js) já inclui as fases 5 e 7: o render
+//                               O catálogo principal (src/catalogo.js) já inclui as fases 4, 5, 6 e 7: o render
 //                               completo gera tudo num manifesto.json só e apaga os manifestos à parte.
 //
 // Sobe um servidor local com esta pasta, abre pagina/render.html no Chromium headless (WebGL por
@@ -87,6 +87,7 @@ async function main() {
       imagens[id] = { arquivo, tipo: r.tipo, largura: r.largura, altura: r.altura, uso: r.uso, apoio: r.apoio, ancoras: r.ancoras };
       if (r.grupo !== undefined) Object.assign(imagens[id], { grupo: r.grupo, tingir: r.tingir, ordem: r.ordem, personagem: r.personagem });
       if (r.esconde) imagens[id].esconde = r.esconde;
+      if (r.dados) Object.assign(imagens[id], r.dados);
       // camadas de câmera fixa não podem encostar na borda: seria parte da figura cortada
       if (r.bordas.length) { falhou = true; console.log(`CORTADO ${id}: encosta em ${r.bordas.join(', ')}`); }
       console.log(`ok ${arquivo} ${r.largura}x${r.altura} ${(webp.length / 1024).toFixed(1)} KB (${Date.now() - t0} ms)`);

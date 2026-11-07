@@ -70,6 +70,23 @@ export const tiposDeCamera = {
     luzes: { sol: [3, 6, 5], forca: 2.4, area: 3, amb: 0.9 },
     sombraDeContato: false,
   },
+  jogo: {
+    // Cenário do jogo (Fase 4): a ilha de cada caminho e as cenas das perguntas (lagoa, mesa, varal...),
+    // como na maquete 2_jogo. Câmera e luz do protótipo (jogo.html: de (0; 15,5; 23,5) olhando para
+    // (0; -2,2; -1), 34 graus na tela de 393 x 852 dp). [quadro] é essa tela inteira, na largura de 400 dp;
+    // cada camada é o recorte [recorte] dela (de y = 100 dp para baixo), o mesmo para todas, então o app
+    // só empilha. A ilha passa das bordas dos lados de propósito (cortaNaBorda).
+    enquadrar: 'fixo',
+    fov: 34,
+    posicao: [0, 15.5, 23.5],
+    alvo: [0, -2.2, -1.0],
+    quadro: { largura: 400, altura: 867 },
+    recorte: { x: 0, y: 100 },
+    centro: [0, 0, 0],
+    luzes: { sol: [5, 12, 8], forca: 2.9, area: 9, amb: 0.6 },
+    sombraDeContato: false,
+    cortaNaBorda: true,
+  },
 };
 
 /** Ajuste final de cor do protótipo (ui2.css: canvas.cena). */
