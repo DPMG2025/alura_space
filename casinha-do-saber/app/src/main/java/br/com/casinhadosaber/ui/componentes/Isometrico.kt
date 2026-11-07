@@ -21,10 +21,11 @@ class Projecao(val ladrilho: Float, val origemX: Float, val origemY: Float) {
     val meioA = ladrilho / 4f
 
     /** Uma unidade de altura na tela (um pouco maior que a aresta do ladrilho, para os móveis "crescerem"). */
-    val unidadeZ = ladrilho * 0.56f
+    val unidadeZ = ladrilho * GradeIsometrica.UNIDADE_Z
 
-    fun x(gx: Float, gy: Float): Float = origemX + (gx - gy) * meioL
-    fun y(gx: Float, gy: Float, z: Float = 0f): Float = origemY + (gx + gy) * meioA - z * unidadeZ
+    // As contas ficam em GradeIsometrica (Kotlin puro), as mesmas que alinham a arte 3D da casa por dentro.
+    fun x(gx: Float, gy: Float): Float = GradeIsometrica.x(ladrilho, origemX, gx, gy)
+    fun y(gx: Float, gy: Float, z: Float = 0f): Float = GradeIsometrica.y(ladrilho, origemY, gx, gy, z)
     fun ponto(gx: Float, gy: Float, z: Float = 0f) = Offset(x(gx, gy), y(gx, gy, z))
 
     /** Ponto da tela (no chão) de volta para ladrilhos. */
