@@ -4,23 +4,26 @@ Memória do projeto entre sessões. Toda sessão nova lê o PRD e este arquivo, 
 
 ## Fases
 
-Situação em 2026-11-07, 17:45 UTC. "Provada" = CI verde completo (build, tablet, celular, Android 7 e 8) naquele commit.
+Situação final em 2026-11-07 (entrega pedida pelo dono do produto, sem terceira rodada de acabamento). "Provada" = o que o CI confirmou no commit 86cf793 (execução 135): build (559+ testes de unidade e capturas, lint, APK, guarda de 150 MB), emulador de tablet (tela cheia), emuladores Android 7 e 8 (abertura 3,1 s, memória máx 113 a 134 MB), testes de voz. NÃO provado: o job do emulador de celular (o emulador some com "device offline"; nunca ficou verde em 15 execuções; a causa exata não foi encontrada).
 
-| Fase | Código e arte | Prova no CI | Revisor independente |
+| Fase | Código e arte | Revisor independente | Situação |
 |---|---|---|---|
-| 0A. Tela cheia | feito | tablet verde nas execuções 121, 122, 123, 125 e 128; confirmação no Samsung pendente | n/a |
-| 0. Pipeline de arte | feito | build verde | n/a |
-| 1. Personagens | feito | build verde; emulador de celular pendente | 7 (revisao-fase1.md) |
-| 2. Interface | feito | build verde; emulador de celular pendente | 8 (revisao-fases-2-3-5-7.md) |
-| 3. Início e casa de fora | feito | build verde (execução 128); celular pendente | 6 |
-| 4. Jogo | feito (4A arte, 4B Kotlin) | build verde (128); celular pendente | pendente (revisão final) |
-| 5. Prêmio e Quase | feito | build verde; celular pendente | 8 |
-| 6. Casa por dentro | feito (6A, 6B) | build verde (128); celular pendente | pendente (revisão final) |
-| 7. Guarda roupa | feito (7A, 7B, polimento de arte) | build verde; celular pendente | 6 |
-| 8. Demais telas | feito (8A arte; 8B grupos A, B, C) | build verde (128); celular pendente | pendente (revisão final) |
-| 9. Acabamento | polimento visual e medição feitos; segunda rodada de arte (lotes 1, 2 e 3) integrada (local); Kotlin dos lotes e revisão final pendentes | build verde; Android 7 e 8 (desempenho) rodando na 128 | pendente |
+| 0A. Tela cheia | feito | n/a | tablet verde em 7 execuções; falta o aceite no Samsung (dono) |
+| 0. Pipeline de arte | feito | n/a | build verde |
+| 1. Personagens | feito | 7 | build verde |
+| 2. Interface | feito | 8 | build verde |
+| 3. Início e casa de fora | feito | 6 | build verde |
+| 4. Jogo | feito | 8 | build verde |
+| 5. Prêmio e Quase | feito | 8 | build verde |
+| 6. Casa por dentro | feito | 7 | build verde |
+| 7. Guarda roupa | feito | 6 | build verde |
+| 8. Demais telas | feito | 6 | build verde |
+| 9. Acabamento | feito (duas rodadas de arte e Kotlin) | 6; geral do app 7 | build verde; terceira rodada NÃO feita |
 
-Pendências que não são do código: confirmação da tela cheia no tablet Samsung (dono do produto) e os testes de dez minutos com a criança (fases 1, 4 e 5).
+## O que ficou de fora (dono decidiu entregar assim)
+* Terceira rodada de acabamento: 30 figuras de emoji (🏊 😴 🧚 👧 🦸 ⛱ 🐞 🎾 📖), casinha de cachorro 3D, composição das áreas novas (adesivos em pares), nós da trilha todos iguais, números soltos em 33 e no v3d_15 (Álbum 14, Diplomas 1), refinamentos de layout. Lista completa em relatorios/revisao-fase9-rodada2.md.
+* Emulador de celular verde no CI (ver acima).
+* Aceites que são do dono: tela cheia no tablet Samsung e teste de dez minutos com a criança (roteiro-aceite.md).
 
 ## Decisões
 
