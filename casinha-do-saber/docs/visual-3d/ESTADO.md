@@ -8,7 +8,7 @@ Situação em 2026-11-07, 17:00 UTC. "Provada" = CI verde completo (build, table
 
 | Fase | Código e arte | Prova no CI | Revisor independente |
 |---|---|---|---|
-| 0A. Tela cheia | feito | tablet verde (execuções 121, 122, 123, 125); celular e confirmação no Samsung pendentes | n/a |
+| 0A. Tela cheia | feito | tablet verde nas execuções 121, 122, 123, 125 e 128; confirmação no Samsung pendente | n/a |
 | 0. Pipeline de arte | feito | build verde | n/a |
 | 1. Personagens | feito | build verde; emulador de celular pendente | 7 (revisao-fase1.md) |
 | 2. Interface | feito | build verde; emulador de celular pendente | 8 (revisao-fases-2-3-5-7.md) |
@@ -44,6 +44,8 @@ Pendências que não são do código: confirmação da tela cheia no tablet Sams
 * 2026-11-07: revisão independente das Fases 2, 3, 5 e 7 (relatorios/revisao-fases-2-3-5-7.md): notas 8, 6, 8, 6; lista de pendências da Fase 9 registrada lá.
 
 * 2026-11-07, revisão independente das Fases 4, 6, 8 e 9 (relatorios/revisao-fases-4-6-8-9.md): notas 7, 4, 4, 4; geral 5. Decisão: segunda rodada da Fase 9 em três frentes de arte em lote (lote 1: figuras do vocabulário das perguntas; lote 2: áreas novas, livros e ateliê; lote 3: ícones de interface) mais Kotlin para os números abstratos, a noite do interior e a integração; refazer a revisão ao fim.
+
+* 2026-11-07, execução 128 (commit 962c3ad, Fases 0A a 8B + orquestrador + medição): build, tablet e Android 7 e 8 VERDES. Celular: com o Android Test Orchestrator, 23 testes rodaram com 0 falhas (todos passam); o emulador sumiu durante o 24º (DesempenhoTest, que não era para rodar no celular), de novo ~6 min depois do início, como em todas as quedas (121 a 128). Desempenho medido: Android 7 abre em 3,1 s (0,9 s a quente), memória máxima 113 MB; Android 8: 3,1 s, 134 MB (limite 384 MB). Decisão: os testes do celular rodam em dois emuladores seguidos (1: Diagnóstico, Emojis, TelaCheia, Vozes; 2: JogoNoEmuladorTest), cada um abaixo de 6 minutos; DesempenhoTest só nos Androids antigos.
 
 ## Problemas abertos
 

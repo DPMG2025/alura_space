@@ -164,14 +164,15 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Testes no emulador
+      # O emulador de celular do CI some depois de uns 6 a 7 minutos de uso (execuções 121 a 128), qualquer que seja o teste.
+      # Por isso os testes rodam em dois emuladores seguidos, cada um abaixo disso. O DesempenhoTest só roda nos Androids antigos.
+      - name: Testes no emulador (1 de 2)
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           target: google_apis
           arch: x86_64
           profile: pixel_6
-          # O emulador de celular morria depois de uns 7 minutos de testes (execuções 121 e 122): mais memória e núcleos.
           ram-size: 4096M
           heap-size: 512M
           cores: 4
@@ -179,15 +180,36 @@ jobs:
           working-directory: casinha-do-saber
           script: |
             adb logcat -c || true
-            nohup sh -c 'adb logcat -v time "*:W" TestRunner:I > logcat-emulador.txt 2>&1' > /dev/null 2>&1 &
-            ./gradlew connectedDebugAndroidTest --no-daemon || echo "FALHA_TESTES" > emulador-falhou.txt
+            nohup sh -c 'adb logcat -v time "*:W" TestRunner:I > logcat-emulador-a.txt 2>&1' > /dev/null 2>&1 &
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.DiagnosticoTelasTest,br.com.casinhadosaber.EmojisNaFonteEmbutidaTest,br.com.casinhadosaber.TelaCheiaTest,br.com.casinhadosaber.VozesGravadasTest || echo "FALHA_TESTES" > emulador-falhou.txt
+            mkdir -p saida-emulador/a
+            cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/a/ 2>/dev/null || true
+
+      - name: Testes no emulador (2 de 2)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          heap-size: 512M
+          cores: 4
+          disable-animations: false
+          working-directory: casinha-do-saber
+          script: |
+            adb logcat -c || true
+            nohup sh -c 'adb logcat -v time "*:W" TestRunner:I > logcat-emulador-b.txt 2>&1' > /dev/null 2>&1 &
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest || echo "FALHA_TESTES" > emulador-falhou.txt
+            mkdir -p saida-emulador/b
+            cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/b/ 2>/dev/null || true
 
       - name: Log do emulador (avisos e erros)
         if: always()
         uses: actions/upload-artifact@v5
         with:
           name: logcat-emulador
-          path: casinha-do-saber/logcat-emulador.txt
+          path: casinha-do-saber/logcat-emulador-*.txt
           if-no-files-found: ignore
 
       - name: Versionar resultado do emulador
@@ -196,13 +218,14 @@ jobs:
           mkdir -p docs/emulador
           find docs/emulador -maxdepth 1 -type f -delete
           rm -rf docs/emulador/vozes && mkdir -p docs/emulador/vozes
-          SAIDA=app/build/outputs/connected_android_test_additional_output
-          find $SAIDA -type f \( -name "*.png" -o -name "*.txt" \) ! -name "vozes_relatorio.txt" -exec cp {} docs/emulador/ \; 2>/dev/null || true
-          find $SAIDA -type f \( -name "*.wav" -o -name "vozes_relatorio.txt" \) -exec cp {} docs/emulador/vozes/ \; 2>/dev/null || true
-          find app/build/outputs/androidTest-results -name "*.xml" -exec grep -h -A8 "<failure" {} \; > docs/emulador/falhas.txt 2>/dev/null || true
+          for SAIDA in saida-emulador/*/connected_android_test_additional_output; do
+            find $SAIDA -type f \( -name "*.png" -o -name "*.txt" \) ! -name "vozes_relatorio.txt" -exec cp {} docs/emulador/ \; 2>/dev/null || true
+            find $SAIDA -type f \( -name "*.wav" -o -name "vozes_relatorio.txt" \) -exec cp {} docs/emulador/vozes/ \; 2>/dev/null || true
+          done
+          find saida-emulador -path "*androidTest-results*" -name "*.xml" -exec grep -h -A8 "<failure" {} \; > docs/emulador/falhas.txt 2>/dev/null || true
           [ -s docs/emulador/falhas.txt ] || rm -f docs/emulador/falhas.txt
           # Quando falha, o fim do logcat (avisos e erros) vai junto, para achar a causa.
-          if [ -f emulador-falhou.txt ] && [ -f logcat-emulador.txt ]; then tail -n 4000 logcat-emulador.txt > docs/emulador/logcat.txt; fi
+          if [ -f emulador-falhou.txt ]; then cat logcat-emulador-*.txt 2>/dev/null | tail -n 4000 > docs/emulador/logcat.txt; fi
           if [ -f emulador-falhou.txt ]; then echo "RESULTADO: FALHOU" > docs/emulador/relatorio.txt; else echo "RESULTADO: TODOS OS TESTES PASSARAM" > docs/emulador/relatorio.txt; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
