@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -307,6 +308,8 @@ private fun JogarPuzzle(
     /** Peça escolhida com um toque (para quem não arrasta): o próximo toque na moldura leva a peça até lá. */
     var selecionada by remember(partida) { mutableIntStateOf(-1) }
     var estrelasGanhas by remember(partida) { mutableIntStateOf(0) }
+    /** SONDA TEMPORÁRIA (diagnóstico do CI): últimos passos do fluxo de largar peças. */
+    var sonda by remember(partida) { mutableStateOf("") }
 
     LaunchedEffect(partida) { narrador.falar(if (partida.tipo == TipoDeJogo.MONTAR) "Arraste cada peça para o lugar dela." else "Deslize as peças para o espaço vazio.") }
     LaunchedEffect(dicaPeca, dicaDeslizante) {
@@ -329,6 +332,7 @@ private fun JogarPuzzle(
     /** Larga a peça [id] com o canto em ([x], [y]) (do arrastar ou do toque): encaixa se está perto da casa certa. */
     fun largar(id: Int, x: Float, y: Float) {
         val depois = Puzzle.soltar(atual, id, x, y, imaLargo)
+        sonda += " | largar id=$id x=$x y=$y ima=$imaLargo faltamAntes=${atual.faltam} faltamDepois=${depois.faltam}"
         montagem = depois
         val encaixou = depois.pecas.first { it.id == id }.colocada
         if (encaixou) sons.acerto() else sons.pousar()
@@ -354,7 +358,7 @@ private fun JogarPuzzle(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = Cores.Texto,
-                            modifier = Modifier.testTag("puzzle_faltam"),
+                            modifier = Modifier.testTag("puzzle_faltam").semantics { stateDescription = sonda },
                         )
                     }
                 }
@@ -379,6 +383,7 @@ private fun JogarPuzzle(
                                         detectTapGestures { o ->
                                             val id = selecionada
                                             val m2 = atual
+                                            sonda += " | toqueMoldura id=$id o=$o lado=$ladoPx"
                                             if (id >= 0 && o.x in 0f..ladoPx && o.y in 0f..ladoPx) {
                                                 val col = (o.x / (ladoPx / m2.grade.colunas)).toInt().coerceIn(0, m2.grade.colunas - 1)
                                                 val lin = (o.y / (ladoPx / m2.grade.linhas)).toInt().coerceIn(0, m2.grade.linhas - 1)
@@ -440,6 +445,7 @@ private fun JogarPuzzle(
                                                         onDragStart = {
                                                             val p = atual.pecas.firstOrNull { it.id == peca.id }
                                                             if (p != null) arrasto = peca.id to Offset(p.x, p.y)
+                                                            sonda += " | inicioArrasto ${peca.id} p=${p != null}"
                                                             sons.toque()
                                                         },
                                                         onDrag = { change, arrastoPx ->
@@ -452,12 +458,14 @@ private fun JogarPuzzle(
                                                         onDragEnd = {
                                                             val a = arrasto
                                                             arrasto = null
+                                                            sonda += " | fimArrasto ${peca.id} a=$a"
                                                             if (a != null && a.first == peca.id) largar(peca.id, a.second.x, a.second.y)
                                                         },
                                                         onDragCancel = {
                                                             // Como nas outras atividades de arrastar: gesto interrompido também larga a peça onde ela está.
                                                             val a = arrasto
                                                             arrasto = null
+                                                            sonda += " | cancelArrasto ${peca.id} a=$a"
                                                             if (a != null && a.first == peca.id) largar(peca.id, a.second.x, a.second.y)
                                                         },
                                                     )
@@ -465,6 +473,7 @@ private fun JogarPuzzle(
                                                 .pointerInput(peca.id) {
                                                     detectTapGestures {
                                                         sons.toque()
+                                                        sonda += " | toquePeca ${peca.id}"
                                                         selecionada = if (selecionada == peca.id) -1 else peca.id
                                                         if (selecionada >= 0) narrador.falar("Agora toque no lugar dela.")
                                                     }
