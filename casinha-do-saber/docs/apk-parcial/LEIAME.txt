@@ -1,0 +1,2 @@
+APK parcial do commit 962c3ad623a22cdffa10001dcc5c5201e9df8a12 (execução 42391997478). Sem o polimento final e sem os ícones e figuras 3D da segunda rodada.
+Passou no build (testes, lint, tamanho), no emulador de tablet e nos Androids 7 e 8; ainda não passou no emulador de celular do CI.
