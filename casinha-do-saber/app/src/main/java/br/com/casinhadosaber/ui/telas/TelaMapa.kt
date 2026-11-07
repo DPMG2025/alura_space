@@ -61,9 +61,16 @@ import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.Raios
-import br.com.casinhadosaber.ui.componentes.EnfeiteDoFundo
 import br.com.casinhadosaber.ui.componentes.cartaoFofo
-import br.com.casinhadosaber.ui.componentes.FundoDecorado
+import br.com.casinhadosaber.ui.componentes.ContasLeves
+import br.com.casinhadosaber.ui.componentes.CorDaConta
+import br.com.casinhadosaber.ui.componentes.EstiloDaPilula
+import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
+import br.com.casinhadosaber.ui.componentes.escurecer
+import br.com.casinhadosaber.ui.componentes.pilula
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.translate
@@ -135,7 +142,8 @@ fun TelaMapa(
     }
 
     EscalaDeTablet {
-        FundoDecorado(cor, Modifier.fillMaxSize(), enfeite = EnfeiteDoFundo.Estrelas) {
+        // Céu de brinquedo parado (vetor): sem as estrelinhas animadas, que redesenhavam a tela inteira.
+        Box(Modifier.fillMaxSize().ceuDeBrinquedo(comGrama = false)) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -143,11 +151,25 @@ fun TelaMapa(
         ) {
             Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 BotaoRedondo("⬅️", "Voltar para o caminho", onVoltar, tamanho = 52.dp)
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(8.dp))
+                IconeDeTrilha(trilha, Modifier.size(40.dp))
+                Spacer(Modifier.width(4.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("🗺️ Mapa: ${trilha.titulo}", style = MaterialTheme.typography.titleLarge.copy(shadow = SOMBRA_DO_TEXTO), color = Color.White, maxLines = 1)
-                    Text("🏅 $completos de ${Mundos.todos.size} mundos completos", style = MaterialTheme.typography.titleSmall.copy(shadow = SOMBRA_DO_TEXTO), color = Color.White, maxLines = 1)
+                    TituloQueCabe("Mapa: ${trilha.titulo}", estilo = MaterialTheme.typography.headlineSmall)
+                    // As medalhas dos mundos completos numa pilulazinha (o "de 25" fica só para a acessibilidade).
+                    Row(
+                        Modifier
+                            .clearAndSetSemantics { contentDescription = "$completos de ${Mundos.todos.size} mundos completos" }
+                            .pilula()
+                            .padding(horizontal = 10.dp, vertical = 1.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        IconeLeve("tela_medalha", 22.dp) { Text("🏅", fontSize = 16.sp) }
+                        Spacer(Modifier.width(4.dp))
+                        Text("$completos", style = EstiloDaPilula.copy(fontSize = 18.sp, lineHeight = 22.sp), maxLines = 1)
+                    }
                 }
+                Spacer(Modifier.width(6.dp))
                 BotaoRedondo("📒", "Álbum de figurinhas", { sons.toque(); onAlbum(mundoDaVez ?: 0) }, tamanho = 52.dp)
             }
             BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -206,7 +228,7 @@ fun TelaMapa(
                     Modifier
                         .fillMaxWidth()
                         .height(36.dp)
-                        .background(Brush.verticalGradient(0f to cor.copy(alpha = 0.6f), 0.4f to cor.copy(alpha = 0.3f), 1f to cor.copy(alpha = 0f))),
+                        .background(Brush.verticalGradient(0f to CEU_DO_MAPA.copy(alpha = 0.75f), 0.4f to CEU_DO_MAPA.copy(alpha = 0.35f), 1f to CEU_DO_MAPA.copy(alpha = 0f))),
                 )
             }
         }
@@ -214,8 +236,16 @@ fun TelaMapa(
     }
 }
 
-/** Sombra ameixa suave dos textos brancos do cabeçalho. */
-private val SOMBRA_DO_TEXTO = Shadow(Color(0x553D2C5E), Offset(0f, 3f), 6f)
+/** Céu logo abaixo do cabeçalho (o esmaecido do alto usa esta cor). */
+private val CEU_DO_MAPA = Color(0xFF8CCDFB)
+
+/** A cor das contas de cada caminho no mapa (perto da cor do caminho). */
+private fun corDasContas(trilha: Trilha): CorDaConta = when (trilha) {
+    Trilha.MATEMATICA -> CorDaConta.LARANJA
+    Trilha.PORTUGUES -> CorDaConta.VERDE
+    Trilha.INGLES -> CorDaConta.ROXA
+    Trilha.LOGICA -> CorDaConta.VERMELHA
+}
 
 private val LARGURA_DA_ILHA: Dp = 168.dp
 
@@ -249,14 +279,27 @@ private fun IlhaDoMundo(s: SituacaoDoMundo, trilha: Trilha, modifier: Modifier, 
                         .background(Brush.radialGradient(listOf(Color(0xCCFFE680), Color(0x00FFE680))), CircleShape),
                 )
             }
+            // Mundo ainda longe: a ilha fica clarinha (opaca, para a trilha não aparecer através dela).
+            val corDaIlha = if (s.alcancado) Color(m.corArgb) else lerp(Color(m.corArgb), Color(0xFFF2F2F2), 0.6f)
             Box(
                 Modifier
                     .size(TAMANHO_DA_ILHA)
                     .then(if (s.atual) Modifier.pulsando() else Modifier)
-                    // Sombra suave embaixo da ilha (descola do caminho).
-                    .drawBehind { drawCircle(Cores.Sombra, size.minDimension / 2, center.copy(y = center.y + 5.dp.toPx())) }
-                    // Mundo ainda longe: a ilha fica clarinha (opaca, para a trilha não aparecer através dela).
-                    .background(if (s.alcancado) Color(m.corArgb) else lerp(Color(m.corArgb), Color(0xFFF2F2F2), 0.6f), CircleShape)
+                    // Disco de brinquedo: sombra macia e lábio mais escuro embaixo (círculos, sem blur).
+                    .drawBehind {
+                        val r = size.minDimension / 2
+                        drawCircle(Cores.Sombra, r, center.copy(y = center.y + 9.dp.toPx()))
+                        drawCircle(escurecer(corDaIlha, 0.72f), r, center.copy(y = center.y + 5.dp.toPx()))
+                    }
+                    .background(Brush.verticalGradient(listOf(lerp(corDaIlha, Color.White, 0.35f), corDaIlha)), CircleShape)
+                    // Brilho de verniz no alto à esquerda.
+                    .drawBehind {
+                        drawOval(
+                            Color.White.copy(alpha = 0.35f),
+                            Offset(size.width * 0.2f, size.height * 0.1f),
+                            androidx.compose.ui.geometry.Size(size.width * 0.38f, size.height * 0.2f),
+                        )
+                    }
                     .border(
                         if (s.completo || s.atual) 5.dp else 3.dp,
                         when {
@@ -303,13 +346,18 @@ private fun IlhaDoMundo(s: SituacaoDoMundo, trilha: Trilha, modifier: Modifier, 
                     ),
                 contentAlignment = Alignment.Center,
             ) {
+                // Cadeado e coroa 3D: um bitmap pequeno de cada, dividido pelos 25 mundos.
                 when {
-                    !s.alcancado -> Text("🔒", fontSize = 17.sp)
-                    else -> Text("👑", fontSize = 18.sp, modifier = Modifier.alpha(if (dourado) 1f else 0.4f))
+                    !s.alcancado -> IconeLeve(IconesDaBarra.PAIS, 24.dp) { Text("🔒", fontSize = 17.sp) }
+                    else -> IconeLeve("premio_coroa", 26.dp, alfa = if (dourado) 1f else 0.4f) {
+                        Text("👑", fontSize = 18.sp, modifier = Modifier.alpha(if (dourado) 1f else 0.4f))
+                    }
                 }
             }
             if (s.completo) {
-                Text("🏅", fontSize = 30.sp, modifier = Modifier.align(Alignment.BottomStart).offset(x = 6.dp, y = (-2).dp))
+                IconeLeve("tela_medalha", 40.dp, Modifier.align(Alignment.BottomStart).offset(x = 4.dp, y = 2.dp)) {
+                    Text("🏅", fontSize = 30.sp)
+                }
             }
             if (s.atual) {
                 Text("📍", fontSize = 34.sp, modifier = Modifier.align(Alignment.TopStart).offset(x = 4.dp).pulsando())
@@ -325,16 +373,13 @@ private fun IlhaDoMundo(s: SituacaoDoMundo, trilha: Trilha, modifier: Modifier, 
                 .cartaoFofo(raio = Raios.Medio)
                 .padding(horizontal = 10.dp, vertical = 2.dp),
         )
-        // As 10 fases do mundo em bolinhas
-        Row(Modifier.padding(top = 4.dp)) {
-            for (k in 0 until Mundos.FASES_POR_MUNDO) {
-                Box(
-                    Modifier
-                        .padding(1.5.dp)
-                        .size(9.dp)
-                        .background(if (k < s.vencidas) Cores.Estrela else Color(0x55FFFFFF), CircleShape),
-                )
-            }
-        }
+        // As 10 fases do mundo em contas 3D (as vencidas na cor do caminho), num Canvas só por mundo.
+        ContasLeves(
+            feitas = s.vencidas,
+            total = Mundos.FASES_POR_MUNDO,
+            tamanho = 13.dp,
+            cor = corDasContas(trilha),
+            modifier = Modifier.padding(top = 4.dp),
+        )
     }
 }

@@ -503,12 +503,28 @@ fun MaoGuia(modifier: Modifier = Modifier, ativa: Boolean = true, espera: Long =
             drawCircle(Color.White.copy(alpha = 0.8f * (1f - p)), radius = size.minDimension * (0.2f + 0.5f * p), style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx()))
         }
         val desce = if (fase < 0.25f) fase * 4f else if (fase < 0.5f) (0.5f - fase) * 4f else 0f
+        MaoDeArte(apertando = desce > 0.6f, deslocamentoY = (-8).dp + 8.dp * desce)
+    }
+}
+
+/**
+ * A mãozinha 3D (`ui_mao_toque`, luva branca de punho roxo; `ui_mao_toque_apertando` com o dedo encostado) com a
+ * ponta do dedo a 20 dp da esquerda e do topo (mais [deslocamentoY]), onde o círculo do toque "pinga". Sem a
+ * arte, o 👆 de antes no mesmo lugar.
+ */
+@Composable
+private fun MaoDeArte(apertando: Boolean, deslocamentoY: Dp) {
+    // A ponta do dedo fica em (52, 23) de 144 px na arte (âncora `ponta`): com 60 dp, em (21,7; 9,6) dp.
+    ImagemDeArte(
+        if (apertando) "ui_mao_toque_apertando" else "ui_mao_toque",
+        Modifier
+            .offset(x = (-2).dp, y = 10.dp + deslocamentoY)
+            .size(60.dp),
+    ) {
         Text(
             "👆",
             fontSize = 40.sp,
-            modifier = Modifier
-                .padding(start = 12.dp, top = 14.dp)
-                .offset(y = (-8).dp + 8.dp * desce),
+            modifier = Modifier.padding(start = 14.dp, top = 4.dp),
         )
     }
 }
@@ -532,13 +548,7 @@ fun MaoQueArrasta(apertando: Boolean, modifier: Modifier = Modifier) {
                 drawCircle(Color.White.copy(alpha = 0.8f * (1f - pulso)), radius = size.minDimension * (0.2f + 0.5f * pulso), style = traco)
             }
         }
-        Text(
-            "👆",
-            fontSize = 40.sp,
-            modifier = Modifier
-                .padding(start = 12.dp, top = 14.dp)
-                .offset(y = if (apertando) 0.dp else (-8).dp),
-        )
+        MaoDeArte(apertando = apertando, deslocamentoY = if (apertando) 0.dp else (-8).dp)
     }
 }
 

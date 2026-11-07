@@ -72,9 +72,24 @@ import br.com.casinhadosaber.ui.componentes.corDaPaleta
 import br.com.casinhadosaber.ui.componentes.coresEmIngles
 import br.com.casinhadosaber.ui.componentes.escurecer
 import br.com.casinhadosaber.ui.tema.Cores
+import br.com.casinhadosaber.ui.componentes.IconeDeArteDaBarra
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.cartaoFofo
+import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 
 /** Ferramentas do ateliê: lápis (toque e arraste), balde (pinta a mancha toda) e borracha. */
 enum class Ferramenta(val emoji: String, val nome: String) { LAPIS("✏️", "Lápis"), BALDE("🪣", "Balde de tinta"), BORRACHA("🧽", "Borracha") }
+
+/** A arte 3D de cada ferramenta (`tela_lapis`, `tela_balde`, `tela_borracha`; Fase 8A). */
+private val Ferramenta.idDaArte: String
+    get() = when (this) {
+        Ferramenta.LAPIS -> "tela_lapis"
+        Ferramenta.BALDE -> "tela_balde"
+        Ferramenta.BORRACHA -> "tela_borracha"
+    }
 
 /**
  * Ateliê (modo criativo): um quadro de 12 por 12 quadradinhos para pintar com o dedo, sem certo nem errado,
@@ -150,13 +165,16 @@ fun TelaAtelie(
         Column(
             Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(Color(0xFFFFE0EC), Cores.Fundo)))
+                .ceuDeBrinquedo(comGrama = false)
                 .windowInsetsPadding(WindowInsets.safeDrawing),
         ) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 BotaoRedondo("⬅️", "Voltar para a casa", { guardar(pintura); onVoltar() }, tamanho = 52.dp)
-                Spacer(Modifier.width(10.dp))
-                Text("🎨 Ateliê", style = MaterialTheme.typography.headlineMedium, maxLines = 1, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(6.dp))
+                // A paleta 3D no lugar do 🎨 e o título em branco com contorno, que diminui se não couber.
+                ImagemDeArte("tela_paleta", Modifier.size(44.dp)) { Text("🎨", style = MaterialTheme.typography.headlineMedium) }
+                Spacer(Modifier.width(2.dp))
+                TituloQueCabe("Ateliê", Modifier.weight(1f), estilo = MaterialTheme.typography.headlineMedium)
                 BotaoRedondo(
                     "↩️", "Desfazer",
                     {
@@ -216,7 +234,9 @@ fun TelaAtelie(
                         modifier = Modifier.testTag("ferramenta_${f.name.lowercase()}"),
                         profundidade = 4.dp,
                     ) {
-                        Box(Modifier.size(width = 72.dp, height = 56.dp), contentAlignment = Alignment.Center) { Text(f.emoji, fontSize = 28.sp) }
+                        Box(Modifier.size(width = 72.dp, height = 56.dp), contentAlignment = Alignment.Center) {
+                            ImagemDeArte(f.idDaArte, Modifier.size(48.dp)) { Text(f.emoji, fontSize = 28.sp) }
+                        }
                     }
                 }
                 BotaoFofo(
@@ -248,6 +268,15 @@ fun TelaAtelie(
                                     .size(52.dp)
                                     .clip(CircleShape)
                                     .background(corDaPaleta(i))
+                                    // Gotinha de tinta de plástico: brilho no alto à esquerda e sombra embaixo.
+                                    .drawBehind {
+                                        drawCircle(Color(0x26000000), size.minDimension * 0.5f, center.copy(y = center.y + size.height * 0.12f))
+                                        drawOval(
+                                            Color.White.copy(alpha = 0.45f),
+                                            Offset(size.width * 0.22f, size.height * 0.12f),
+                                            Size(size.width * 0.32f, size.height * 0.2f),
+                                        )
+                                    }
                                     .border(if (escolhida) 5.dp else 2.dp, if (escolhida) Color.White else Color(0x33000000), CircleShape)
                                     .semantics { contentDescription = "Cor ${Atelie.paleta[i].second}" }
                                     .testTag("cor_$i")
@@ -329,8 +358,13 @@ private fun QuadroDePintar(
     val fim by rememberUpdatedState(onFim)
     Box(
         modifier
-            // Moldura de madeira com sombra, um friso claro por dentro e o papel encaixado.
-            .shadow(10.dp, RoundedCornerShape(12.dp))
+            // Moldura de madeira com um lábio escuro e sombra macia desenhados (sem a sombra borrada de elevação,
+            // que num quadro deste tamanho pesava), um friso claro por dentro e o papel encaixado.
+            .drawBehind {
+                val r = CornerRadius(12.dp.toPx())
+                drawRoundRect(Cores.Sombra, Offset(0f, 9.dp.toPx()), size, r)
+                drawRoundRect(Color(0xFF7A4B2A), Offset(0f, 5.dp.toPx()), size, r)
+            }
             .background(Brush.linearGradient(listOf(Color(0xFFE0A774), Color(0xFFC98B5B), Color(0xFFA86F43))), RoundedCornerShape(12.dp))
             .border(2.dp, Color(0xFF8A5A36), RoundedCornerShape(12.dp))
             .padding(6.dp)
@@ -455,12 +489,18 @@ private fun Galeria(
         if (estado.desenhos.isEmpty()) {
             // Mesma altura da fileira de desenhos: quando o primeiro desenho é guardado, o quadro não pula.
             Box(Modifier.fillMaxWidth().height(ALTURA_DA_GALERIA), contentAlignment = Alignment.Center) {
-                Text(
-                    "Pinte alguma coisa: o desenho fica guardado aqui sozinho!",
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                )
+                Row(
+                    Modifier.padding(horizontal = 12.dp).cartaoFofo(raio = 20.dp, labio = Cores.LabioClaro).padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    ImagemDeArte("tela_pincel", Modifier.size(56.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Pinte alguma coisa: o desenho fica guardado aqui sozinho!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
             return@Column
         }
@@ -475,7 +515,7 @@ private fun Galeria(
                     Box(
                         Modifier
                             .size(LADO_DA_MINIATURA)
-                            .shadow(3.dp, RoundedCornerShape(8.dp))
+                            .drawBehind { drawRoundRect(Cores.Sombra, Offset(0f, 3.dp.toPx()), size, CornerRadius(8.dp.toPx())) }
                             .background(Color.White, RoundedCornerShape(8.dp))
                             .border(if (d.id == aberta) 4.dp else 3.dp, if (d.id == aberta) Cores.Roxo else Color(0xFFC98B5B), RoundedCornerShape(8.dp))
                             .padding(7.dp)
@@ -503,7 +543,15 @@ private fun Galeria(
 
 @Composable
 private fun BotaoPequeno(emoji: String, descricao: String, cor: Color, onClick: () -> Unit) {
+    // 🗑️ vira a lixeira 3D da barra (IconesDaBarra); 🖼️ ainda não tem arte e continua emoji.
+    val icone = remember(emoji) { IconesDaBarra.para(emoji) }
     BotaoFofo(onClick = onClick, cor = cor, corBase = escurecer(cor, 0.7f), descricao = descricao, forma = RoundedCornerShape(12.dp), profundidade = 3.dp) {
-        Box(Modifier.size(width = 44.dp, height = 44.dp), contentAlignment = Alignment.Center) { Text(emoji, fontSize = 20.sp) }
+        Box(Modifier.size(width = 44.dp, height = 44.dp), contentAlignment = Alignment.Center) {
+            if (icone == null) {
+                Text(emoji, fontSize = 20.sp)
+            } else {
+                IconeDeArteDaBarra(icone, Modifier.size(28.dp)) { Text(emoji, fontSize = 20.sp) }
+            }
+        }
     }
 }

@@ -27,6 +27,8 @@ import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.dominio.paraRelembrar
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
+import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
+import androidx.compose.foundation.layout.size
 import br.com.casinhadosaber.ui.tema.Cores
 
 /** Convite do "Descobrir o nível" de um caminho: umas perguntas que sobem pelos mundos. Opcional. */
@@ -34,7 +36,8 @@ import br.com.casinhadosaber.ui.tema.Cores
 fun TelaConviteNivel(trilha: Trilha, nome: String?, onComecar: () -> Unit, onAgoraNao: () -> Unit) {
     val quem = if (nome.isNullOrBlank()) "você" else nome
     ConviteDaCorujinha(
-        titulo = "${trilha.emoji} Descobrir o nível",
+        titulo = "Descobrir o nível",
+        icone = { IconeDeTrilha(trilha, Modifier.size(48.dp)) },
         texto = "Será que $quem já sabe bastante de ${trilha.titulo}? Vou fazer umas perguntinhas, cada vez mais difíceis. " +
             "Não tem problema errar: é só para saber por onde começar.",
         botaoSim = "Começar",
@@ -52,7 +55,8 @@ fun TelaConviteNivel(trilha: Trilha, nome: String?, onComecar: () -> Unit, onAgo
 fun TelaResultadoNivel(nivel: Nivelamento, nome: String?, onContinuar: () -> Unit) {
     val mundo = Mundos.todos[nivel.mundoSugerido - 1]
     ConviteDaCorujinha(
-        titulo = "${nivel.trilha.emoji} ${nivel.trilha.titulo}",
+        titulo = nivel.trilha.titulo,
+        icone = { IconeDeTrilha(nivel.trilha, Modifier.size(48.dp)) },
         texto = nivel.resultado(nome),
         botaoSim = "Ver o caminho",
         onSim = onContinuar,

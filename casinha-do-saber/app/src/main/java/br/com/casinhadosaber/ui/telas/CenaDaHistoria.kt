@@ -61,6 +61,13 @@ import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Corujinha
 import br.com.casinhadosaber.ui.componentes.caminhoEstrela
 import br.com.casinhadosaber.ui.componentes.pulsando
+import br.com.casinhadosaber.ui.componentes.FiguraDaPergunta
+import br.com.casinhadosaber.ui.componentes.LadoDaCauda
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import br.com.casinhadosaber.ui.componentes.balaoDeFala
+import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
+import br.com.casinhadosaber.ui.componentes.escurecer
+import br.com.casinhadosaber.ui.componentes.pilula
 import br.com.casinhadosaber.ui.tema.Cores
 
 /**
@@ -85,7 +92,8 @@ fun CenaDaHistoria(fase: Fase, texto: String, chefao: Boolean = false, onContinu
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(corDaTrilha, cor, Cores.Fundo)))
+            // O céu de brinquedo do app (sem a grama: os morros floridos abaixo fazem o chão).
+            .ceuDeBrinquedo(comGrama = false)
             // Segura os toques: nada atrás da cena responde enquanto ela está aberta.
             .clickable(remember { MutableInteractionSource() }, indication = null) { }
             .windowInsetsPadding(WindowInsets.safeDrawing),
@@ -109,23 +117,33 @@ fun CenaDaHistoria(fase: Fase, texto: String, chefao: Boolean = false, onContinu
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Text(
-                    if (chefao) "${mundo.emoji} Você venceu o chefão!" else "${mundo.emoji} ${mundo.titulo}",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                )
-                if (chefao) {
-                    Text(capitulo.guardiao, style = MaterialTheme.typography.titleLarge, color = Color.White, textAlign = TextAlign.Center)
+                // Título em branco com contorno (o emoji do mundo fica fora do contorno, ao lado).
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                    Text(mundo.emoji, style = MaterialTheme.typography.headlineMedium)
+                    Spacer(Modifier.size(6.dp))
+                    TextoComContorno(
+                        if (chefao) "Você venceu o chefão!" else mundo.titulo,
+                        Modifier.weight(1f, fill = false),
+                        estilo = MaterialTheme.typography.headlineMedium,
+                        corDoContorno = escurecerHistoria(cor),
+                        maxLinhas = 2,
+                    )
                 }
-                // Balão de fala da Corujinha, com a pontinha grudada embaixo, apontando para ela.
+                if (chefao) {
+                    Text(
+                        capitulo.guardiao,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Cores.TextoDaPilula,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.pilula().padding(horizontal = 14.dp, vertical = 2.dp),
+                    )
+                }
+                // Balão de fala da Corujinha (o do sistema novo), com a pontinha embaixo, apontando para ela.
                 Column(Modifier.widthIn(max = 520.dp).fillMaxWidth()) {
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .shadow(6.dp, RoundedCornerShape(28.dp))
-                            .background(Color.White, RoundedCornerShape(28.dp))
-                            .border(4.dp, Color(0xFFEDE6FF), RoundedCornerShape(28.dp))
+                            .balaoDeFala(LadoDaCauda.Baixo)
                             .padding(horizontal = 20.dp, vertical = 18.dp),
                     ) {
                         Column {
@@ -142,30 +160,6 @@ fun CenaDaHistoria(fase: Fase, texto: String, chefao: Boolean = false, onContinu
                             Text(texto, style = MaterialTheme.typography.titleLarge, color = Cores.Texto)
                         }
                     }
-                    // A pontinha sobe 6 dp para dentro do balão (cobre a borda) e desce até perto da Corujinha.
-                    Canvas(
-                        Modifier
-                            .padding(start = 72.dp)
-                            .offset(y = (-6).dp)
-                            .size(width = 44.dp, height = 30.dp),
-                    ) {
-                        val ponta = Path().apply {
-                            moveTo(0f, 0f)
-                            lineTo(size.width, 0f)
-                            quadraticTo(size.width * 0.55f, size.height * 0.45f, size.width * 0.18f, size.height)
-                            quadraticTo(size.width * 0.28f, size.height * 0.45f, 0f, 0f)
-                            close()
-                        }
-                        drawPath(ponta, Color.White)
-                        // Borda lilás só nos dois lados (em cima ela se junta ao balão).
-                        val lados = Path().apply {
-                            moveTo(0f, 6.dp.toPx())
-                            quadraticTo(size.width * 0.28f, size.height * 0.45f, size.width * 0.18f, size.height)
-                            quadraticTo(size.width * 0.55f, size.height * 0.45f, size.width, 6.dp.toPx())
-                        }
-                        drawPath(lados, Color(0xFFEDE6FF), style = Stroke(4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                        drawRect(Color.White, Offset(4.dp.toPx(), 0f), Size(size.width - 8.dp.toPx(), 6.dp.toPx() + 1f))
-                    }
                 }
                 Row(
                     Modifier.fillMaxWidth().heightIn(min = 180.dp),
@@ -176,27 +170,31 @@ fun CenaDaHistoria(fase: Fase, texto: String, chefao: Boolean = false, onContinu
                     Spacer(Modifier.size(12.dp))
                     // O amigo do caminho, junto da Corujinha, num pratinho redondo com sombra.
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        // Pratinho de brinquedo: lábio na cor do mundo e sombra desenhados (círculos, sem blur).
                         Box(
                             Modifier
                                 .size(104.dp)
                                 .drawBehind {
-                                    drawOval(Color(0x33000000), Offset(size.width * 0.1f, size.height * 0.86f), Size(size.width * 0.8f, size.height * 0.16f))
+                                    val r = size.minDimension / 2
+                                    drawCircle(Cores.Sombra, r, center.copy(y = center.y + 9.dp.toPx()))
+                                    drawCircle(escurecerHistoria(cor), r, center.copy(y = center.y + 5.dp.toPx()))
                                 }
-                                .shadow(4.dp, CircleShape)
                                 .background(Brush.radialGradient(listOf(Color.White, Color(0xFFFFF3D6))), CircleShape)
-                                .border(4.dp, cor.copy(alpha = 0.55f), CircleShape),
+                                .border(4.dp, Color.White, CircleShape),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(capitulo.amigo.emoji, fontSize = 52.sp, lineHeight = 60.sp)
+                            FiguraDaPergunta(capitulo.amigo.emoji, 80.dp) {
+                                Text(capitulo.amigo.emoji, fontSize = 52.sp, lineHeight = 60.sp)
+                            }
                         }
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(8.dp))
                         Text(
                             capitulo.amigo.nome.substringBefore(","),
                             style = MaterialTheme.typography.titleMedium,
-                            color = Cores.Texto,
+                            color = Cores.TextoDaPilula,
                             modifier = Modifier
-                                .background(Color.White.copy(alpha = 0.85f), RoundedCornerShape(50))
-                                .padding(horizontal = 10.dp, vertical = 2.dp),
+                                .pilula()
+                                .padding(horizontal = 12.dp, vertical = 2.dp),
                         )
                     }
                 }
@@ -212,19 +210,29 @@ fun CenaDaHistoria(fase: Fase, texto: String, chefao: Boolean = false, onContinu
                     .testTag("historia_continuar")
                     .pulsando(),
             ) {
-                Text(
-                    if (chefao) "🎉 Oba!" else "▶ Vamos lá!",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 18.dp),
-                )
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 14.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // O símbolo fica fora do contorno (emoji com traço sairia duplicado).
+                    Text(if (chefao) "🎉" else "▶", style = MaterialTheme.typography.headlineMedium, color = Color.White)
+                    Spacer(Modifier.size(8.dp))
+                    TextoComContorno(
+                        if (chefao) "Oba!" else "Vamos lá!",
+                        estilo = MaterialTheme.typography.headlineMedium,
+                        corDoContorno = Cores.ContornoEscuro,
+                        espessura = 3.dp,
+                        profundidade = 2.dp,
+                    )
+                }
             }
         }
     }
 }
+
+/** Contorno e lábio na cor do mundo, mais escura (lê bem sobre o céu claro). */
+private fun escurecerHistoria(cor: Color): Color = escurecer(cor, 0.62f)
 
 /**
  * Dois morros (um mais claro atrás) com florzinhas, moitas e uma arvorezinha, para o chão da história não
