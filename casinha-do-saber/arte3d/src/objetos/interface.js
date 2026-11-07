@@ -9,11 +9,11 @@ import { estrela3D } from './estrela3D.js';
 
 /** Roxo dos glifos das maquetes (botões redondos). */
 export const ROXO = '#5a3df2';
-const roxo = () => plastico(ROXO, { rugosidade: 0.24, verniz: 1, rugosidadeVerniz: 0.1, ambiente: 0.5 });
-const brancoPlastico = () => plastico('#ffffff', { rugosidade: 0.3, verniz: 1, ambiente: 0.45 });
+export const roxo = () => plastico(ROXO, { rugosidade: 0.24, verniz: 1, rugosidadeVerniz: 0.1, ambiente: 0.5 });
+export const brancoPlastico = () => plastico('#ffffff', { rugosidade: 0.3, verniz: 1, ambiente: 0.45 });
 
 /** Glifo levemente girado para mostrar a espessura, com âncora no centro. */
-function glifo(g, { giroY = -0.28, giroX = 0.1 } = {}) {
+export function glifo(g, { giroY = -0.28, giroX = 0.1 } = {}) {
   const fora = new THREE.Group();
   g.rotation.set(giroX, giroY, 0);
   fora.add(g);
@@ -22,7 +22,7 @@ function glifo(g, { giroY = -0.28, giroX = 0.1 } = {}) {
 }
 
 /** Tubo de pontas redondas entre dois pontos do plano XY (traço de caneta em plástico). */
-function traco([x0, y0], [x1, y1], r, mat) {
+export function traco([x0, y0], [x1, y1], r, mat) {
   const L = Math.hypot(x1 - x0, y1 - y0);
   const c = capsula(r, L, mat);
   c.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0);
@@ -31,7 +31,7 @@ function traco([x0, y0], [x1, y1], r, mat) {
 }
 
 /** Arco de tubo (centro, raio, ângulo inicial e final) com as pontas arredondadas. */
-function arcoDeTubo([cx, cy], R, a0, a1, r, mat) {
+export function arcoDeTubo([cx, cy], R, a0, a1, r, mat) {
   const g = new THREE.Group();
   const t = malha(new THREE.TorusGeometry(R, r, 20, 48, a1 - a0), mat);
   t.rotation.z = a0;
@@ -41,7 +41,7 @@ function arcoDeTubo([cx, cy], R, a0, a1, r, mat) {
 }
 
 /** Polígono com cantos arredondados (raio por canto ou um raio para todos). */
-function poligono(pontos, raio, alvo = new THREE.Shape()) {
+export function poligono(pontos, raio, alvo = new THREE.Shape()) {
   const n = pontos.length;
   const rs = Array.isArray(raio) ? raio : pontos.map(() => raio);
   const v = pontos.map((p) => new THREE.Vector2(...p));
@@ -59,7 +59,7 @@ function poligono(pontos, raio, alvo = new THREE.Shape()) {
 }
 
 /** Forma plana extrudada com bisel redondo (bala de goma), centrada em z = 0. */
-function extrudar(forma, prof, mat, bisel = 0.08) {
+export function extrudar(forma, prof, mat, bisel = 0.08) {
   const geo = new THREE.ExtrudeGeometry(forma, { depth: prof, bevelEnabled: true, bevelThickness: bisel, bevelSize: bisel, bevelSegments: 8, curveSegments: 24 });
   geo.translate(0, 0, -prof / 2);
   return malha(geo, mat);
