@@ -85,6 +85,7 @@ async function main() {
       const arquivo = id + '.webp';
       fs.writeFileSync(path.join(DESTINO, arquivo), webp);
       imagens[id] = { arquivo, tipo: r.tipo, largura: r.largura, altura: r.altura, uso: r.uso, apoio: r.apoio, ancoras: r.ancoras };
+      if (r.iso !== undefined) imagens[id].iso = r.iso;
       if (r.grupo !== undefined) Object.assign(imagens[id], { grupo: r.grupo, tingir: r.tingir, ordem: r.ordem, personagem: r.personagem });
       if (r.esconde) imagens[id].esconde = r.esconde;
       if (r.dados) Object.assign(imagens[id], r.dados);

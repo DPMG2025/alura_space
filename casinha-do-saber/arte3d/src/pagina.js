@@ -2,7 +2,7 @@
 // renderiza com fundo transparente e devolve o PNG e os pontos (apoio e âncoras) em pixels.
 // Quem chama é o render.js, pelo Playwright: window.renderizar(id, escala, superamostra).
 import { THREE, palco, luzes } from './kit.js';
-import { tiposDeCamera, filtroFinal } from './cameras.js';
+import { tiposDeCamera, filtroFinal, ISO } from './cameras.js';
 // ?catalogo=fase5 carrega src/catalogo_fase5.js (catálogos de fases paralelas, juntados depois ao principal)
 const nomeDoCatalogo = new URLSearchParams(location.search).get('catalogo');
 if (nomeDoCatalogo && !/^[a-z0-9_]+$/.test(nomeDoCatalogo)) throw new Error('catálogo inválido: ' + nomeDoCatalogo);
@@ -75,7 +75,7 @@ function verticesDoMundo(obj) {
   const v = new THREE.Vector3();
   obj.updateMatrixWorld(true);
   obj.traverse((o) => {
-    if (!o.isMesh) return;
+    if (!o.isMesh || o.userData.semVertices) return;
     const pos = o.geometry.attributes.position;
     for (let i = 0; i < pos.count; i++) pts.push(v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld).clone());
   });
@@ -146,11 +146,118 @@ function paraPixel(cam, ponto, largura, altura) {
   return { x: ((p.x + 1) / 2) * largura, y: ((1 - p.y) / 2) * altura };
 }
 
+/**
+ * Câmera 'isometrico' (casa por dentro): ortográfica, com a projeção de Isometrico.kt. O objeto vem em
+ * coordenadas da planta (ladrilhos; ver cameras.js); [item.referencia] = { x, y, z } da planta é o ponto que
+ * vira o apoio. O recorte é justo em volta do objeto, em pixels inteiros contados a partir do apoio, então o
+ * app acerta a grade desenhando o apoio em Projecao.ponto(x, y, z).
+ */
+function renderizarIsometrico(item, cfg, escala, superamostra) {
+  const k = (cfg.ladrilho * escala) / Math.SQRT2; // pixels finais por unidade do mundo (no plano da tela)
+  const canvas = document.createElement('canvas');
+  const p = palco(canvas, { largura: 16, altura: 16, fov: cfg.fov, pixelRatio: 1 });
+  const raiz = new THREE.Group();
+  raiz.scale.y = ISO.escalaAltura;
+  const obj = item.montar();
+  raiz.add(obj);
+  const r = item.referencia;
+  const ref = new THREE.Vector3(r.x, r.z * ISO.escalaAltura, r.y);
+  if (item.sombra) raiz.add(sombraIsometrica(item.sombra));
+  p.cena.add(raiz);
+  raiz.updateMatrixWorld(true);
+
+  const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
+  const dir = new THREE.Vector3(Math.cos(ISO.elevacao) * Math.sin(ISO.azimute), Math.sin(ISO.elevacao), Math.cos(ISO.elevacao) * Math.cos(ISO.azimute));
+  cam.position.copy(ref).addScaledVector(dir, 100);
+  cam.up.set(0, 1, 0);
+  cam.lookAt(ref);
+  cam.updateMatrixWorld(true);
+  const inv = cam.matrixWorldInverse;
+  let u0 = Infinity, u1 = -Infinity, v0 = Infinity, v1 = -Infinity;
+  for (const q of verticesDoMundo(raiz)) {
+    q.applyMatrix4(inv);
+    u0 = Math.min(u0, q.x); u1 = Math.max(u1, q.x);
+    v0 = Math.min(v0, q.y); v1 = Math.max(v1, q.y);
+  }
+  const m = cfg.margemPx;
+  const x0 = Math.floor(u0 * k) - m;
+  let x1 = Math.ceil(u1 * k) + m;
+  const y0 = Math.floor(-v1 * k) - m; // topo da imagem, em pixels abaixo do apoio (negativo = acima)
+  let y1 = Math.ceil(-v0 * k) + m;
+  if ((x1 - x0) % 2) x1++;
+  if ((y1 - y0) % 2) y1++;
+  const largura = x1 - x0, altura = y1 - y0;
+  cam.left = x0 / k; cam.right = x1 / k; cam.top = -y0 / k; cam.bottom = -y1 / k;
+  cam.updateProjectionMatrix();
+
+  const L = largura * superamostra, A = altura * superamostra;
+  p.r.setSize(L, A, false);
+  const sol = cfg.luzes.sol.map((v, i) => v + ref.getComponent(i));
+  luzes(p.cena, { ...cfg.luzes, ...(item.luzes || {}), sol, alvo: ref.toArray(), area: cfg.luzes.area + (item.areaDeLuz || 0) });
+  p.r.render(p.cena, cam);
+
+  const saida = document.createElement('canvas');
+  saida.width = L; saida.height = A;
+  const ctx = saida.getContext('2d');
+  ctx.filter = filtroFinal;
+  ctx.drawImage(canvas, 0, 0);
+  const png = saida.toDataURL('image/png');
+
+  const apoio = { x: -x0, y: -y0 };
+  const ancoras = {};
+  obj.traverse((o) => {
+    if (!o.userData.ancora) return;
+    const q = o.getWorldPosition(new THREE.Vector3()).applyMatrix4(inv);
+    ancoras[o.userData.ancora] = { x: Math.round(q.x * k) - x0, y: Math.round(-q.y * k) - y0 };
+  });
+  p.r.dispose();
+  p.r.forceContextLoss();
+  const uso = { largura: largura / escala, altura: altura / escala };
+  const iso = { ladrilho: cfg.ladrilho, unidadeZ: cfg.unidadeZ, referencia: item.referencia, ...(item.iso || {}) };
+  return { png, largura, altura, tipo: item.tipo, uso, apoio, ancoras, bordas: [], iso };
+}
+
+/**
+ * Sombra de contato da casa por dentro: retângulo de cantos redondos, macio, deitado em y = [z] (altura da
+ * base), um pouco maior que a pegada ([x0], [y0]) a ([x1], [y1]) da planta.
+ */
+function sombraIsometrica({ x0, y0, x1, y1, z = 0, folga = 0.1, forca = 0.34 }) {
+  const cv = document.createElement('canvas');
+  const N = 256;
+  cv.width = cv.height = N;
+  const ctx = cv.getContext('2d');
+  ctx.filter = `blur(${N * 0.06}px)`;
+  ctx.fillStyle = `rgba(46,24,74,${forca})`;
+  const b = N * 0.16;
+  ctx.beginPath();
+  ctx.roundRect(b, b, N - 2 * b, N - 2 * b, N * 0.12);
+  ctx.fill();
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  // o quadrado útil (sem a borda b) cobre a pegada mais a folga
+  const w = (x1 - x0 + 2 * folga) / (1 - 0.32), d = (y1 - y0 + 2 * folga) / (1 - 0.32);
+  const plano = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false }));
+  plano.rotation.x = -Math.PI / 2;
+  plano.position.set((x0 + x1) / 2, z + 0.004, (y0 + y1) / 2);
+  plano.renderOrder = -1;
+  plano.userData.semVertices = true;
+  // só a parte visível conta para o recorte
+  const g = new THREE.Group();
+  g.add(plano);
+  const caixaUtil = new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(x0 - folga, z, y0 - folga), new THREE.Vector3(x1 + folga, z, y0 - folga),
+    new THREE.Vector3(x1 + folga, z, y1 + folga), new THREE.Vector3(x0 - folga, z, y1 + folga),
+  ]), new THREE.MeshBasicMaterial({ visible: false }));
+  g.add(caixaUtil);
+  return g;
+}
+
 window.renderizar = (id, escala, superamostra) => {
   const item = catalogo.find((c) => c.id === id);
   if (!item) throw new Error('objeto fora do catálogo: ' + id);
   const cfg = tiposDeCamera[item.tipo];
   if (!cfg) throw new Error('tipo de câmera desconhecido: ' + item.tipo);
+  if (cfg.enquadrar === 'isometrico') return renderizarIsometrico(item, cfg, escala, superamostra);
   // tamanho final (o que vai para o app) e tamanho do render (superamostrado, o Node reduz depois)
   const largura = Math.round(item.uso.largura * escala), altura = Math.round(item.uso.altura * escala);
   const L = largura * superamostra, A = altura * superamostra;

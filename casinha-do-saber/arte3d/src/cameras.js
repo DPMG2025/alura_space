@@ -87,6 +87,31 @@ export const tiposDeCamera = {
     sombraDeContato: false,
     cortaNaBorda: true,
   },
+  isometrico: {
+    // Casa por dentro (Fase 6): câmera ORTOGRÁFICA com a mesma projeção de ui/componentes/Isometrico.kt
+    // (Projecao): isométrica 2:1, azimute 45 graus e elevação 30 graus (sen 30 = 1/2, o losango do ladrilho
+    // tem metade da altura da largura). Mundo em ladrilhos: x do mundo = x da planta, z do mundo = y da
+    // planta (do fundo para a frente) e y do mundo = altura z da planta. Na tela, um ladrilho tem
+    // [ladrilho] dp de largura (meioL = ladrilho / 2, meioA = ladrilho / 4) e uma unidade de altura mede
+    // unidadeZ = 0,56 x ladrilho, como no app. A câmera pura daria cos 30 / raiz 2 = 0,6124 x ladrilho por
+    // unidade de altura; [escalaAltura] = 0,56 / 0,6124 achata o mundo em y para bater com o app.
+    // Recorte justo em volta do objeto, em pixels inteiros a partir do ponto de referência (o apoio), então
+    // a grade do piso cai no mesmo pixel em todas as imagens.
+    enquadrar: 'isometrico',
+    ladrilho: 64, // dp por ladrilho na imagem (128 px no dobro); o app escala por tw / (ladrilho x densidade)
+    unidadeZ: 0.56,
+    margemPx: 6, // folga transparente em volta, em pixels finais
+    fov: 30, // só para o palco; a câmera usada é ortográfica
+    luzes: { sol: [3, 5.5, 7.5], forca: 1.8, area: 6, amb: 0.55 },
+    sombraDeContato: false,
+  },
+};
+
+/** Ângulos e escala da câmera 'isometrico' (Isometrico.kt): azimute 45, elevação 30. */
+export const ISO = {
+  azimute: Math.PI / 4,
+  elevacao: Math.PI / 6,
+  get escalaAltura() { return tiposDeCamera.isometrico.unidadeZ / (Math.cos(this.elevacao) / Math.SQRT2); },
 };
 
 /** Ajuste final de cor do protótipo (ui2.css: canvas.cena). */
