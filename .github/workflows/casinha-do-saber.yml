@@ -508,7 +508,7 @@ jobs:
           Para atualizar depois, baixe e instale de novo por cima: o progresso fica guardado."
 
       # O token do workflow não pôde criar o release (403 em /releases). Alternativa: guardar o APK no próprio repositório,
-      # onde o dono do produto baixa pelo navegador (casinha-do-saber/docs/apk-parcial/CasinhaDoSaber-parcial.apk).
+      # onde o dono do produto baixa pelo navegador (casinha-do-saber/docs/apk/CasinhaDoSaber.apk).
       - name: Guardar o APK no repositório (se o release falhou)
         if: steps.release.outcome == 'failure'
         env:
@@ -516,13 +516,13 @@ jobs:
           RUN_ALVO: ${{ steps.alvo.outputs.run }}
         run: |
           git clone --depth 1 --branch "${GITHUB_REF_NAME}" "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" repo
-          mkdir -p repo/casinha-do-saber/docs/apk-parcial
-          cp CasinhaDoSaber.apk repo/casinha-do-saber/docs/apk-parcial/CasinhaDoSaber-parcial.apk
-          printf 'APK parcial do commit %s (execução %s). Sem o polimento final e sem os ícones e figuras 3D da segunda rodada.\nPassou no build (testes, lint, tamanho), no emulador de tablet e nos Androids 7 e 8; ainda não passou no emulador de celular do CI.\n' "$ALVO" "$RUN_ALVO" > repo/casinha-do-saber/docs/apk-parcial/LEIAME.txt
+          mkdir -p repo/casinha-do-saber/docs/apk
+          cp CasinhaDoSaber.apk repo/casinha-do-saber/docs/apk/CasinhaDoSaber.apk
+          printf 'APK do commit %s (execução %s) com o visual brinquedo 3D (Fases 0 a 9 e duas rodadas de acabamento).\nO estado dos testes desse commit está em casinha-do-saber/docs/visual-3d/ESTADO.md. Instalar: baixar o arquivo, abrir e permitir fontes desconhecidas se o Android pedir.\n' "$ALVO" "$RUN_ALVO" > repo/casinha-do-saber/docs/apk/LEIAME.txt
           cd repo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f casinha-do-saber/docs/apk-parcial/CasinhaDoSaber-parcial.apk casinha-do-saber/docs/apk-parcial/LEIAME.txt
+          git add -f casinha-do-saber/docs/apk/CasinhaDoSaber.apk casinha-do-saber/docs/apk/LEIAME.txt
           git commit -m "APK parcial (execução ${RUN_ALVO}, commit ${ALVO::7}) [skip ci]"
           for tentativa in 1 2 3 4 5; do
             git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break
