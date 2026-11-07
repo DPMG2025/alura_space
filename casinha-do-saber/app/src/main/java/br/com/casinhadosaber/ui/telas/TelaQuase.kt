@@ -1,64 +1,84 @@
 package br.com.casinhadosaber.ui.telas
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Fase
 import br.com.casinhadosaber.dominio.Perfil
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
+import br.com.casinhadosaber.ui.componentes.AnelDeToque
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
+import br.com.casinhadosaber.ui.componentes.CorDaConta
 import br.com.casinhadosaber.ui.componentes.Crianca
-import br.com.casinhadosaber.ui.componentes.Irmaozinho
+import br.com.casinhadosaber.ui.componentes.Estrela
 import br.com.casinhadosaber.ui.componentes.Humor
-import br.com.casinhadosaber.ui.componentes.MaoGuia
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.Irmaozinho
+import br.com.casinhadosaber.ui.componentes.PecasDoPremio
+import br.com.casinhadosaber.ui.componentes.Pilula
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import br.com.casinhadosaber.ui.componentes.animacoesLigadas
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
+import kotlinx.coroutines.delay
+
+/** Céu do Quase: azul em cima, pêssego e rosa embaixo (o céu das ilhas do PRD), mais calmo que o roxo do prêmio. */
+private val FUNDO_DO_QUASE = Brush.verticalGradient(
+    0f to Color(0xFF8FCBFF),
+    0.55f to Color(0xFFFFDCC4),
+    1f to Color(0xFFFFC6DA),
+)
 
 /**
- * A fase não foi vencida (menos de 3 acertos de primeira). Sem bronca: o presente
- * continua fechado, tremendo de vontade de abrir, e a criança é convidada a tentar de novo.
+ * A fase não foi vencida (menos de 4 acertos de primeira). Sem bronca: a estrela da fase está dormindo e a
+ * sementinha cresce um pouco a cada acerto de primeira (`quase_semente_1..4`; a flor é vencer a fase). As contas
+ * mostram os acertos, com o presente fechado na quarta, e a criança é convidada a tentar de novo.
  */
 @Composable
 fun TelaQuase(
@@ -70,8 +90,14 @@ fun TelaQuase(
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
-    val tremor = rememberInfiniteTransition(label = "tremor")
-    val giro by tremor.animateFloat(-6f, 6f, infiniteRepeatable(tween(140), RepeatMode.Reverse), label = "giro")
+    val animado = animacoesLigadas()
+    val minimo = EstadoJogo.MINIMO_PARA_VENCER
+    val estagio = PecasDoPremio.estagioDaSemente(acertos, minimo)
+    // A semente nasce pequena e cresce, quadro a quadro, até o tamanho que os acertos deram.
+    var visivel by remember { mutableIntStateOf(if (animado) 1 else estagio) }
+    val pulo = remember { Animatable(1f) }
+    val boia = rememberInfiniteTransition(label = "estrelaDormindo")
+    val sobe by boia.animateFloat(-4f, 4f, infiniteRepeatable(tween(1600), RepeatMode.Reverse), label = "sobe")
 
     LaunchedEffect(Unit) {
         sons.toque()
@@ -80,83 +106,109 @@ fun TelaQuase(
                 "Para abrir, acerte quatro de primeira. Vamos tentar de novo?",
         )
     }
+    LaunchedEffect(Unit) {
+        while (visivel < estagio) {
+            delay(650)
+            visivel++
+        }
+    }
+    LaunchedEffect(visivel) {
+        if (visivel > 1) {
+            pulo.snapTo(0.82f)
+            pulo.animateTo(1f, spring(dampingRatio = 0.4f, stiffness = 300f))
+        }
+    }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(fase.trilha.corArgb), Cores.Fundo)))
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text("Quase!", style = MaterialTheme.typography.displayLarge, color = Color.White)
-        Spacer(Modifier.height(8.dp))
-        // Cinco bolinhas: verdes as que acertou de primeira; o alvo (4) fica marcado.
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            repeat(5) { k ->
-                Box(
-                    Modifier
-                        .size(if (k == EstadoJogo.MINIMO_PARA_VENCER - 1) 30.dp else 24.dp)
-                        .background(if (k < acertos) Cores.Certo else Color.White, CircleShape)
-                        .border(3.dp, if (k == EstadoJogo.MINIMO_PARA_VENCER - 1) Cores.Estrela else Color(0x33000000), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (k == EstadoJogo.MINIMO_PARA_VENCER - 1) Text("🎁", fontSize = 14.sp)
-                }
-            }
-        }
-        Spacer(Modifier.height(20.dp))
-        // O presente é desenhado (e não um emoji ampliado, que fica borrado): nítido em qualquer tela.
-        // Um holofote suave desce de cima e ilumina o presente.
-        Box(
+    BoxWithConstraints(Modifier.fillMaxSize().background(FUNDO_DO_QUASE)) {
+        val alta = maxHeight > 720.dp
+        Column(
             Modifier
-                .size(190.dp)
-                .drawBehind {
-                    val c = center
-                    val feixe = Path().apply {
-                        moveTo(c.x - 26.dp.toPx(), c.y - 420.dp.toPx())
-                        lineTo(c.x + 26.dp.toPx(), c.y - 420.dp.toPx())
-                        lineTo(c.x + size.width * 0.5f, c.y)
-                        lineTo(c.x - size.width * 0.5f, c.y)
-                        close()
-                    }
-                    drawPath(feixe, Brush.verticalGradient(listOf(Color.White.copy(alpha = 0f), Color.White.copy(alpha = 0.32f)), startY = c.y - 420.dp.toPx(), endY = c.y))
-                    drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.7f), Color.White.copy(alpha = 0f)), c, size.width * 0.75f), size.width * 0.75f, c)
-                }
-                .background(Color.White.copy(alpha = 0.88f), CircleShape),
-            contentAlignment = Alignment.Center,
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = maxHeight)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            PresenteFechado(Modifier.size(120.dp).graphicsLayer { rotationZ = giro })
-            Text("🔒", fontSize = 32.sp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp))
-        }
-        Spacer(Modifier.height(12.dp))
-        perfil?.let {
-            Row(verticalAlignment = Alignment.Bottom) {
-                Crianca(it, Modifier.height(130.dp), humor = Humor.TORCENDO)
-                // O irmãozinho dá tchau, animando para tentar de novo.
-                if (it.irmao.ligado) Irmaozinho(it, Modifier.height(86.dp), acenando = true)
-            }
-        }
-        Spacer(Modifier.height(20.dp))
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            BotaoRedondo("🗺️", "Voltar para o caminho", onVoltar, tamanho = 60.dp)
-            Box {
-                BotaoFofo(onClick = onTentarDeNovo, cor = Cores.Certo, modifier = Modifier.pulsando(), descricao = "Tentar de novo") {
-                    Text(
-                        "🔄 De novo",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White,
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
-                    )
+            TextoComContorno("Quase!", estilo = MaterialTheme.typography.displayLarge)
+            TextoComContorno(
+                "A sementinha está crescendo!",
+                estilo = MaterialTheme.typography.titleLarge,
+                espessura = 3.dp,
+                profundidade = 2.dp,
+                maxLinhas = 2,
+            )
+            Spacer(Modifier.height(10.dp))
+            // Cinco contas: verdes as que acertou de primeira; depois da quarta (o alvo), o presente fechado.
+            Pilula(descricao = "Você acertou $acertos de primeira. Para abrir o presente, acerte $minimo.") {
+                repeat(5) { k ->
+                    val alvo = k == minimo - 1
+                    ImagemDeArte(if (k < acertos) CorDaConta.VERDE.id else CorDaConta.VAZIA, Modifier.size(if (alvo) 30.dp else 24.dp))
+                    if (alvo) {
+                        ImagemDeArte(PecasDoPremio.PRESENTE_FECHADO, Modifier.size(38.dp)) { PresenteFechado(Modifier.size(32.dp)) }
+                    }
                 }
-                MaoGuia(Modifier.align(Alignment.BottomEnd).offset(x = 30.dp, y = 34.dp), espera = 2500)
+            }
+            Spacer(Modifier.height(12.dp))
+            // A cena: luz macia, a estrela da fase dormindo (ela acorda quando a fase for vencida) e a semente.
+            val alturaDaCena = if (alta) 250.dp else 200.dp
+            Box(Modifier.size(alturaDaCena * 1.2f, alturaDaCena)) {
+                Canvas(Modifier.fillMaxSize()) {
+                    val c = Offset(size.width * 0.45f, size.height * 0.62f)
+                    val r = size.minDimension * 0.6f
+                    drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.75f), Color.White.copy(alpha = 0f)), c, r), r, c)
+                }
+                ImagemDeArte(
+                    PecasDoPremio.ESTRELA_DORMINDO,
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .size(alturaDaCena * 0.42f)
+                        .graphicsLayer { translationY = if (animado) sobe.dp.toPx() else 0f; rotationZ = 8f },
+                    descricao = "A estrela está dormindo",
+                ) { Estrela(false, tamanho = alturaDaCena * 0.36f) }
+                ImagemDeArte(
+                    PecasDoPremio.idDaSemente(visivel),
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .offset(x = -alturaDaCena * 0.06f)
+                        .size(alturaDaCena * 0.62f, alturaDaCena * 0.86f)
+                        .graphicsLayer {
+                            transformOrigin = TransformOrigin(0.5f, 0.8f)
+                            scaleX = 2f - pulo.value
+                            scaleY = pulo.value
+                        },
+                    descricao = "A sementinha",
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            perfil?.let {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Crianca(it, Modifier.height(if (alta) 140.dp else 116.dp), humor = Humor.TORCENDO)
+                    // O irmãozinho dá tchau, animando para tentar de novo.
+                    if (it.irmao.ligado) Irmaozinho(it, Modifier.height(if (alta) 100.dp else 84.dp), acenando = true)
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                BotaoRedondo("⬅️", "Voltar para o caminho", onVoltar, tamanho = 56.dp)
+                Box {
+                    BotaoFofo(onClick = onTentarDeNovo, cor = Cores.Certo, modifier = Modifier.pulsando(), descricao = "Tentar de novo") {
+                        TextoComContorno(
+                            "De novo",
+                            estilo = MaterialTheme.typography.headlineMedium,
+                            corDoContorno = Cores.ContornoEscuro,
+                            modifier = Modifier.padding(horizontal = 26.dp, vertical = 12.dp),
+                        )
+                    }
+                    if (animado) AnelDeToque(Modifier.align(Alignment.CenterEnd).offset(x = 22.dp).size(56.dp), espera = 2500)
+                }
             }
         }
     }
 }
 
-/** Caixa de presente desenhada em Canvas: tampa, fita vermelha, laço com contorno e brilho. */
+/** Caixa de presente desenhada em Canvas (reserva do presente 3D nas contas): tampa, fita vermelha, laço e brilho. */
 @Composable
 private fun PresenteFechado(modifier: Modifier) {
     Canvas(modifier) {
