@@ -45,6 +45,16 @@ class DiagnosticoTelasTest {
     @get:Rule
     val regra = createAndroidComposeRule<ComponentActivity>()
 
+    @org.junit.After
+    fun registrarMemoria() {
+        val rt = Runtime.getRuntime()
+        android.util.Log.w(
+            "MEM",
+            "java=${(rt.totalMemory() - rt.freeMemory()) / 1048576}MB max=${rt.maxMemory() / 1048576}MB " +
+                "nativo=${android.os.Debug.getNativeHeapAllocatedSize() / 1048576}MB",
+        )
+    }
+
     private val menina = Perfil("Ana", Genero.MENINA, pele = 2, cabelo = 1)
 
     private fun mostrar(conteudo: @Composable () -> Unit) {

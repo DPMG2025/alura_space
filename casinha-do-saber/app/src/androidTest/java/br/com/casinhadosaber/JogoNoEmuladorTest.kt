@@ -94,6 +94,17 @@ class JogoNoEmuladorTest {
     @After
     fun fechar() {
         cenario?.close()
+        registrarMemoria()
+    }
+
+    /** Memória do app no fim de cada teste (aviso no logcat do CI, tag MEM): mostra se algo cresce entre os testes. */
+    private fun registrarMemoria() {
+        val rt = Runtime.getRuntime()
+        android.util.Log.w(
+            "MEM",
+            "java=${(rt.totalMemory() - rt.freeMemory()) / 1048576}MB max=${rt.maxMemory() / 1048576}MB " +
+                "nativo=${android.os.Debug.getNativeHeapAllocatedSize() / 1048576}MB",
+        )
     }
 
     private fun capturar(nome: String) {
