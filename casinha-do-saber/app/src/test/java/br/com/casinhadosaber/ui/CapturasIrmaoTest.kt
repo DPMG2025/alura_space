@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -89,13 +90,19 @@ class CapturasIrmaoTest {
     @Test fun rostos() = capturar("70_rostos_e_irmaos") {
         Column(
             Modifier.fillMaxSize().padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
+            // Dois humores por fileira (os quatro numa fileira só passavam da borda direita em 393 dp e se
+            // sobrepunham): cada par criança e irmão numa metade da largura, sem encostar no vizinho.
             for (p in listOf(menina, comIrma, menino)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.Bottom) {
-                    for (h in listOf(Humor.FELIZ, Humor.TORCENDO, Humor.PENSANDO, Humor.SURPRESO)) {
-                        Crianca(p, Modifier.height(140.dp), humor = h, animado = false)
-                        Irmaozinho(p, Modifier.height(92.dp), humor = h, animado = false)
+                for (humores in listOf(Humor.FELIZ, Humor.TORCENDO, Humor.PENSANDO, Humor.SURPRESO).chunked(2)) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+                        for (h in humores) {
+                            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.Bottom) {
+                                Crianca(p, Modifier.height(122.dp), humor = h, animado = false)
+                                Irmaozinho(p, Modifier.height(80.dp), humor = h, animado = false)
+                            }
+                        }
                     }
                 }
             }

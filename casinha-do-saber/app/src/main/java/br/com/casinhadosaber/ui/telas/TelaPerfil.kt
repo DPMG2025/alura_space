@@ -1,13 +1,17 @@
 package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,10 +19,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -38,33 +45,23 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import br.com.casinhadosaber.ui.componentes.caminhoEstrela
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.Aparencia
 import br.com.casinhadosaber.dominio.Genero
 import br.com.casinhadosaber.dominio.Perfil
@@ -72,13 +69,22 @@ import br.com.casinhadosaber.dominio.Produto
 import br.com.casinhadosaber.dominio.Serializacao
 import br.com.casinhadosaber.dominio.tirando
 import br.com.casinhadosaber.dominio.vestindo
-import br.com.casinhadosaber.ui.componentes.Provador
-import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
+import br.com.casinhadosaber.ui.componentes.BotaoRedondo
+import br.com.casinhadosaber.ui.componentes.CeuDaEntrada
 import br.com.casinhadosaber.ui.componentes.Crianca
+import br.com.casinhadosaber.ui.componentes.IlhaAtras
+import br.com.casinhadosaber.ui.componentes.LabioDoVerde
 import br.com.casinhadosaber.ui.componentes.MaoGuia
+import br.com.casinhadosaber.ui.componentes.NuvensDoCeu
+import br.com.casinhadosaber.ui.componentes.Provador
+import br.com.casinhadosaber.ui.componentes.TextoDoBotao
+import br.com.casinhadosaber.ui.componentes.TituloDeBrinquedo
+import br.com.casinhadosaber.ui.componentes.VerdeDoPronto
+import br.com.casinhadosaber.ui.componentes.faceDeBrinquedo
+import br.com.casinhadosaber.ui.componentes.pilula
 import br.com.casinhadosaber.ui.componentes.pulsando
 import br.com.casinhadosaber.ui.tema.Cores
 
@@ -153,194 +159,255 @@ fun TelaPerfil(
         mudancas++
     }
 
-    Column(
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Cores.Ceu, Cores.Fundo)))
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .background(CeuDaEntrada)
+            .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        if (onVoltar != null) {
-            Box(Modifier.fillMaxWidth()) {
-                BotaoRedondo("⬅️", "Voltar", onVoltar, Modifier.align(Alignment.CenterStart), tamanho = 52.dp)
-                Text(if (espelho) "🪞" else "Casinha do Saber", style = MaterialTheme.typography.headlineLarge, color = Color.White, modifier = Modifier.align(Alignment.Center))
-            }
-        } else {
-            Text("Casinha do Saber", style = MaterialTheme.typography.headlineLarge, color = Color.White)
-        }
-        Spacer(Modifier.height(8.dp))
-
-        if (g == null) {
-            // Ainda não escolheu: os dois cartões grandes, com a mãozinha mostrando.
-            Spacer(Modifier.height(72.dp))
-            Text("Quem vai morar na casinha?", style = MaterialTheme.typography.headlineMedium, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-            Spacer(Modifier.height(28.dp))
-            Box {
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    for (opcao in Genero.entries) {
-                        val rotulo = if (opcao == Genero.MENINO) "Menino" else "Menina"
-                        // O cartão afunda um pouquinho ao tocar e volta com mola.
-                        val toque = remember { MutableInteractionSource() }
-                        val apertado by toque.collectIsPressedAsState()
-                        val escala by animateFloatAsState(if (apertado) 0.94f else 1f, spring(dampingRatio = 0.4f), label = "cartao")
-                        Column(
-                            Modifier
-                                .weight(1f)
-                                .graphicsLayer { scaleX = escala; scaleY = escala }
-                                .shadow(6.dp, RoundedCornerShape(28.dp))
-                                .background(Color.White, RoundedCornerShape(28.dp))
-                                .clickable(interactionSource = toque, indication = null, role = Role.RadioButton) { escolher("$rotulo!") { genero = opcao } }
-                                .padding(12.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            // A largura manda no tamanho: o braço que dá tchau fica dentro do cartão.
-                            Box(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 6.dp)
-                                    .background(Brush.radialGradient(listOf(Color(0xFFE3F4FF), Color.White)), RoundedCornerShape(22.dp)),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Crianca(Perfil("", opcao, pele, cabelo, -1), Modifier.fillMaxWidth(0.8f).padding(vertical = 8.dp).pulsando(), acenando = true)
-                            }
-                            Text(rotulo, style = MaterialTheme.typography.titleLarge)
-                        }
-                    }
-                }
-                MaoGuia(Modifier.align(Alignment.Center), espera = 2000)
-            }
-            // Embaixo, o terreno onde a casinha vai nascer (só desenho, para a tela não ficar vazia).
-            Spacer(Modifier.height(18.dp))
-            TerrenoDaCasinha(Modifier.fillMaxWidth().height(230.dp).clip(RoundedCornerShape(28.dp)))
-            return@Column
-        }
-
-        // Personagem grande, que pula a cada escolha. No espelho, fica dentro de uma moldura dourada.
-        Box(
+        val alturaDaTela = maxHeight
+        NuvensDoCeu()
+        Column(
             Modifier
-                .size(230.dp)
-                .then(if (espelho) Modifier.border(8.dp, Color(0xFFD4A24C), CircleShape) else Modifier)
-                .background(if (espelho) Color(0xFFDDF3FF) else Color.White.copy(alpha = 0.7f), CircleShape),
-            contentAlignment = Alignment.Center,
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                // A primeira escolha fica no meio da tela (sem o rodapé vazio de antes); as outras rolam.
+                .heightIn(min = alturaDaTela)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = if (g == null) Arrangement.Center else Arrangement.Top,
         ) {
-            Crianca(perfil, Modifier.height(190.dp).graphicsLayer { translationY = pulo.value * density }, acenando = true)
-        }
-        Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            for (opcao in Genero.entries) {
-                val rotulo = if (opcao == Genero.MENINO) "Menino" else "Menina"
-                Text(
-                    if (opcao == Genero.MENINO) "👦" else "👧",
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier
-                        .background(if (opcao == g) Cores.Estrela else Color.White, CircleShape)
-                        .semantics { contentDescription = rotulo }
-                        .clickable { escolher("$rotulo!") { genero = opcao } }
-                        .padding(10.dp),
+            if (onVoltar != null) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    BotaoRedondo("⬅️", "Voltar", onVoltar, Modifier.align(Alignment.CenterStart), tamanho = 52.dp)
+                    TituloDeBrinquedo(
+                        if (espelho) "Espelho" else "Casinha do Saber",
+                        Modifier.padding(horizontal = 60.dp),
+                        estilo = MaterialTheme.typography.headlineMedium,
+                        maxLinhas = 2,
+                    )
+                }
+            } else {
+                TituloDeBrinquedo("Casinha do Saber", maxLinhas = 1)
+            }
+            Spacer(Modifier.height(8.dp))
+
+            if (g == null) {
+                // Ainda não escolheu: o menino e a menina de pé na ilhinha, e um botão com o nome de cada um.
+                EscolhaDoPersonagem(pele, cabelo, alturaDaTela) { opcao, rotulo -> escolher("$rotulo!") { genero = opcao } }
+                return@Column
+            }
+
+            // Personagem grande, que pula a cada escolha, de pé na ilhinha. No espelho, dentro de uma moldura dourada.
+            Box(Modifier.size(width = 260.dp, height = 236.dp), contentAlignment = Alignment.BottomCenter) {
+                if (espelho) {
+                    Box(
+                        Modifier
+                            .align(Alignment.Center)
+                            .size(230.dp)
+                            .border(8.dp, Color(0xFFD4A24C), CircleShape)
+                            .background(Color(0xFFDDF3FF), CircleShape),
+                    )
+                } else {
+                    IlhaAtras(largura = 210.dp, pes = 40.dp)
+                }
+                Crianca(
+                    perfil,
+                    Modifier
+                        .padding(bottom = if (espelho) 20.dp else 36.dp)
+                        .height(190.dp)
+                        .graphicsLayer { translationY = pulo.value * density },
+                    acenando = true,
                 )
             }
-        }
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                for (opcao in Genero.entries) {
+                    val rotulo = if (opcao == Genero.MENINO) "Menino" else "Menina"
+                    BotaoFofo(
+                        onClick = { escolher("$rotulo!") { genero = opcao } },
+                        cor = if (opcao == g) Cores.Estrela else Color.White,
+                        forma = RoundedCornerShape(50),
+                        descricao = rotulo,
+                        profundidade = 4.dp,
+                    ) {
+                        Text(
+                            rotulo,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Cores.TextoDaPilula,
+                            maxLines = 1,
+                            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+                        )
+                    }
+                }
+            }
 
-        Linha("🧑", "pele") {
-            Aparencia.peles.forEachIndexed { i, c ->
-                Bolinha(Color(c), i == pele, "Cor de pele ${i + 1}") { escolher("Que lindo!") { pele = i } }
+            Linha("🧑", "pele") {
+                Aparencia.peles.forEachIndexed { i, c ->
+                    Bolinha(Color(c), i == pele, "Cor de pele ${i + 1}") { escolher("Que lindo!") { pele = i } }
+                }
             }
-        }
-        Linha("💇", "cor do cabelo") {
-            Aparencia.cabelos.forEachIndexed { i, c ->
-                Bolinha(Color(c), i == cabelo, "Cabelo ${nomesDoCabelo[i]}") { escolher("Cabelo ${nomesDoCabelo[i]}!") { cabelo = i } }
+            Linha("💇", "cor do cabelo") {
+                Aparencia.cabelos.forEachIndexed { i, c ->
+                    Bolinha(Color(c), i == cabelo, "Cabelo ${nomesDoCabelo[i]}") { escolher("Cabelo ${nomesDoCabelo[i]}!") { cabelo = i } }
+                }
             }
-        }
-        Linha("✂️", "penteado") {
-            val nomesEstilo = if (g == Genero.MENINA) listOf("liso", "cacheado", "trancinhas") else listOf("liso", "cacheado", "espetadinho")
-            for (i in 0..2) {
-                Box(
-                    Modifier
-                        .size(62.dp)
-                        .clip(CircleShape)
-                        .border(if (i == estilo) 4.dp else 2.dp, if (i == estilo) Cores.Estrela else Color.White, CircleShape)
-                        .background(Color.White.copy(alpha = 0.8f), CircleShape)
-                        .semantics { contentDescription = "Cabelo ${nomesEstilo[i]}" }
-                        .clickable { escolher("Cabelo ${nomesEstilo[i]}!") { estilo = i } },
-                    contentAlignment = Alignment.TopCenter,
+            Linha("✂️", "penteado") {
+                val nomesEstilo = if (g == Genero.MENINA) listOf("liso", "cacheado", "trancinhas") else listOf("liso", "cacheado", "espetadinho")
+                for (i in 0..2) {
+                    val escolhido = i == estilo
+                    Box(
+                        Modifier
+                            .size(62.dp)
+                            .shadow(if (escolhido) 6.dp else 3.dp, CircleShape)
+                            .clip(CircleShape)
+                            .faceDeBrinquedo(if (escolhido) Color(0xFFFFF3C4) else Color.White, CircleShape, redonda = true)
+                            .border(if (escolhido) 4.dp else 2.dp, if (escolhido) Cores.Estrela else Color.White, CircleShape)
+                            .semantics { contentDescription = "Cabelo ${nomesEstilo[i]}" }
+                            .clickable { escolher("Cabelo ${nomesEstilo[i]}!") { estilo = i } },
+                        contentAlignment = Alignment.TopCenter,
+                    ) {
+                        // Só a cabeça: o personagem grande, recortado no círculo.
+                        Crianca(perfil.copy(estiloCabelo = i, chapeu = ""), Modifier.height(110.dp).padding(top = 6.dp), animado = false)
+                    }
+                }
+            }
+            Linha("👕", "roupa") {
+                val roupaAtual = if (roupa >= 0) roupa else if (g == Genero.MENINA) 1 else 0
+                Aparencia.roupas.forEachIndexed { i, c ->
+                    Bolinha(Color(c), i == roupaAtual, "Roupa ${nomesDaRoupa[i]}") { escolher("Roupa ${nomesDaRoupa[i]}!") { roupa = i } }
+                }
+            }
+
+            if (espelho) {
+                // Provador: roupas, chapéus e acessórios do guarda-roupa, uma gaveta por parte do corpo.
+                val possui: (Produto) -> Boolean = { p -> p in roupas || p.id in comprados }
+                Spacer(Modifier.height(14.dp))
+                Provador(
+                    perfil = perfil,
+                    possui = possui,
+                    onVestir = { p ->
+                        if (possui(p)) {
+                            sons.toque()
+                            provar(perfil.vestindo(p))
+                        }
+                    },
+                    onTirar = { gaveta -> provar(perfil.tirando(gaveta)) },
+                )
+            }
+
+            Spacer(Modifier.height(14.dp))
+            // O nome é com o adulto (a criança pequena ainda não escreve).
+            if (mostrarNome) {
+                OutlinedTextField(
+                    value = nome,
+                    onValueChange = { nome = br.com.casinhadosaber.dominio.Familia.cortarNome(it) },
+                    label = { Text("Nome da criança (opcional)") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White.copy(alpha = 0.85f), RoundedCornerShape(8.dp)),
+                    textStyle = MaterialTheme.typography.titleLarge,
+                )
+            } else {
+                Text(
+                    if (nome.isBlank()) "✏️ Adulto: escrever o nome" else "✏️ $nome",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Cores.TextoDaPilula,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .pilula()
+                        .clickable { mostrarNome = true }
+                        .padding(horizontal = 18.dp, vertical = 8.dp),
+                )
+            }
+
+            Spacer(Modifier.height(22.dp))
+            Box {
+                BotaoFofo(
+                    onClick = {
+                        sons.acerto()
+                        onPronto(perfil.copy(genero = g))
+                    },
+                    cor = VerdeDoPronto,
+                    corBase = LabioDoVerde,
+                    modifier = Modifier.pulsando(),
+                    descricao = "Pronto",
                 ) {
-                    // Só a cabeça: o personagem grande, recortado no círculo.
-                    Crianca(perfil.copy(estiloCabelo = i, chapeu = ""), Modifier.height(110.dp).padding(top = 6.dp), animado = false)
+                    TextoDoBotao("Pronto!", Modifier.padding(horizontal = 40.dp, vertical = 10.dp))
+                }
+                MaoGuia(Modifier.align(Alignment.BottomEnd), espera = 9000)
+            }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+/**
+ * A primeira escolha: o menino e a menina de pé numa ilhinha de grama no céu, dando tchau (tocar num deles
+ * escolhe), e embaixo um botão com o nome de cada um (o adulto lê; os testes do emulador tocam em "Menina").
+ * A mãozinha aponta o botão da menina depois de um tempinho sem toque.
+ */
+@Composable
+private fun EscolhaDoPersonagem(pele: Int, cabelo: Int, alturaDaTela: Dp, onEscolher: (Genero, String) -> Unit) {
+    Spacer(Modifier.height(8.dp))
+    TituloDeBrinquedo("Quem vai morar na casinha?", Modifier.fillMaxWidth())
+    Spacer(Modifier.height(12.dp))
+    BoxWithConstraints(Modifier.fillMaxWidth().widthIn(max = 460.dp)) {
+        val largura = maxWidth
+        // Os bonecos crescem com a tela, sem passar da largura de cada metade.
+        val alturaDoBoneco = minOf((alturaDaTela * 0.32f).coerceIn(150.dp, 280.dp), largura * 0.6f)
+        val ilha = largura * 0.92f
+        // Quanto da ilha fica embaixo dos pés (da grama até a base da terra).
+        val sobIlha = ilha / 0.77f * 0.2f
+        Box(Modifier.fillMaxWidth().height(alturaDoBoneco + sobIlha + 4.dp)) {
+            IlhaAtras(ilha, pes = sobIlha)
+            Row(
+                Modifier.align(Alignment.BottomCenter).padding(bottom = sobIlha - 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                for (opcao in Genero.entries) {
+                    val rotulo = if (opcao == Genero.MENINO) "Menino" else "Menina"
+                    // O boneco afunda um pouquinho ao tocar e volta com mola.
+                    val toque = remember { MutableInteractionSource() }
+                    val apertado by toque.collectIsPressedAsState()
+                    val escala by animateFloatAsState(if (apertado) 0.94f else 1f, spring(dampingRatio = 0.4f), label = "boneco")
+                    Box(
+                        Modifier
+                            .width(largura * 0.44f)
+                            .height(alturaDoBoneco)
+                            .graphicsLayer { scaleX = escala; scaleY = escala; transformOrigin = TransformOrigin(0.5f, 1f) }
+                            .semantics { contentDescription = rotulo }
+                            .clickable(interactionSource = toque, indication = null, role = Role.RadioButton) { onEscolher(opcao, rotulo) },
+                        contentAlignment = Alignment.BottomCenter,
+                    ) {
+                        Crianca(Perfil("", opcao, pele, cabelo, -1), Modifier.height(alturaDoBoneco).pulsando(), acenando = true)
+                    }
                 }
             }
         }
-        Linha("👕", "roupa") {
-            val roupaAtual = if (roupa >= 0) roupa else if (g == Genero.MENINA) 1 else 0
-            Aparencia.roupas.forEachIndexed { i, c ->
-                Bolinha(Color(c), i == roupaAtual, "Roupa ${nomesDaRoupa[i]}") { escolher("Roupa ${nomesDaRoupa[i]}!") { roupa = i } }
-            }
-        }
-
-        if (espelho) {
-            // Provador: roupas, chapéus e acessórios do guarda-roupa, uma gaveta por parte do corpo.
-            val possui: (Produto) -> Boolean = { p -> p in roupas || p.id in comprados }
-            Spacer(Modifier.height(14.dp))
-            Provador(
-                perfil = perfil,
-                possui = possui,
-                onVestir = { p ->
-                    if (possui(p)) {
-                        sons.toque()
-                        provar(perfil.vestindo(p))
-                    }
-                },
-                onTirar = { gaveta -> provar(perfil.tirando(gaveta)) },
-            )
-        }
-
-        Spacer(Modifier.height(12.dp))
-        // O nome é com o adulto (a criança pequena ainda não escreve).
-        if (mostrarNome) {
-            OutlinedTextField(
-                value = nome,
-                onValueChange = { nome = br.com.casinhadosaber.dominio.Familia.cortarNome(it) },
-                label = { Text("Nome da criança (opcional)") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = MaterialTheme.typography.titleLarge,
-            )
-        } else {
-            Text(
-                if (nome.isBlank()) "✏️ Adulto: escrever o nome" else "✏️ $nome",
-                style = MaterialTheme.typography.titleMedium,
-                color = Cores.TextoSuave,
-                modifier = Modifier
-                    .background(Color.White.copy(alpha = 0.6f), RoundedCornerShape(50))
-                    .clickable { mostrarNome = true }
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-        }
-
-        Spacer(Modifier.height(20.dp))
-        Box {
-            BotaoFofo(
-                onClick = {
-                    sons.acerto()
-                    onPronto(perfil.copy(genero = g))
-                },
-                cor = Cores.Certo,
-                modifier = Modifier.pulsando(),
-                descricao = "Pronto",
-            ) {
-                Text(
-                    "Pronto! ✔",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 40.dp, vertical = 14.dp),
-                )
-            }
-            MaoGuia(Modifier.align(Alignment.BottomEnd), espera = 9000)
-        }
-        Spacer(Modifier.height(24.dp))
     }
+    Spacer(Modifier.height(6.dp))
+    Row(Modifier.fillMaxWidth().widthIn(max = 460.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        for (opcao in Genero.entries) {
+            val rotulo = if (opcao == Genero.MENINO) "Menino" else "Menina"
+            Box(Modifier.weight(1f)) {
+                BotaoFofo(
+                    onClick = { onEscolher(opcao, rotulo) },
+                    modifier = Modifier.fillMaxWidth(),
+                    cor = if (opcao == Genero.MENINO) Color(0xFF4FA8F5) else Color(0xFFFF7EB3),
+                    corBase = if (opcao == Genero.MENINO) Color(0xFF2B78C9) else Color(0xFFD94F8A),
+                    descricao = rotulo,
+                ) {
+                    TextoDoBotao(rotulo, Modifier.padding(vertical = 8.dp), estilo = MaterialTheme.typography.headlineSmall)
+                }
+                if (opcao == Genero.MENINA) MaoGuia(Modifier.align(Alignment.BottomEnd).offset(x = (-8).dp, y = 30.dp), espera = 2500)
+            }
+        }
+    }
+    Spacer(Modifier.height(24.dp))
 }
 
 /** Uma linha de escolhas com um ícone na frente (sem depender de leitura). */
@@ -353,130 +420,48 @@ private fun Linha(icone: String, descricao: String, conteudo: @Composable () -> 
             .semantics(mergeDescendants = false) { contentDescription = "Escolher $descricao" },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(icone, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.width(44.dp))
+        // O ícone num botãozinho redondo claro, como os da barra (decorativo: a linha já diz o que é).
+        Box(Modifier.width(44.dp)) {
+            Box(
+                Modifier
+                    .size(38.dp)
+                    .shadow(3.dp, CircleShape)
+                    .clip(CircleShape)
+                    .faceDeBrinquedo(Color.White, CircleShape, redonda = true)
+                    .clearAndSetSemantics { },
+                contentAlignment = Alignment.Center,
+            ) { Text(icone, fontSize = 20.sp) }
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { conteudo() }
     }
 }
 
+/** Uma conta de plástico da cor: brilho em cima à esquerda, borda branca; a escolhida ganha o anel amarelo. */
 @Composable
 private fun Bolinha(cor: Color, escolhida: Boolean, descricao: String, onClick: () -> Unit) {
     Box(
         Modifier
             .size(40.dp)
-            .border(if (escolhida) 4.dp else 2.dp, if (escolhida) Cores.Estrela else Color.White, CircleShape)
-            .padding(4.dp)
-            .background(cor, CircleShape)
+            .shadow(if (escolhida) 5.dp else 2.dp, CircleShape)
+            .background(if (escolhida) Cores.Estrela else Color.White, CircleShape)
+            .padding(if (escolhida) 4.dp else 3.dp)
+            .drawBehind {
+                drawCircle(
+                    Brush.radialGradient(
+                        0f to Color.White.copy(alpha = 0.55f).compositeSobre(cor),
+                        0.45f to cor,
+                        1f to cor.escurecida(),
+                        center = Offset(size.width * 0.35f, size.height * 0.3f),
+                        radius = size.width * 0.8f,
+                    ),
+                )
+            }
             .semantics { contentDescription = descricao }
             .clickable(role = Role.RadioButton, onClick = onClick),
     )
 }
 
-/**
- * O terreno vazio da primeira tela: morrinhos, um caminho de pedrinhas, flores e a casinha ainda tracejada,
- * com estrelinhas que piscam (é ali que ela vai nascer).
- */
-@Composable
-private fun TerrenoDaCasinha(modifier: Modifier) {
-    val brilho = rememberInfiniteTransition(label = "terreno").animateFloat(
-        0.35f, 1f, infiniteRepeatable(androidx.compose.animation.core.tween(1100), RepeatMode.Reverse), label = "brilho",
-    )
-    Box(modifier.semantics { contentDescription = "O terreno onde a casinha vai nascer" }) {
-        // O terreno é montado uma vez por tamanho; só as estrelinhas (numa camada pequena, só delas) piscam.
-        Spacer(Modifier.fillMaxSize().drawWithCache { val desenho = terrenoParado(); onDrawBehind { desenho() } })
-        Spacer(
-            Modifier
-                .fillMaxSize()
-                .graphicsLayer()
-                .drawWithCache {
-                    val w = size.width
-                    val h = size.height
-                    val base = Offset(w * 0.5f, h * 0.56f)
-                    // Estrelinhas mágicas em volta da casinha (as formas são feitas uma vez; o brilho só muda a cor).
-                    val estrelas = listOf(-0.36f to 0.18f, 0.34f to 0.12f, -0.2f to 0.02f, 0.22f to 0.36f).map { e ->
-                        caminhoEstrela(Offset(base.x + w * e.first, h * e.second + h * 0.08f), h * 0.04f)
-                    }
-                    onDrawBehind {
-                        val b = brilho.value
-                        for ((k, estrela) in estrelas.withIndex()) {
-                            val a = if (k % 2 == 0) b else 1.35f - b
-                            drawPath(estrela, Color(0xFFFFE27A).copy(alpha = a.coerceIn(0f, 1f)))
-                        }
-                    }
-                },
-        )
-    }
-}
+private fun Color.compositeSobre(fundo: Color): Color =
+    Color(fundo.red + (red - fundo.red) * alpha, fundo.green + (green - fundo.green) * alpha, fundo.blue + (blue - fundo.blue) * alpha)
 
-/**
- * A parte parada do [TerrenoDaCasinha] (morros, casinha tracejada, caminho e flores): as formas e os pincéis são
- * montados aqui uma vez por tamanho, e o que volta só desenha.
- */
-private fun androidx.compose.ui.draw.CacheDrawScope.terrenoParado(): DrawScope.() -> Unit {
-    val w = size.width
-    val h = size.height
-    // Morro de trás (mais claro) e o da frente.
-    val tras = Path().apply {
-        moveTo(0f, h * 0.55f)
-        cubicTo(w * 0.25f, h * 0.38f, w * 0.55f, h * 0.5f, w * 0.75f, h * 0.42f)
-        cubicTo(w * 0.88f, h * 0.37f, w, h * 0.45f, w, h * 0.45f)
-        lineTo(w, h); lineTo(0f, h); close()
-    }
-    val frente = Path().apply {
-        moveTo(0f, h * 0.72f)
-        cubicTo(w * 0.3f, h * 0.6f, w * 0.7f, h * 0.62f, w, h * 0.7f)
-        lineTo(w, h); lineTo(0f, h); close()
-    }
-    val gramado = Brush.verticalGradient(listOf(Color(0xFF8ACF6E), Color(0xFF6DB85A)), startY = h * 0.6f, endY = h)
-    // A casinha que ainda vai nascer: só o contorno tracejado, em cima do morro.
-    val base = Offset(w * 0.5f, h * 0.56f)
-    val lw = h * 0.42f
-    val lh = h * 0.26f
-    val casa = Path().apply {
-        moveTo(base.x - lw / 2f, base.y)
-        lineTo(base.x - lw / 2f, base.y - lh)
-        lineTo(base.x, base.y - lh - h * 0.2f)
-        lineTo(base.x + lw / 2f, base.y - lh)
-        lineTo(base.x + lw / 2f, base.y)
-        close()
-    }
-    val tracejado = Stroke(h * 0.018f, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(h * 0.05f, h * 0.035f)))
-    val desenho: DrawScope.() -> Unit = {
-        drawPath(tras, Color(0xFFA9DE8F))
-        drawPath(frente, gramado)
-        drawPath(casa, Color.White.copy(alpha = 0.45f))
-        drawPath(casa, Color.White, style = tracejado)
-        drawRoundRect(
-            Color.White.copy(alpha = 0.8f), Offset(base.x - lw * 0.1f, base.y - lh * 0.55f), Size(lw * 0.2f, lh * 0.55f),
-            androidx.compose.ui.geometry.CornerRadius(h * 0.02f), style = Stroke(h * 0.012f),
-        )
-        drawOval(Color(0x22000000), Offset(base.x - lw * 0.62f, base.y - h * 0.015f), Size(lw * 1.24f, h * 0.05f))
-        // Caminho de pedrinhas até a porta.
-        for (k in 0 until 5) {
-            val t = k / 4f
-            val c = Offset(base.x - w * 0.02f + t * w * 0.06f, base.y + h * 0.06f + t * h * 0.32f)
-            val r = h * (0.025f + t * 0.025f)
-            drawOval(Color(0xFFEFE6D2), Offset(c.x - r * 1.5f, c.y - r * 0.6f), Size(r * 3f, r * 1.2f))
-        }
-        // Florzinhas e moitinhas nos morros.
-        val flores = listOf(0.08f to 0.8f, 0.2f to 0.74f, 0.33f to 0.86f, 0.72f to 0.8f, 0.86f to 0.74f, 0.93f to 0.9f, 0.62f to 0.92f)
-        val cores = listOf(Color(0xFFFF7AA2), Color(0xFFFFD166), Color(0xFFFFFFFF), Color(0xFFB79CFF))
-        for ((i, f) in flores.withIndex()) {
-            val c = Offset(w * f.first, h * f.second)
-            val r = h * 0.022f
-            drawLine(Color(0xFF4E9A3E), c, Offset(c.x, c.y + r * 2.4f), r * 0.45f, StrokeCap.Round)
-            for (k in 0 until 5) {
-                val a = k * 1.2566f
-                drawCircle(cores[i % cores.size], r * 0.7f, Offset(c.x + kotlin.math.cos(a) * r, c.y + kotlin.math.sin(a) * r))
-            }
-            drawCircle(Color(0xFFFFB13C), r * 0.55f, c)
-        }
-        for (u in listOf(0.14f, 0.82f)) {
-            val c = Offset(w * u, h * (if (u < 0.5f) 0.6f else 0.55f))
-            drawCircle(Color(0xFF5FAE4E), h * 0.06f, c)
-            drawCircle(Color(0xFF5FAE4E), h * 0.05f, Offset(c.x - h * 0.06f, c.y + h * 0.02f))
-            drawCircle(Color(0xFF5FAE4E), h * 0.05f, Offset(c.x + h * 0.06f, c.y + h * 0.02f))
-            drawCircle(Color(0x33FFFFFF), h * 0.025f, Offset(c.x - h * 0.02f, c.y - h * 0.025f))
-        }
-    }
-    return desenho
-}
+private fun Color.escurecida(): Color = Color(red * 0.78f, green * 0.78f, blue * 0.78f, alpha)

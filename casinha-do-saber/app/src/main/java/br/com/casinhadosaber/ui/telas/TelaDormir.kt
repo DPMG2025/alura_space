@@ -1,12 +1,30 @@
 package br.com.casinhadosaber.ui.telas
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
+import br.com.casinhadosaber.ui.componentes.IconeDaBarra
+import br.com.casinhadosaber.ui.componentes.IconeDeArteDaBarra
+import br.com.casinhadosaber.ui.componentes.IconesDaBarra
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.PecasDasTelas
+import br.com.casinhadosaber.ui.componentes.TextoComContorno
+import br.com.casinhadosaber.ui.componentes.faceDeBrinquedo
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -20,9 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.en
@@ -63,49 +78,128 @@ fun TelaDormir(estado: EstadoJogo, onLiberar: () -> Unit) {
         )
     }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .ceuDaNoite()
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text("Boa noite! 🌙", style = MaterialTheme.typography.displayMedium, color = Color.White)
-        Spacer(Modifier.height(12.dp))
-        CenaDaCasa(
-            estado,
+    BoxWithConstraints(Modifier.fillMaxSize().ceuDaNoite()) {
+        val baixa = maxHeight < 700.dp
+        // Estrelinhas 3D penduradas no céu, piscando devagar (uma imagem só, do cache, em vários lugares).
+        EstrelasDaNoite()
+        Column(
             Modifier
-                .shadow(12.dp, Formas.Grande, ambientColor = Color(0xFF05081A), spotColor = Color(0xFF05081A))
-                .clip(Formas.Grande)
-                .border(3.dp, Color.White.copy(alpha = 0.25f), Formas.Grande)
-                .weight(1f, fill = false),
-            noite = true,
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            "A casinha volta amanhã! 💤",
-            style = MaterialTheme.typography.titleLarge,
-            color = Color.White,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(16.dp))
-        // Só um adulto libera (continha de multiplicação). Sem isso, a casinha acorda sozinha amanhã.
-        var mostrarPortao by remember { mutableStateOf(false) }
-        if (mostrarPortao) {
-            PortaoDeAdulto(onLiberar = onLiberar)
-        } else {
-            // Botão sólido (o translúcido de antes parecia desligado), num azul da noite.
-            BotaoFofo(onClick = { mostrarPortao = true }, cor = Color(0xFF3B4C8C), profundidade = 4.dp) {
-                Text(
-                    "🔒 Adulto",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-                )
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            // A lua de touca dormindo, com o "Zzz" subindo devagar.
+            LuaDormindo(if (baixa) 96.dp else 140.dp)
+            TextoComContorno(
+                "Boa noite!",
+                estilo = MaterialTheme.typography.displayMedium,
+                corDoContorno = AzulDaNoite,
+                corDoLabio = Color(0xFF0B1030),
+            )
+            Spacer(Modifier.height(10.dp))
+            CenaDaCasa(
+                estado,
+                Modifier
+                    .shadow(12.dp, Formas.Grande, ambientColor = Color(0xFF05081A), spotColor = Color(0xFF05081A))
+                    .clip(Formas.Grande)
+                    .border(3.dp, Color.White.copy(alpha = 0.25f), Formas.Grande)
+                    .weight(1f, fill = false),
+                noite = true,
+            )
+            Spacer(Modifier.height(14.dp))
+            TextoComContorno(
+                "A casinha volta amanhã!",
+                estilo = MaterialTheme.typography.titleLarge,
+                corDoContorno = AzulDaNoite,
+                espessura = 3.dp,
+                profundidade = 0.dp,
+                maxLinhas = 2,
+            )
+            Spacer(Modifier.height(14.dp))
+            // Só um adulto libera (continha de multiplicação). Sem isso, a casinha acorda sozinha amanhã.
+            var mostrarPortao by remember { mutableStateOf(false) }
+            if (mostrarPortao) {
+                PortaoDeAdulto(onLiberar = onLiberar)
+            } else {
+                // Botão sólido (o translúcido de antes parecia desligado), num azul da noite, com o cadeado 3D.
+                BotaoFofo(onClick = { mostrarPortao = true }, cor = Color(0xFF3B4C8C), corBase = Color(0xFF26336A), profundidade = 4.dp, descricao = "Adulto") {
+                    Row(Modifier.padding(start = 14.dp, end = 22.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .faceDeBrinquedo(Color.White, CircleShape, redonda = true),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            IconeDeArteDaBarra(IconeDaBarra(IconesDaBarra.PAIS), Modifier.size(22.dp)) { Text("🔒") }
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        Text("Adulto", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                    }
+                }
             }
         }
+    }
+}
+
+/** Contorno dos títulos da noite. */
+private val AzulDaNoite = Color(0xFF1B2556)
+
+/** A lua 3D de touca (`tela_lua_dormindo`) balançando devagar, com o `tela_zzz` subindo e sumindo. */
+@Composable
+private fun LuaDormindo(tamanho: Dp) {
+    val tempo = rememberInfiniteTransition(label = "lua")
+    val balanco by tempo.animateFloat(-1f, 1f, infiniteRepeatable(tween(2600), RepeatMode.Reverse), label = "balanco")
+    val sobe by tempo.animateFloat(0f, 1f, infiniteRepeatable(tween(2400, easing = LinearEasing)), label = "sobe")
+    Box(Modifier.size(width = tamanho * 1.45f, height = tamanho).clearAndSetSemantics { }) {
+        ImagemDeArte(
+            PecasDasTelas.LUA_DORMINDO,
+            Modifier
+                .align(Alignment.BottomStart)
+                .size(tamanho)
+                .graphicsLayer { rotationZ = 4f * balanco },
+        ) { Box(contentAlignment = Alignment.Center) { Text("🌙", fontSize = (tamanho.value * 0.6f).sp) } }
+        ImagemDeArte(
+            PecasDasTelas.ZZZ,
+            Modifier
+                .align(Alignment.TopEnd)
+                .size(tamanho * 0.5f)
+                .graphicsLayer {
+                    translationY = -sobe * size.height * 0.35f + size.height * 0.15f
+                    alpha = ((1f - sobe) * 1.4f).coerceIn(0f, 1f)
+                    val e = 0.8f + 0.25f * sobe
+                    scaleX = e
+                    scaleY = e
+                },
+        )
+    }
+}
+
+/** Lugares (fração da tela) e tamanho (dp) das estrelas 3D da noite; as do [ceuDaNoite] continuam no fundo. */
+private val ESTRELAS_3D = listOf(
+    Triple(0.10f, 0.08f, 30f), Triple(0.84f, 0.12f, 36f), Triple(0.70f, 0.30f, 22f),
+    Triple(0.06f, 0.46f, 24f), Triple(0.90f, 0.62f, 26f), Triple(0.14f, 0.90f, 28f),
+)
+
+@Composable
+private fun BoxWithConstraintsScope.EstrelasDaNoite() {
+    val pisca by rememberInfiniteTransition(label = "estrelas3d")
+        .animateFloat(0f, 1f, infiniteRepeatable(tween(5000, easing = LinearEasing)), label = "pisca")
+    for ((k, e) in ESTRELAS_3D.withIndex()) {
+        val (fx, fy, lado) = e
+        ImagemDeArte(
+            PecasDasTelas.ESTRELA_NOITE,
+            Modifier
+                .offset(x = maxWidth * fx - (lado / 2).dp, y = maxHeight * fy - (lado / 2).dp)
+                .size(lado.dp)
+                .graphicsLayer {
+                    val a = 2f * PI.toFloat() * (pisca + k * 0.27f)
+                    alpha = 0.6f + 0.4f * (0.5f + 0.5f * sin(a))
+                    rotationZ = 8f * sin(a)
+                },
+        )
     }
 }
 

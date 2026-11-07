@@ -63,6 +63,13 @@ import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.Confete
 import br.com.casinhadosaber.ui.componentes.VeuDoModal
+import androidx.compose.ui.graphics.graphicsLayer
+import br.com.casinhadosaber.ui.componentes.ContasDeProgresso
+import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
+import br.com.casinhadosaber.ui.componentes.ImagemDeArte
+import br.com.casinhadosaber.ui.componentes.PecasDasTelas
+import br.com.casinhadosaber.ui.componentes.PilulaDeValor
+import br.com.casinhadosaber.ui.componentes.TituloDeBrinquedo
 import br.com.casinhadosaber.ui.tema.Cores
 
 /**
@@ -103,15 +110,14 @@ fun TelaDiplomas(
                 Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     BotaoRedondo("⬅️", "Voltar", onVoltar, tamanho = 52.dp)
                     Spacer(Modifier.width(10.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("📜 Diplomas", style = MaterialTheme.typography.headlineMedium, maxLines = 1)
-                        Text(
-                            "${diplomas.size} de ${Trilha.entries.size * Mundos.todos.size} mundos completos",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = Cores.TextoSuave,
-                            maxLines = 1,
-                        )
-                    }
+                    ImagemDeArte(PecasDasTelas.DIPLOMA_ROLO, Modifier.size(44.dp)) { Text("📜", fontSize = 28.sp) }
+                    TituloDeBrinquedo("Diplomas", Modifier.weight(1f).padding(horizontal = 4.dp), estilo = MaterialTheme.typography.headlineMedium, maxLinhas = 1)
+                    // Quantos já tem: a medalha e o número, numa pílula (o total de mundos fica na descrição).
+                    PilulaDeValor(
+                        PecasDasTelas.MEDALHA,
+                        "${diplomas.size}",
+                        descricao = "${diplomas.size} de ${Trilha.entries.size * Mundos.todos.size} mundos completos",
+                    )
                 }
                 Column(
                     Modifier
@@ -127,7 +133,11 @@ fun TelaDiplomas(
                     for (t in Trilha.entries) {
                         val daTrilha = diplomas.filter { it.trilha == t }
                         if (daTrilha.isEmpty()) continue
-                        Text("${t.emoji} ${t.titulo}", style = MaterialTheme.typography.titleLarge, color = Color(t.corEscuraArgb))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconeDeTrilha(t, Modifier.size(34.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(t.titulo, style = MaterialTheme.typography.headlineSmall, color = Color(t.corEscuraArgb))
+                        }
                         for (linha in daTrilha.chunked(3)) {
                             // Fileira incompleta fica centralizada (meio espaço vazio de cada lado).
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -167,12 +177,15 @@ private fun ParedeVazia(estado: EstadoJogo) {
             .padding(18.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // A moldura vazia esperando: o rolo do diploma clarinho dentro, como quem diz "vem aí".
         Box(
             Modifier
                 .size(width = 140.dp, height = 110.dp)
                 .border(8.dp, Color(0xFFC98B5B), RoundedCornerShape(6.dp)),
             contentAlignment = Alignment.Center,
-        ) { Text("❔", fontSize = 40.sp) }
+        ) {
+            ImagemDeArte(PecasDasTelas.DIPLOMA_ROLO, Modifier.size(96.dp).graphicsLayer { alpha = 0.45f }) { Text("❔", fontSize = 40.sp) }
+        }
         Spacer(Modifier.height(12.dp))
         Text(
             "Complete as 10 fases de um mundo para pendurar o primeiro diploma!",
@@ -182,11 +195,23 @@ private fun ParedeVazia(estado: EstadoJogo) {
         if (perto != null && perto.third > 0) {
             val (t, m, n) = perto
             Spacer(Modifier.height(8.dp))
-            Text(
-                "${t.emoji} ${m.emoji} Mundo ${m.numero}: ${m.nome}: $n de ${Mundos.FASES_POR_MUNDO}",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color(t.corEscuraArgb),
-                textAlign = TextAlign.Center,
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconeDeTrilha(t, Modifier.size(28.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    "${m.emoji} Mundo ${m.numero}: ${m.nome}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color(t.corEscuraArgb),
+                    textAlign = TextAlign.Center,
+                )
+            }
+            // Quanto falta, em contas (as fases vencidas do mundo), e não "n de 10".
+            ContasDeProgresso(
+                n,
+                Mundos.FASES_POR_MUNDO,
+                Modifier.padding(top = 6.dp),
+                tamanho = 20.dp,
+                descricao = "$n de ${Mundos.FASES_POR_MUNDO} fases do mundo",
             )
         }
     }
@@ -216,8 +241,10 @@ private fun QuadroDeDiploma(d: Diploma, modifier: Modifier, onClick: () -> Unit)
             Text(m.emoji, fontSize = 30.sp)
             Text("Mundo ${m.numero}", style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp), fontWeight = FontWeight.Bold, color = Cores.Texto, maxLines = 1)
             Text(m.nome, style = MaterialTheme.typography.labelLarge.copy(fontSize = 11.sp, fontWeight = FontWeight.Normal), color = Cores.TextoSuave, maxLines = 1, textAlign = TextAlign.Center)
-            Canvas(Modifier.padding(top = 2.dp).size(26.dp)) {
-                desenharSelo(Offset(size.width / 2f, size.height * 0.42f), size.minDimension * 0.36f, Color(d.trilha.corArgb), comFitas = true)
+            ImagemDeArte(PecasDasTelas.SELO, Modifier.padding(top = 2.dp).size(30.dp)) {
+                Canvas(Modifier.size(26.dp)) {
+                    desenharSelo(Offset(size.width / 2f, size.height * 0.42f), size.minDimension * 0.36f, Color(d.trilha.corArgb), comFitas = true)
+                }
             }
         }
     }
@@ -250,7 +277,11 @@ private fun DiplomaGrande(d: Diploma, nome: String?, onFechar: () -> Unit) {
             ) {
                 Text("DIPLOMA", style = MaterialTheme.typography.headlineMedium.copy(fontSize = 26.sp, letterSpacing = 4.sp), fontWeight = FontWeight.Bold, color = Color.White)
             }
-            Text("${d.trilha.emoji}  ${m.emoji}", fontSize = 32.sp, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+            Row(Modifier.padding(top = 12.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconeDeTrilha(d.trilha, Modifier.size(44.dp))
+                Spacer(Modifier.width(10.dp))
+                Text(m.emoji, fontSize = 32.sp)
+            }
             if (!nome.isNullOrBlank()) {
                 Text(nome, style = MaterialTheme.typography.headlineMedium, color = corEscura, textAlign = TextAlign.Center)
                 // Linha de assinatura embaixo do nome.
@@ -261,8 +292,11 @@ private fun DiplomaGrande(d: Diploma, nome: String?, onFechar: () -> Unit) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Spacer(Modifier.size(52.dp))
                 // O selo dourado, com as duas fitinhas na cor do caminho.
-                Canvas(Modifier.size(104.dp)) {
-                    desenharSelo(Offset(size.width / 2f, size.height * 0.42f), size.minDimension * 0.34f, cor, comFitas = true)
+                // A medalha 3D de fita (o selo desenhado fica de reserva).
+                ImagemDeArte(PecasDasTelas.MEDALHA, Modifier.size(104.dp)) {
+                    Canvas(Modifier.size(104.dp)) {
+                        desenharSelo(Offset(size.width / 2f, size.height * 0.42f), size.minDimension * 0.34f, cor, comFitas = true)
+                    }
                 }
                 BotaoRedondo("✖", "Fechar", onFechar, tamanho = 52.dp)
             }

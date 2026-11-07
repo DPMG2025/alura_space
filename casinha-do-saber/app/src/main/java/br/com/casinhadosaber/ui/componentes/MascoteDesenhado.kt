@@ -10,6 +10,19 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Text
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -43,8 +56,12 @@ private fun pelagem(e: EspecieMascote) = when (e) {
 }
 
 /**
- * O mascote animado (respira, pisca e dá pulinhos de alegria). O tamanho do desenho cresce com o
- * [estagio] dentro do mesmo espaço, então o bebê parece pequeno e o campeão ocupa tudo.
+ * O mascote animado (respira e dá pulinhos de alegria). O tamanho cresce com o [estagio] dentro do mesmo espaço,
+ * então o bebê parece pequeno e o campeão ocupa tudo.
+ *
+ * Com a arte 3D (`mascote_<bicho>_<pose>`, Fase 8), mostra a pose: [pose] quando dada; senão feliz quando
+ * [pulando] e parado no resto. O enfeite em uso aparece em cima, na âncora da cabeça ou do corpo (a arte dos
+ * enfeites ainda não existe: vai o emoji dele). Sem a arte, o desenho em Canvas de antes (reserva).
  */
 @Composable
 fun MascoteAnimado(
@@ -55,29 +72,114 @@ fun MascoteAnimado(
     nome: String = especie.nome,
     /** Dá pulinhos (na festa de crescimento e na vitória). */
     pulando: Boolean = false,
+    /** A pose da arte 3D; nula escolhe pela [pulando]. */
+    pose: PoseDoMascote? = null,
 ) {
     val transicao = rememberInfiniteTransition(label = "mascote")
     val respiro by transicao.animateFloat(1f, 1.03f, infiniteRepeatable(tween(1300), RepeatMode.Reverse), label = "respiro")
     val piscar by transicao.animateFloat(0f, 1f, infiniteRepeatable(tween(4200, easing = LinearEasing)), label = "piscar")
     val pulo by transicao.animateFloat(0f, 1f, infiniteRepeatable(tween(520), RepeatMode.Reverse), label = "pulo")
-    Canvas(
-        modifier
-            .aspectRatio(1f)
-            .semantics { contentDescription = nome }
-            .graphicsLayer {
-                scaleY = respiro
-                transformOrigin = TransformOrigin(0.5f, 1f)
-                if (pulando) translationY = -size.height * 0.08f * pulo
-            },
-    ) {
-        desenharMascote(especie, estagio, acessorio, olhosFechados = piscar > 0.96f)
+    val id = PecasDoMascote.id(especie, pose ?: PoseDoMascote.de(feliz = pulando))
+    val contexto = LocalContext.current
+    val info = remember(id) { ArteDoApp.info(contexto, id) }
+    val corpo = modifier
+        .aspectRatio(1f)
+        .semantics { contentDescription = nome }
+        .graphicsLayer {
+            scaleY = respiro
+            transformOrigin = TransformOrigin(0.5f, 1f)
+            if (pulando) translationY = -size.height * 0.08f * pulo
+        }
+    if (info == null) {
+        Canvas(corpo) { desenharMascote(especie, estagio, acessorio, olhosFechados = piscar > 0.96f) }
+    } else {
+        MascoteDaArte(info, especie, estagio, acessorio, corpo) { piscar > 0.96f }
     }
 }
 
-/** Desenho parado (para as capturas e para miniaturas). */
+/** Desenho parado (para as capturas e para miniaturas): a pose parada da arte 3D, ou o Canvas de reserva. */
 @Composable
-fun MascoteParado(especie: EspecieMascote, estagio: EstagioMascote, modifier: Modifier = Modifier, acessorio: AcessorioMascote? = null) {
-    Canvas(modifier.aspectRatio(1f)) { desenharMascote(especie, estagio, acessorio) }
+fun MascoteParado(
+    especie: EspecieMascote,
+    estagio: EstagioMascote,
+    modifier: Modifier = Modifier,
+    acessorio: AcessorioMascote? = null,
+    pose: PoseDoMascote = PoseDoMascote.PARADO,
+) {
+    val id = PecasDoMascote.id(especie, pose)
+    val contexto = LocalContext.current
+    val info = remember(id) { ArteDoApp.info(contexto, id) }
+    if (info == null) {
+        Canvas(modifier.aspectRatio(1f)) { desenharMascote(especie, estagio, acessorio) }
+    } else {
+        MascoteDaArte(info, especie, estagio, acessorio, modifier.aspectRatio(1f))
+    }
+}
+
+/**
+ * A imagem 3D do mascote num quadrado: escala do [estagio] a partir dos pés (o apoio do manifesto), brilho
+ * dourado atrás do grande e do campeão e o enfeite por cima. Se a imagem não decodificar, o Canvas antigo.
+ */
+@Composable
+private fun MascoteDaArte(
+    info: InfoDaArte,
+    especie: EspecieMascote,
+    estagio: EstagioMascote,
+    acessorio: AcessorioMascote?,
+    modifier: Modifier,
+    /** Para o desenho de reserva: lido só ao desenhar (piscar não recompõe). */
+    olhosFechados: () -> Boolean = { false },
+) {
+    val (ax, ay) = info.fracao(info.apoio)
+    val brilho = when (estagio) {
+        EstagioMascote.CAMPEAO -> 0.45f
+        EstagioMascote.GRANDE -> 0.25f
+        else -> 0f
+    }
+    BoxWithConstraints(
+        modifier.drawBehind {
+            if (brilho > 0f) {
+                val c = Offset(size.width * ax, size.height * (ay - 0.34f * estagio.escala))
+                val r = size.minDimension * 0.46f * estagio.escala
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFFE27A).copy(alpha = brilho), Color(0x00FFE27A)), c, r), r, c)
+            }
+        },
+    ) {
+        val largura = maxWidth
+        val altura = maxHeight
+        val lado = minOf(largura, altura)
+        Box(
+            Modifier
+                .matchParentSize()
+                .graphicsLayer {
+                    scaleX = estagio.escala
+                    scaleY = estagio.escala
+                    transformOrigin = TransformOrigin(ax, ay)
+                },
+        ) {
+            ImagemDeArte(info.id, Modifier.matchParentSize()) {
+                Canvas(Modifier.fillMaxSize()) {
+                    // A reserva já cresce com o estágio por dentro; desfaz a escala desta camada.
+                    withTransform({ scale(1f / estagio.escala, 1f / estagio.escala, Offset(size.width * ax, size.height * ay)) }) {
+                        desenharMascote(especie, estagio, null, olhosFechados())
+                    }
+                }
+            }
+            if (acessorio != null) {
+                val (fx, fy) = PecasDoMascote.lugarDoEnfeite(acessorio, info)
+                val tamanho = lado * 0.2f
+                val letra = with(LocalDensity.current) { (tamanho * 0.8f).toSp() }
+                Box(
+                    Modifier
+                        .offset(x = largura * fx - tamanho / 2, y = altura * fy - tamanho / 2)
+                        .size(tamanho),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(acessorio.emoji, fontSize = letra, lineHeight = letra, maxLines = 1, modifier = Modifier.clearAndSetSemantics { })
+                }
+            }
+        }
+    }
 }
 
 fun DrawScope.desenharMascote(
