@@ -1,5 +1,0 @@
-Motor de voz iniciado: true (motor: com.google.android.tts)
-pt_BR: disponível
-en_US: disponível
-Narrador do app: pt: pt-br-x-pte-local (qualidade 400); en: en-us-x-tpf-local (qualidade 400)
-Vozes de boa qualidade: true
