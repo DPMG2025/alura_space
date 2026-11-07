@@ -44,6 +44,20 @@ class PuzzleTest {
     }
 
     @Test
+    fun `nenhuma peca da bandeja fica em cima de outra`() {
+        for (n in Puzzle.niveis) {
+            val m = Puzzle.montar("modelo:gato", n.numero, 3)
+            val caixas = m.pecas.map { it.x to it.y }
+            assertEquals("nível ${n.numero}: casas repetidas", caixas.size, caixas.toSet().size)
+            for (a in m.pecas) for (b in m.pecas) if (a.id < b.id) {
+                val separados = a.x + m.largura <= b.x + 0.0001f || b.x + m.largura <= a.x + 0.0001f ||
+                    a.y + m.altura <= b.y + 0.0001f || b.y + m.altura <= a.y + 0.0001f
+                assertTrue("nível ${n.numero}: peças ${a.id} e ${b.id} se sobrepõem", separados)
+            }
+        }
+    }
+
+    @Test
     fun `peca solta perto da casa certa encaixa exata e fica parada`() {
         val m = montagem(3)
         val id = 4

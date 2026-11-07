@@ -193,6 +193,8 @@ class CapturasColorirEPuzzleTest {
         val peca = regra.onNodeWithTag("peca_$id").fetchSemanticsNode().boundsInRoot
         // Nível 1 é 2 por 2: a casa do id está na coluna id % 2, linha id / 2.
         val alvo = Offset(moldura.left + moldura.width * ((id % 2) * 0.5f + 0.25f), moldura.top + moldura.width * ((id / 2) * 0.5f + 0.25f))
+        fun todas() = (0 until 4).associateWith { regra.onAllNodesWithTag("peca_$it").fetchSemanticsNodes().firstOrNull()?.boundsInRoot }
+        val todasAntes = todas()
         val de = peca.center
         val delta = Offset(alvo.x - de.x, alvo.y - de.y)
         regra.onNodeWithTag("peca_$id").performTouchInput {
@@ -205,7 +207,7 @@ class CapturasColorirEPuzzleTest {
         regra.mainClock.advanceTimeBy(800)
         val depois = regra.onAllNodesWithTag("peca_$id").fetchSemanticsNodes().firstOrNull()?.boundsInRoot
         val texto = regra.onNodeWithTag("puzzle_faltam").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
-        assertEquals("peça $id: antes=$peca alvo=$alvo depois=$depois moldura=$moldura", "Faltam 3", texto)
+        assertEquals("peça $id: antes=$peca alvo=$alvo depois=$depois moldura=$moldura todasAntes=$todasAntes todasDepois=${todas()}", "Faltam 3", texto)
         foto("s11_puzzle_uma_peca_no_lugar")
     }
 

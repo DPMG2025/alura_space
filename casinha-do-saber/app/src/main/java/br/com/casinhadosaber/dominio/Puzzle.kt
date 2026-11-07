@@ -28,9 +28,12 @@ object Puzzle {
 
     const val NIVEL_MAXIMO = 8
 
-    /** Topo e fundo da bandeja, em unidades da moldura. */
+    /**
+     * Topo e fundo da bandeja, em unidades da moldura. A bandeja tem o tamanho da moldura (uma casa para cada peça),
+     * então nenhuma peça fica em cima de outra e a criança consegue pegar todas.
+     */
     const val BANDEJA_DE = 1.05f
-    const val BANDEJA_ATE = 1.55f
+    const val BANDEJA_ATE = 2.05f
 
     /** O ímã pega a peça quando ela chega a esta fração do tamanho da casa. Com a ajuda "ímã largo", [IMA_LARGO]. */
     const val IMA = 0.38f
@@ -66,18 +69,17 @@ object Puzzle {
     fun alvoX(m: Montagem, id: Int): Float = (id % m.grade.colunas) * m.largura
     fun alvoY(m: Montagem, id: Int): Float = (id / m.grade.colunas) * m.altura
 
-    /** Espalha as peças na bandeja (nenhuma começa colocada). Mesma [semente], mesma bagunça (para testar). */
+    /** Põe as peças embaralhadas nas casas da bandeja, uma em cada (nenhuma começa colocada). Mesma [semente], mesma ordem. */
     fun montar(fonte: String, nivel: Int, semente: Long): Montagem {
         val g = nivel(nivel)
         val sorteio = Random(semente)
         val w = 1f / g.colunas
         val h = 1f / g.linhas
-        val pecas = (0 until g.pecas).map { id ->
-            val x = sorteio.nextFloat() * (1f - w)
-            val folga = (BANDEJA_ATE - BANDEJA_DE - h).coerceAtLeast(0f)
-            val y = BANDEJA_DE + sorteio.nextFloat() * folga
-            Peca(id, x, y, colocada = false)
-        }.shuffled(sorteio)
+        val ordem = (0 until g.pecas).shuffled(sorteio)
+        // A peça que cai na casa k da bandeja: a lista fica na ordem das casas, a última é a que fica por cima.
+        val pecas = ordem.mapIndexed { casa, id ->
+            Peca(id, (casa % g.colunas) * w, BANDEJA_DE + (casa / g.colunas) * h, colocada = false)
+        }
         return Montagem(fonte, g.numero, pecas)
     }
 
