@@ -1,0 +1,1726 @@
+{
+  "versao": 1,
+  "escala": 2,
+  "imagens": {
+    "dentro_abajur": {
+      "altura": 78,
+      "ancoras": {},
+      "apoio": {
+        "x": 39,
+        "y": 55
+      },
+      "arquivo": "dentro_abajur.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "abajur",
+        "pegada": {
+          "altura": 0.55,
+          "x0": 2.7,
+          "x1": 3.15,
+          "y0": 0.13,
+          "y1": 0.62,
+          "z": 0.5
+        },
+        "referencia": {
+          "x": 2.925,
+          "y": 0.375,
+          "z": 0.5
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 78,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 39,
+        "largura": 39
+      }
+    },
+    "dentro_acabamento_de_baixo": {
+      "altura": 500,
+      "ancoras": {},
+      "apoio": {
+        "x": 338,
+        "y": 236
+      },
+      "arquivo": "dentro_acabamento_de_baixo.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "ladrilho": 64,
+        "ordem": 3,
+        "peca": "acabamento",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 868,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 250,
+        "largura": 434
+      }
+    },
+    "dentro_acabamento_de_cima": {
+      "altura": 500,
+      "ancoras": {},
+      "apoio": {
+        "x": 338,
+        "y": 236
+      },
+      "arquivo": "dentro_acabamento_de_cima.webp",
+      "iso": {
+        "andar": "de_cima",
+        "ladrilho": 64,
+        "ordem": 3,
+        "peca": "acabamento",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 868,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 250,
+        "largura": 434
+      }
+    },
+    "dentro_banheira": {
+      "altura": 156,
+      "ancoras": {
+        "agua": {
+          "x": 110,
+          "y": 55
+        }
+      },
+      "apoio": {
+        "x": 110,
+        "y": 98
+      },
+      "arquivo": "dentro_banheira.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "banheira",
+        "pegada": {
+          "altura": 0.6,
+          "x0": 4.15,
+          "x1": 5.8,
+          "y0": 0.1,
+          "y1": 1.35,
+          "z": 0
+        },
+        "referencia": {
+          "x": 4.975,
+          "y": 0.7250000000000001,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 220,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 78,
+        "largura": 110
+      }
+    },
+    "dentro_bolo": {
+      "altura": 62,
+      "ancoras": {},
+      "apoio": {
+        "x": 41,
+        "y": 38
+      },
+      "arquivo": "dentro_bolo.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "bolo",
+        "pegada": {
+          "altura": 0.45,
+          "x0": 5.9,
+          "x1": 6.4,
+          "y0": 2.25,
+          "y1": 2.75,
+          "z": 0.72
+        },
+        "referencia": {
+          "x": 6.15,
+          "y": 2.5,
+          "z": 0.72
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 82,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 31,
+        "largura": 41
+      }
+    },
+    "dentro_cama": {
+      "altura": 190,
+      "ancoras": {},
+      "apoio": {
+        "x": 117,
+        "y": 127
+      },
+      "arquivo": "dentro_cama.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "cama",
+        "pegada": {
+          "altura": 0.55,
+          "x0": 1.25,
+          "x1": 2.5,
+          "y0": 0.1,
+          "y1": 1.98,
+          "z": 0
+        },
+        "referencia": {
+          "x": 1.875,
+          "y": 1.04,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 234,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 95,
+        "largura": 117
+      }
+    },
+    "dentro_criado": {
+      "altura": 90,
+      "ancoras": {},
+      "apoio": {
+        "x": 52,
+        "y": 61
+      },
+      "arquivo": "dentro_criado.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "criado",
+        "pegada": {
+          "altura": 0.5,
+          "x0": 2.65,
+          "x1": 3.2,
+          "y0": 0.1,
+          "y1": 0.65,
+          "z": 0
+        },
+        "referencia": {
+          "x": 2.925,
+          "y": 0.375,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 104,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 45,
+        "largura": 52
+      }
+    },
+    "dentro_escada": {
+      "altura": 318,
+      "ancoras": {},
+      "apoio": {
+        "x": 125,
+        "y": 252
+      },
+      "arquivo": "dentro_escada.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "escada",
+        "pegada": {
+          "altura": 2.7,
+          "x0": 0.08,
+          "x1": 0.95,
+          "y0": 0.08,
+          "y1": 2.6,
+          "z": 0
+        },
+        "referencia": {
+          "x": 0.515,
+          "y": 1.34,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 250,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 159,
+        "largura": 125
+      }
+    },
+    "dentro_escada_de_cima": {
+      "altura": 152,
+      "ancoras": {},
+      "apoio": {
+        "x": 117,
+        "y": 88
+      },
+      "arquivo": "dentro_escada_de_cima.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "escadaDeCima",
+        "pegada": {
+          "altura": 0.75,
+          "x0": 0.08,
+          "x1": 0.95,
+          "y0": 0.08,
+          "y1": 2.6,
+          "z": 0
+        },
+        "referencia": {
+          "x": 0.515,
+          "y": 1.34,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 232,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 76,
+        "largura": 116
+      }
+    },
+    "dentro_espelho": {
+      "altura": 90,
+      "ancoras": {},
+      "apoio": {
+        "x": 37,
+        "y": 78
+      },
+      "arquivo": "dentro_espelho.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "espelho",
+        "pegada": {
+          "altura": 0.8,
+          "x0": 7.07,
+          "x1": 7.81,
+          "y0": 0,
+          "y1": 0.04,
+          "z": 1.3
+        },
+        "referencia": {
+          "x": 7.4399999999999995,
+          "y": 0,
+          "z": 1.3
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 66,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 45,
+        "largura": 33
+      }
+    },
+    "dentro_fogao": {
+      "altura": 130,
+      "ancoras": {},
+      "apoio": {
+        "x": 70,
+        "y": 92
+      },
+      "arquivo": "dentro_fogao.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "fogao",
+        "pegada": {
+          "altura": 0.85,
+          "x0": 5.95,
+          "x1": 6.8,
+          "y0": 0.1,
+          "y1": 0.92,
+          "z": 0
+        },
+        "referencia": {
+          "x": 6.375,
+          "y": 0.51,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 140,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 65,
+        "largura": 70
+      }
+    },
+    "dentro_gato": {
+      "altura": 74,
+      "ancoras": {},
+      "apoio": {
+        "x": 41,
+        "y": 49
+      },
+      "arquivo": "dentro_gato.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "gato",
+        "pegada": {
+          "altura": 0.45,
+          "x0": 1.65,
+          "x1": 2.15,
+          "y0": 0.35,
+          "y1": 0.85,
+          "z": 0.5
+        },
+        "referencia": {
+          "x": 1.9,
+          "y": 0.6,
+          "z": 0.5
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 82,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 37,
+        "largura": 41
+      }
+    },
+    "dentro_geladeira": {
+      "altura": 214,
+      "ancoras": {},
+      "apoio": {
+        "x": 73,
+        "y": 173
+      },
+      "arquivo": "dentro_geladeira.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "geladeira",
+        "pegada": {
+          "altura": 2,
+          "x0": 6.98,
+          "x1": 7.9,
+          "y0": 0.1,
+          "y1": 0.95,
+          "z": 0
+        },
+        "referencia": {
+          "x": 7.44,
+          "y": 0.525,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 146,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 107,
+        "largura": 73
+      }
+    },
+    "dentro_geladeira_aberta": {
+      "altura": 216,
+      "ancoras": {
+        "comida_0": {
+          "x": 91,
+          "y": 166
+        },
+        "comida_1": {
+          "x": 109,
+          "y": 175
+        },
+        "comida_2": {
+          "x": 127,
+          "y": 184
+        },
+        "comida_3": {
+          "x": 91,
+          "y": 130
+        },
+        "comida_4": {
+          "x": 109,
+          "y": 139
+        },
+        "comida_5": {
+          "x": 127,
+          "y": 148
+        },
+        "comida_6": {
+          "x": 91,
+          "y": 94
+        },
+        "comida_7": {
+          "x": 109,
+          "y": 103
+        },
+        "comida_8": {
+          "x": 127,
+          "y": 112
+        }
+      },
+      "apoio": {
+        "x": 123,
+        "y": 176
+      },
+      "arquivo": "dentro_geladeira_aberta.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "aberta",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "geladeira",
+        "pegada": {
+          "altura": 2,
+          "x0": 6.98,
+          "x1": 7.9,
+          "y0": 0.1,
+          "y1": 0.95,
+          "z": 0
+        },
+        "referencia": {
+          "x": 7.44,
+          "y": 0.525,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 196,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 108,
+        "largura": 98
+      }
+    },
+    "dentro_guardaroupa": {
+      "altura": 262,
+      "ancoras": {},
+      "apoio": {
+        "x": 96,
+        "y": 210
+      },
+      "arquivo": "dentro_guardaroupa.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "X",
+        "ladrilho": 64,
+        "movel": "guardaroupa",
+        "pegada": {
+          "altura": 2.2,
+          "x0": 0.1,
+          "x1": 0.72,
+          "y0": 3,
+          "y1": 4.85,
+          "z": 0
+        },
+        "referencia": {
+          "x": 0.41,
+          "y": 3.925,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 192,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 131,
+        "largura": 96
+      }
+    },
+    "dentro_guardaroupa_aberto": {
+      "altura": 274,
+      "ancoras": {
+        "cabide_0": {
+          "x": 158,
+          "y": 70
+        },
+        "cabide_1": {
+          "x": 142,
+          "y": 78
+        },
+        "cabide_2": {
+          "x": 125,
+          "y": 86
+        },
+        "cabide_3": {
+          "x": 108,
+          "y": 95
+        },
+        "cabide_4": {
+          "x": 92,
+          "y": 103
+        },
+        "cabide_5": {
+          "x": 75,
+          "y": 111
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 210
+      },
+      "arquivo": "dentro_guardaroupa_aberto.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "aberto",
+        "frente": "X",
+        "ladrilho": 64,
+        "movel": "guardaroupa",
+        "pegada": {
+          "altura": 2.2,
+          "x0": 0.1,
+          "x1": 0.72,
+          "y0": 3,
+          "y1": 4.85,
+          "z": 0
+        },
+        "referencia": {
+          "x": 0.41,
+          "y": 3.925,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 234,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 137,
+        "largura": 117
+      }
+    },
+    "dentro_janela": {
+      "altura": 160,
+      "ancoras": {},
+      "apoio": {
+        "x": 60,
+        "y": 126
+      },
+      "arquivo": "dentro_janela.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "janela",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 1.32
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 110,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 80,
+        "largura": 55
+      }
+    },
+    "dentro_janela_noite": {
+      "altura": 160,
+      "ancoras": {},
+      "apoio": {
+        "x": 60,
+        "y": 126
+      },
+      "arquivo": "dentro_janela_noite.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "janela",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 1.32
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 110,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 80,
+        "largura": 55
+      }
+    },
+    "dentro_janela_redonda": {
+      "altura": 94,
+      "ancoras": {},
+      "apoio": {
+        "x": 43,
+        "y": 81
+      },
+      "arquivo": "dentro_janela_redonda.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "janela",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 1.55
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 82,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 47,
+        "largura": 41
+      }
+    },
+    "dentro_janela_redonda_noite": {
+      "altura": 94,
+      "ancoras": {},
+      "apoio": {
+        "x": 43,
+        "y": 81
+      },
+      "arquivo": "dentro_janela_redonda_noite.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "janela",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 1.55
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 82,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 47,
+        "largura": 41
+      }
+    },
+    "dentro_laje_de_baixo": {
+      "altura": 460,
+      "ancoras": {},
+      "apoio": {
+        "x": 337,
+        "y": 10
+      },
+      "arquivo": "dentro_laje_de_baixo.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "ladrilho": 64,
+        "ordem": 0,
+        "peca": "laje",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 866,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 230,
+        "largura": 433
+      }
+    },
+    "dentro_laje_de_cima": {
+      "altura": 460,
+      "ancoras": {},
+      "apoio": {
+        "x": 337,
+        "y": 10
+      },
+      "arquivo": "dentro_laje_de_cima.webp",
+      "iso": {
+        "andar": "de_cima",
+        "ladrilho": 64,
+        "ordem": 0,
+        "peca": "laje",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 866,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 230,
+        "largura": 433
+      }
+    },
+    "dentro_lampada_acesa": {
+      "altura": 84,
+      "ancoras": {
+        "luz": {
+          "x": 25,
+          "y": 71
+        }
+      },
+      "apoio": {
+        "x": 25,
+        "y": 71
+      },
+      "arquivo": "dentro_lampada_acesa.webp",
+      "iso": {
+        "ladrilho": 64,
+        "peca": "lampada",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 50,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 42,
+        "largura": 25
+      }
+    },
+    "dentro_lampada_apagada": {
+      "altura": 84,
+      "ancoras": {
+        "luz": {
+          "x": 25,
+          "y": 71
+        }
+      },
+      "apoio": {
+        "x": 25,
+        "y": 71
+      },
+      "arquivo": "dentro_lampada_apagada.webp",
+      "iso": {
+        "ladrilho": 64,
+        "peca": "lampada",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 50,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 42,
+        "largura": 25
+      }
+    },
+    "dentro_livros": {
+      "altura": 52,
+      "ancoras": {},
+      "apoio": {
+        "x": 44,
+        "y": 27
+      },
+      "arquivo": "dentro_livros.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "livros",
+        "pegada": {
+          "altura": 0.5,
+          "x0": 2.8,
+          "x1": 3.22,
+          "y0": 0.12,
+          "y1": 0.54,
+          "z": 0
+        },
+        "referencia": {
+          "x": 3.01,
+          "y": 0.33,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 88,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 26,
+        "largura": 44
+      }
+    },
+    "dentro_lixeira": {
+      "altura": 80,
+      "ancoras": {},
+      "apoio": {
+        "x": 46,
+        "y": 54
+      },
+      "arquivo": "dentro_lixeira.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "lixeira",
+        "pegada": {
+          "altura": 0.55,
+          "x0": 5.17,
+          "x1": 5.62,
+          "y0": 0.12,
+          "y1": 0.57,
+          "z": 0
+        },
+        "referencia": {
+          "x": 5.395,
+          "y": 0.345,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 92,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 40,
+        "largura": 46
+      }
+    },
+    "dentro_mesa": {
+      "altura": 126,
+      "ancoras": {},
+      "apoio": {
+        "x": 83,
+        "y": 80
+      },
+      "arquivo": "dentro_mesa.webp",
+      "iso": {
+        "comodo": "cozinha",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "mesa",
+        "pegada": {
+          "altura": 0.72,
+          "x0": 5.6,
+          "x1": 6.7,
+          "y0": 2,
+          "y1": 2.98,
+          "z": 0
+        },
+        "referencia": {
+          "x": 6.15,
+          "y": 2.49,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 166,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 63,
+        "largura": 83
+      }
+    },
+    "dentro_parede_banheiro": {
+      "altura": 362,
+      "ancoras": {},
+      "apoio": {
+        "x": -248,
+        "y": 98
+      },
+      "arquivo": "dentro_parede_banheiro.webp",
+      "iso": {
+        "andar": "de_cima",
+        "comodo": "banheiro",
+        "ladrilho": 64,
+        "ordem": 2,
+        "peca": "parede",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "tingir": "banheiro",
+        "unidadeZ": 0.56
+      },
+      "largura": 280,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 181,
+        "largura": 140
+      }
+    },
+    "dentro_parede_cozinha": {
+      "altura": 330,
+      "ancoras": {},
+      "apoio": {
+        "x": -312,
+        "y": 66
+      },
+      "arquivo": "dentro_parede_cozinha.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "comodo": "cozinha",
+        "ladrilho": 64,
+        "ordem": 2,
+        "peca": "parede",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "tingir": "cozinha",
+        "unidadeZ": 0.56
+      },
+      "largura": 216,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 165,
+        "largura": 108
+      }
+    },
+    "dentro_parede_interna": {
+      "altura": 80,
+      "ancoras": {},
+      "apoio": {
+        "x": 42,
+        "y": 57
+      },
+      "arquivo": "dentro_parede_interna.webp",
+      "iso": {
+        "ladrilho": 64,
+        "peca": "paredeInterna",
+        "pegada": {
+          "altura": 0.45,
+          "x0": -0.06,
+          "x1": 0.06,
+          "y0": 0,
+          "y1": 1,
+          "z": 0
+        },
+        "referencia": {
+          "x": 0,
+          "y": 0.5,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 84,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 40,
+        "largura": 42
+      }
+    },
+    "dentro_parede_quarto": {
+      "altura": 398,
+      "ancoras": {},
+      "apoio": {
+        "x": 335,
+        "y": 230
+      },
+      "arquivo": "dentro_parede_quarto.webp",
+      "iso": {
+        "andar": "de_cima",
+        "comodo": "quarto",
+        "ladrilho": 64,
+        "ordem": 2,
+        "peca": "parede",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "tingir": "quarto",
+        "unidadeZ": 0.56
+      },
+      "largura": 606,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 199,
+        "largura": 303
+      }
+    },
+    "dentro_parede_sala": {
+      "altura": 398,
+      "ancoras": {},
+      "apoio": {
+        "x": 335,
+        "y": 230
+      },
+      "arquivo": "dentro_parede_sala.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "comodo": "sala",
+        "ladrilho": 64,
+        "ordem": 2,
+        "peca": "parede",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "tingir": "sala",
+        "unidadeZ": 0.56
+      },
+      "largura": 670,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 199,
+        "largura": 335
+      }
+    },
+    "dentro_patinho": {
+      "altura": 46,
+      "ancoras": {
+        "cabeca": {
+          "x": 21,
+          "y": 16
+        },
+        "topoDaCabeca": {
+          "x": 21,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 30,
+        "y": 36
+      },
+      "arquivo": "dentro_patinho.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "patinho",
+        "pegada": {
+          "altura": 0.4,
+          "x0": 4.65,
+          "x1": 5.1,
+          "y0": 0.45,
+          "y1": 0.9,
+          "z": 0.6
+        },
+        "referencia": {
+          "x": 4.875,
+          "y": 0.675,
+          "z": 0.6
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 58,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 23,
+        "largura": 29
+      }
+    },
+    "dentro_pia": {
+      "altura": 126,
+      "ancoras": {
+        "bacia": {
+          "x": 61,
+          "y": 32
+        },
+        "bico": {
+          "x": 65,
+          "y": 18
+        }
+      },
+      "apoio": {
+        "x": 65,
+        "y": 90
+      },
+      "arquivo": "dentro_pia.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "pia",
+        "pegada": {
+          "altura": 0.9,
+          "x0": 6.98,
+          "x1": 7.9,
+          "y0": 0.1,
+          "y1": 0.7,
+          "z": 0
+        },
+        "referencia": {
+          "x": 7.44,
+          "y": 0.39999999999999997,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 130,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 63,
+        "largura": 65
+      }
+    },
+    "dentro_piso_banheiro": {
+      "altura": 304,
+      "ancoras": {},
+      "apoio": {
+        "x": 70,
+        "y": -123
+      },
+      "arquivo": "dentro_piso_banheiro.webp",
+      "iso": {
+        "andar": "de_cima",
+        "comodo": "banheiro",
+        "ladrilho": 64,
+        "ordem": 1,
+        "peca": "piso",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 588,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 152,
+        "largura": 294
+      }
+    },
+    "dentro_piso_cozinha": {
+      "altura": 272,
+      "ancoras": {},
+      "apoio": {
+        "x": 6,
+        "y": -155
+      },
+      "arquivo": "dentro_piso_cozinha.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "comodo": "cozinha",
+        "ladrilho": 64,
+        "ordem": 1,
+        "peca": "piso",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 524,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 136,
+        "largura": 262
+      }
+    },
+    "dentro_piso_quarto": {
+      "altura": 304,
+      "ancoras": {},
+      "apoio": {
+        "x": 326,
+        "y": 5
+      },
+      "arquivo": "dentro_piso_quarto.webp",
+      "iso": {
+        "andar": "de_cima",
+        "comodo": "quarto",
+        "ladrilho": 64,
+        "ordem": 1,
+        "peca": "piso",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 588,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 152,
+        "largura": 294
+      }
+    },
+    "dentro_piso_sala": {
+      "altura": 336,
+      "ancoras": {},
+      "apoio": {
+        "x": 326,
+        "y": 5
+      },
+      "arquivo": "dentro_piso_sala.webp",
+      "iso": {
+        "andar": "de_baixo",
+        "comodo": "sala",
+        "ladrilho": 64,
+        "ordem": 1,
+        "peca": "piso",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 652,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 168,
+        "largura": 326
+      }
+    },
+    "dentro_planta": {
+      "altura": 88,
+      "ancoras": {},
+      "apoio": {
+        "x": 52,
+        "y": 59
+      },
+      "arquivo": "dentro_planta.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "planta",
+        "pegada": {
+          "altura": 0.7,
+          "x0": 7.3,
+          "x1": 7.85,
+          "y0": 4.3,
+          "y1": 4.85,
+          "z": 0
+        },
+        "referencia": {
+          "x": 7.574999999999999,
+          "y": 4.574999999999999,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 104,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 44,
+        "largura": 52
+      }
+    },
+    "dentro_porta_0": {
+      "altura": 232,
+      "ancoras": {},
+      "apoio": {
+        "x": 50,
+        "y": 192
+      },
+      "arquivo": "dentro_porta_0.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "porta",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 124,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 116,
+        "largura": 62
+      }
+    },
+    "dentro_porta_1": {
+      "altura": 232,
+      "ancoras": {},
+      "apoio": {
+        "x": 50,
+        "y": 192
+      },
+      "arquivo": "dentro_porta_1.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "porta",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 124,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 116,
+        "largura": 62
+      }
+    },
+    "dentro_porta_2": {
+      "altura": 232,
+      "ancoras": {},
+      "apoio": {
+        "x": 50,
+        "y": 192
+      },
+      "arquivo": "dentro_porta_2.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "porta",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 124,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 116,
+        "largura": 62
+      }
+    },
+    "dentro_porta_3": {
+      "altura": 232,
+      "ancoras": {},
+      "apoio": {
+        "x": 50,
+        "y": 192
+      },
+      "arquivo": "dentro_porta_3.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "porta",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 124,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 116,
+        "largura": 62
+      }
+    },
+    "dentro_porta_4": {
+      "altura": 232,
+      "ancoras": {},
+      "apoio": {
+        "x": 50,
+        "y": 192
+      },
+      "arquivo": "dentro_porta_4.webp",
+      "iso": {
+        "ladrilho": 64,
+        "ordem": 2.5,
+        "peca": "porta",
+        "referencia": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 124,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 116,
+        "largura": 62
+      }
+    },
+    "dentro_quadro": {
+      "altura": 86,
+      "ancoras": {},
+      "apoio": {
+        "x": 43,
+        "y": 64
+      },
+      "arquivo": "dentro_quadro.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "quadro",
+        "pegada": {
+          "altura": 0.65,
+          "x0": 1.45,
+          "x1": 2.3,
+          "y0": 0,
+          "y1": 0.04,
+          "z": 1.5
+        },
+        "referencia": {
+          "x": 1.875,
+          "y": 0,
+          "z": 1.5
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 76,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 43,
+        "largura": 38
+      }
+    },
+    "dentro_sofa": {
+      "altura": 158,
+      "ancoras": {},
+      "apoio": {
+        "x": 98,
+        "y": 106
+      },
+      "arquivo": "dentro_sofa.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "sofa",
+        "pegada": {
+          "altura": 0.88,
+          "x0": 1.05,
+          "x1": 2.7,
+          "y0": 0.1,
+          "y1": 0.98,
+          "z": 0
+        },
+        "referencia": {
+          "x": 1.875,
+          "y": 0.54,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 196,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 79,
+        "largura": 98
+      }
+    },
+    "dentro_tapete": {
+      "altura": 154,
+      "ancoras": {},
+      "apoio": {
+        "x": 147,
+        "y": 78
+      },
+      "arquivo": "dentro_tapete.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "tapete",
+        "pegada": {
+          "altura": 0,
+          "x0": 1.5,
+          "x1": 3.9,
+          "y0": 1.45,
+          "y1": 3.45,
+          "z": 0
+        },
+        "referencia": {
+          "x": 2.7,
+          "y": 2.45,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 294,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 77,
+        "largura": 147
+      }
+    },
+    "dentro_tv": {
+      "altura": 150,
+      "ancoras": {},
+      "apoio": {
+        "x": 70,
+        "y": 112
+      },
+      "arquivo": "dentro_tv.webp",
+      "iso": {
+        "comodo": "sala",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "tv",
+        "pegada": {
+          "altura": 1.3,
+          "x0": 3.7,
+          "x1": 4.85,
+          "y0": 0.1,
+          "y1": 0.6,
+          "z": 0
+        },
+        "referencia": {
+          "x": 4.275,
+          "y": 0.35,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 140,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 75,
+        "largura": 70
+      }
+    },
+    "dentro_ursinho": {
+      "altura": 78,
+      "ancoras": {},
+      "apoio": {
+        "x": 43,
+        "y": 53
+      },
+      "arquivo": "dentro_ursinho.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "ursinho",
+        "pegada": {
+          "altura": 0.5,
+          "x0": 1.6,
+          "x1": 2.15,
+          "y0": 1.2,
+          "y1": 1.7,
+          "z": 0.55
+        },
+        "referencia": {
+          "x": 1.875,
+          "y": 1.45,
+          "z": 0.55
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 86,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 39,
+        "largura": 43
+      }
+    },
+    "dentro_vaso": {
+      "altura": 108,
+      "ancoras": {},
+      "apoio": {
+        "x": 54,
+        "y": 77
+      },
+      "arquivo": "dentro_vaso.webp",
+      "iso": {
+        "comodo": "banheiro",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "vaso",
+        "pegada": {
+          "altura": 0.7,
+          "x0": 5.92,
+          "x1": 6.47,
+          "y0": 0.1,
+          "y1": 0.7,
+          "z": 0
+        },
+        "referencia": {
+          "x": 6.195,
+          "y": 0.39999999999999997,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 108,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 54,
+        "largura": 54
+      }
+    },
+    "dentro_violao": {
+      "altura": 104,
+      "ancoras": {},
+      "apoio": {
+        "x": 52,
+        "y": 74
+      },
+      "arquivo": "dentro_violao.webp",
+      "iso": {
+        "comodo": "quarto",
+        "estado": "normal",
+        "frente": "Y",
+        "ladrilho": 64,
+        "movel": "violao",
+        "pegada": {
+          "altura": 0.9,
+          "x0": 3.3,
+          "x1": 3.85,
+          "y0": 4.3,
+          "y1": 4.85,
+          "z": 0
+        },
+        "referencia": {
+          "x": 3.575,
+          "y": 4.574999999999999,
+          "z": 0
+        },
+        "unidadeZ": 0.56
+      },
+      "largura": 104,
+      "tipo": "isometrico",
+      "uso": {
+        "altura": 52,
+        "largura": 52
+      }
+    }
+  }
+}

@@ -3,6 +3,8 @@
 //
 //   npm run render              renderiza o catálogo inteiro e apaga imagens órfãs
 //   npm run render -- moeda     renderiza só os ids dados (o resto do manifesto fica como está)
+//   CATALOGO=fase6 npm run render   catálogo separado (src/catalogo_fase6.js) e manifesto separado
+//                               (manifesto_fase6.json, na mesma pasta); nunca apaga imagens de outros manifestos
 //
 // Sobe um servidor local com esta pasta, abre pagina/render.html no Chromium headless (WebGL por
 // SwiftShader), pede cada objeto do catálogo (src/catalogo.js) e grava, em
@@ -22,6 +24,9 @@ const ESCALA = 2;
 /** O render sai maior e é reduzido com Lanczos: bordas mais lisas que o antialias do SwiftShader. */
 const SUPERAMOSTRA = 2;
 const QUALIDADE_WEBP = 85;
+/** Catálogo separado por fase (ex.: fase6), para fases em paralelo não mexerem no mesmo manifesto. */
+const CATALOGO = process.env.CATALOGO || '';
+if (CATALOGO && !/^[a-z0-9_]+$/.test(CATALOGO)) throw new Error('CATALOGO inválido: ' + CATALOGO);
 
 const TIPOS = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.css': 'text/css', '.woff2': 'font/woff2' };
 
@@ -55,15 +60,15 @@ async function main() {
     const pagina = await navegador.newPage();
     pagina.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log('console:', m.text()); });
     pagina.on('pageerror', (e) => { falhou = true; console.log('erro na página:', e.message); });
-    await pagina.goto(`http://127.0.0.1:${porta}/pagina/render.html`);
+    await pagina.goto(`http://127.0.0.1:${porta}/pagina/render.html${CATALOGO ? '?catalogo=' + CATALOGO : ''}`);
     await pagina.waitForFunction(() => window.PRONTO === true, null, { timeout: 120000 });
     const todos = await pagina.evaluate(() => window.catalogo());
     const ids = pedidos.length ? pedidos : todos;
     const desconhecidos = ids.filter((i) => !todos.includes(i));
     if (desconhecidos.length) throw new Error('fora do catálogo: ' + desconhecidos.join(', '));
 
-    const arqManifesto = path.join(DESTINO, 'manifesto.json');
-    const anterior = pedidos.length && fs.existsSync(arqManifesto) ? JSON.parse(fs.readFileSync(arqManifesto, 'utf8')).imagens : {};
+    const arqManifesto = path.join(DESTINO, CATALOGO ? `manifesto_${CATALOGO}.json` : 'manifesto.json');
+    const anterior = (pedidos.length || CATALOGO) && fs.existsSync(arqManifesto) ? JSON.parse(fs.readFileSync(arqManifesto, 'utf8')).imagens : {};
     const imagens = { ...anterior };
 
     for (const id of ids) {
@@ -76,6 +81,7 @@ async function main() {
       const arquivo = id + '.webp';
       fs.writeFileSync(path.join(DESTINO, arquivo), webp);
       imagens[id] = { arquivo, tipo: r.tipo, largura: r.largura, altura: r.altura, uso: r.uso, apoio: r.apoio, ancoras: r.ancoras };
+      if (r.iso !== undefined) imagens[id].iso = r.iso;
       if (r.grupo !== undefined) Object.assign(imagens[id], { grupo: r.grupo, tingir: r.tingir, ordem: r.ordem, personagem: r.personagem });
       // camadas de câmera fixa não podem encostar na borda: seria parte da figura cortada
       if (r.bordas.length) { falhou = true; console.log(`CORTADO ${id}: encosta em ${r.bordas.join(', ')}`); }
@@ -83,9 +89,23 @@ async function main() {
     }
 
     // Sem lista explícita, o manifesto é exatamente o catálogo: remove o que saiu dele.
-    if (!pedidos.length) {
+    if (!pedidos.length && CATALOGO) {
+      // catálogo separado: só some o que saiu DESTE catálogo (as imagens dos outros manifestos ficam)
+      for (const id of Object.keys(imagens)) {
+        if (todos.includes(id)) continue;
+        const f = path.join(DESTINO, imagens[id].arquivo);
+        if (fs.existsSync(f)) { fs.unlinkSync(f); console.log('removido órfão', imagens[id].arquivo); }
+        delete imagens[id];
+      }
+    } else if (!pedidos.length) {
       for (const id of Object.keys(imagens)) if (!todos.includes(id)) delete imagens[id];
       const validos = new Set(Object.values(imagens).map((i) => i.arquivo).concat('manifesto.json'));
+      // imagens dos manifestos separados (manifesto_<fase>.json) também são válidas
+      for (const f of fs.readdirSync(DESTINO)) {
+        if (!/^manifesto_[a-z0-9_]+\.json$/.test(f)) continue;
+        validos.add(f);
+        for (const i of Object.values(JSON.parse(fs.readFileSync(path.join(DESTINO, f), 'utf8')).imagens)) validos.add(i.arquivo);
+      }
       for (const f of fs.readdirSync(DESTINO)) {
         if (!validos.has(f)) { fs.unlinkSync(path.join(DESTINO, f)); console.log('removido órfão', f); }
       }
