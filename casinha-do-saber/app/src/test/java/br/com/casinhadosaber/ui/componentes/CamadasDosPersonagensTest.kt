@@ -3,6 +3,7 @@ package br.com.casinhadosaber.ui.componentes
 import br.com.casinhadosaber.dominio.Aparencia
 import br.com.casinhadosaber.dominio.Genero
 import br.com.casinhadosaber.dominio.Irmao
+import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.dominio.ParteDoCorpo
 import br.com.casinhadosaber.dominio.Perfil
 import org.junit.Assert.assertEquals
@@ -51,7 +52,7 @@ class CamadasDosPersonagensTest {
         for (perfil in perfis) for (personagem in PersonagemDaArte.entries) {
             assertTrue("$personagem de $perfil", CamadasDosPersonagens.disponivel(manifesto, personagem, perfil))
             for (q in CamadasDosPersonagens.todosOsQuadros()) {
-                val ids = CamadasDosPersonagens.ids(personagem, perfil, q)
+                val ids = CamadasDosPersonagens.ids(manifesto, personagem, perfil, q)
                 assertEquals("ids repetidos em $ids", ids.size, ids.toSet().size)
                 val camadas = CamadasDosPersonagens.empilhar(manifesto, ids)
                 assertNotNull("faltam camadas de $personagem: ${ids.filter { it !in manifesto.imagens }}", camadas)
@@ -69,24 +70,24 @@ class CamadasDosPersonagensTest {
     @Test fun humorEPiscarEscolhemORosto() {
         val menina = Perfil("Ana", Genero.MENINA, estiloCabelo = 0)
         val menino = Perfil("Leo", Genero.MENINO, estiloCabelo = 2)
-        val feliz = CamadasDosPersonagens.idsDaCrianca(menina, QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.FELIZ))
+        val feliz = CamadasDosPersonagens.idsDaCrianca(manifesto, menina, QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.FELIZ))
         assertTrue("crianca_olhos_aberto_cilios" in feliz)
         assertTrue("crianca_boca_feliz" in feliz)
         assertTrue("crianca_laco" in feliz)
         assertTrue("crianca_cabelo_frente_menina_liso" in feliz)
-        val torcendo = CamadasDosPersonagens.idsDaCrianca(menino, QuadroDoPersonagem(PoseDosBracos.TORCENDO, Humor.TORCENDO))
+        val torcendo = CamadasDosPersonagens.idsDaCrianca(manifesto, menino, QuadroDoPersonagem(PoseDosBracos.TORCENDO, Humor.TORCENDO))
         assertTrue("crianca_olhos_alegre" in torcendo)
         assertTrue("crianca_cabelo_tras_menino_espetado" in torcendo)
         assertFalse(torcendo.any { it.contains("laco") })
-        val piscando = CamadasDosPersonagens.idsDaCrianca(menina, QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.PENSANDO, olhosFechados = true))
+        val piscando = CamadasDosPersonagens.idsDaCrianca(manifesto, menina, QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.PENSANDO, olhosFechados = true))
         assertTrue("crianca_olhos_fechado_cilios" in piscando)
         assertTrue("crianca_sobrancelhas_pensando" in piscando)
-        val falando = CamadasDosPersonagens.idsDaCrianca(menina, QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.FELIZ, bocaAberta = true))
+        val falando = CamadasDosPersonagens.idsDaCrianca(manifesto, menina, QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.FELIZ, bocaAberta = true))
         assertTrue("crianca_boca_surpreso" in falando)
         // Com chapéu ou acessório no cabelo, o laço sai (como no desenho antigo).
-        assertFalse("crianca_laco" in CamadasDosPersonagens.idsDaCrianca(menina.copy(chapeu = "👑"), QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.FELIZ)))
+        assertFalse("crianca_laco" in CamadasDosPersonagens.idsDaCrianca(manifesto, menina.copy(chapeu = "👑"), QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.FELIZ)))
         // Tranças: elásticos, sem laço.
-        val trancas = CamadasDosPersonagens.idsDaCrianca(menina.copy(estiloCabelo = 2), QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.FELIZ))
+        val trancas = CamadasDosPersonagens.idsDaCrianca(manifesto, menina.copy(estiloCabelo = 2), QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.FELIZ))
         assertTrue("crianca_enfeite_trancas" in trancas)
         assertFalse("crianca_laco" in trancas)
         // Irmãzinha com cílios e laço; irmãozinho sem.
@@ -156,15 +157,6 @@ class CamadasDosPersonagensTest {
         assertEquals(Aparencia.roupas[0], CamadasDosPersonagens.cor(p.copy(roupa = -1), "roupa"))
     }
 
-    @Test fun trajeEAcessorioFicamComODesenhoAntigo() {
-        val p = Perfil("X", Genero.MENINA)
-        assertTrue(CamadasDosPersonagens.usaCamadas(p))
-        assertTrue(CamadasDosPersonagens.usaCamadas(p.copy(chapeu = "👑")))
-        // Traje desconhecido (save antigo) conta como roupa de sempre.
-        assertTrue(CamadasDosPersonagens.usaCamadas(p.copy(traje = "nao_existe")))
-        assertFalse(CamadasDosPersonagens.usaCamadas(p.copy(traje = "listras")))
-        assertFalse(CamadasDosPersonagens.usaCamadas(p.copy(acessorios = mapOf(ParteDoCorpo.ROSTO to "oculos"))))
-    }
 
     @Test fun quadroNaCaixaPoeOsPesNoLugar() {
         val info = manifesto.imagens.getValue("crianca_corpo")
@@ -202,5 +194,177 @@ class CamadasDosPersonagensTest {
         assertTrue(lugar.largura in r * 1.5f..r * 2.2f)
         // Sem âncora, sem chapéu (e sem quebrar).
         assertNull(CamadasDosPersonagens.lugarDoChapeu(cabeca.copy(ancoras = emptyMap())))
+    }
+
+    // ------------------------------------------------------------------ guarda-roupa (Fase 7)
+
+    private val parado = QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.FELIZ)
+
+    /** As camadas visíveis (depois do `esconde`), na ordem de desenho. */
+    private fun visiveis(perfil: Perfil, q: QuadroDoPersonagem = parado): List<String> =
+        CamadasDosPersonagens.camadas(manifesto, PersonagemDaArte.CRIANCA, perfil, q)?.map { it.id }
+            ?: throw AssertionError("faltam camadas: ${CamadasDosPersonagens.idsDaCrianca(manifesto, perfil, q).filter { it !in manifesto.imagens }}")
+
+    /** Confere uma pilha: todas no manifesto, em ordem, no mesmo quadro, da criança e uma por grupo. */
+    private fun confereAPilha(perfil: Perfil, q: QuadroDoPersonagem) {
+        val ids = CamadasDosPersonagens.idsDaCrianca(manifesto, perfil, q)
+        assertEquals("ids repetidos em $ids", ids.size, ids.toSet().size)
+        val camadas = CamadasDosPersonagens.empilhar(manifesto, ids)
+        assertNotNull("faltam camadas de $perfil em $q: ${ids.filter { it !in manifesto.imagens }}", camadas)
+        camadas!!
+        assertEquals(camadas.map { it.ordem }.sorted(), camadas.map { it.ordem })
+        assertTrue(camadas.all { it.personagem == "crianca" })
+        assertEquals(1, camadas.map { Triple(it.largura, it.altura, it.apoio) }.toSet().size)
+        assertEquals("dois do mesmo grupo em ${camadas.map { it.id }}", camadas.size, camadas.map { it.grupo }.toSet().size)
+        // Nada do que ficou na pilha está escondido por outra peça.
+        for (c in camadas) for (o in camadas) {
+            if (CamadasDosPersonagens.pecaDe(o.id) != CamadasDosPersonagens.pecaDe(c.id)) {
+                assertFalse("${o.id} devia esconder ${c.id}", c.grupo in o.esconde)
+            }
+        }
+    }
+
+    @Test fun todoTrajeAcessorioEChapeuTemTodasAsCamadas() {
+        val chapeus = listOf("") + CamadasDosPersonagens.CAMADAS_DOS_CHAPEUS.keys
+        val perfis = Genero.entries.flatMap { g ->
+            val base = Perfil("X", g, pele = 1, cabelo = 2, estiloCabelo = if (g == Genero.MENINA) 0 else 2)
+            Loja.trajes.flatMap { t -> chapeus.map { c -> base.copy(traje = t.id, chapeu = c) } } +
+                Loja.acessorios.map { a -> base.copy(acessorios = mapOf(a.parte to a.id)) } +
+                // Um de cada parte ao mesmo tempo, com traje e chapéu (como a captura 59).
+                (0 until 3).map { k ->
+                    base.copy(
+                        acessorios = ParteDoCorpo.entries.associateWith { parte -> Loja.acessorios.filter { it.parte == parte }[k].id },
+                        traje = Loja.trajes[k * 5].id,
+                        chapeu = chapeus[k + 1],
+                    )
+                }
+        }
+        for (perfil in perfis) {
+            assertTrue("sem camadas para $perfil", CamadasDosPersonagens.disponivel(manifesto, PersonagemDaArte.CRIANCA, perfil))
+            for (q in CamadasDosPersonagens.todosOsQuadros()) confereAPilha(perfil, q)
+        }
+    }
+
+    @Test fun trajeTrocaARoupaDeSempreEUsaOGenero() {
+        val menina = Perfil("Ana", Genero.MENINA, estiloCabelo = 0)
+        val menino = Perfil("Leo", Genero.MENINO, estiloCabelo = 0)
+        // Listras: silhueta por gênero, tingida com a cor do perfil, com estampa; o sapato de sempre continua.
+        val listras = visiveis(menina.copy(traje = "listras"))
+        assertTrue("roupa_listras_menina" in listras && "roupa_listras_menina_estampa" in listras)
+        assertFalse(listras.any { it.startsWith("crianca_roupa_") })
+        assertTrue("crianca_pes_menina" in listras)
+        assertEquals("roupa", manifesto.imagens.getValue("roupa_listras_menina").tingir)
+        assertTrue("roupa_listras_menino" in visiveis(menino.copy(traje = "listras")))
+        // Herói: capa atrás e botas próprias (o sapato de sempre sai).
+        val heroi = visiveis(menino.copy(traje = "heroi"))
+        assertTrue(listOf("roupa_heroi_menino", "roupa_heroi_menino_estampa", "roupa_heroi_tras", "roupa_heroi_pes").all { it in heroi })
+        assertFalse("crianca_pes_menino" in heroi)
+        assertTrue(heroi.indexOf("roupa_heroi_tras") < heroi.indexOf("crianca_corpo"))
+        // Realeza muda com o gênero; vestido e macacão servem em qualquer criança (a mesma camada).
+        assertTrue("roupa_realeza_menina" in visiveis(menina.copy(traje = "realeza")))
+        assertTrue("roupa_realeza_menino" in visiveis(menino.copy(traje = "realeza")))
+        assertTrue("roupa_vestido" in visiveis(menino.copy(traje = "vestido")))
+        assertTrue("roupa_macacao" in visiveis(menina.copy(traje = "macacao")))
+        // Trajes coloridos não tingem.
+        assertNull(manifesto.imagens.getValue("roupa_pijama").tingir)
+        // Traje desconhecido (save antigo) é a roupa de sempre.
+        assertEquals(visiveis(menina), visiveis(menina.copy(traje = "nao_existe")))
+    }
+
+    @Test fun mangasSeguemOsBracosECabecaDoTrajeSaiComChapeu() {
+        val menina = Perfil("Ana", Genero.MENINA, estiloCabelo = 0)
+        for (pose in PoseDosBracos.entries) {
+            val ids = visiveis(menina.copy(traje = "astronauta"), QuadroDoPersonagem(pose, Humor.FELIZ))
+            assertTrue("roupa_astronauta_mangas_${pose.sufixo}" in ids)
+            assertEquals(1, ids.count { it.contains("_mangas_") })
+            assertTrue("crianca_bracos_${pose.sufixo}" in ids)
+            // As mangas compridas vão por cima dos braços.
+            assertTrue(ids.indexOf("roupa_astronauta_mangas_${pose.sufixo}") > ids.indexOf("crianca_bracos_${pose.sufixo}"))
+        }
+        // Capacete sem chapéu (e o laço dos coques some debaixo dele); com o boné, o boné no lugar do capacete.
+        val semChapeu = visiveis(menina.copy(traje = "astronauta"))
+        assertTrue("roupa_astronauta_cabeca" in semChapeu)
+        assertFalse("crianca_laco" in semChapeu)
+        val comBone = visiveis(menina.copy(traje = "astronauta", chapeu = "🧢"))
+        assertTrue("chapeu_bone" in comBone)
+        assertFalse(comBone.any { it.startsWith("roupa_") && it.endsWith("_cabeca") })
+        // Pirata: tapa-olho, que sai com óculos.
+        assertTrue("roupa_pirata_tapaolho" in visiveis(menina.copy(traje = "pirata")))
+        val pirataDeOculos = visiveis(menina.copy(traje = "pirata", acessorios = mapOf(ParteDoCorpo.ROSTO to "oculos")))
+        assertFalse("roupa_pirata_tapaolho" in pirataDeOculos)
+        assertTrue("acessorio_oculos" in pirataDeOculos)
+    }
+
+    @Test fun acessoriosPorParteDoCorpo() {
+        val menino = Perfil("Leo", Genero.MENINO, estiloCabelo = 1)
+        // Na mão: para cima só torcendo.
+        val balao = menino.copy(acessorios = mapOf(ParteDoCorpo.MAO to "balao"))
+        assertTrue("acessorio_balao_baixo" in visiveis(balao))
+        assertTrue("acessorio_balao_baixo" in visiveis(balao, QuadroDoPersonagem(PoseDosBracos.TCHAU2, Humor.FELIZ)))
+        assertTrue("acessorio_balao_cima" in visiveis(balao, QuadroDoPersonagem(PoseDosBracos.TORCENDO, Humor.TORCENDO)))
+        // Costas: a peça de trás e as alças (ou o fecho) na frente.
+        val mochila = visiveis(menino.copy(acessorios = mapOf(ParteDoCorpo.COSTAS to "mochila")))
+        assertTrue("acessorio_mochila" in mochila && "acessorio_mochila_frente" in mochila)
+        assertTrue(mochila.indexOf("acessorio_mochila") < mochila.indexOf("crianca_corpo"))
+        assertTrue(mochila.indexOf("acessorio_mochila_frente") > mochila.indexOf("crianca_cabeca"))
+        assertTrue("acessorio_asas" in visiveis(menino.copy(acessorios = mapOf(ParteDoCorpo.COSTAS to "asas"))))
+        // Pés: o tênis tira o sapato de sempre e o do traje.
+        val tenis = visiveis(menino.copy(traje = "heroi", acessorios = mapOf(ParteDoCorpo.PES to "tenis")))
+        assertTrue("acessorio_tenis" in tenis)
+        assertFalse("roupa_heroi_pes" in tenis || "crianca_pes_menino" in tenis)
+        // Cabelo: a tiara tira o laço da menina.
+        val tiara = visiveis(Perfil("Ana", Genero.MENINA, estiloCabelo = 1, acessorios = mapOf(ParteDoCorpo.CABELO to "tiara")))
+        assertTrue("acessorio_tiara" in tiara)
+        assertFalse("crianca_laco" in tiara)
+        // Pescoço por cima da roupa e embaixo do rosto.
+        val gravata = visiveis(menino.copy(acessorios = mapOf(ParteDoCorpo.PESCOCO to "gravata")))
+        assertTrue(gravata.indexOf("acessorio_gravata") > gravata.indexOf("crianca_roupa_menino"))
+        assertTrue(gravata.indexOf("acessorio_gravata") < gravata.indexOf("crianca_boca_feliz"))
+        // Acessório desconhecido ou na parte errada é ignorado.
+        assertEquals(visiveis(menino), visiveis(menino.copy(acessorios = mapOf(ParteDoCorpo.ROSTO to "balao"))))
+        assertEquals(visiveis(menino), visiveis(menino.copy(acessorios = mapOf(ParteDoCorpo.ROSTO to "nao_existe"))))
+    }
+
+    @Test fun chapeusDaLojaSaoCamadas() {
+        val chapeusDaLoja = Loja.produtos.filter { it.categoria == br.com.casinhadosaber.dominio.Categoria.CHAPEU }.map { it.valor }
+        assertEquals(chapeusDaLoja.toSet(), CamadasDosPersonagens.CAMADAS_DOS_CHAPEUS.keys)
+        val menino = Perfil("Leo", Genero.MENINO)
+        for (c in chapeusDaLoja) {
+            val id = CamadasDosPersonagens.camadaDoChapeu(c)!!
+            val info = manifesto.imagens.getValue(id)
+            assertEquals("chapeu", info.grupo)
+            // A âncora da cabeça do chapéu é a mesma da cabeça da criança (a camada já está no lugar).
+            assertEquals(manifesto.imagens.getValue("crianca_cabeca").ancoras["cabeca"], info.ancoras["cabeca"])
+            val ids = visiveis(menino.copy(chapeu = c))
+            assertEquals(1, ids.count { it.startsWith("chapeu_") })
+            assertTrue(id in ids)
+            // Por cima do cabelo da frente, embaixo dos braços.
+            assertTrue(ids.indexOf(id) > ids.indexOf("crianca_cabelo_frente_menino_liso"))
+            assertTrue(ids.indexOf(id) < ids.indexOf("crianca_bracos_parado"))
+            assertFalse(CamadasDosPersonagens.chapeuEmEmoji(menino.copy(chapeu = c)))
+        }
+        // Emoji sem camada (save estranho): fica fora da pilha e vai como emoji pela âncora.
+        val estranho = menino.copy(chapeu = "🎓")
+        assertTrue(CamadasDosPersonagens.chapeuEmEmoji(estranho))
+        assertFalse(visiveis(estranho).any { it.startsWith("chapeu_") })
+        assertFalse(CamadasDosPersonagens.chapeuEmEmoji(menino))
+    }
+
+    @Test fun pecaDeCadaCamada() {
+        assertEquals("crianca", CamadasDosPersonagens.pecaDe("crianca_roupa_menina_estampa"))
+        assertEquals("irmao", CamadasDosPersonagens.pecaDe("irmao_laco"))
+        assertEquals("roupa_pirata", CamadasDosPersonagens.pecaDe("roupa_pirata_tapaolho"))
+        assertEquals("roupa_heroi", CamadasDosPersonagens.pecaDe("roupa_heroi_menina_estampa"))
+        assertEquals("acessorio_capa", CamadasDosPersonagens.pecaDe("acessorio_capa_frente"))
+        assertEquals("chapeu_bone", CamadasDosPersonagens.pecaDe("chapeu_bone"))
+    }
+
+    @Test fun faltandoUmaCamadaDoTrajeFicaODesenhoAntigo() {
+        val p = Perfil("X", Genero.MENINO, traje = "pirata")
+        assertTrue(CamadasDosPersonagens.disponivel(manifesto, PersonagemDaArte.CRIANCA, p))
+        val semPirata = ManifestoDaArte(manifesto.versao, manifesto.escala, manifesto.imagens - "roupa_pirata")
+        assertFalse(CamadasDosPersonagens.disponivel(semPirata, PersonagemDaArte.CRIANCA, p))
+        // A roupa de sempre continua montada pelas camadas.
+        assertTrue(CamadasDosPersonagens.disponivel(semPirata, PersonagemDaArte.CRIANCA, p.copy(traje = "")))
     }
 }

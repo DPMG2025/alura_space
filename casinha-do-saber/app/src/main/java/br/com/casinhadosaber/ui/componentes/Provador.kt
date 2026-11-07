@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +35,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.casinhadosaber.dominio.Categoria
 import br.com.casinhadosaber.dominio.Gaveta
 import br.com.casinhadosaber.dominio.Loja
 import br.com.casinhadosaber.dominio.Perfil
@@ -41,6 +43,7 @@ import br.com.casinhadosaber.dominio.Produto
 import br.com.casinhadosaber.dominio.en
 import br.com.casinhadosaber.dominio.pt
 import br.com.casinhadosaber.dominio.temNa
+import br.com.casinhadosaber.dominio.tirando
 import br.com.casinhadosaber.dominio.usa
 import br.com.casinhadosaber.dominio.vestindo
 import br.com.casinhadosaber.ui.LocalNarrador
@@ -51,6 +54,9 @@ import br.com.casinhadosaber.ui.tema.Cores
  * Provador do espelho e do guarda-roupa: uma aba por gaveta (roupas, chapéus e cada parte do corpo),
  * com ícone grande e toque de 64dp. Tocar num item que é seu veste (e o narrador diz o nome, em português
  * e em inglês); o botão ✖ da gaveta tira o que está nela.
+ *
+ * Cada item mostra a criança vestindo a peça (camadas 3D, miniatura parada: um bitmap composto uma vez e
+ * guardado), com o ícone pequeno no canto para reconhecer peças que quase não aparecem de frente (a mochila).
  *
  * Com [precoDe], mostra também o que ainda não é seu, com o preço: tocar nele chama [onVestir] do mesmo jeito,
  * e quem chamou decide (no guarda-roupa, experimentar e depois comprar). Sem [precoDe] (espelho), só o que é seu.
@@ -135,9 +141,11 @@ fun Provador(
                 },
             ) {
                 if (aba == Gaveta.ROUPAS) {
-                    Crianca(perfil.copy(traje = "", chapeu = ""), Modifier.height(58.dp), animado = false)
+                    Crianca(perfil.copy(traje = "", chapeu = ""), Modifier.height(ALTURA_DA_MINIATURA), animado = false)
                 } else {
-                    Text("✖️", fontSize = 30.sp)
+                    // A criança sem nada nesta gaveta, com o ✖ no canto.
+                    Crianca(perfil.tirando(aba), Modifier.height(ALTURA_DA_MINIATURA), animado = false)
+                    IconeNoCanto("✖️")
                 }
             }
             for (p in itens) {
@@ -156,11 +164,8 @@ fun Provador(
                         onVestir(p)
                     },
                 ) {
-                    if (p.categoria == br.com.casinhadosaber.dominio.Categoria.ROUPA) {
-                        Crianca(perfil.vestindo(p).copy(chapeu = ""), Modifier.height(58.dp), animado = false)
-                    } else {
-                        Text(p.icone, fontSize = 38.sp, maxLines = 1)
-                    }
+                    Crianca(miniaturaVestindo(perfil, p), Modifier.height(ALTURA_DA_MINIATURA), animado = false)
+                    IconeNoCanto(p.icone)
                 }
             }
             if (itens.isEmpty()) {
@@ -179,6 +184,30 @@ fun Provador(
     }
 }
 
+/** Altura da criança nas miniaturas do provador, da lojinha e do guarda-roupa. */
+private val ALTURA_DA_MINIATURA = 58.dp
+
+/**
+ * O perfil para a miniatura de [p]: a criança vestindo a peça. Na roupa, sem chapéu (o chapéu esconderia a
+ * cabeça do traje, como o capacete do astronauta ou a touca do chef).
+ */
+fun miniaturaVestindo(perfil: Perfil, p: Produto): Perfil =
+    if (p.categoria == Categoria.ROUPA) perfil.vestindo(p).copy(chapeu = "") else perfil.vestindo(p)
+
+/** O ícone da peça, pequeno, no canto de cima da miniatura (só para reconhecer; a peça está na criança). */
+@Composable
+private fun BoxScope.IconeNoCanto(icone: String) {
+    Text(
+        icone,
+        fontSize = 15.sp,
+        maxLines = 1,
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .background(Color.White.copy(alpha = 0.85f), CircleShape)
+            .padding(2.dp),
+    )
+}
+
 @Composable
 private fun ItemDoProvador(
     descricao: String,
@@ -186,7 +215,7 @@ private fun ItemDoProvador(
     rodape: String?,
     onClick: () -> Unit,
     apagado: Boolean = false,
-    desenho: @Composable () -> Unit,
+    desenho: @Composable BoxScope.() -> Unit,
 ) {
     Column(
         Modifier
@@ -204,7 +233,7 @@ private fun ItemDoProvador(
     ) {
         Box(
             Modifier
-                .height(64.dp)
+                .size(width = 64.dp, height = 64.dp)
                 .graphicsLayer { alpha = if (apagado) 0.6f else 1f },
             contentAlignment = Alignment.Center,
         ) { desenho() }

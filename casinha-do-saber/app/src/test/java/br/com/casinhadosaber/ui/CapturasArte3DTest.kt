@@ -40,7 +40,7 @@ import br.com.casinhadosaber.ui.componentes.desenharPersonagemEmCamadas
 import br.com.casinhadosaber.ui.tema.TemaCasinha
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import br.com.casinhadosaber.dominio.ParteDoCorpo
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -125,7 +125,7 @@ class CapturasArte3DTest {
         val manifesto = ArteDoApp.manifesto(app)
         val parado = QuadroDoPersonagem(PoseDosBracos.PARADO, Humor.FELIZ)
         fun composto(p: Perfil): android.graphics.Bitmap {
-            val camadas = CamadasDosPersonagens.empilhar(manifesto, CamadasDosPersonagens.idsDaCrianca(p, parado))
+            val camadas = CamadasDosPersonagens.camadas(manifesto, PersonagemDaArte.CRIANCA, p, parado)
             assertNotNull("faltam camadas para $p", camadas)
             val img = ComposicaoDosPersonagens.composto(app, camadas!!, p, 170, 260)
             assertNotNull("a criança $p não foi composta (camada ilegível?)", img)
@@ -152,8 +152,14 @@ class CapturasArte3DTest {
             assertTrue(ComposicaoDosPersonagens.podeUsar(app, PersonagemDaArte.CRIANCA, p))
             assertTrue(ComposicaoDosPersonagens.podeUsar(app, PersonagemDaArte.IRMAO, p))
         }
-        // Traje da loja ainda não tem camadas: fica o desenho antigo.
-        assertFalse(ComposicaoDosPersonagens.podeUsar(app, PersonagemDaArte.CRIANCA, Perfil("A", Genero.MENINA, traje = "listras")))
+        // Desde a Fase 7, traje, acessório e chapéu da loja também são camadas (o desenho antigo é só reserva).
+        assertTrue(ComposicaoDosPersonagens.podeUsar(app, PersonagemDaArte.CRIANCA, Perfil("A", Genero.MENINA, traje = "listras")))
+        assertTrue(
+            ComposicaoDosPersonagens.podeUsar(
+                app, PersonagemDaArte.CRIANCA,
+                Perfil("A", Genero.MENINO, traje = "pirata", chapeu = "🎩", acessorios = mapOf(ParteDoCorpo.MAO to "balao")),
+            ),
+        )
 
         val criancas = listOf(
             Perfil("Ana", Genero.MENINA, pele = 3, cabelo = 1, estiloCabelo = 0, roupa = 1),

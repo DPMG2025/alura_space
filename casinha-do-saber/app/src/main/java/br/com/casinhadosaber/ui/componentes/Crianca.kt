@@ -64,9 +64,9 @@ const val PROPORCAO_DESENHO_CRIANCA = 0.62f
 
 /**
  * A criança (menino ou menina). Monta as camadas 3D pré-renderizadas (`assets/arte/crianca_*`) para o perfil,
- * o humor e a pose, tingidas com a pele, o cabelo e a cor da roupa; com traje ou acessório da loja (que ainda
- * não têm camadas) ou se faltar alguma camada, usa o desenho antigo, feito com formas simples.
- * [acenando] faz um braço dar tchau.
+ * o humor e a pose, tingidas com a pele, o cabelo e a cor da roupa, com o que ela veste do guarda-roupa
+ * (`roupa_*`, `acessorio_*` e `chapeu_*`, Fase 7). Só se faltar alguma camada (ou a arte não puder ser lida)
+ * usa o desenho antigo, feito com formas simples, como reserva. [acenando] faz um braço dar tchau.
  */
 @Composable
 fun Crianca(
@@ -101,7 +101,8 @@ fun Crianca(
                 vivo = vivo,
                 largura = maxWidth,
                 altura = maxHeight,
-                chapeu = perfil.chapeu,
+                // Os chapéus da loja estão na pilha das camadas; só um emoji sem camada vai por cima.
+                chapeu = if (CamadasDosPersonagens.chapeuEmEmoji(perfil)) perfil.chapeu else "",
                 ritmoDoPiscar = 3800,
                 ginga = 0f,
                 reserva = { q -> desenharCrianca(perfil, null, q.olhosFechados, q.humor) },
