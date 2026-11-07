@@ -19,11 +19,70 @@ Situação final em 2026-11-07 (entrega pedida pelo dono do produto, sem terceir
 | 7. Guarda roupa | feito | 6 | build verde |
 | 8. Demais telas | feito | 6 | build verde |
 | 9. Acabamento | feito (duas rodadas de arte e Kotlin) | 6; geral do app 7 | build verde; terceira rodada NÃO feita |
+| 10. Livro de Colorir | NOVA, não começada | a fazer | desenho abaixo, seção "Fases novas" |
+| 11. Quebra-cabeças | NOVA, não começada | a fazer | desenho abaixo, seção "Fases novas" |
 
 ## O que ficou de fora (dono decidiu entregar assim)
 * Terceira rodada de acabamento: 30 figuras de emoji (🏊 😴 🧚 👧 🦸 ⛱ 🐞 🎾 📖), casinha de cachorro 3D, composição das áreas novas (adesivos em pares), nós da trilha todos iguais, números soltos em 33 e no v3d_15 (Álbum 14, Diplomas 1), refinamentos de layout. Lista completa em relatorios/revisao-fase9-rodada2.md.
 * Emulador de celular verde no CI (ver acima).
 * Aceites que são do dono: tela cheia no tablet Samsung e teste de dez minutos com a criança (roteiro-aceite.md).
+
+## Fases novas pedidas pelo dono (2026-11-07, origem: pedido na sessão)
+
+Regras comuns às duas: arte no pipeline `arte3d/` (WebP, manifesto, orçamento de 400 KB por imagem, APK abaixo de 150 MB); prêmios pelo mesmo caminho que o app já usa (moedinhas, estrelas, adesivos do álbum, itens da casa e diplomas, sem inventar moeda nova); tudo funciona sem internet, sem anúncio, sem compra; nada de tempo limite nem perda ao errar; só avança de nível quem quer; progresso salvo em `EstadoJogo` (dados novos com valor padrão, para não quebrar cópia antiga); voz do narrador pelas mesmas vozes gravadas; área dos pais mostra o que a criança pintou e montou. Cada fase segue o processo das anteriores: briefing, código e arte, revisor independente, CI. Sem Android SDK na nuvem, só o CI prova.
+
+### Fase 10. Livro de Colorir
+
+Não confundir com o ateliê atual (`TelaAtelie`, `Pintura`, quadradinhos em grade): o Livro de Colorir é outra tela, com desenhos de contorno de verdade. O ateliê continua como está.
+
+**Desenhos.** Pelo menos 60 no começo, em 10 coleções de 6 (Bichos da fazenda, Mar, Dinossauros, Princesas e castelos, Carros e aviões, Espaço, Jardim, Casa e família, Festas, Mundo dos mascotes). Arte de linha grossa e fechada, gerada pelo pipeline (SVG para WebP em duas camadas: o contorno e um mapa de regiões, cada região com um número). Cada desenho tem de 12 a 60 regiões, as pequenas só nos mais difíceis. Desenhos novos entram por coleção, sem mexer em código (um `colorir.json` no manifesto).
+
+**Ferramentas, tudo com o dedo (sem texto na tela, ícones grandes e voz):**
+* **Balde mágico** (padrão para os pequenos): toca numa região e ela enche com a cor, sem passar da linha. Zero frustração.
+* **Pincel**: traço livre com 3 grossuras (fino, médio, grosso). A tinta fica presa dentro da região onde o dedo começou, então não borra para fora do contorno (máscara pelo mapa de regiões). Liga e desliga com o botão "Dentro da linha". Desligado, vira pincel livre (para os maiores).
+* **Borracha** e **desfazer / refazer** (20 passos).
+* **Paleta**: 12 cores de saída (as do app), mais 12 que abrem com os prêmios; **cores especiais** que se ganham: brilhante (glitter), arco-íris (a cor muda ao longo do traço), metálicas (ouro e prata) e texturas simples (bolinhas, listras, estrelas) para o balde.
+* **Carimbos** (estrelinha, coração, flor, pegadas) e **fundo** (céu, campo, mar) como enfeite, depois de pintar.
+* **Modo mágico para os pequenos de 2 a 3 anos**: só o balde, regiões grandes, 4 cores.
+* **Dica de cor**: botão que acende a próxima região a pintar e fala o nome da cor (junto com o ensino de cores em português e inglês).
+
+**Salvar e mostrar.** A pintura salva sozinha a cada toque (a criança volta e continua). Ao terminar, o botão "Pronto!" mostra a tela de prêmio com o desenho girando. A obra vai para a **Galeria** (quadros na parede do ateliê e na casa por dentro, como já acontece com as pinturas do ateliê). Dá para pintar o mesmo desenho de novo sem apagar o antigo (cada obra tem um número). Os pais podem salvar a obra como imagem na galeria do aparelho.
+
+**Prêmios.**
+* Cada desenho terminado: moedinhas, 1 a 3 estrelas (1 por pintar tudo, 2 por usar 5 cores diferentes, 3 por usar uma cor especial) e uma **figurinha do desenho** no álbum (a coleção completa de 6 dá a figurinha dourada).
+* Coleção completa: **diploma da coleção** e um item da casa a ser pendurado (quadro grande ou tapete do tema).
+* Marcos: 1º, 10º, 25º e 60º desenho dão uma cor especial nova, um carimbo novo ou um mascote como modelo de cor.
+* "Pintor do dia": um desenho sugerido por dia, com moedinhas em dobro (junto com a missão do dia existente).
+
+**Arquivos e módulos previstos.** `dominio/Colorir.kt` (modelo, regras, prêmios, testes de unidade sem Android), `ui/telas/TelaColorir.kt` e `TelaEscolherDesenho.kt`, `ui/componentes/TelaDeTinta.kt` (canvas com máscara de regiões e balde por pré-cálculo de regiões, nunca por flood fill em tempo de toque), `arte3d/colorir/` (desenhos e mapas de região). Teste do manifesto de desenhos: cada contorno tem seu mapa, regiões numeradas sem buraco, orçamento de tamanho.
+
+**Aceite.** Capturas do CI: escolha de desenho, pintura em andamento, tela de prêmio, galeria. Teste de unidade: balde enche só a região, pincel preso dentro da linha, desfazer, prêmios por marco, salvar e abrir. Memória: máscara de região em 8 bits (cada desenho ocupa menos de 1 MB decodificado), abre em 3,5 s no Android 7. Aceite do dono: criança colore 3 desenhos em 10 minutos sem pedir ajuda.
+
+### Fase 11. Quebra-cabeças
+
+**Tipos, do mais fácil ao mais difícil (o jogo escolhe o tipo e o tamanho pela idade e pelo que a criança já venceu, e deixa trocar):**
+1. **Encaixar a peça grande** (2 a 3 anos): 2 a 4 peças com formas bem diferentes, a peça gruda sozinha quando chega perto, com som de "plim". Sem como errar.
+2. **Quebra-cabeça de imagem** (4 a 8 anos): imagem cortada em grade de 2x2 até 6x8 (4, 6, 9, 12, 16, 24, 36, 48 peças). A peça é arrastada, gira só nos níveis difíceis, e gruda na casa certa com ímã. Moldura mostra uma sombra do desenho (some nos níveis difíceis, volta com o botão de dica).
+3. **Peças de formato livre** (tipo jigsaw, com saliências), de 6 em diante, com as bordas separadas primeiro (botão "só as bordas").
+4. **Quebra-cabeças de lógica** (7 anos em diante): deslizar peças (quebra-cabeça de 8 com um espaço vazio, 3x3 até 4x4), montar a figura pelo espelho, completar a sequência de formas. Cada um com dificuldade crescente.
+5. **Sombras**: arrastar o bicho/objeto para a silhueta certa (4 anos em diante, seis níveis).
+
+**Imagens.** Pelo menos 60 imagens em 10 coleções (as mesmas do Livro de Colorir mais cenas da casinha, dos mascotes e dos mundos do jogo), cortadas em tempo de execução a partir de uma imagem só (nada de uma imagem por peça). **Ligação com o Livro de Colorir:** a criança pode montar o quebra-cabeça da própria obra pintada (a foto do desenho dela vira puzzle, e é por isso que os dois estão juntos).
+
+**Dificuldade crescente.** Trilha de 8 níveis por coleção; passa de nível ao montar, sem tempo e sem perder nada ao errar. Auxílios que a criança pode ligar: sombra, dica (acende a peça certa), "bordas primeiro" e ímã largo. Usar auxílio não tira a estrela, mas a 3ª estrela exige sem dica. Nível adaptativo: se a criança monta 3 seguidas sem dica, o próximo salta um nível; se trava 2 minutos, o jogo oferece uma dica e baixa um degrau na próxima.
+
+**Prêmios.**
+* Por quebra-cabeça: moedinhas, 1 a 3 estrelas (montou; sem dica; sem dica e rápido sem tempo na tela, só o relógio de areia opcional) e a **figurinha da cena** no álbum.
+* Por nível de dificuldade vencido: **peças douradas** que se colecionam e trocam por itens da casa (uma "caixa de peças" na loja).
+* Marcos: 1º, 10º, 25º, 50º quebra-cabeça dão um mascote, um chapéu, uma moldura para as obras e o diploma "Mestre dos quebra-cabeças".
+* Coleção inteira vencida: diploma da coleção e uma imagem extra secreta.
+
+**Arquivos e módulos previstos.** `dominio/QuebraCabeca.kt` (cortes, formas de peça, ímã, dificuldade, nível adaptativo, prêmios, testes de unidade), `ui/telas/TelaQuebraCabeca.kt`, `TelaEscolherQuebraCabeca.kt`, `ui/componentes/PecaArrastavel.kt`, `arte3d/puzzle/` (imagens, silhuetas e máscaras de encaixe). Gestos com `pointerInput` (sem bibliotecas novas).
+
+**Aceite.** Capturas do CI: escolha, montando (fácil e difícil), tela de prêmio. Teste de unidade: corte cobre a imagem inteira sem sobra, peça gruda só dentro do ímã, vitória só com todas no lugar, progressão e níveis adaptativos, prêmios por marco. Memória: peças são recortes da mesma imagem em cache, uma imagem decodificada no máximo por vez. Aceite do dono: criança monta um de 12 peças sozinha em até 5 minutos e pede o seguinte.
+
+### Ordem sugerida
+Fase 10 antes da 11 (a 11 usa as obras da 10). Dentro de cada uma: (a) arte e manifesto, (b) domínio com testes, (c) telas, (d) prêmios e ligação com álbum, casa e pais, (e) revisão independente e CI. Os dois ganham um botão na casa e no mapa, no mesmo lugar do ateliê e do piano.
 
 ## Decisões
 
@@ -53,6 +112,8 @@ Situação final em 2026-11-07 (entrega pedida pelo dono do produto, sem terceir
 * 2026-11-07, execução 128 (commit 962c3ad, Fases 0A a 8B + orquestrador + medição): build, tablet e Android 7 e 8 VERDES. Celular: com o Android Test Orchestrator, 23 testes rodaram com 0 falhas (todos passam); o emulador sumiu durante o 24º (DesempenhoTest, que não era para rodar no celular), de novo ~6 min depois do início, como em todas as quedas (121 a 128). Desempenho medido: Android 7 abre em 3,1 s (0,9 s a quente), memória máxima 113 MB; Android 8: 3,1 s, 134 MB (limite 384 MB). Decisão: os testes do celular rodam em dois emuladores seguidos (1: Diagnóstico, Emojis, TelaCheia, Vozes; 2: JogoNoEmuladorTest), cada um abaixo de 6 minutos; DesempenhoTest só nos Androids antigos.
 
 * 2026-11-07, execução 133 (commit 0bcb23b): build (inclui o polimento), tablet, Android 7 e 8 VERDES. Celular em dois emuladores: o passo 1 (Diagnóstico, Emojis, TelaCheia, Vozes; 11 testes) PASSOU com 0 falhas; o passo 2 (JogoNoEmuladorTest, 11 testes pesados) caiu com "device offline" ~8 min depois de o emulador subir. Regra confirmada em 6 execuções: o emulador de celular some depois de uns 6 a 8 min de vida, e o orquestrador deixa cada teste ~35 s. Decisão: JogoNoEmuladorTest dividido em três emuladores (3 + 4 + 4 testes), no total quatro emuladores seguidos no job do celular.
+
+* 2026-11-07, execução 137 (commit 1f2ccee, na branch ccr-7bf7dd82-00owm6, a primeira a rodar o celular em cinco passos): build COMPLETO verde, tablet, Android 7 e 8 verdes. Celular: passos 1, 2 e 3 de 5 PASSARAM (9 min 16 s, 2 min 40 s, 2 min 51 s); o 4º e o de voz isolado (5º, informativo) ainda rodavam quando isto foi escrito. Primeira vez que o job do celular passa de três passos seguidos. Resultado final do job: ver a próxima linha quando existir.
 
 ## Aceites (dono e criança)
 
