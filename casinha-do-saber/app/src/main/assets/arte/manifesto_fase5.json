@@ -1,0 +1,1010 @@
+{
+  "versao": 1,
+  "escala": 2,
+  "imagens": {
+    "premio_caixa_aberta": {
+      "altura": 360,
+      "ancoras": {
+        "boca": {
+          "x": 180,
+          "y": 69
+        },
+        "centro": {
+          "x": 180,
+          "y": 154
+        }
+      },
+      "apoio": {
+        "x": 180,
+        "y": 232
+      },
+      "arquivo": "premio_caixa_aberta.webp",
+      "largura": 360,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 180,
+        "largura": 180
+      }
+    },
+    "premio_clarao": {
+      "altura": 440,
+      "ancoras": {
+        "centro": {
+          "x": 220,
+          "y": 226
+        }
+      },
+      "apoio": {
+        "x": 220,
+        "y": 420
+      },
+      "arquivo": "premio_clarao.webp",
+      "largura": 440,
+      "tipo": "item",
+      "uso": {
+        "altura": 220,
+        "largura": 220
+      }
+    },
+    "premio_confete_bolinha_amarelo": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 23,
+          "y": 25
+        }
+      },
+      "apoio": {
+        "x": 23,
+        "y": 47
+      },
+      "arquivo": "premio_confete_bolinha_amarelo.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_bolinha_azul": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 23,
+          "y": 23
+        }
+      },
+      "apoio": {
+        "x": 23,
+        "y": 47
+      },
+      "arquivo": "premio_confete_bolinha_azul.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_bolinha_rosa": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 23,
+          "y": 25
+        }
+      },
+      "apoio": {
+        "x": 23,
+        "y": 47
+      },
+      "arquivo": "premio_confete_bolinha_rosa.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_bolinha_roxo": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 23,
+          "y": 25
+        }
+      },
+      "apoio": {
+        "x": 23,
+        "y": 47
+      },
+      "arquivo": "premio_confete_bolinha_roxo.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_bolinha_verde": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 23,
+          "y": 25
+        }
+      },
+      "apoio": {
+        "x": 23,
+        "y": 47
+      },
+      "arquivo": "premio_confete_bolinha_verde.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_bolinha_vermelho": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 23,
+          "y": 25
+        }
+      },
+      "apoio": {
+        "x": 23,
+        "y": 47
+      },
+      "arquivo": "premio_confete_bolinha_vermelho.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_estrela_amarelo": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 24,
+          "y": 24
+        }
+      },
+      "apoio": {
+        "x": 24,
+        "y": 47
+      },
+      "arquivo": "premio_confete_estrela_amarelo.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_estrela_azul": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 24,
+          "y": 24
+        }
+      },
+      "apoio": {
+        "x": 24,
+        "y": 47
+      },
+      "arquivo": "premio_confete_estrela_azul.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_estrela_rosa": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 24,
+          "y": 24
+        }
+      },
+      "apoio": {
+        "x": 24,
+        "y": 47
+      },
+      "arquivo": "premio_confete_estrela_rosa.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_estrela_roxo": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 24,
+          "y": 24
+        }
+      },
+      "apoio": {
+        "x": 24,
+        "y": 47
+      },
+      "arquivo": "premio_confete_estrela_roxo.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_estrela_verde": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 24,
+          "y": 24
+        }
+      },
+      "apoio": {
+        "x": 24,
+        "y": 47
+      },
+      "arquivo": "premio_confete_estrela_verde.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_estrela_vermelho": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 24,
+          "y": 24
+        }
+      },
+      "apoio": {
+        "x": 24,
+        "y": 47
+      },
+      "arquivo": "premio_confete_estrela_vermelho.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_papel_amarelo": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 28,
+          "y": 28
+        }
+      },
+      "apoio": {
+        "x": 26,
+        "y": 47
+      },
+      "arquivo": "premio_confete_papel_amarelo.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_papel_azul": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 28,
+          "y": 28
+        }
+      },
+      "apoio": {
+        "x": 26,
+        "y": 47
+      },
+      "arquivo": "premio_confete_papel_azul.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_papel_rosa": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 28,
+          "y": 28
+        }
+      },
+      "apoio": {
+        "x": 26,
+        "y": 47
+      },
+      "arquivo": "premio_confete_papel_rosa.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_papel_roxo": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 28,
+          "y": 28
+        }
+      },
+      "apoio": {
+        "x": 26,
+        "y": 47
+      },
+      "arquivo": "premio_confete_papel_roxo.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_papel_verde": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 28,
+          "y": 28
+        }
+      },
+      "apoio": {
+        "x": 26,
+        "y": 47
+      },
+      "arquivo": "premio_confete_papel_verde.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_papel_vermelho": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 28,
+          "y": 28
+        }
+      },
+      "apoio": {
+        "x": 26,
+        "y": 47
+      },
+      "arquivo": "premio_confete_papel_vermelho.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_serpentina_amarelo": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 21,
+          "y": 26
+        }
+      },
+      "apoio": {
+        "x": 21,
+        "y": 47
+      },
+      "arquivo": "premio_confete_serpentina_amarelo.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_serpentina_azul": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 21,
+          "y": 26
+        }
+      },
+      "apoio": {
+        "x": 21,
+        "y": 47
+      },
+      "arquivo": "premio_confete_serpentina_azul.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_serpentina_rosa": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 21,
+          "y": 26
+        }
+      },
+      "apoio": {
+        "x": 21,
+        "y": 47
+      },
+      "arquivo": "premio_confete_serpentina_rosa.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_serpentina_roxo": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 21,
+          "y": 26
+        }
+      },
+      "apoio": {
+        "x": 21,
+        "y": 47
+      },
+      "arquivo": "premio_confete_serpentina_roxo.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_serpentina_verde": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 21,
+          "y": 26
+        }
+      },
+      "apoio": {
+        "x": 21,
+        "y": 47
+      },
+      "arquivo": "premio_confete_serpentina_verde.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_confete_serpentina_vermelho": {
+      "altura": 48,
+      "ancoras": {
+        "centro": {
+          "x": 21,
+          "y": 26
+        }
+      },
+      "apoio": {
+        "x": 21,
+        "y": 47
+      },
+      "arquivo": "premio_confete_serpentina_vermelho.webp",
+      "largura": 48,
+      "tipo": "item",
+      "uso": {
+        "altura": 24,
+        "largura": 24
+      }
+    },
+    "premio_coroa": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 92,
+          "y": 91
+        }
+      },
+      "apoio": {
+        "x": 92,
+        "y": 158
+      },
+      "arquivo": "premio_coroa.webp",
+      "largura": 192,
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "premio_faisca_branca": {
+      "altura": 64,
+      "ancoras": {
+        "centro": {
+          "x": 31,
+          "y": 33
+        }
+      },
+      "apoio": {
+        "x": 31,
+        "y": 63
+      },
+      "arquivo": "premio_faisca_branca.webp",
+      "largura": 64,
+      "tipo": "item",
+      "uso": {
+        "altura": 32,
+        "largura": 32
+      }
+    },
+    "premio_faisca_dourada": {
+      "altura": 64,
+      "ancoras": {
+        "centro": {
+          "x": 31,
+          "y": 33
+        }
+      },
+      "apoio": {
+        "x": 31,
+        "y": 63
+      },
+      "arquivo": "premio_faisca_dourada.webp",
+      "largura": 64,
+      "tipo": "item",
+      "uso": {
+        "altura": 32,
+        "largura": 32
+      }
+    },
+    "premio_moedas_1": {
+      "altura": 144,
+      "ancoras": {
+        "centro": {
+          "x": 72,
+          "y": 64
+        }
+      },
+      "apoio": {
+        "x": 72,
+        "y": 113
+      },
+      "arquivo": "premio_moedas_1.webp",
+      "largura": 144,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 72,
+        "largura": 72
+      }
+    },
+    "premio_moedas_2": {
+      "altura": 144,
+      "ancoras": {
+        "centro": {
+          "x": 73,
+          "y": 64
+        }
+      },
+      "apoio": {
+        "x": 72,
+        "y": 92
+      },
+      "arquivo": "premio_moedas_2.webp",
+      "largura": 144,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 72,
+        "largura": 72
+      }
+    },
+    "premio_moedas_3": {
+      "altura": 144,
+      "ancoras": {
+        "centro": {
+          "x": 73,
+          "y": 63
+        }
+      },
+      "apoio": {
+        "x": 72,
+        "y": 113
+      },
+      "arquivo": "premio_moedas_3.webp",
+      "largura": 144,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 72,
+        "largura": 72
+      }
+    },
+    "premio_moedas_5": {
+      "altura": 144,
+      "ancoras": {
+        "centro": {
+          "x": 72,
+          "y": 62
+        }
+      },
+      "apoio": {
+        "x": 72,
+        "y": 98
+      },
+      "arquivo": "premio_moedas_5.webp",
+      "largura": 144,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 72,
+        "largura": 72
+      }
+    },
+    "premio_podio": {
+      "altura": 240,
+      "ancoras": {
+        "centro": {
+          "x": 340,
+          "y": 75
+        },
+        "direita": {
+          "x": 529,
+          "y": 82
+        },
+        "esquerda": {
+          "x": 151,
+          "y": 82
+        },
+        "fundo": {
+          "x": 340,
+          "y": 42
+        }
+      },
+      "apoio": {
+        "x": 340,
+        "y": 129
+      },
+      "arquivo": "premio_podio.webp",
+      "largura": 680,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 120,
+        "largura": 340
+      }
+    },
+    "premio_presente_abrindo_0": {
+      "altura": 480,
+      "ancoras": {
+        "boca": {
+          "x": 163,
+          "y": 298
+        },
+        "centro": {
+          "x": 163,
+          "y": 351
+        },
+        "tampa": {
+          "x": 162,
+          "y": 289
+        }
+      },
+      "apoio": {
+        "x": 207,
+        "y": 403
+      },
+      "arquivo": "premio_presente_abrindo_0.webp",
+      "largura": 440,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 240,
+        "largura": 220
+      }
+    },
+    "premio_presente_abrindo_1": {
+      "altura": 480,
+      "ancoras": {
+        "boca": {
+          "x": 163,
+          "y": 298
+        },
+        "centro": {
+          "x": 163,
+          "y": 351
+        },
+        "tampa": {
+          "x": 171,
+          "y": 254
+        }
+      },
+      "apoio": {
+        "x": 207,
+        "y": 403
+      },
+      "arquivo": "premio_presente_abrindo_1.webp",
+      "largura": 440,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 240,
+        "largura": 220
+      }
+    },
+    "premio_presente_abrindo_2": {
+      "altura": 480,
+      "ancoras": {
+        "boca": {
+          "x": 171,
+          "y": 298
+        },
+        "centro": {
+          "x": 172,
+          "y": 351
+        },
+        "tampa": {
+          "x": 222,
+          "y": 193
+        }
+      },
+      "apoio": {
+        "x": 215,
+        "y": 403
+      },
+      "arquivo": "premio_presente_abrindo_2.webp",
+      "largura": 440,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 240,
+        "largura": 220
+      }
+    },
+    "premio_presente_abrindo_3": {
+      "altura": 480,
+      "ancoras": {
+        "boca": {
+          "x": 178,
+          "y": 298
+        },
+        "centro": {
+          "x": 178,
+          "y": 352
+        },
+        "tampa": {
+          "x": 294,
+          "y": 137
+        }
+      },
+      "apoio": {
+        "x": 214,
+        "y": 404
+      },
+      "arquivo": "premio_presente_abrindo_3.webp",
+      "largura": 440,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 240,
+        "largura": 220
+      }
+    },
+    "premio_presente_abrindo_4": {
+      "altura": 480,
+      "ancoras": {
+        "boca": {
+          "x": 164,
+          "y": 298
+        },
+        "centro": {
+          "x": 165,
+          "y": 351
+        },
+        "tampa": {
+          "x": 313,
+          "y": 117
+        }
+      },
+      "apoio": {
+        "x": 208,
+        "y": 403
+      },
+      "arquivo": "premio_presente_abrindo_4.webp",
+      "largura": 440,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 240,
+        "largura": 220
+      }
+    },
+    "premio_presente_fechado": {
+      "altura": 360,
+      "ancoras": {
+        "boca": {
+          "x": 180,
+          "y": 124
+        },
+        "centro": {
+          "x": 180,
+          "y": 196
+        },
+        "tampa": {
+          "x": 180,
+          "y": 112
+        }
+      },
+      "apoio": {
+        "x": 180,
+        "y": 264
+      },
+      "arquivo": "premio_presente_fechado.webp",
+      "largura": 360,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 180,
+        "largura": 180
+      }
+    },
+    "premio_tampa": {
+      "altura": 240,
+      "ancoras": {
+        "centro": {
+          "x": 129,
+          "y": 120
+        }
+      },
+      "apoio": {
+        "x": 129,
+        "y": 204
+      },
+      "arquivo": "premio_tampa.webp",
+      "largura": 240,
+      "tipo": "item",
+      "uso": {
+        "altura": 120,
+        "largura": 120
+      }
+    },
+    "premio_trofeu": {
+      "altura": 240,
+      "ancoras": {
+        "centro": {
+          "x": 120,
+          "y": 92
+        }
+      },
+      "apoio": {
+        "x": 120,
+        "y": 180
+      },
+      "arquivo": "premio_trofeu.webp",
+      "largura": 240,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 120,
+        "largura": 120
+      }
+    },
+    "quase_estrela_dormindo": {
+      "altura": 240,
+      "ancoras": {
+        "centro": {
+          "x": 108,
+          "y": 135
+        }
+      },
+      "apoio": {
+        "x": 110,
+        "y": 239
+      },
+      "arquivo": "quase_estrela_dormindo.webp",
+      "largura": 240,
+      "tipo": "item",
+      "uso": {
+        "altura": 120,
+        "largura": 120
+      }
+    },
+    "quase_semente_1": {
+      "altura": 280,
+      "ancoras": {
+        "topoDaTerra": {
+          "x": 100,
+          "y": 152
+        }
+      },
+      "apoio": {
+        "x": 100,
+        "y": 221
+      },
+      "arquivo": "quase_semente_1.webp",
+      "largura": 200,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 140,
+        "largura": 100
+      }
+    },
+    "quase_semente_2": {
+      "altura": 280,
+      "ancoras": {
+        "topoDaTerra": {
+          "x": 100,
+          "y": 152
+        }
+      },
+      "apoio": {
+        "x": 100,
+        "y": 221
+      },
+      "arquivo": "quase_semente_2.webp",
+      "largura": 200,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 140,
+        "largura": 100
+      }
+    },
+    "quase_semente_3": {
+      "altura": 280,
+      "ancoras": {
+        "topoDaTerra": {
+          "x": 100,
+          "y": 152
+        }
+      },
+      "apoio": {
+        "x": 100,
+        "y": 221
+      },
+      "arquivo": "quase_semente_3.webp",
+      "largura": 200,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 140,
+        "largura": 100
+      }
+    },
+    "quase_semente_4": {
+      "altura": 280,
+      "ancoras": {
+        "topoDaTerra": {
+          "x": 100,
+          "y": 153
+        }
+      },
+      "apoio": {
+        "x": 100,
+        "y": 221
+      },
+      "arquivo": "quase_semente_4.webp",
+      "largura": 200,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 140,
+        "largura": 100
+      }
+    }
+  }
+}
