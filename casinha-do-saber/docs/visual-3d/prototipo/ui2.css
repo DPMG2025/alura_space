@@ -1,0 +1,52 @@
+@import url('fonts/fonts.css');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 393px; height: 852px; overflow: hidden; }
+body { font-family: 'Baloo 2', 'Fredoka', sans-serif; position: relative; color: #3a2766; }
+.tela { position: absolute; inset: 0; overflow: hidden; }
+canvas.cena { position: absolute; display: block; filter: saturate(1.22) contrast(1.04); }
+
+/* botão redondo de brinquedo: face clara, lábio embaixo, brilho em cima */
+.redondo {
+  position: absolute; width: 58px; height: 58px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, #ffffff 0 18%, #fdfbff 30%, #e9e2ff 100%);
+  box-shadow: 0 6px 0 #b9a8ec, 0 10px 16px rgba(60, 30, 120, .28), inset 0 -4px 8px rgba(120, 90, 200, .18);
+  border: 3px solid #fff;
+  display: grid; place-items: center;
+}
+.redondo svg { width: 30px; height: 30px; }
+
+/* botão grande de brinquedo colorido (--c cor, --b base escura) */
+.bloco {
+  position: absolute; border-radius: 28px;
+  background:
+    radial-gradient(120% 70% at 30% 0%, rgba(255,255,255,.55) 0 30%, rgba(255,255,255,0) 55%),
+    linear-gradient(180deg, var(--c) 0%, var(--c2, var(--c)) 100%);
+  box-shadow: 0 8px 0 var(--b), 0 14px 22px rgba(40, 20, 90, .3), inset 0 -6px 10px rgba(0,0,0,.12), inset 0 3px 0 rgba(255,255,255,.45);
+  border: 3px solid rgba(255,255,255,.75);
+  color: #fff;
+}
+.titulo-brinquedo {
+  font-weight: 800; color: #fff; letter-spacing: .5px;
+  text-shadow:
+    0 2px 0 #7c4dff, 2px 0 0 #7c4dff, -2px 0 0 #7c4dff, 0 -2px 0 #7c4dff,
+    2px 2px 0 #7c4dff, -2px 2px 0 #7c4dff, 2px -2px 0 #7c4dff, -2px -2px 0 #7c4dff,
+    0 6px 0 #5a2fd1, 0 10px 14px rgba(60, 20, 140, .35);
+}
+.contorno-escuro {
+  text-shadow:
+    0 2px 0 rgba(0,0,0,.28), 2px 0 0 rgba(0,0,0,.28), -2px 0 0 rgba(0,0,0,.28), 0 -2px 0 rgba(0,0,0,.28),
+    0 4px 0 rgba(0,0,0,.22);
+}
+.pilula {
+  position: absolute; height: 44px; border-radius: 22px; padding: 0 16px 0 8px;
+  display: flex; align-items: center; gap: 6px;
+  background: linear-gradient(180deg, #ffffff, #f1ecff);
+  box-shadow: 0 5px 0 #c9bbf2, 0 10px 16px rgba(60, 30, 120, .22);
+  font-weight: 800; font-size: 24px; color: #4b2fa8;
+}
+.balao {
+  position: absolute; background: linear-gradient(180deg, #ffffff 0%, #f6f2ff 100%);
+  border-radius: 28px; padding: 14px 18px;
+  box-shadow: 0 6px 0 #d7ccf7, 0 12px 22px rgba(60, 30, 120, .22);
+  font-weight: 700; font-size: 25px; line-height: 1.15; color: #3a2766;
+}

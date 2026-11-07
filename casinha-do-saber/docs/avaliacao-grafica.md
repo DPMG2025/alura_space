@@ -68,3 +68,7 @@ O jogo não precisa ser refeito do zero. O conteúdo (1000 fases, quatro caminho
 
 * As capturas ficam em `docs/capturas/` (o CI refaz a cada push).
 * Para ver no celular: baixar o APK do artefato `casinha-do-saber-apk` na aba Actions do GitHub, na execução mais recente do branch.
+
+## Decisão (7 de novembro de 2026)
+
+Entre as maquetes da opção 2 (brinquedo 3D) e da opção 3 (aquarela), a criança preferiu a **opção 2**. O plano de execução está em [visual-3d/PRD-visual-brinquedo-3d.md](visual-3d/PRD-visual-brinquedo-3d.md).

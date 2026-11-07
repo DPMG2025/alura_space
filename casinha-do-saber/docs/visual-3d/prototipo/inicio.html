@@ -1,0 +1,73 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="ui2.css">
+<style>
+  .tela { background: linear-gradient(180deg, #8fd3ff 0%, #bfe7ff 38%, #ffe9d6 70%, #ffd3e1 100%); }
+  #c { left: 0; top: 112px; width: 393px; height: 456px; }
+  .titulo { position: absolute; top: 80px; left: 0; right: 0; text-align: center; font-size: 38px; }
+  .cards { position: absolute; left: 16px; right: 16px; top: 568px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px 14px; }
+  .card { position: relative !important; height: 118px; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 12px 10px; }
+  .card img { position: absolute; width: 96px; height: 96px; right: -6px; top: -30px; filter: drop-shadow(0 6px 6px rgba(0,0,0,.25)); }
+  .card .nome { font-size: 25px; font-weight: 800; line-height: 1; }
+  .estrelas { display: flex; gap: 2px; margin-top: 6px; }
+  .estrelas svg { width: 20px; height: 20px; }
+</style></head>
+<body><div class="tela">
+  <canvas id="c" class="cena"></canvas>
+  <div class="redondo" style="left:16px;top:16px"><svg viewBox="0 0 24 24"><path fill="#7c5cff" d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Zm8.6 4.6 1.9 1.4-2 3.5-2.3-.8a7.8 7.8 0 0 1-2 1.2l-.4 2.4h-4l-.4-2.4a7.8 7.8 0 0 1-2-1.2l-2.3.8-2-3.5 1.9-1.4a7.6 7.6 0 0 1 0-2.4L1.5 9.4l2-3.5 2.3.8a7.8 7.8 0 0 1 2-1.2L8.2 3h4l.4 2.5a7.8 7.8 0 0 1 2 1.2l2.3-.8 2 3.5-1.9 1.4a7.6 7.6 0 0 1 0 2.4Z"/></svg></div>
+  <div class="redondo" style="right:16px;top:16px"><svg viewBox="0 0 24 24"><path fill="#7c5cff" d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="#7c5cff" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></div>
+  <div class="titulo titulo-brinquedo">Casinha do Saber</div>
+  <div class="pilula" style="left:50%;transform:translateX(-50%);top:22px"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" fill="#ffc933" stroke="#e09a00" stroke-width="1.4" stroke-linejoin="round"/></svg>27</div>
+  <div class="cards" id="cards"></div>
+</div>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import { THREE, palco, luzes, crianca, irmaozinho, casinha, ilhaDeGrama, arvore, arbusto, flor, nuvem, em, bola, plastico, caixa } from './kit.js';
+import { carregarFonte, renderizarIcones } from './icones.js';
+await document.fonts.ready;
+await carregarFonte();
+
+const p = palco(document.getElementById('c'), { largura: 393, altura: 456, fov: 30 });
+luzes(p.cena, { sol: [6, 11, 9], forca: 2.6, area: 9 });
+const ilha = ilhaDeGrama(6.2); p.cena.add(ilha);
+const casa = casinha(); em(casa, 0, 0.14, -1.8); p.cena.add(casa);
+const ana = crianca({ humor: 'feliz', bracos: 'tchau' }); em(ana, -0.75, 0.14, 2.1, 0.62); ana.rotation.y = 0.18; p.cena.add(ana);
+const theo = irmaozinho({ humor: 'feliz' }); em(theo, 0.55, 0.14, 2.35, 0.62); theo.rotation.y = -0.25; p.cena.add(theo);
+p.cena.add(em(arvore({ s: 1.05 }), -3.9, 0.14, -0.9));
+p.cena.add(em(arvore({ s: 0.85, copa: '#6ccf55' }), 3.9, 0.14, -0.6));
+p.cena.add(em(arbusto('#4fae3e', 1.0), -3.8, 0.14, 2.2));
+p.cena.add(em(arbusto('#5bb94a', 0.9), 3.6, 0.14, 2.4));
+const cores = ['#ff5c8a', '#ffd23f', '#9b6bff', '#ffffff', '#ff8c1a'];
+[[-2.6, 3.2], [-1.9, 4.2], [2.2, 3.8], [3.0, 1.2], [-3.1, 0.8], [1.6, 4.6], [-0.4, 4.9], [2.8, 4.6], [-2.8, 4.7]].forEach(([x, z], i) => p.cena.add(em(flor(cores[i % 5], 1.3), x, 0.14, z)));
+// caminho de pedrinhas
+[[0.2, 0.65], [-0.1, 1.15], [0.15, 3.3], [-0.05, 4.1], [0.1, 4.95]].forEach(([x, z], i) => {
+  const pedra = bola(0.3, plastico('#efe3cf', { rugosidade: 0.8, verniz: 0 }), 24); pedra.scale.set(1.3, 0.25, 0.9); p.cena.add(em(pedra, x, 0.16, z));
+});
+// cachorrinho simplificado
+const mc = plastico('#d9a066', { rugosidade: 0.6, verniz: 0.2 }), mb = plastico('#fff4e6', { rugosidade: 0.6 });
+const cao = new THREE.Group();
+cao.add(em(caixa(0.9, 0.55, 0.5, 0.22, mc), 0, 0.55, 0));
+cao.add(em(bola(0.34, mc, 32), 0.55, 0.95, 0));
+cao.add(em(bola(0.17, mb, 24), 0.82, 0.88, 0));
+cao.add(em(bola(0.07, plastico('#2b1a14', { verniz: 1, rugosidade: .1 }), 12), 0.97, 0.92, 0));
+for (const l of [-1, 1]) { const o = bola(0.16, plastico('#8a5a35', { rugosidade: .6 }), 16); o.scale.set(0.6, 1.3, 0.5); cao.add(em(o, 0.45, 1.0, l * 0.3)); cao.add(em(bola(0.045, plastico('#1d1210', { verniz: 1, rugosidade: .1 }), 10), 0.8, 1.05, l * 0.13)); }
+for (const [x, z] of [[-0.3, -0.15], [-0.3, 0.15], [0.3, -0.15], [0.3, 0.15]]) cao.add(em(bola(0.12, mc, 16), x, 0.18, z));
+const rabo = bola(0.1, mc, 12); rabo.scale.set(1, 2.2, 1); rabo.rotation.z = -0.6; cao.add(em(rabo, -0.5, 0.85, 0));
+em(cao, 2.4, 0.14, 2.0, 0.8); cao.rotation.y = -2.4; p.cena.add(cao);
+for (const [x, y, z, s] of [[-4.5, 7.5, -6, 1.4], [3.8, 8.3, -7, 1.1], [0.5, 9.2, -9, 1.0]]) p.cena.add(em(nuvem(s), x, y, z));
+p.cam.position.set(0, 7.2, 14.5);
+p.cam.lookAt(0, 2.3, 0);
+p.desenhar();
+
+const urls = renderizarIcones(['numeros', 'letras', 'ingles', 'logica']);
+const caminhos = [
+  ['Números', 'numeros', '#ffa63d', '#ff8a1f', '#d66a0a', 3],
+  ['Letras', 'letras', '#2fd0b5', '#16b39a', '#0d8a76', 2],
+  ['Inglês', 'ingles', '#8b7bff', '#6c5cf5', '#4d3ccf', 2],
+  ['Lógica', 'logica', '#ff6b8f', '#f2476f', '#c42a52', 1],
+];
+const estrela = (cheia) => `<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" fill="${cheia ? '#ffd84d' : 'rgba(255,255,255,.35)'}" stroke="${cheia ? '#fff3b0' : 'rgba(255,255,255,.5)'}" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+document.getElementById('cards').innerHTML = caminhos.map(([n, ic, c, c2, b, e]) =>
+  `<div class="bloco card" style="--c:${c};--c2:${c2};--b:${b}"><img src="${urls[ic]}"><div class="nome contorno-escuro">${n}</div><div class="estrelas">${[0,1,2,3,4].map(i => estrela(i < e)).join('')}</div></div>`).join('');
+await Promise.all([...document.images].map(i => i.decode()));
+window.PRONTO = true;
+</script></body></html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="ui2.css">
+<style>
+  .tela { background:
+    radial-gradient(circle at 50% 50%, rgba(255,247,200,.95) 0 9%, rgba(255,214,120,.55) 20%, rgba(255,190,220,0) 46%),
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.16) 0 9deg, rgba(255,255,255,0) 9deg 22.5deg),
+    linear-gradient(180deg, #8a6cff 0%, #b783ff 40%, #ff9fcf 85%, #ffc2dc 100%); }
+  #c { left: 0; top: 0; width: 393px; height: 852px; }
+  .titulo { position: absolute; top: 34px; left: 0; right: 0; text-align: center; font-size: 46px; }
+  .moedas { position: absolute; left: 50%; transform: translateX(-50%); top: 222px; }
+  .botao { left: 40px; right: 40px; bottom: 34px; height: 82px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 32px; font-weight: 800; }
+</style></head>
+<body><div class="tela">
+  <canvas id="c" class="cena"></canvas>
+  <div class="titulo titulo-brinquedo">Parabéns, Ana!</div>
+  <div class="pilula moedas"><svg width="32" height="32" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ffc933" stroke="#e09a00" stroke-width="1.6"/><path d="M12 6.5l1.7 3.5 3.8.5-2.8 2.6.7 3.8L12 15.1l-3.4 1.8.7-3.8-2.8-2.6 3.8-.5z" fill="#fff1a8"/></svg>+5</div>
+  <div class="bloco botao contorno-escuro" style="--c:#5be38f;--c2:#2fc46c;--b:#1c9552">
+    <svg width="40" height="40" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10.5V20h12v-9.5" fill="#fff"/><rect x="10.2" y="14" width="3.6" height="6" rx="1" fill="#2fc46c"/></svg>
+    Pôr na casinha</div>
+</div>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import { THREE, palco, luzes, crianca, irmaozinho, presente, estrela3D, plastico, em, bola, cilindro, malha, confete, caixa } from './kit.js';
+await document.fonts.ready;
+const p = palco(document.getElementById('c'), { largura: 393, altura: 852, fov: 28 });
+luzes(p.cena, { sol: [4, 10, 9], forca: 2.8, area: 9, amb: 0.75, ceu: '#fff0ff', chao: '#b98ad8' });
+// três estrelas douradas no alto
+const ouro = plastico('#ffc21a', { rugosidade: 0.18, verniz: 1 });
+[[-2.3, 9.75, 0.0, 0.3], [0, 10.15, 0.2, 0], [2.3, 9.75, 0.0, -0.3]].forEach(([x, y, z, rz], i) => {
+  const e = estrela3D(i === 1 ? 1.0 : 0.82, 0.35, ouro); e.rotation.set(0.15, 0, rz); p.cena.add(em(e, x, y, z));
+});
+// presente aberto, com a tampa voando e uma cama de presente saindo
+const pr = presente(1.35, true); em(pr, 0, 2.3, 0); pr.rotation.y = -0.35; p.cena.add(pr);
+const brilho = new THREE.PointLight('#fff2b0', 18, 9, 2); brilho.position.set(0, 5.8, 2.5); p.cena.add(brilho);
+// o prêmio: uma caminha azul flutuando acima do presente
+const cama = new THREE.Group();
+const madeira = plastico('#d99a5b', { rugosidade: 0.45, verniz: 0.5 });
+cama.add(em(caixa(1.9, 0.42, 1.1, 0.16, plastico('#4d96ff', { rugosidade: 0.55, verniz: 0.2 })), 0, 0.42, 0));
+cama.add(em(caixa(1.9, 0.18, 1.1, 0.08, madeira), 0, 0.15, 0));
+cama.add(em(caixa(0.16, 1.0, 1.1, 0.07, madeira), -0.95, 0.5, 0));
+cama.add(em(caixa(0.5, 0.22, 0.8, 0.1, plastico('#ffffff', { rugosidade: 0.8, verniz: 0 })), -0.6, 0.72, 0));
+em(cama, -0.45, 6.15, 1.4); cama.rotation.set(0.35, 0.45, 0.1); p.cena.add(cama);
+// pódio e as crianças torcendo
+const podio = cilindro(3.0, 3.2, 0.6, plastico('#ffffff', { rugosidade: 0.3, verniz: 1 }), 64); em(podio, 0, -0.3, 0); p.cena.add(podio);
+const faixa = cilindro(3.22, 3.22, 0.16, plastico('#ffd23f', { rugosidade: 0.25, verniz: 1 }), 64); em(faixa, 0, -0.38, 0); p.cena.add(faixa);
+const ana = crianca({ humor: 'torcendo', bracos: 'torcendo' }); em(ana, -2.45, 0, 1.4, 0.95); ana.rotation.y = 0.25; p.cena.add(ana);
+const theo = irmaozinho({ humor: 'torcendo', bracos: 'torcendo' }); em(theo, 2.45, 0, 1.6, 1.0); theo.rotation.y = -0.3; p.cena.add(theo);
+confete(p.cena, 80, [-5.2, 5.2, 0.5, 12.5, -2, 3], 11);
+p.cam.position.set(0, 5.2, 34);
+p.cam.lookAt(0, 4.6, 0);
+p.desenhar();
+window.PRONTO = true;
+</script></body></html>

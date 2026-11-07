@@ -341,3 +341,7 @@ Pedido do dono do produto: a filha não gostou do jogo, a suspeita é o visual; 
 * **Irmãozinho** (`dominio/Irmao.kt`, `ui/componentes/Irmaozinho.kt`, `ui/telas/CartaoDoIrmao.kt`): `Perfil.irmao` (ligado, gênero, nome), chave `irmao` no Repositorio e na cópia, ligado por padrão. Aparece no jogo (torce no acerto, pensa no erro), no prêmio, no "Quase!", na casa e na tela inicial (ao lado da criança; tocar faz pular e falar). Cartão na área dos pais. Testes: `IrmaoTest`; capturas `70` a `75b` em `CapturasIrmaoTest`.
 * **Cenário do jogo** (`ui/componentes/CenarioDoJogo.kt`): céu na cor do caminho, sol, nuvens, morros, arbustos, flores e a casinha ao longe, no lugar do fundo liso de `TelaJogo`.
 * Conferência local sem o SDK do Android: o mesmo projeto Compose Desktop 1.5.12 da seção 4 (Kotlin 1.9.22, só Maven Central, `--max-workers=1` por causa do limite de pedidos) compila `dominio/`, `Crianca.kt`, `RostoDaCrianca.kt`, `Irmaozinho.kt` e `CenarioDoJogo.kt` e salva PNG.
+
+## 15. Próximo grande passo: visual brinquedo 3D (7 de novembro de 2026)
+
+A criança escolheu, entre maquetes de visual novo, o estilo **brinquedo 3D**. O plano completo, com as fases, a decisão técnica (imagens 3D pré-renderizadas em camadas, sem 3D em tempo real) e a regra de **delegar a execução a subagentes** para não estourar o contexto da sessão principal, está em [visual-3d/PRD-visual-brinquedo-3d.md](visual-3d/PRD-visual-brinquedo-3d.md). Maquetes e protótipo em `docs/visual-3d/`.
