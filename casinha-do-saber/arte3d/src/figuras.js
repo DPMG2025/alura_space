@@ -82,7 +82,7 @@ export const LISTA_DE_FIGURAS = [
 export const USO_DA_FIGURA = 96;
 
 /** Põe o modelo num grupo limpo e marca as âncoras 'topo' (meio de cima) e 'centro'. */
-function comAncoras(montar) {
+export function comAncoras(montar) {
   return () => {
     const w = new THREE.Group();
     w.add(montar());

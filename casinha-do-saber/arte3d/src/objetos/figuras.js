@@ -890,3 +890,6 @@ export const modelosDasFiguras = {
   bolinha_vermelha: bolinha('#ff3b4f'), bolinha_azul: bolinha('#3d8bff'), bolinha_verde: bolinha('#36c26a'),
   bolinha_amarela: bolinha('#ffc21a'), bolinha_roxa: bolinha('#9a62ff'), bolinha_laranja: bolinha('#ff8a1c'),
 };
+
+/** Peças e moldes reaproveitados pelos lotes seguintes de figuras (Fase 9: figurasDoLote9a.js). */
+export const pecasDasFiguras = { pl, brilho, preto, branco, torneado, tubo, estufado, carinha, bichinho, orelhasDeGato, bigodes, rabo, coracao, ave };
