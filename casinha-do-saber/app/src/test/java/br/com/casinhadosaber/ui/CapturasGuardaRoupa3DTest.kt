@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,7 +32,6 @@ import br.com.casinhadosaber.ui.componentes.CamadasDosPersonagens
 import br.com.casinhadosaber.ui.componentes.ComposicaoDosPersonagens
 import br.com.casinhadosaber.ui.componentes.Crianca
 import br.com.casinhadosaber.ui.componentes.Humor
-import br.com.casinhadosaber.ui.componentes.PROPORCAO_CRIANCA
 import br.com.casinhadosaber.ui.componentes.PersonagemDaArte
 import br.com.casinhadosaber.ui.componentes.PoseDosBracos
 import br.com.casinhadosaber.ui.componentes.QuadroDoPersonagem
@@ -117,8 +116,9 @@ class CapturasGuardaRoupa3DTest {
                     ) {
                         Text(titulo, fontSize = 22.sp, color = Color(0xFF3A2766))
                         for ((altura, criancas) in linhas) {
-                            Row(verticalAlignment = Alignment.Bottom) {
-                                for ((rotulo, p, humor) in criancas) Miniatura(rotulo, p, humor, altura)
+                            // Cada criança numa coluna de mesma largura (a linha inteira), para o nome ter espaço.
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                                for ((rotulo, p, humor) in criancas) Miniatura(rotulo, p, humor, altura, Modifier.weight(1f))
                             }
                         }
                     }
@@ -130,10 +130,21 @@ class CapturasGuardaRoupa3DTest {
     }
 
     @Composable
-    private fun Miniatura(rotulo: String, p: Perfil, humor: Humor, altura: Dp) {
-        Column(Modifier.width(altura * PROPORCAO_CRIANCA + 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    private fun Miniatura(rotulo: String, p: Perfil, humor: Humor, altura: Dp, modifier: Modifier) {
+        Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
             Crianca(p, Modifier.height(altura), humor = humor, animado = false)
-            Text(rotulo, fontSize = 10.sp, color = Color(0xFF3A2766), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+            // Nomes longos ("Fantasia de dinossauro") em até duas linhas, centralizados, sem reticências e com
+            // folga dos lados para não encostar no vizinho.
+            Text(
+                rotulo,
+                Modifier.padding(horizontal = 2.dp),
+                fontSize = 10.sp,
+                lineHeight = 12.sp,
+                color = Color(0xFF3A2766),
+                maxLines = 2,
+                overflow = TextOverflow.Clip,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 

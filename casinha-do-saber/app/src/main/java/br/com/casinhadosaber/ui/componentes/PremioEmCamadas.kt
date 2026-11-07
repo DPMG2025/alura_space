@@ -207,19 +207,46 @@ fun AnelDeToque(modifier: Modifier = Modifier, espera: Long = 1200) {
 }
 
 /**
- * A pílula das moedas ganhas: as pilhas de moedas 3D que se contam (`premio_moedas_N`) e, ao lado, o número
- * (sempre acompanhado da imagem). Sem a arte, a moeda solta (`moeda`).
+ * A pílula das moedas ganhas: as pilhas de moedas 3D que se contam (`premio_moedas_N`) e, ao lado, o número.
+ * O número só aparece junto de moedas que dão exatamente a mesma conta ([PecasDoPremio.rotuloDasMoedas]); nunca
+ * sozinho nem ao lado de uma moeda só.
  */
 @Composable
 fun PilulaDeMoedas(moedas: Int, modifier: Modifier = Modifier, descricao: String = "Mais $moedas moedinhas") {
-    val pilhas = remember(moedas) { PecasDoPremio.pilhasDeMoedas(moedas) }
-    Pilula(modifier, descricao) {
-        for (p in pilhas) {
-            ImagemDeArte(PecasDoPremio.idDasMoedas(p), Modifier.size(40.dp)) { ImagemDeArte("moeda", Modifier.size(28.dp)) }
-        }
-        androidx.compose.material3.Text("+$moedas", maxLines = 1)
-    }
+    Pilula(modifier, descricao) { MoedasQueSeContam(moedas) }
 }
+
+/**
+ * As [moedas] como pilhas 3D que se contam (`premio_moedas_N`) e o "+N" ao lado quando a conta das pilhas bate.
+ * Sem a arte das pilhas, até [PecasDoPremio.MOEDAS_SOLTAS] moedas soltas (`moeda`) encostadas, e o número só se
+ * couberem todas. Sem nenhuma imagem, nada (nem o número).
+ */
+@Composable
+fun MoedasQueSeContam(moedas: Int, tamanho: Dp = 40.dp) {
+    val contexto = LocalContext.current
+    val pilhas = remember(moedas) { PecasDoPremio.pilhasDeMoedas(moedas) }
+    val temPilhas = remember(pilhas) { pilhas.all { ArteDoApp.info(contexto, PecasDoPremio.idDasMoedas(it)) != null } }
+    val temMoeda = remember { ArteDoApp.info(contexto, ID_DA_MOEDA) != null }
+    val rotulo = when {
+        temPilhas -> PecasDoPremio.rotuloDasMoedas(moedas)
+        temMoeda && moedas <= PecasDoPremio.MOEDAS_SOLTAS -> if (moedas > 0) "+$moedas" else null
+        else -> null
+    }
+    if (temPilhas) {
+        for (p in pilhas) ImagemDeArte(PecasDoPremio.idDasMoedas(p), Modifier.size(tamanho))
+    } else if (temMoeda) {
+        // Moedas soltas, um pouco sobrepostas, para contar uma a uma.
+        val lado = tamanho * 0.6f
+        Box(Modifier.size(lado + lado * 0.55f * (moedas.coerceIn(1, PecasDoPremio.MOEDAS_SOLTAS) - 1), lado)) {
+            repeat(moedas.coerceIn(0, PecasDoPremio.MOEDAS_SOLTAS)) { i ->
+                ImagemDeArte(ID_DA_MOEDA, Modifier.offset(x = lado * 0.55f * i).size(lado))
+            }
+        }
+    }
+    if (rotulo != null) androidx.compose.material3.Text(rotulo, maxLines = 1)
+}
+
+private const val ID_DA_MOEDA = "moeda"
 
 /** A estrela grande do prêmio (`estrela3d`); a que não foi ganha fica de plástico cinza claro e translúcida. */
 @Composable

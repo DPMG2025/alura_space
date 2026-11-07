@@ -68,7 +68,8 @@ import br.com.casinhadosaber.ui.tema.Raios
  * face colorida em degradê ([Degrades.bloco]), lábio mais escuro embaixo ([corBase], [profundidade]), brilho
  * macio no alto à esquerda ([brilho]), borda branca ([contorno] diferente de nulo) e sombra suave ([sombra]).
  * Ao apertar, afunda até o lábio e amassa (1,04 × 0,94), voltando com mola.
- * Desabilitado fica numa versão clarinha da própria cor (nunca cinza).
+ * Desabilitado: o colorido fica fosco (a própria cor puxada para um lilás acinzentado, [faceDesligada]), com o
+ * texto branco ainda legível (3:1); o claro fica numa versão clarinha da própria cor.
  */
 @Composable
 fun BotaoFofo(
@@ -123,8 +124,11 @@ private fun BlocoDeBrinquedo(
         spring(dampingRatio = 0.4f, stiffness = 700f),
         label = "amassar",
     )
-    val corFace = if (habilitado) cor else clarear(cor, 0.5f)
-    val corDaBase = if (habilitado) corBase else clarear(corBase, 0.45f)
+    // Desligado: o botão colorido fica fosco (lilás acinzentado da própria cor), com contraste para o texto branco
+    // (WCAG 3:1); o claro só clareia. Sem brilho nem transparência no texto, para ler bem sem parecer ativo.
+    val corFace = if (habilitado) cor else faceDesligada(cor)
+    val corDaBase = if (habilitado) corBase else baseDesligada(cor, corBase)
+    val textoApagado = !habilitado && botaoClaro(cor)
     Box(
         modifier
             .graphicsLayer {
@@ -144,8 +148,8 @@ private fun BlocoDeBrinquedo(
                 .then(if (preencher) Modifier.fillMaxSize() else Modifier)
                 .offset { IntOffset(0, (profundidade.toPx() * afundar).roundToInt()) }
                 .clip(forma)
-                .faceDeBrinquedo(corFace, forma, brilho, bordaBranca = contorno != null, redonda = redondoClaro)
-                .graphicsLayer { alpha = if (habilitado) 1f else 0.8f },
+                .faceDeBrinquedo(corFace, forma, brilho && habilitado, bordaBranca = contorno != null, redonda = redondoClaro)
+                .graphicsLayer { alpha = if (textoApagado) 0.8f else 1f },
             contentAlignment = Alignment.Center,
         ) {
             conteudo()

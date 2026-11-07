@@ -47,6 +47,18 @@ class PecasDoPremioTest {
         }
     }
 
+    @Test fun numeroSoAoLadoDeMoedasQueDaoAConta() {
+        assertEquals(null, PecasDoPremio.rotuloDasMoedas(0))
+        for (n in (1..13) + 15) assertEquals("+$n", PecasDoPremio.rotuloDasMoedas(n))
+        // 14 moedas em até 3 pilhas não dá a conta (5 + 5 + 3): nenhum número, para não mentir.
+        assertEquals(null, PecasDoPremio.rotuloDasMoedas(14))
+        assertEquals(null, PecasDoPremio.rotuloDasMoedas(30))
+        // As moedas do prêmio, do brinde, da missão e do relembrar sempre têm o número certo ao lado.
+        for (n in listOf(EstadoJogo.MOEDAS_DO_BRINDE, EstadoJogo.MOEDAS_DA_MISSAO, br.com.casinhadosaber.dominio.Relembrar.MOEDAS)) {
+            assertEquals("+$n", PecasDoPremio.rotuloDasMoedas(n))
+        }
+    }
+
     @Test fun moedasEmPilhasQueSeContam() {
         assertEquals(emptyList<Int>(), PecasDoPremio.pilhasDeMoedas(0))
         assertEquals(listOf(1), PecasDoPremio.pilhasDeMoedas(1))

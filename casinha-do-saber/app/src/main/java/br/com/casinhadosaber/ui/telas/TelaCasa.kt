@@ -1219,7 +1219,8 @@ private fun ItemDoBau(item: ItemCasa, primeiro: Boolean, onClick: () -> Unit) {
                 }
                 if (primeiro) MaoGuia(Modifier.align(Alignment.BottomStart).offset(x = (-6).dp, y = 22.dp), espera = 1500)
             }
-            Text(item.nome, style = MaterialTheme.typography.bodyMedium, maxLines = 1, textAlign = TextAlign.Center)
+            // Nomes longos ("Casa na árvore") em duas linhas, centralizados, sem cortar.
+            Text(item.nome, style = MaterialTheme.typography.bodyMedium, maxLines = 2, textAlign = TextAlign.Center)
         }
     }
 }

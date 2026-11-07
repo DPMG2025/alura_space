@@ -111,6 +111,16 @@ class CapturasCasa3DTest {
             assertTrue("falta o caminho ${t.titulo}", regra.onAllNodes(hasContentDescription("Caminho ${t.titulo}", substring = true)).fetchSemanticsNodes().isNotEmpty())
         }
         assertTrue(regra.onAllNodes(hasContentDescription("Minha casinha", substring = true)).fetchSemanticsNodes().isNotEmpty())
+        // Fase 9: o espelho (agora no cabeçalho) não cobre o sol, e a criança fica em primeiro plano, com o dobro do
+        // tamanho da casa de montar (mais de 22% da largura, como na maquete 1).
+        val espelho = regra.onAllNodes(hasContentDescription("Espelho: trocar a aparência")).fetchSemanticsNodes().map { it.boundsInRoot }
+        val sol = regra.onAllNodes(hasContentDescription("Sol"), useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
+        assertTrue("o espelho devia estar na tela", espelho.isNotEmpty())
+        for (e in espelho) for (s in sol) assertTrue("o espelho cobre o sol: $e x $s", !e.overlaps(s))
+        val largura = regra.onRoot().fetchSemanticsNode().boundsInRoot.width
+        val crianca = regra.onAllNodes(hasContentDescription("Ana"), useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
+        assertTrue("a criança devia estar na casinha", crianca.isNotEmpty())
+        assertTrue("a criança do início está pequena: ${crianca.first()}", crianca.first().width >= largura * 0.22f)
         regra.onRoot().captureRoboImage("build/outputs/roborazzi/v3d_04_inicio.png")
     }
 

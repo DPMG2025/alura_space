@@ -32,7 +32,7 @@ object PecasDoPremio {
     /**
      * As moedas ganhas como pilhas que se contam (5, 3, 2 e 1 moedas), da maior para a menor, no máximo [maximo]
      * pilhas. Até 13 moedas (e com 15), a soma das pilhas é exatamente [moedas]; nos outros casos as pilhas mostram
-     * quase tudo e o número ao lado, que sempre acompanha, conta o certo. Nenhuma moeda, nenhuma pilha.
+     * quase tudo e o número fica de fora ([rotuloDasMoedas]). Nenhuma moeda, nenhuma pilha.
      */
     fun pilhasDeMoedas(moedas: Int, maximo: Int = 3): List<Int> {
         val pilhas = mutableListOf<Int>()
@@ -44,6 +44,17 @@ object PecasDoPremio {
         }
         return pilhas
     }
+
+    /**
+     * O número que pode ir ao lado das pilhas de [moedas] ("+5"): só quando as pilhas mostram exatamente essas
+     * moedas (cada uma é um `premio_moedas_N` com N moedas que se contam). Quando as pilhas não dão a conta certa,
+     * ou não há moeda, nenhum número: nunca um número sozinho ou diferente do que se vê.
+     */
+    fun rotuloDasMoedas(moedas: Int, maximo: Int = 3): String? =
+        if (moedas > 0 && pilhasDeMoedas(moedas, maximo).sum() == moedas) "+$moedas" else null
+
+    /** Sem a arte das pilhas: no máximo estas moedas soltas (`moeda`), e o número só se couberem todas. */
+    const val MOEDAS_SOLTAS = 5
 
     val FORMAS_DO_CONFETE = listOf("papel", "estrela", "bolinha", "serpentina")
     val CORES_DO_CONFETE = listOf("vermelho", "amarelo", "verde", "azul", "roxo", "rosa")

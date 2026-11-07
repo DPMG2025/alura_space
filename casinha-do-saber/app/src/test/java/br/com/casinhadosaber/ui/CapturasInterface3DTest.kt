@@ -3,6 +3,7 @@ package br.com.casinhadosaber.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -37,7 +38,11 @@ import br.com.casinhadosaber.ui.componentes.EstrelasDeProgresso
 import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
 import br.com.casinhadosaber.ui.componentes.IconesDaBarra
 import br.com.casinhadosaber.ui.componentes.LadoDaCauda
+import br.com.casinhadosaber.ui.componentes.PecasDoPremio
+import br.com.casinhadosaber.ui.componentes.PilulaDeMoedas
 import br.com.casinhadosaber.ui.componentes.PilulaDeValor
+import br.com.casinhadosaber.ui.componentes.contraste
+import br.com.casinhadosaber.ui.componentes.faceDesligada
 import br.com.casinhadosaber.ui.componentes.TextoComContorno
 import br.com.casinhadosaber.ui.componentes.cartaoFofo
 import br.com.casinhadosaber.ui.componentes.idDoIconeDaTrilha
@@ -162,6 +167,9 @@ class CapturasInterface3DTest {
             assertEquals(descricao, 1, regra.onAllNodesWithContentDescription(descricao).fetchSemanticsNodes().size)
             assertTrue("o emoji $emoji apareceu na barra", regra.onAllNodesWithText(emoji).fetchSemanticsNodes().isEmpty())
         }
+        // O "Depois" desligado lê bem (texto branco na face fosca, 3:1 até no alto do degradê) sem parecer ativo.
+        val face = faceDesligada(Cores.Roxo)
+        assertTrue(contraste(androidx.compose.ui.graphics.lerp(face, Color.White, 0.22f), Color.White) >= 3f)
         conferirTextosInteiros()
         regra.onRoot().captureRoboImage("build/outputs/roborazzi/v3d_02_interface_botoes.png")
     }
@@ -169,6 +177,7 @@ class CapturasInterface3DTest {
     @Test fun pilulasContasEBaloes() {
         conferirArte(
             CorDaConta.entries.map { it.id } + CorDaConta.VAZIA + listOf("estrela_cheia", "estrela_vazia", "estrela_brilhando", "moeda") +
+                PecasDoPremio.PILHAS.map(PecasDoPremio::idDasMoedas) +
                 Trilha.entries.map { idDoIconeDaTrilha(it) },
         )
         montar {
@@ -188,7 +197,8 @@ class CapturasInterface3DTest {
                 // Placar como na maquete 1 e moedas como na 3.
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     PilulaDeValor("estrela_cheia", "27", descricao = "27 estrelas")
-                    PilulaDeValor("moeda", "+5", descricao = "Mais 5 moedas")
+                    // "+5" só ao lado das 5 moedas que se contam (premio_moedas_5), nunca de uma moeda só.
+                    PilulaDeMoedas(5, descricao = "Mais 5 moedas")
                 }
                 // Contas de todas as cores e muitas contas numa linha (encolhem para caber).
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -200,6 +210,10 @@ class CapturasInterface3DTest {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     EstrelasDeProgresso(3, total = 5, tamanho = 22.dp, descricao = "3 de 5 estrelas")
                     EstrelasDeProgresso(2, total = 3, tamanho = 30.dp, brilharUltima = true)
+                }
+                // As vazias na cor do cartão do caminho (maquete 1), não cinza.
+                Box(Modifier.background(Color(Trilha.PORTUGUES.corArgb), RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+                    EstrelasDeProgresso(2, total = 5, tamanho = 22.dp, corDaVazia = Color(Trilha.PORTUGUES.corArgb))
                 }
                 // Ícones 3D dos caminhos.
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

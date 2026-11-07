@@ -146,6 +146,11 @@ fun CenaDaCasa(
     onTocarVisitante: (String) -> Unit = {},
     /** Evento do dia: os enfeites ficam no fundo da cena (atrás das coisas), seguindo o beiral do telhado. */
     evento: TipoDeEvento? = null,
+    /**
+     * Tamanho da criança e do irmãozinho em relação ao normal. A tela inicial (maquete 1) põe os dois em primeiro
+     * plano, com o dobro do tamanho; a casa de montar usa 1 (eles cabem nos cômodos).
+     */
+    escalaDasCriancas: Float = 1f,
 ) {
     val tempo = rememberInfiniteTransition(label = "cena")
     val t by tempo.animateFloat(
@@ -229,6 +234,7 @@ fun CenaDaCasa(
                 onTocarIrmao = onTocarIrmao,
                 onTocarVisitante = onTocarVisitante,
                 evento = evento,
+                escalaDasCriancas = escalaDasCriancas,
             )
             // Visitantes passeiam numa "pista" no alto do jardim de baixo, passando na frente dos objetos.
             if (temJardimExtra) {
@@ -271,6 +277,7 @@ fun CenaDaCasa(
         onTocarIrmao = onTocarIrmao,
         onTocarVisitante = onTocarVisitante,
         evento = evento,
+        escalaDasCriancas = escalaDasCriancas,
     )
 }
 
@@ -330,6 +337,7 @@ private fun CenaPlana(
     onTocarVisitante: (String) -> Unit,
     onTocarIrmao: () -> Unit = {},
     evento: TipoDeEvento? = null,
+    escalaDasCriancas: Float = 1f,
 ) {
     val jardim = remember(jardimExtra) { JardimDeBaixo(jardimExtra) }
     val relogio = rememberRelogioDoPasseio()
@@ -503,20 +511,27 @@ private fun CenaPlana(
 
         val perfil = estado.perfil
         if (perfil != null) {
-            val posCrianca = jardim.naTela(estado.posicaoCrianca)
+            // Maiores (tela inicial), os bonecos ficam inteiros dentro da cena: nada cortado nas bordas.
+            val posCrianca = jardim.naTela(estado.posicaoCrianca).let { p ->
+                if (escalaDasCriancas > 1f) p.copy(x = dentroDaCena(p.x, LARGURA_DA_CRIANCA_NA_CASA * escalaDasCriancas)) else p
+            }
             if (perfil.irmao.ligado) {
                 // O irmãozinho fica sempre ao lado da criança (do lado que tiver espaço) e vai junto quando ela
                 // muda de lugar. Arrastado, ele volta correndo para perto dela. Desenhado antes da criança, fica
                 // um pouquinho atrás dela.
-                val lado = if (posCrianca.x > 0.86f) -1f else 1f
-                val posIrmao = Posicao(posCrianca.x + lado * 0.1f, posCrianca.y - 0.004f)
+                val lado = if (posCrianca.x > 1f - 0.14f * escalaDasCriancas) -1f else 1f
+                val xDoIrmao = posCrianca.x + lado * 0.1f * escalaDasCriancas
+                val posIrmao = Posicao(
+                    if (escalaDasCriancas > 1f) dentroDaCena(xDoIrmao, LARGURA_DO_IRMAO_NA_CASA * escalaDasCriancas) else xDoIrmao,
+                    posCrianca.y - 0.004f,
+                )
                 key("irmao") {
                     ObjetoNaCena(
                         item = null,
                         pos = posIrmao,
                         larguraCena = larguraPx,
                         alturaCena = alturaPx,
-                        larguraRelativa = LARGURA_DO_IRMAO_NA_CASA,
+                        larguraRelativa = LARGURA_DO_IRMAO_NA_CASA * escalaDasCriancas,
                         proporcao = 1f / PROPORCAO_IRMAO,
                         interativo = interativa && !pintando,
                         aparecer = false,
@@ -536,7 +551,7 @@ private fun CenaPlana(
                 pos = posCrianca,
                 larguraCena = larguraPx,
                 alturaCena = alturaPx,
-                larguraRelativa = 0.13f,
+                larguraRelativa = LARGURA_DA_CRIANCA_NA_CASA * escalaDasCriancas,
                 proporcao = 1f / PROPORCAO_CRIANCA,
                 interativo = interativa && !pintando,
                 aparecer = false,
@@ -566,11 +581,17 @@ private fun CenaPlana(
     }
 }
 
+/** Largura da criança na cena da casa (fração da largura), no tamanho normal. */
+private const val LARGURA_DA_CRIANCA_NA_CASA = 0.13f
+
 /**
  * Largura do irmãozinho na cena da casa (fração da largura): dois terços da altura da criança, que tem 0,13 de
  * largura e proporção [PROPORCAO_CRIANCA].
  */
-private const val LARGURA_DO_IRMAO_NA_CASA = 0.13f / PROPORCAO_CRIANCA * 0.66f * PROPORCAO_IRMAO
+private const val LARGURA_DO_IRMAO_NA_CASA = LARGURA_DA_CRIANCA_NA_CASA / PROPORCAO_CRIANCA * 0.66f * PROPORCAO_IRMAO
+
+/** O centro [x] (fração da largura) de um boneco de [largura] puxado para dentro da cena, sem passar das bordas. */
+private fun dentroDaCena(x: Float, largura: Float): Float = x.coerceIn(largura / 2f, 1f - largura / 2f)
 
 /** Pequenas animações que deixam a casa viva. */
 enum class Vida { PARADO, BALANCAR, RESPIRAR, BOIAR, VOAR, DERIVAR, BRILHAR, DANCAR }
@@ -1010,13 +1031,7 @@ private fun DrawScope.desenharCasaEmCamadas(
             imagemEm(img, X(x - 0.07f), Y(0.07f + k * 0.06f), X(0.15f - k * 0.03f), alfa = 0.92f)
         }
         // Passarinhos de enfeite (a arte 3D não tem): os mesmos risquinhos de antes.
-        for (k in 0 until 3) {
-            val bx = X(((t + k * 0.31f) % 1f) * 1.1f - 0.05f)
-            val by = Y(0.22f + k * 0.03f) + kotlin.math.sin((t * 6f + k) * Math.PI.toFloat()) * X(0.006f)
-            val asa = X(0.012f)
-            drawLine(Color(0xFF3D2C5E), Offset(bx - asa, by - asa * 0.5f), Offset(bx, by), 3f)
-            drawLine(Color(0xFF3D2C5E), Offset(bx, by), Offset(bx + asa, by - asa * 0.5f), 3f)
-        }
+        passarinhos(t)
     }
     c.nuvemDeChuva?.let {
         imagemEm(it, X(0.56f), Y(0.03f), X(0.36f))
@@ -1055,6 +1070,30 @@ private fun DrawScope.desenharCasaEmCamadas(
         drawPath(contorno, Color.White.copy(alpha = 0.75f), style = Stroke(X(0.008f), pathEffect = tracejado, join = StrokeJoin.Round))
     }
 }
+
+/**
+ * Três passarinhos de enfeite (risquinhos) atravessando o céu, cada um no seu tempo. Nunca são cortados pela
+ * borda da cena: voam só entre as margens (a asa inteira dentro) e aparecem e somem devagar perto delas.
+ */
+private fun DrawScope.passarinhos(t: Float) {
+    val W = size.width
+    val H = size.height
+    val asa = W * 0.012f
+    val margem = asa * 2f
+    for (k in 0 until 3) {
+        val p = (t + k * 0.31f) % 1f
+        val bx = margem + p * (W - 2f * margem)
+        val by = H * (0.22f + k * 0.03f) + kotlin.math.sin((t * 6f + k) * Math.PI.toFloat()) * W * 0.006f
+        val alfa = alfaDoPassarinho(p)
+        if (alfa <= 0f) continue
+        val cor = Color(0xFF3D2C5E).copy(alpha = alfa)
+        drawLine(cor, Offset(bx - asa, by - asa * 0.5f), Offset(bx, by), 3f)
+        drawLine(cor, Offset(bx, by), Offset(bx + asa, by - asa * 0.5f), 3f)
+    }
+}
+
+/** Transparência do passarinho em [p] (0 a 1 da travessia): some nos 10% de cada ponta. */
+private fun alfaDoPassarinho(p: Float): Float = (minOf(p, 1f - p) / 0.1f).coerceIn(0f, 1f)
 
 /**
  * A chuva ou a neve da arte 3D ([img], emendável na vertical) caindo por toda a caixa, [velocidade] imagens por
@@ -1132,13 +1171,7 @@ private fun DrawScope.desenharCasa(e: EstadoJogo, t: Float, nova: Estrutura?, pr
             val x = 0.64f + ((t * 0.3f + k * 0.5f) % 1f) * 0.30f
             nuvemDeFundo(X(x), Y(0.11f + k * 0.05f), X(0.05f))
         }
-        for (k in 0 until 3) {
-            val bx = X(((t + k * 0.31f) % 1f) * 1.1f - 0.05f)
-            val by = Y(0.22f + k * 0.03f) + kotlin.math.sin((t * 6f + k) * Math.PI.toFloat()) * X(0.006f)
-            val asa = X(0.012f)
-            drawLine(Color(0xFF3D2C5E), Offset(bx - asa, by - asa * 0.5f), Offset(bx, by), 3f)
-            drawLine(Color(0xFF3D2C5E), Offset(bx, by), Offset(bx + asa, by - asa * 0.5f), 3f)
-        }
+        passarinhos(t)
     }
     // morros
     drawOval(if (noite) Color(0xFF4C7F55) else Color(0xFFA8DD8F), topLeft = Offset(X(-0.2f), Y(0.68f)), size = Size(X(0.7f), Y(0.24f)))

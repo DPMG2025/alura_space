@@ -48,7 +48,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -102,6 +101,7 @@ import br.com.casinhadosaber.ui.componentes.PROPORCAO_CRIANCA
 import br.com.casinhadosaber.ui.componentes.PROPORCAO_IRMAO
 import br.com.casinhadosaber.ui.componentes.PalcoDaFesta
 import br.com.casinhadosaber.ui.componentes.PersonagemDaArte
+import br.com.casinhadosaber.ui.componentes.Pilula
 import br.com.casinhadosaber.ui.componentes.PilulaDeMoedas
 import br.com.casinhadosaber.ui.componentes.PresenteQueAbre
 import br.com.casinhadosaber.ui.componentes.RaiosDeLuz
@@ -341,12 +341,16 @@ fun TelaPremio(
                 when {
                     item != null -> if (aberto) {
                         TextoComContorno(item.nome, estilo = MaterialTheme.typography.headlineMedium)
-                        Text(
-                            "Em inglês: ${item.nomeEn}",
-                            style = MaterialTheme.typography.titleMedium.copy(shadow = SOMBRA_DO_TITULO),
-                            color = Color.White,
-                            textAlign = TextAlign.Center,
-                        )
+                        // Numa pílula clara com o texto roxo escuro: o branco sobre o lilás claro do fundo não lia.
+                        Spacer(Modifier.height(4.dp))
+                        Pilula {
+                            Text(
+                                "Em inglês: ${item.nomeEn}",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Cores.TextoDaPilula,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                     } else {
                         TextoComContorno("Um presente para a sua casa!", estilo = estiloDoConvite, espessura = 3.dp, profundidade = 2.dp, maxLinhas = 2)
                     }
@@ -583,8 +587,6 @@ private fun DesenhoDoBrinde(p: Produto, lado: Dp, modifier: Modifier = Modifier,
     }
 }
 
-/** Sombra ameixa suave do texto branco. */
-private val SOMBRA_DO_TITULO = Shadow(Color(0x553D2C5E), Offset(0f, 4f), 8f)
 
 /**
  * A caixa de presente desenhada: corpo rosa com fita dourada, tampa mais larga, laço de duas alças,

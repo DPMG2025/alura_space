@@ -52,6 +52,7 @@ import br.com.casinhadosaber.ui.componentes.ID_ESTRELA_CHEIA
 import br.com.casinhadosaber.ui.componentes.ImagemDeArte
 import br.com.casinhadosaber.ui.componentes.LadoDaCauda
 import br.com.casinhadosaber.ui.componentes.Pilula
+import br.com.casinhadosaber.ui.componentes.PilulaDeMoedas
 import br.com.casinhadosaber.ui.componentes.PilulaDeValor
 import br.com.casinhadosaber.ui.componentes.TextoComContorno
 import br.com.casinhadosaber.ui.componentes.balaoDeFala
@@ -133,6 +134,9 @@ fun ConviteDaCorujinha(
                     destaqueIcone != null && destaque.isNullOrBlank() -> Pilula(descricao = "Estrela") {
                         ImagemDeArte(destaqueIcone, Modifier.size(36.dp)) { Text("⭐", style = MaterialTheme.typography.headlineSmall) }
                     }
+                    // Moedinhas: as moedas que se contam, com o número só ao lado delas (nunca "+3" com uma moeda só).
+                    destaqueIcone == ID_MOEDA_DO_RELEMBRAR && destaque?.removePrefix("+")?.toIntOrNull() != null ->
+                        PilulaDeMoedas(destaque.orEmpty().removePrefix("+").toInt())
                     destaqueIcone != null -> PilulaDeValor(destaqueIcone, destaque!!, reserva = { Text("🪙", style = MaterialTheme.typography.titleLarge) })
                     destaque != null -> Pilula {
                         Text(destaque, style = MaterialTheme.typography.headlineSmall, color = Cores.TextoDaPilula, maxLines = 1)
@@ -178,7 +182,7 @@ fun TelaConviteRelembrar(nome: String?, quantas: Int, onVamos: () -> Unit, onAgo
         onNao = onAgoraNao,
         marcaNao = "relembrar_agora_nao",
         destaque = "+${br.com.casinhadosaber.dominio.Relembrar.MOEDAS}",
-        destaqueIcone = "moeda",
+        destaqueIcone = ID_MOEDA_DO_RELEMBRAR,
     )
 }
 
@@ -198,7 +202,7 @@ fun TelaFimRelembrar(nome: String?, acertos: Int, total: Int, moedas: Int, onCon
         onSim = onContinuar,
         marcaSim = "relembrar_continuar",
         destaque = if (moedas > 0) "+$moedas" else "",
-        destaqueIcone = if (moedas > 0) "moeda" else ID_ESTRELA_CHEIA,
+        destaqueIcone = if (moedas > 0) ID_MOEDA_DO_RELEMBRAR else ID_ESTRELA_CHEIA,
     )
 }
 
@@ -244,3 +248,6 @@ fun perguntasDoRelembrar(gerador: GeradorDeFases, fases: List<Pair<Trilha, Int>>
     val todas = fases.map { (t, n) -> gerador.fases(t)[n] }
     return todas.first() to todas.map { gerador.perguntaDaFase(it) }
 }
+
+/** A moeda 3D (`moeda`): na pílula do destaque, vira as moedas que se contam. */
+private const val ID_MOEDA_DO_RELEMBRAR = "moeda"

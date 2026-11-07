@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Fase
@@ -146,7 +147,13 @@ fun TelaQuase(
                     val alvo = k == minimo - 1
                     ImagemDeArte(if (k < acertos) CorDaConta.VERDE.id else CorDaConta.VAZIA, Modifier.size(if (alvo) 30.dp else 24.dp))
                     if (alvo) {
-                        ImagemDeArte(PecasDoPremio.PRESENTE_FECHADO, Modifier.size(38.dp)) { PresenteFechado(Modifier.size(32.dp)) }
+                        // O presente 3D (`premio_presente_fechado`) grande o bastante para se ver o laço e o brilho,
+                        // maior que as contas (nunca o 🎁 do sistema).
+                        ImagemDeArte(
+                            PecasDoPremio.PRESENTE_FECHADO,
+                            Modifier.size(TAMANHO_DO_PRESENTE),
+                            descricao = null,
+                        ) { PresenteFechado(Modifier.size(TAMANHO_DO_PRESENTE)) }
                     }
                 }
             }
@@ -198,15 +205,33 @@ fun TelaQuase(
                             "De novo",
                             estilo = MaterialTheme.typography.headlineMedium,
                             corDoContorno = Cores.ContornoEscuro,
-                            modifier = Modifier.padding(horizontal = 26.dp, vertical = 12.dp),
+                            // Com o anel do toque, o botão guarda um cantinho à direita para ele (sem cobrir o texto).
+                            modifier = Modifier.padding(start = 26.dp, end = if (animado) 26.dp + ANEL_DO_BOTAO + 6.dp else 26.dp, top = 12.dp, bottom = 12.dp),
                         )
                     }
-                    if (animado) AnelDeToque(Modifier.align(Alignment.CenterEnd).offset(x = 22.dp).size(56.dp), espera = 2500)
+                    // O anel que pinga fica dentro da face do botão, no canto da direita: nunca passa da borda.
+                    if (animado) {
+                        AnelDeToque(
+                            Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 10.dp, bottom = LABIO_DO_BOTAO)
+                                .size(ANEL_DO_BOTAO)
+                                .testTag("anel_de_toque"),
+                            espera = 2500,
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+/** O presente 3D dentro da pílula das contas. */
+private val TAMANHO_DO_PRESENTE = 46.dp
+
+/** O anel do toque no botão "De novo" (cabe na altura da face) e o lábio do botão (6 dp, o padrão do BotaoFofo). */
+private val ANEL_DO_BOTAO = 44.dp
+private val LABIO_DO_BOTAO = 6.dp
 
 /** Caixa de presente desenhada em Canvas (reserva do presente 3D nas contas): tampa, fita vermelha, laço e brilho. */
 @Composable

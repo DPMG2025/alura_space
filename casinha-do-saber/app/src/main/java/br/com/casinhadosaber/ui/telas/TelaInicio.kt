@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,12 +55,15 @@ import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.CenaDaCasa
 import br.com.casinhadosaber.ui.componentes.Estrela
+import br.com.casinhadosaber.ui.componentes.EstiloDaPilula
 import br.com.casinhadosaber.ui.componentes.EstrelasDeProgresso
 import br.com.casinhadosaber.ui.componentes.ID_ESTRELA_CHEIA
 import br.com.casinhadosaber.ui.componentes.IconeDeTrilha
 import br.com.casinhadosaber.ui.componentes.IconesDaBarra
 import br.com.casinhadosaber.ui.componentes.ImagemDeArte
 import br.com.casinhadosaber.ui.componentes.MaoGuia
+import br.com.casinhadosaber.ui.componentes.MoedasQueSeContam
+import br.com.casinhadosaber.ui.componentes.PecasDasTelas
 import br.com.casinhadosaber.ui.componentes.PilulaDeValor
 import br.com.casinhadosaber.ui.componentes.ProgressoVisivel
 import br.com.casinhadosaber.ui.componentes.TextoComContorno
@@ -127,10 +131,24 @@ fun TelaInicio(
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            BotaoAdulto(onAreaDosPais)
+            // O espelho e a estante ficam no cabeçalho, ao lado dos outros botões redondos: na casinha eles tampavam
+            // o sol (que mora no canto de cima à esquerda do céu). Os dois lados têm a mesma largura, para a pílula
+            // ficar no meio como na maquete.
+            val ladoDoCabecalho = if (baixa) Modifier else Modifier.width(LARGURA_DO_LADO_DO_CABECALHO)
+            Row(ladoDoCabecalho, horizontalArrangement = Arrangement.spacedBy(ESPACO_DO_CABECALHO), verticalAlignment = Alignment.CenterVertically) {
+                BotaoAdulto(onAreaDosPais)
+                if (estado.perfil != null) {
+                    BotaoRedondo(
+                        "🪞",
+                        "Espelho: trocar a aparência",
+                        { sons.toque(); onEspelho() },
+                        tamanho = 48.dp,
+                    )
+                }
+            }
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 if (baixa) {
-                    TextoComContorno("Casinha do Saber", estilo = MaterialTheme.typography.headlineMedium, espessura = 5.dp)
+                    TituloQueCabe("Casinha do Saber", estilo = MaterialTheme.typography.headlineMedium)
                 } else {
                     PilulaDeValor(
                         ID_ESTRELA_CHEIA,
@@ -139,12 +157,19 @@ fun TelaInicio(
                     ) { Estrela(true, tamanho = 26.dp) }
                 }
             }
-            BotaoRedondo(
-                emoji = if (somLigado) "🔊" else "🔇",
-                descricao = if (somLigado) "Desligar som" else "Ligar som",
-                onClick = onAlternarSom,
-                tamanho = 48.dp,
-            )
+            Row(
+                ladoDoCabecalho,
+                horizontalArrangement = Arrangement.spacedBy(ESPACO_DO_CABECALHO, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (onEstante != null) BotaoEstante(onEstante, tamanho = 48.dp)
+                BotaoRedondo(
+                    emoji = if (somLigado) "🔊" else "🔇",
+                    descricao = if (somLigado) "Desligar som" else "Ligar som",
+                    onClick = onAlternarSom,
+                    tamanho = 48.dp,
+                )
+            }
         }
         if (!baixa) {
             // Título de brinquedo: Baloo 2 branca com contorno roxo e lábio embaixo (maquete 1).
@@ -168,7 +193,8 @@ fun TelaInicio(
                     }
                     .clickable { sons.toque(); onAbrirCasa() },
             ) {
-                CenaDaCasa(estado, Modifier.fillMaxSize(), preencherAltura = true, semCeu = true)
+                // Os bonecos em primeiro plano, com o dobro do tamanho da casa de montar (maquete 1).
+                CenaDaCasa(estado, Modifier.fillMaxSize(), preencherAltura = true, semCeu = true, escalaDasCriancas = ESCALA_DOS_BONECOS)
                 if (!deitada) {
                     // A grama se desfaz no rosado do céu de baixo, onde ficam os caminhos (como na maquete).
                     Spacer(
@@ -178,22 +204,6 @@ fun TelaInicio(
                             .height(28.dp)
                             .background(Brush.verticalGradient(listOf(Color.Transparent, RosaDoChao))),
                     )
-                }
-                Column(
-                    Modifier
-                        .align(Alignment.TopStart)
-                        .padding(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    if (estado.perfil != null) {
-                        BotaoRedondo(
-                            "🪞",
-                            "Espelho: trocar a aparência",
-                            { sons.toque(); onEspelho() },
-                            tamanho = 52.dp,
-                        )
-                    }
-                    if (onEstante != null) BotaoEstante(onEstante)
                 }
                 if (relembrar > 0) {
                     // Relembrar: a Corujinha no canto de cima (embaixo da missão, quando há missão).
@@ -218,7 +228,15 @@ fun TelaInicio(
                             .padding(10.dp)
                             .pulsando(),
                     ) {
-                        Text("📜 +${EstadoJogo.MOEDAS_DA_MISSAO} 🪙", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
+                        // O pergaminho 3D e as moedas que se contam (o número só ao lado delas).
+                        Row(
+                            Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            ImagemDeArte(PecasDasTelas.DIPLOMA_ROLO, Modifier.size(34.dp)) { Text("📜", style = MaterialTheme.typography.titleLarge) }
+                            ProvideTextStyle(EstiloDaPilula) { MoedasQueSeContam(EstadoJogo.MOEDAS_DA_MISSAO, tamanho = 32.dp) }
+                        }
                     }
                 }
                 if (noBau > 0) {
@@ -301,6 +319,15 @@ private val RosaDoChao = Color(0xFFFFDCDC)
 /** Quantas estrelas cada caminho mostra (a última acende só com o caminho inteiro). */
 private const val ESTRELAS_DO_CAMINHO = 5
 
+/** Tamanho dos bonecos na casinha do início em relação à casa de montar (primeiro plano, maquete 1). */
+private const val ESCALA_DOS_BONECOS = 2f
+
+/** Espaço entre os botões redondos do cabeçalho. */
+private val ESPACO_DO_CABECALHO = 6.dp
+
+/** Largura de cada lado do cabeçalho (dois botões de 48 dp), igual dos dois lados para a pílula ficar no meio. */
+private val LARGURA_DO_LADO_DO_CABECALHO = 48.dp * 2 + ESPACO_DO_CABECALHO
+
 /** Largura da coluna dos caminhos quando a tela está deitada. */
 private val LARGURA_DOS_CAMINHOS_DEITADA = 320.dp
 
@@ -338,6 +365,8 @@ private fun BotaoTrilha(trilha: Trilha, vencidas: Int, modifier: Modifier, alto:
                     total = ESTRELAS_DO_CAMINHO,
                     tamanho = if (alto) 20.dp else 15.dp,
                     espaco = 1.dp,
+                    // As vazias na cor do cartão, clarinhas (maquete 1), e não cinza.
+                    corDaVazia = Color(trilha.corArgb),
                 )
             }
         }

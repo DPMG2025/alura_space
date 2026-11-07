@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -150,8 +151,11 @@ fun EstrelasDeProgresso(
     espaco: Dp = 2.dp,
     brilharUltima: Boolean = false,
     descricao: String? = null,
+    /** Cor do cartão em que as estrelas estão: as vazias saem nessa cor, clarinhas (maquete 1), e não cinza. */
+    corDaVazia: Color? = null,
 ) {
     val acesas = cheias.coerceIn(0, total.coerceAtLeast(0))
+    val filtroDaVazia = remember(corDaVazia) { corDaVazia?.let { filtroDaEstrelaVazia(it) } }
     Row(
         modifier.then(if (descricao != null) Modifier.clearAndSetSemantics { contentDescription = descricao } else Modifier),
         horizontalArrangement = Arrangement.spacedBy(espaco),
@@ -166,6 +170,8 @@ fun EstrelasDeProgresso(
                         Modifier.size(tamanho).graphicsLayer { scaleX = 1.5f; scaleY = 1.5f },
                     ) { Estrela(true, tamanho = tamanho) }
                 }
+            } else if (i >= acesas && filtroDaVazia != null) {
+                ImagemDeArte(ID_ESTRELA_VAZIA, Modifier.size(tamanho), filtro = filtroDaVazia) { Estrela(false, tamanho = tamanho) }
             } else {
                 Estrela(i < acesas, tamanho = tamanho)
             }

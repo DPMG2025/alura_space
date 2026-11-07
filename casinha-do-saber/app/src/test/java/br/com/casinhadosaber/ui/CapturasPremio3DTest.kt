@@ -96,6 +96,8 @@ class CapturasPremio3DTest {
         assertTrue(regra.onAllNodes(hasText("Pôr na casinha")).fetchSemanticsNodes().isNotEmpty())
         assertTrue(regra.onAllNodes(hasContentDescription("Voltar para o caminho")).fetchSemanticsNodes().isNotEmpty())
         semEmojis("🪙", "👆", "🏛", "🏠", "🗺")
+        // O nome em inglês numa pílula clara (antes, branco sobre o lilás claro do fundo).
+        assertTrue(regra.onAllNodes(hasText("Em inglês: bed")).fetchSemanticsNodes().isNotEmpty())
         regra.onRoot().captureRoboImage("build/outputs/roborazzi/v3d_06_premio.png")
     }
 
@@ -108,6 +110,18 @@ class CapturasPremio3DTest {
         assertTrue(regra.onAllNodes(hasContentDescription("Voltar para o caminho")).fetchSemanticsNodes().isNotEmpty())
         assertTrue(regra.onAllNodes(hasContentDescription("Você acertou 3", substring = true)).fetchSemanticsNodes().isNotEmpty())
         semEmojis("🔒", "🎁", "🔄", "👆", "🗺")
+        anelDentroDoBotao(regra)
         regra.onRoot().captureRoboImage("build/outputs/roborazzi/v3d_07_quase.png")
+    }
+}
+
+/** O anel do toque do "De novo" (já visível) fica inteiro dentro do botão: não passa da borda direita. */
+internal fun anelDentroDoBotao(regra: androidx.compose.ui.test.junit4.ComposeContentTestRule) {
+    val aneis = regra.onAllNodes(androidx.compose.ui.test.hasTestTag("anel_de_toque"), useUnmergedTree = true).fetchSemanticsNodes()
+    assertTrue("o anel do toque devia estar na tela", aneis.isNotEmpty())
+    val botao = regra.onAllNodes(hasContentDescription("Tentar de novo")).fetchSemanticsNodes().first().boundsInRoot
+    for (a in aneis) {
+        val r = a.boundsInRoot
+        assertTrue("anel do toque fora do botão: $r (botão $botao)", r.left >= botao.left - 1f && r.right <= botao.right + 1f && r.top >= botao.top - 1f && r.bottom <= botao.bottom + 1f)
     }
 }
