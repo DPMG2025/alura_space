@@ -104,4 +104,4 @@ tocou"). Assinaturas públicas iguais (`ConviteDaCorujinha` só ganhou parâmetr
 
 ## Commit
 
-Código, teste e este relatório: ver o hash na mensagem de entrega (branch `worktree-agent-a2e33bf3d36cc727d`).
+Código, teste e este relatório: `2b533f9` (branch `worktree-agent-a2e33bf3d36cc727d`, sem push); o hash entrou neste relatório num segundo commit.
