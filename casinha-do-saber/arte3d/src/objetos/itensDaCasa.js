@@ -792,4 +792,6 @@ export const LUA = lua;
 
 /** Peças e modelos reaproveitados pelas figuras das perguntas (Fase 4, figuras.js). */
 export const pecasDosItens = { segmento, olho, sorriso, bochecha, rostinho, brilhante, fosco, preto, branco, luz };
-export const modelosDosItens = { gato, cachorro, ursinho, bola: bola_, trem, borboleta, pipa, bolo, lua, estrela };
+export const modelosDosItens = { gato, cachorro, ursinho, bola: bola_, trem, borboleta, pipa, bolo, lua, estrela, escorregador };
+/** Mais modelos reaproveitados pelo lote de figuras da Fase 9 (figurasDoLote9a.js). */
+export const maisModelosDosItens = { cama, livros, violao, bicicleta, arvore: arvore_, sol, nuvem: nuvem_, arcoiris, planta };

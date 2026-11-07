@@ -23,6 +23,9 @@ import { catalogoFase5 } from './catalogo_fase5.js';
 import { catalogo as catalogoFase6 } from './catalogo_fase6.js';
 import { catalogo as catalogoFase7 } from './catalogo_fase7.js';
 import { catalogo as catalogoFase8 } from './catalogo_fase8.js';
+import { catalogoDaFase9a } from './catalogo_fase9a.js';
+import { catalogoDaFase9b } from './catalogo_fase9b.js';
+import { catalogoFase9c } from './catalogo_fase9c.js';
 
 // Fase 2: ícones dos caminhos (ids pelos nomes de dominio/Trilha) e peças da interface.
 const icone = (id, montar, uso = 48) => ({ id, tipo: 'item', uso: { largura: uso, altura: uso }, montar });
@@ -65,4 +68,10 @@ export const catalogo = [
   ...catalogoFase7,
   // Fase 8: ícones da barra, mascotes e enfeites das demais telas (catalogo_fase8.js)
   ...catalogoFase8,
+  // Fase 9, lote 1: mais figuras das perguntas (catalogo_fase9a.js)
+  ...catalogoDaFase9a,
+  // Fase 9, lote 2: figuras das áreas, dos livrinhos, da história e do ateliê (catalogo_fase9b.js)
+  ...catalogoDaFase9b,
+  // Fase 9, lote 3: ícones de interface que ainda eram emoji (catalogo_fase9c.js)
+  ...catalogoFase9c,
 ];

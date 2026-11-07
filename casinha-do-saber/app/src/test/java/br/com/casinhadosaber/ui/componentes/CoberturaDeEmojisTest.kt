@@ -144,8 +144,8 @@ class CoberturaDeEmojisTest {
         const val SORTEIOS = 12
         const val FASES = 100
         const val TOP_SEM_MODELO = 40
-        /** Guarda contra regressão: a fase 4A cobria 57 % das aparições. */
-        const val MINIMO_COBERTO = 50.0
+        /** Guarda contra regressão: a fase 4A cobria 57 % das aparições; a Fase 9 (lotes 1 e 2), 90 %. */
+        const val MINIMO_COBERTO = 75.0
 
         private val SIMBOLOS_DE_TEXTO = setOf(0x2192, 0x2212, 0x2605, 0x232B, 0x25CF, 0x25B2, 0x25A0, 0x25AC)
 

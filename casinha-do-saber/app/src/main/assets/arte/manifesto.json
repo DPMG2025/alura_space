@@ -4460,6 +4460,34 @@
         "largura": 48
       }
     },
+    "fig_abacaxi": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 155
+      },
+      "arquivo": "fig_abacaxi.webp",
+      "emojis": [
+        "🍍"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_abelha": {
       "altura": 192,
       "ancoras": {
@@ -4483,6 +4511,146 @@
       "largura": 192,
       "lugar": "ceu",
       "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_alface": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 70
+        },
+        "topo": {
+          "x": 96,
+          "y": 16
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 119
+      },
+      "arquivo": "fig_alface.webp",
+      "emojis": [
+        "🥬"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_almofada_coracao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 79
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 146
+      },
+      "arquivo": "fig_almofada_coracao.webp",
+      "emojis": [
+        "💖"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_arco_iris": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 97
+        },
+        "topo": {
+          "x": 96,
+          "y": 51
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_arco_iris.webp",
+      "emojis": [
+        "🌈"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_arvore": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 152
+      },
+      "arquivo": "fig_arvore.webp",
+      "emojis": [
+        "🌳"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_atabaque": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 14
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 148
+      },
+      "arquivo": "fig_atabaque.webp",
+      "emojis": [
+        "🪘"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
       "uso": {
         "altura": 96,
         "largura": 96
@@ -4516,6 +4684,62 @@
         "largura": 96
       }
     },
+    "fig_baiacu": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 6
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 133
+      },
+      "arquivo": "fig_baiacu.webp",
+      "emojis": [
+        "🐡"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bala": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 79
+        },
+        "topo": {
+          "x": 96,
+          "y": 42
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 114
+      },
+      "arquivo": "fig_bala.webp",
+      "emojis": [
+        "🍬"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_balao": {
       "altura": 192,
       "ancoras": {
@@ -4539,6 +4763,35 @@
       "largura": 192,
       "lugar": "ceu",
       "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_baleia": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 77
+        },
+        "topo": {
+          "x": 96,
+          "y": 31
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 119
+      },
+      "arquivo": "fig_baleia.webp",
+      "emojis": [
+        "🐳",
+        "🐋"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
       "uso": {
         "altura": 96,
         "largura": 96
@@ -4572,6 +4825,258 @@
         "largura": 96
       }
     },
+    "fig_banjo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 92
+        },
+        "topo": {
+          "x": 96,
+          "y": 2
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 169
+      },
+      "arquivo": "fig_banjo.webp",
+      "emojis": [
+        "🪕"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_barco": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 6
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 150
+      },
+      "arquivo": "fig_barco.webp",
+      "emojis": [
+        "⛵"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_batata": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 41
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 116
+      },
+      "arquivo": "fig_batata.webp",
+      "emojis": [
+        "🥔"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bermuda": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 97,
+          "y": 94
+        },
+        "topo": {
+          "x": 97,
+          "y": 37
+        }
+      },
+      "apoio": {
+        "x": 97,
+        "y": 149
+      },
+      "arquivo": "fig_bermuda.webp",
+      "emojis": [
+        "🩳"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bicicleta": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 34
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 129
+      },
+      "arquivo": "fig_bicicleta.webp",
+      "emojis": [
+        "🚲"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_biscoito": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 2
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 151
+      },
+      "arquivo": "fig_biscoito.webp",
+      "emojis": [
+        "🍪"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_boca": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 39
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 125
+      },
+      "arquivo": "fig_boca.webp",
+      "emojis": [
+        "👄"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_boi": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 9
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_boi.webp",
+      "emojis": [
+        "🐂"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_boia": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 22
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 125
+      },
+      "arquivo": "fig_boia.webp",
+      "emojis": [
+        "🛟"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_bola": {
       "altura": 192,
       "ancoras": {
@@ -4595,6 +5100,118 @@
       "largura": 192,
       "lugar": "tapete",
       "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bola_de_beisebol": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 58
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 126
+      },
+      "arquivo": "fig_bola_de_beisebol.webp",
+      "emojis": [
+        "⚾"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bola_de_confete": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 97,
+          "y": 102
+        },
+        "topo": {
+          "x": 97,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 97,
+        "y": 191
+      },
+      "arquivo": "fig_bola_de_confete.webp",
+      "emojis": [
+        "🎊"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bola_de_rugbi": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 68
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 131
+      },
+      "arquivo": "fig_bola_de_rugbi.webp",
+      "emojis": [
+        "🏈"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bolhas": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 97
+        },
+        "topo": {
+          "x": 96,
+          "y": 16
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 174
+      },
+      "arquivo": "fig_bolhas.webp",
+      "emojis": [
+        "🫧"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
       "uso": {
         "altura": 96,
         "largura": 96
@@ -4656,6 +5273,34 @@
         "largura": 96
       }
     },
+    "fig_bolinha_branca": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 138
+      },
+      "arquivo": "fig_bolinha_branca.webp",
+      "emojis": [
+        "⚪"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_bolinha_laranja": {
       "altura": 192,
       "ancoras": {
@@ -4675,6 +5320,34 @@
       "arquivo": "fig_bolinha_laranja.webp",
       "emojis": [
         "🟠"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bolinha_marrom": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 138
+      },
+      "arquivo": "fig_bolinha_marrom.webp",
+      "emojis": [
+        "🟤"
       ],
       "largura": 192,
       "lugar": "tapete",
@@ -4852,6 +5525,35 @@
         "largura": 96
       }
     },
+    "fig_boneco_de_neve": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 88
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 158
+      },
+      "arquivo": "fig_boneco_de_neve.webp",
+      "emojis": [
+        "⛄",
+        "☃️"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_borboleta": {
       "altura": 192,
       "ancoras": {
@@ -4875,6 +5577,119 @@
       "largura": 192,
       "lugar": "ceu",
       "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_bota": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 92,
+          "y": 88
+        },
+        "topo": {
+          "x": 92,
+          "y": 13
+        }
+      },
+      "apoio": {
+        "x": 92,
+        "y": 160
+      },
+      "arquivo": "fig_bota.webp",
+      "emojis": [
+        "🥾",
+        "👢"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_brocolis": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 146
+      },
+      "arquivo": "fig_brocolis.webp",
+      "emojis": [
+        "🥦"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_broto": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 144
+      },
+      "arquivo": "fig_broto.webp",
+      "emojis": [
+        "🌱"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cabra": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 12
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_cabra.webp",
+      "emojis": [
+        "🐐"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
       "uso": {
         "altura": 96,
         "largura": 96
@@ -4937,6 +5752,259 @@
         "largura": 96
       }
     },
+    "fig_cacto": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 86
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 155
+      },
+      "arquivo": "fig_cacto.webp",
+      "emojis": [
+        "🌵"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cadeira": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 87
+        },
+        "topo": {
+          "x": 96,
+          "y": 17
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_cadeira.webp",
+      "emojis": [
+        "🪑"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_calca": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 94
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 179
+      },
+      "arquivo": "fig_calca.webp",
+      "emojis": [
+        "👖"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cama": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 42
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 126
+      },
+      "arquivo": "fig_cama.webp",
+      "emojis": [
+        "🛏️"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_camarao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 91
+        },
+        "topo": {
+          "x": 96,
+          "y": 12
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 161
+      },
+      "arquivo": "fig_camarao.webp",
+      "emojis": [
+        "🦐"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_camelo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 137
+      },
+      "arquivo": "fig_camelo.webp",
+      "emojis": [
+        "🐫",
+        "🐪"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_camera_de_cinema": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 86
+        },
+        "topo": {
+          "x": 96,
+          "y": 11
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 152
+      },
+      "arquivo": "fig_camera_de_cinema.webp",
+      "emojis": [
+        "🎥"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_caminhao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 118
+      },
+      "arquivo": "fig_caminhao.webp",
+      "emojis": [
+        "🚚"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_caminhao_de_bombeiro": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 78
+        },
+        "topo": {
+          "x": 96,
+          "y": 41
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 113
+      },
+      "arquivo": "fig_caminhao_de_bombeiro.webp",
+      "emojis": [
+        "🚒"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_camiseta": {
       "altura": 192,
       "ancoras": {
@@ -4959,6 +6027,230 @@
       ],
       "largura": 192,
       "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_caneta": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 90
+        },
+        "topo": {
+          "x": 96,
+          "y": 3
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 165
+      },
+      "arquivo": "fig_caneta.webp",
+      "emojis": [
+        "🖊️"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_canoa": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 43
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 106
+      },
+      "arquivo": "fig_canoa.webp",
+      "emojis": [
+        "🛶"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_caracol": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 25
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 137
+      },
+      "arquivo": "fig_caracol.webp",
+      "emojis": [
+        "🐌"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_caranguejo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 78
+        },
+        "topo": {
+          "x": 96,
+          "y": 41
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 112
+      },
+      "arquivo": "fig_caranguejo.webp",
+      "emojis": [
+        "🦀"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_carinha_abraco": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 94
+        },
+        "topo": {
+          "x": 98,
+          "y": 9
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 176
+      },
+      "arquivo": "fig_carinha_abraco.webp",
+      "emojis": [
+        "🤗"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_carinha_feliz": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 96
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 183
+      },
+      "arquivo": "fig_carinha_feliz.webp",
+      "emojis": [
+        "😊"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_carinha_preocupada": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 96
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 183
+      },
+      "arquivo": "fig_carinha_preocupada.webp",
+      "emojis": [
+        "😟"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_carinha_rindo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 96
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 183
+      },
+      "arquivo": "fig_carinha_rindo.webp",
+      "emojis": [
+        "😄"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
       "tipo": "item",
       "uso": {
         "altura": 96,
@@ -4993,6 +6285,175 @@
         "largura": 96
       }
     },
+    "fig_carro_de_corrida": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 58
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 105
+      },
+      "arquivo": "fig_carro_de_corrida.webp",
+      "emojis": [
+        "🏎️"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cartola": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 87
+        },
+        "topo": {
+          "x": 96,
+          "y": 20
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 152
+      },
+      "arquivo": "fig_cartola.webp",
+      "emojis": [
+        "🎩"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_casa": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 22
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 136
+      },
+      "arquivo": "fig_casa.webp",
+      "emojis": [
+        "🏠",
+        "🏡"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_casaco": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 97,
+          "y": 95
+        },
+        "topo": {
+          "x": 97,
+          "y": 33
+        }
+      },
+      "apoio": {
+        "x": 97,
+        "y": 155
+      },
+      "arquivo": "fig_casaco.webp",
+      "emojis": [
+        "🧥"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_casinhas": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 52
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 111
+      },
+      "arquivo": "fig_casinhas.webp",
+      "emojis": [
+        "🏘️"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_castor": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 1
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 137
+      },
+      "arquivo": "fig_castor.webp",
+      "emojis": [
+        "🦫"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_cavalo": {
       "altura": 192,
       "ancoras": {
@@ -5012,6 +6473,34 @@
       "arquivo": "fig_cavalo.webp",
       "emojis": [
         "🐴"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cavalo_da_fazenda": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 148
+      },
+      "arquivo": "fig_cavalo_da_fazenda.webp",
+      "emojis": [
+        "🐎"
       ],
       "largura": 192,
       "lugar": "cercado",
@@ -5077,6 +6566,230 @@
         "largura": 96
       }
     },
+    "fig_cesto": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 11
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 130
+      },
+      "arquivo": "fig_cesto.webp",
+      "emojis": [
+        "🧺"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_chapeu_de_festa": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 11
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 143
+      },
+      "arquivo": "fig_chapeu_de_festa.webp",
+      "emojis": [
+        "🥳"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_chave": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 35
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 121
+      },
+      "arquivo": "fig_chave.webp",
+      "emojis": [
+        "🔑"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_chinelo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 93,
+          "y": 88
+        },
+        "topo": {
+          "x": 93,
+          "y": 17
+        }
+      },
+      "apoio": {
+        "x": 93,
+        "y": 156
+      },
+      "arquivo": "fig_chinelo.webp",
+      "emojis": [
+        "🩴"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_chuva": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 96
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 183
+      },
+      "arquivo": "fig_chuva.webp",
+      "emojis": [
+        "🌧️"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_circo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 6
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 139
+      },
+      "arquivo": "fig_circo.webp",
+      "emojis": [
+        "🎪"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cobra": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 138
+      },
+      "arquivo": "fig_cobra.webp",
+      "emojis": [
+        "🐍"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_coco": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 77
+        },
+        "topo": {
+          "x": 96,
+          "y": 26
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 124
+      },
+      "arquivo": "fig_coco.webp",
+      "emojis": [
+        "🥥"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_coelho": {
       "altura": 192,
       "ancoras": {
@@ -5106,6 +6819,146 @@
         "largura": 96
       }
     },
+    "fig_cogumelo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 70
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 128
+      },
+      "arquivo": "fig_cogumelo.webp",
+      "emojis": [
+        "🍄"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_colar_de_contas": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 98
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 185
+      },
+      "arquivo": "fig_colar_de_contas.webp",
+      "emojis": [
+        "📿"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_computador": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 44
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 122
+      },
+      "arquivo": "fig_computador.webp",
+      "emojis": [
+        "💻"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_concha": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 87
+        },
+        "topo": {
+          "x": 96,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 123
+      },
+      "arquivo": "fig_concha.webp",
+      "emojis": [
+        "🐚"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_copo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 87
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 159
+      },
+      "arquivo": "fig_copo.webp",
+      "emojis": [
+        "🥤"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_coracao": {
       "altura": 192,
       "ancoras": {
@@ -5125,6 +6978,343 @@
       "arquivo": "fig_coracao.webp",
       "emojis": [
         "❤️"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_coracao_amarelo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 98
+        },
+        "topo": {
+          "x": 98,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 191
+      },
+      "arquivo": "fig_coracao_amarelo.webp",
+      "emojis": [
+        "💛"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_coracao_azul": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 98
+        },
+        "topo": {
+          "x": 98,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 191
+      },
+      "arquivo": "fig_coracao_azul.webp",
+      "emojis": [
+        "💙"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_coracao_laranja": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 98
+        },
+        "topo": {
+          "x": 98,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 191
+      },
+      "arquivo": "fig_coracao_laranja.webp",
+      "emojis": [
+        "🧡"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_coracao_roxo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 98
+        },
+        "topo": {
+          "x": 98,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 191
+      },
+      "arquivo": "fig_coracao_roxo.webp",
+      "emojis": [
+        "💜"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_coracao_verde": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 98
+        },
+        "topo": {
+          "x": 98,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 191
+      },
+      "arquivo": "fig_coracao_verde.webp",
+      "emojis": [
+        "💚"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_coral": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 156
+      },
+      "arquivo": "fig_coral.webp",
+      "emojis": [
+        "🪸"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_coruja": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 150
+      },
+      "arquivo": "fig_coruja.webp",
+      "emojis": [
+        "🦉"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_cronometro": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 95,
+          "y": 97
+        },
+        "topo": {
+          "x": 95,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 95,
+        "y": 185
+      },
+      "arquivo": "fig_cronometro.webp",
+      "emojis": [
+        "⏱️"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_dado": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 79
+        },
+        "topo": {
+          "x": 96,
+          "y": 23
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 130
+      },
+      "arquivo": "fig_dado.webp",
+      "emojis": [
+        "🎲"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_dente": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 151
+      },
+      "arquivo": "fig_dente.webp",
+      "emojis": [
+        "🦷"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_dinossauro": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 13
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 132
+      },
+      "arquivo": "fig_dinossauro.webp",
+      "emojis": [
+        "🦕",
+        "🦖"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_dna": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 100
+        },
+        "topo": {
+          "x": 98,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 191
+      },
+      "arquivo": "fig_dna.webp",
+      "emojis": [
+        "🧬"
       ],
       "largura": 192,
       "lugar": "ceu",
@@ -5162,6 +7352,202 @@
         "largura": 96
       }
     },
+    "fig_escola": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 18
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_escola.webp",
+      "emojis": [
+        "🏫"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_escorregador": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 89
+        },
+        "topo": {
+          "x": 96,
+          "y": 30
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 142
+      },
+      "arquivo": "fig_escorregador.webp",
+      "emojis": [
+        "🛝"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_escova_de_dente": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 71
+        },
+        "topo": {
+          "x": 96,
+          "y": 11
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 125
+      },
+      "arquivo": "fig_escova_de_dente.webp",
+      "emojis": [
+        "🪥"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_espetinho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 94
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 169
+      },
+      "arquivo": "fig_espetinho.webp",
+      "emojis": [
+        "🍢"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_esponja": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 13
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 127
+      },
+      "arquivo": "fig_esponja.webp",
+      "emojis": [
+        "🧽"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_esquadro": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 89
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 160
+      },
+      "arquivo": "fig_esquadro.webp",
+      "emojis": [
+        "📐"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_esqui": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 32
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 134
+      },
+      "arquivo": "fig_esqui.webp",
+      "emojis": [
+        "🎿"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_estrela": {
       "altura": 192,
       "ancoras": {
@@ -5182,6 +7568,62 @@
       "emojis": [
         "⭐",
         "🌟"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_estrelinha_de_festa": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 98
+        },
+        "topo": {
+          "x": 98,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 186
+      },
+      "arquivo": "fig_estrelinha_de_festa.webp",
+      "emojis": [
+        "🎇"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_floco_de_neve": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 93,
+          "y": 100
+        },
+        "topo": {
+          "x": 93,
+          "y": 3
+        }
+      },
+      "apoio": {
+        "x": 93,
+        "y": 191
+      },
+      "arquivo": "fig_floco_de_neve.webp",
+      "emojis": [
+        "❄️"
       ],
       "largura": 192,
       "lugar": "ceu",
@@ -5241,6 +7683,202 @@
       ],
       "largura": 192,
       "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_fogo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 22
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 142
+      },
+      "arquivo": "fig_fogo.webp",
+      "emojis": [
+        "🔥"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_foguete": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 111,
+          "y": 93
+        },
+        "topo": {
+          "x": 111,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 111,
+        "y": 189
+      },
+      "arquivo": "fig_foguete.webp",
+      "emojis": [
+        "🚀"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_fone": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 20
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 135
+      },
+      "arquivo": "fig_fone.webp",
+      "emojis": [
+        "🎧"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_fonte": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 74
+        },
+        "topo": {
+          "x": 96,
+          "y": 19
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 125
+      },
+      "arquivo": "fig_fonte.webp",
+      "emojis": [
+        "⛲"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_formiga": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 21
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 125
+      },
+      "arquivo": "fig_formiga.webp",
+      "emojis": [
+        "🐜"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_frasco": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 78
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 144
+      },
+      "arquivo": "fig_frasco.webp",
+      "emojis": [
+        "⚗️"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_frisbee": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 23
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 125
+      },
+      "arquivo": "fig_frisbee.webp",
+      "emojis": [
+        "🥏"
+      ],
+      "largura": 192,
+      "lugar": "grama",
       "tipo": "objeto",
       "uso": {
         "altura": 96,
@@ -5332,6 +7970,399 @@
         "largura": 96
       }
     },
+    "fig_gelo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 33
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 110
+      },
+      "arquivo": "fig_gelo.webp",
+      "emojis": [
+        "🧊"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_girafa": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 89
+        },
+        "topo": {
+          "x": 96,
+          "y": 6
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 160
+      },
+      "arquivo": "fig_girafa.webp",
+      "emojis": [
+        "🦒"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_girassol": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 95
+        },
+        "topo": {
+          "x": 96,
+          "y": 6
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 170
+      },
+      "arquivo": "fig_girassol.webp",
+      "emojis": [
+        "🌻"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_giz_de_cera": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 89
+        },
+        "topo": {
+          "x": 96,
+          "y": 9
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 159
+      },
+      "arquivo": "fig_giz_de_cera.webp",
+      "emojis": [
+        "🖍️"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_globo_de_luz": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 95,
+          "y": 97
+        },
+        "topo": {
+          "x": 95,
+          "y": 9
+        }
+      },
+      "apoio": {
+        "x": 95,
+        "y": 180
+      },
+      "arquivo": "fig_globo_de_luz.webp",
+      "emojis": [
+        "🪩"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_gol": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 111
+      },
+      "arquivo": "fig_gol.webp",
+      "emojis": [
+        "🥅"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_golfinho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 29
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 113
+      },
+      "arquivo": "fig_golfinho.webp",
+      "emojis": [
+        "🐬"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_gorila": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 150
+      },
+      "arquivo": "fig_gorila.webp",
+      "emojis": [
+        "🦍"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_guarda_chuva": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 90,
+          "y": 90
+        },
+        "topo": {
+          "x": 90,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 90,
+        "y": 176
+      },
+      "arquivo": "fig_guarda_chuva.webp",
+      "emojis": [
+        "☂️",
+        "☔"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_guarda_sol": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 72
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 139
+      },
+      "arquivo": "fig_guarda_sol.webp",
+      "emojis": [
+        "⛱️"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_helicoptero": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 90,
+          "y": 93
+        },
+        "topo": {
+          "x": 90,
+          "y": 35
+        }
+      },
+      "apoio": {
+        "x": 90,
+        "y": 149
+      },
+      "arquivo": "fig_helicoptero.webp",
+      "emojis": [
+        "🚁"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_hibisco": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 93
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 166
+      },
+      "arquivo": "fig_hibisco.webp",
+      "emojis": [
+        "🌺"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_ioio": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 151
+      },
+      "arquivo": "fig_ioio.webp",
+      "emojis": [
+        "🪀"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_jacare": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 54
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 111
+      },
+      "arquivo": "fig_jacare.webp",
+      "emojis": [
+        "🐊"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_joaninha": {
       "altura": 192,
       "ancoras": {
@@ -5354,6 +8385,174 @@
       ],
       "largura": 192,
       "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_lagartixa": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 113
+      },
+      "arquivo": "fig_lagartixa.webp",
+      "emojis": [
+        "🦎"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_lagosta": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 68
+        },
+        "topo": {
+          "x": 96,
+          "y": 18
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 114
+      },
+      "arquivo": "fig_lagosta.webp",
+      "emojis": [
+        "🦞"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_lampada": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_lampada.webp",
+      "emojis": [
+        "💡"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_lanterna_de_papel": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 98
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 186
+      },
+      "arquivo": "fig_lanterna_de_papel.webp",
+      "emojis": [
+        "🏮"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_lapis": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 86
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 161
+      },
+      "arquivo": "fig_lapis.webp",
+      "emojis": [
+        "✏️"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_laranja": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 75
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 139
+      },
+      "arquivo": "fig_laranja.webp",
+      "emojis": [
+        "🍊"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
       "tipo": "objeto",
       "uso": {
         "altura": 96,
@@ -5388,6 +8587,233 @@
         "largura": 96
       }
     },
+    "fig_leite": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 88
+        },
+        "topo": {
+          "x": 96,
+          "y": 17
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 150
+      },
+      "arquivo": "fig_leite.webp",
+      "emojis": [
+        "🥛"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_limao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 77
+        },
+        "topo": {
+          "x": 96,
+          "y": 32
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 119
+      },
+      "arquivo": "fig_limao.webp",
+      "emojis": [
+        "🍋"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_livro": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 89
+        },
+        "topo": {
+          "x": 96,
+          "y": 15
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 155
+      },
+      "arquivo": "fig_livro.webp",
+      "emojis": [
+        "📕",
+        "📘",
+        "📗",
+        "📙"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_livro_aberto": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 86
+        },
+        "topo": {
+          "x": 96,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 122
+      },
+      "arquivo": "fig_livro_aberto.webp",
+      "emojis": [
+        "📖"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_livros": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 34
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 129
+      },
+      "arquivo": "fig_livros.webp",
+      "emojis": [
+        "📚"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_lontra": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 150
+      },
+      "arquivo": "fig_lontra.webp",
+      "emojis": [
+        "🦦"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_losango": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 89
+        },
+        "topo": {
+          "x": 96,
+          "y": 9
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 159
+      },
+      "arquivo": "fig_losango.webp",
+      "emojis": [
+        "🔷"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_lotus": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 74
+        },
+        "topo": {
+          "x": 96,
+          "y": 54
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 93
+      },
+      "arquivo": "fig_lotus.webp",
+      "emojis": [
+        "🪷"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_lua": {
       "altura": 192,
       "ancoras": {
@@ -5411,6 +8837,62 @@
       "largura": 192,
       "lugar": "ceu",
       "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_lua_cheia": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 96
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 184
+      },
+      "arquivo": "fig_lua_cheia.webp",
+      "emojis": [
+        "🌕"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_lula": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 156
+      },
+      "arquivo": "fig_lula.webp",
+      "emojis": [
+        "🦑"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
       "uso": {
         "altura": 96,
         "largura": 96
@@ -5472,6 +8954,34 @@
         "largura": 96
       }
     },
+    "fig_maca_verde": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 131
+      },
+      "arquivo": "fig_maca_verde.webp",
+      "emojis": [
+        "🍏"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_macaco": {
       "altura": 192,
       "ancoras": {
@@ -5490,10 +9000,209 @@
       },
       "arquivo": "fig_macaco.webp",
       "emojis": [
-        "🐒"
+        "🐒",
+        "🐵"
       ],
       "largura": 192,
       "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_maio": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 97
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 183
+      },
+      "arquivo": "fig_maio.webp",
+      "emojis": [
+        "🩱"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_mala": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 10
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_mala.webp",
+      "emojis": [
+        "🧳"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_mao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 92
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 167
+      },
+      "arquivo": "fig_mao.webp",
+      "emojis": [
+        "✋",
+        "🖐️"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_marcador": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 97,
+          "y": 101
+        },
+        "topo": {
+          "x": 97,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 97,
+        "y": 190
+      },
+      "arquivo": "fig_marcador.webp",
+      "emojis": [
+        "🔖"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_margarida": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 94
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 168
+      },
+      "arquivo": "fig_margarida.webp",
+      "emojis": [
+        "🌼"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_mascara_de_mergulho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 1
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 155
+      },
+      "arquivo": "fig_mascara_de_mergulho.webp",
+      "emojis": [
+        "🤿"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_medalha": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 95
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 171
+      },
+      "arquivo": "fig_medalha.webp",
+      "emojis": [
+        "🥇",
+        "🏅"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
       "tipo": "objeto",
       "uso": {
         "altura": 96,
@@ -5528,6 +9237,231 @@
         "largura": 96
       }
     },
+    "fig_mel": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 78
+        },
+        "topo": {
+          "x": 96,
+          "y": 3
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 144
+      },
+      "arquivo": "fig_mel.webp",
+      "emojis": [
+        "🍯"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_melancia": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 41
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 122
+      },
+      "arquivo": "fig_melancia.webp",
+      "emojis": [
+        "🍉"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_microfone": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 86
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 164
+      },
+      "arquivo": "fig_microfone.webp",
+      "emojis": [
+        "🎤"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_microscopio": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 6
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 150
+      },
+      "arquivo": "fig_microscopio.webp",
+      "emojis": [
+        "🔬"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_milho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 88
+        },
+        "topo": {
+          "x": 96,
+          "y": 3
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 162
+      },
+      "arquivo": "fig_milho.webp",
+      "emojis": [
+        "🌽"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_mochila": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 86
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 156
+      },
+      "arquivo": "fig_mochila.webp",
+      "emojis": [
+        "🎒"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_montanha": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 77
+        },
+        "topo": {
+          "x": 96,
+          "y": 32
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 119
+      },
+      "arquivo": "fig_montanha.webp",
+      "emojis": [
+        "⛰️",
+        "🏔️"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_montanha_sol": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 34
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 130
+      },
+      "arquivo": "fig_montanha_sol.webp",
+      "emojis": [
+        "🌄"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_morango": {
       "altura": 192,
       "ancoras": {
@@ -5550,6 +9484,371 @@
       ],
       "largura": 192,
       "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_nariz": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 89
+        },
+        "topo": {
+          "x": 96,
+          "y": 12
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 158
+      },
+      "arquivo": "fig_nariz.webp",
+      "emojis": [
+        "👃"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_navio": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 10
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 142
+      },
+      "arquivo": "fig_navio.webp",
+      "emojis": [
+        "🚢"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_ninho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 71
+        },
+        "topo": {
+          "x": 96,
+          "y": 30
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 110
+      },
+      "arquivo": "fig_ninho.webp",
+      "emojis": [
+        "🪺"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_ninho_vazio": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 53
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 109
+      },
+      "arquivo": "fig_ninho_vazio.webp",
+      "emojis": [
+        "🪹"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_novelo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 16
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 143
+      },
+      "arquivo": "fig_novelo.webp",
+      "emojis": [
+        "🧶"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_nuvem": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 97
+        },
+        "topo": {
+          "x": 96,
+          "y": 56
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 136
+      },
+      "arquivo": "fig_nuvem.webp",
+      "emojis": [
+        "☁️"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_oculos": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 97,
+          "y": 90
+        },
+        "topo": {
+          "x": 97,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 97,
+        "y": 128
+      },
+      "arquivo": "fig_oculos.webp",
+      "emojis": [
+        "🕶️",
+        "👓"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_olho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 22
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 132
+      },
+      "arquivo": "fig_olho.webp",
+      "emojis": [
+        "👁️"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_onca": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_onca.webp",
+      "emojis": [
+        "🐆"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_onda": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 87
+        },
+        "topo": {
+          "x": 96,
+          "y": 33
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 136
+      },
+      "arquivo": "fig_onda.webp",
+      "emojis": [
+        "🌊"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_onibus": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 117
+      },
+      "arquivo": "fig_onibus.webp",
+      "emojis": [
+        "🚌"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_orelha": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 91
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 163
+      },
+      "arquivo": "fig_orelha.webp",
+      "emojis": [
+        "👂"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_osso": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 78
+        },
+        "topo": {
+          "x": 96,
+          "y": 30
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 122
+      },
+      "arquivo": "fig_osso.webp",
+      "emojis": [
+        "🦴"
+      ],
+      "largura": 192,
+      "lugar": "grama",
       "tipo": "objeto",
       "uso": {
         "altura": 96,
@@ -5612,6 +9911,146 @@
         "largura": 96
       }
     },
+    "fig_ovo_frito": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 40
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 117
+      },
+      "arquivo": "fig_ovo_frito.webp",
+      "emojis": [
+        "🍳"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_paleta": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 35
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 130
+      },
+      "arquivo": "fig_paleta.webp",
+      "emojis": [
+        "🎨"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_palmeira": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 12
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 148
+      },
+      "arquivo": "fig_palmeira.webp",
+      "emojis": [
+        "🌴"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_panda": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 144
+      },
+      "arquivo": "fig_panda.webp",
+      "emojis": [
+        "🐼"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_panquecas": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 75
+        },
+        "topo": {
+          "x": 96,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 100
+      },
+      "arquivo": "fig_panquecas.webp",
+      "emojis": [
+        "🥞"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_pao": {
       "altura": 192,
       "ancoras": {
@@ -5640,6 +10079,34 @@
         "largura": 96
       }
     },
+    "fig_papagaio": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 155
+      },
+      "arquivo": "fig_papagaio.webp",
+      "emojis": [
+        "🦜"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_passarinho": {
       "altura": 192,
       "ancoras": {
@@ -5662,6 +10129,90 @@
       ],
       "largura": 192,
       "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_patinete": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 10
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 144
+      },
+      "arquivo": "fig_patinete.webp",
+      "emojis": [
+        "🛴"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_patins": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 91,
+          "y": 95
+        },
+        "topo": {
+          "x": 91,
+          "y": 13
+        }
+      },
+      "apoio": {
+        "x": 91,
+        "y": 174
+      },
+      "arquivo": "fig_patins.webp",
+      "emojis": [
+        "⛸️"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_patins_de_rodinha": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 16
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 139
+      },
+      "arquivo": "fig_patins_de_rodinha.webp",
+      "emojis": [
+        "🛼"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
       "tipo": "objeto",
       "uso": {
         "altura": 96,
@@ -5704,6 +10255,62 @@
         "largura": 96
       }
     },
+    "fig_pe": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 72
+        },
+        "topo": {
+          "x": 96,
+          "y": 22
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 118
+      },
+      "arquivo": "fig_pe.webp",
+      "emojis": [
+        "🦶"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pedra": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 39
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 120
+      },
+      "arquivo": "fig_pedra.webp",
+      "emojis": [
+        "🪨"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_peixe": {
       "altura": 192,
       "ancoras": {
@@ -5726,6 +10333,314 @@
       ],
       "largura": 192,
       "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_peixinho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 20
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 143
+      },
+      "arquivo": "fig_peixinho.webp",
+      "emojis": [
+        "🐠"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pepino": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 62
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 102
+      },
+      "arquivo": "fig_pepino.webp",
+      "emojis": [
+        "🥒"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pera": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_pera.webp",
+      "emojis": [
+        "🍐"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_perna": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 87
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 155
+      },
+      "arquivo": "fig_perna.webp",
+      "emojis": [
+        "🦵"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_peru": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 88
+        },
+        "topo": {
+          "x": 96,
+          "y": 20
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 148
+      },
+      "arquivo": "fig_peru.webp",
+      "emojis": [
+        "🦃"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pessego": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 78
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 143
+      },
+      "arquivo": "fig_pessego.webp",
+      "emojis": [
+        "🍑"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_peteca": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 87
+        },
+        "topo": {
+          "x": 96,
+          "y": 19
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 147
+      },
+      "arquivo": "fig_peteca.webp",
+      "emojis": [
+        "🏸"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_piano": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 86
+        },
+        "topo": {
+          "x": 96,
+          "y": 44
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 125
+      },
+      "arquivo": "fig_piano.webp",
+      "emojis": [
+        "🎹"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pimentao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 74
+        },
+        "topo": {
+          "x": 96,
+          "y": 3
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 138
+      },
+      "arquivo": "fig_pimentao.webp",
+      "emojis": [
+        "🫑"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pinata": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 93
+        },
+        "topo": {
+          "x": 98,
+          "y": 3
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 177
+      },
+      "arquivo": "fig_pinata.webp",
+      "emojis": [
+        "🪅"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pingue_pongue": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 14
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 144
+      },
+      "arquivo": "fig_pingue_pongue.webp",
+      "emojis": [
+        "🏓"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
       "tipo": "objeto",
       "uso": {
         "altura": 96,
@@ -5760,6 +10675,34 @@
         "largura": 96
       }
     },
+    "fig_pinheiro": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 147
+      },
+      "arquivo": "fig_pinheiro.webp",
+      "emojis": [
+        "🌲"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_pintinho": {
       "altura": 192,
       "ancoras": {
@@ -5779,6 +10722,34 @@
       "arquivo": "fig_pintinho.webp",
       "emojis": [
         "🐥"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pintinho_da_fazenda": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 148
+      },
+      "arquivo": "fig_pintinho_da_fazenda.webp",
+      "emojis": [
+        "🐤"
       ],
       "largura": 192,
       "lugar": "cercado",
@@ -5816,6 +10787,174 @@
         "largura": 96
       }
     },
+    "fig_pipoca": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 11
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 145
+      },
+      "arquivo": "fig_pipoca.webp",
+      "emojis": [
+        "🍿"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pirulito": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 90
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 168
+      },
+      "arquivo": "fig_pirulito.webp",
+      "emojis": [
+        "🍭"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_pizza": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 78
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 140
+      },
+      "arquivo": "fig_pizza.webp",
+      "emojis": [
+        "🍕"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_placa_de_petri": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 81
+        },
+        "topo": {
+          "x": 96,
+          "y": 36
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 124
+      },
+      "arquivo": "fig_placa_de_petri.webp",
+      "emojis": [
+        "🧫"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_polvo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 74
+        },
+        "topo": {
+          "x": 96,
+          "y": 21
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 124
+      },
+      "arquivo": "fig_polvo.webp",
+      "emojis": [
+        "🐙"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_poodle": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 6
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 151
+      },
+      "arquivo": "fig_poodle.webp",
+      "emojis": [
+        "🐩"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_porco": {
       "altura": 192,
       "ancoras": {
@@ -5839,6 +10978,426 @@
       "largura": 192,
       "lugar": "cercado",
       "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_porco_da_fazenda": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_porco_da_fazenda.webp",
+      "emojis": [
+        "🐖"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_preguica": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 23
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_preguica.webp",
+      "emojis": [
+        "🦥"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_presente": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 74
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 143
+      },
+      "arquivo": "fig_presente.webp",
+      "emojis": [
+        "🎁"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_projetor": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 34
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 128
+      },
+      "arquivo": "fig_projetor.webp",
+      "emojis": [
+        "📽️"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_quadrado_amarelo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 17
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_quadrado_amarelo.webp",
+      "emojis": [
+        "🟨"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_quadrado_azul": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 17
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_quadrado_azul.webp",
+      "emojis": [
+        "🟦"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_quadrado_laranja": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 17
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_quadrado_laranja.webp",
+      "emojis": [
+        "🟧"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_quadrado_marrom": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 27
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 129
+      },
+      "arquivo": "fig_quadrado_marrom.webp",
+      "emojis": [
+        "🟫"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_quadrado_roxo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 17
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_quadrado_roxo.webp",
+      "emojis": [
+        "🟪"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_quadrado_verde": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 17
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_quadrado_verde.webp",
+      "emojis": [
+        "🟩"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_quadrado_vermelho": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 17
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_quadrado_vermelho.webp",
+      "emojis": [
+        "🟥"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_quebra_cabeca": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 119
+      },
+      "arquivo": "fig_quebra_cabeca.webp",
+      "emojis": [
+        "🧩"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_queijo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 51
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 100
+      },
+      "arquivo": "fig_queijo.webp",
+      "emojis": [
+        "🧀"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_radio": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 9
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 150
+      },
+      "arquivo": "fig_radio.webp",
+      "emojis": [
+        "📻"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_raio": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 95,
+          "y": 100
+        },
+        "topo": {
+          "x": 95,
+          "y": 1
+        }
+      },
+      "apoio": {
+        "x": 95,
+        "y": 191
+      },
+      "arquivo": "fig_raio.webp",
+      "emojis": [
+        "⚡"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
       "uso": {
         "altura": 96,
         "largura": 96
@@ -5872,6 +11431,202 @@
         "largura": 96
       }
     },
+    "fig_regua": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 84
+        },
+        "topo": {
+          "x": 96,
+          "y": 35
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 129
+      },
+      "arquivo": "fig_regua.webp",
+      "emojis": [
+        "📏"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_robo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 91
+        },
+        "topo": {
+          "x": 96,
+          "y": 6
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 164
+      },
+      "arquivo": "fig_robo.webp",
+      "emojis": [
+        "🤖"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_rolo_de_filme": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 95,
+          "y": 100
+        },
+        "topo": {
+          "x": 95,
+          "y": 12
+        }
+      },
+      "apoio": {
+        "x": 95,
+        "y": 182
+      },
+      "arquivo": "fig_rolo_de_filme.webp",
+      "emojis": [
+        "🎞️"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_rosa": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 89
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 160
+      },
+      "arquivo": "fig_rosa.webp",
+      "emojis": [
+        "🌹"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_sapatilha": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 98,
+          "y": 95
+        },
+        "topo": {
+          "x": 98,
+          "y": 38
+        }
+      },
+      "apoio": {
+        "x": 98,
+        "y": 150
+      },
+      "arquivo": "fig_sapatilha.webp",
+      "emojis": [
+        "🩰"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_sapatilha_baixa": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 77
+        },
+        "topo": {
+          "x": 96,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 103
+      },
+      "arquivo": "fig_sapatilha_baixa.webp",
+      "emojis": [
+        "🥿"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_sapato": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 95,
+          "y": 93
+        },
+        "topo": {
+          "x": 95,
+          "y": 39
+        }
+      },
+      "apoio": {
+        "x": 95,
+        "y": 145
+      },
+      "arquivo": "fig_sapato.webp",
+      "emojis": [
+        "👞"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_sapo": {
       "altura": 192,
       "ancoras": {
@@ -5894,6 +11649,148 @@
       ],
       "largura": 192,
       "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_saxofone": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 88
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 160
+      },
+      "arquivo": "fig_saxofone.webp",
+      "emojis": [
+        "🎷"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_skate": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 87
+        },
+        "topo": {
+          "x": 96,
+          "y": 62
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 110
+      },
+      "arquivo": "fig_skate.webp",
+      "emojis": [
+        "🛹"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_sol": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 93,
+          "y": 99
+        },
+        "topo": {
+          "x": 93,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 93,
+        "y": 189
+      },
+      "arquivo": "fig_sol.webp",
+      "emojis": [
+        "☀️",
+        "🌞"
+      ],
+      "largura": 192,
+      "lugar": "ceu",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_sorvete": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 90
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 163
+      },
+      "arquivo": "fig_sorvete.webp",
+      "emojis": [
+        "🍦",
+        "🍨"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_taco_de_hoquei": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 92
+        },
+        "topo": {
+          "x": 96,
+          "y": 12
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 160
+      },
+      "arquivo": "fig_taco_de_hoquei.webp",
+      "emojis": [
+        "🏒"
+      ],
+      "largura": 192,
+      "lugar": "grama",
       "tipo": "objeto",
       "uso": {
         "altura": 96,
@@ -5956,6 +11853,90 @@
         "largura": 96
       }
     },
+    "fig_tenis": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 95,
+          "y": 88
+        },
+        "topo": {
+          "x": 95,
+          "y": 39
+        }
+      },
+      "apoio": {
+        "x": 95,
+        "y": 135
+      },
+      "arquivo": "fig_tenis.webp",
+      "emojis": [
+        "👟"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_termometro": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 94
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 167
+      },
+      "arquivo": "fig_termometro.webp",
+      "emojis": [
+        "🌡️"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_tesoura": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 161
+      },
+      "arquivo": "fig_tesoura.webp",
+      "emojis": [
+        "✂️"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_tigre": {
       "altura": 192,
       "ancoras": {
@@ -5978,6 +11959,90 @@
       ],
       "largura": 192,
       "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_tijolo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 87
+        },
+        "topo": {
+          "x": 96,
+          "y": 61
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 112
+      },
+      "arquivo": "fig_tijolo.webp",
+      "emojis": [
+        "🧱"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_tomate": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 9
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 132
+      },
+      "arquivo": "fig_tomate.webp",
+      "emojis": [
+        "🍅"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_trator": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 33
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 127
+      },
+      "arquivo": "fig_trator.webp",
+      "emojis": [
+        "🚜"
+      ],
+      "largura": 192,
+      "lugar": "cercado",
       "tipo": "objeto",
       "uso": {
         "altura": 96,
@@ -6012,6 +12077,202 @@
         "largura": 96
       }
     },
+    "fig_treno": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 86
+        },
+        "topo": {
+          "x": 96,
+          "y": 69
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 102
+      },
+      "arquivo": "fig_treno.webp",
+      "emojis": [
+        "🛷"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_trevo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 88
+        },
+        "topo": {
+          "x": 96,
+          "y": 0
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 165
+      },
+      "arquivo": "fig_trevo.webp",
+      "emojis": [
+        "🍀"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_triangulo": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 86
+        },
+        "topo": {
+          "x": 96,
+          "y": 26
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 141
+      },
+      "arquivo": "fig_triangulo.webp",
+      "emojis": [
+        "🔺"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_trofeu": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 85
+        },
+        "topo": {
+          "x": 96,
+          "y": 19
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 144
+      },
+      "arquivo": "fig_trofeu.webp",
+      "emojis": [
+        "🏆"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_trompete": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 37
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 120
+      },
+      "arquivo": "fig_trompete.webp",
+      "emojis": [
+        "🎺"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_tronco": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 74
+        },
+        "topo": {
+          "x": 96,
+          "y": 30
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 115
+      },
+      "arquivo": "fig_tronco.webp",
+      "emojis": [
+        "🪵"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_tubarao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 76
+        },
+        "topo": {
+          "x": 96,
+          "y": 27
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 121
+      },
+      "arquivo": "fig_tubarao.webp",
+      "emojis": [
+        "🦈"
+      ],
+      "largura": 192,
+      "lugar": "lagoa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "fig_ursinho": {
       "altura": 192,
       "ancoras": {
@@ -6034,6 +12295,62 @@
       ],
       "largura": 192,
       "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_urso": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 8
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_urso.webp",
+      "emojis": [
+        "🐻"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_urso_polar": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 83
+        },
+        "topo": {
+          "x": 96,
+          "y": 4
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 152
+      },
+      "arquivo": "fig_urso_polar.webp",
+      "emojis": [
+        "🐻‍❄️"
+      ],
+      "largura": 192,
+      "lugar": "grama",
       "tipo": "objeto",
       "uso": {
         "altura": 96,
@@ -6097,6 +12414,174 @@
         "largura": 96
       }
     },
+    "fig_vela": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 149
+      },
+      "arquivo": "fig_vela.webp",
+      "emojis": [
+        "🕯️"
+      ],
+      "largura": 192,
+      "lugar": "mesa",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_vestido": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 97,
+          "y": 97
+        },
+        "topo": {
+          "x": 97,
+          "y": 11
+        }
+      },
+      "apoio": {
+        "x": 97,
+        "y": 178
+      },
+      "arquivo": "fig_vestido.webp",
+      "emojis": [
+        "👗"
+      ],
+      "largura": 192,
+      "lugar": "varal",
+      "tipo": "item",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_videogame": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 80
+        },
+        "topo": {
+          "x": 96,
+          "y": 39
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 118
+      },
+      "arquivo": "fig_videogame.webp",
+      "emojis": [
+        "🎮"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_violao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 97
+        },
+        "topo": {
+          "x": 96,
+          "y": 5
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 174
+      },
+      "arquivo": "fig_violao.webp",
+      "emojis": [
+        "🎸"
+      ],
+      "largura": 192,
+      "lugar": "tapete",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_vulcao": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 73
+        },
+        "topo": {
+          "x": 96,
+          "y": 11
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 130
+      },
+      "arquivo": "fig_vulcao.webp",
+      "emojis": [
+        "🌋"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "fig_zebra": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 82
+        },
+        "topo": {
+          "x": 96,
+          "y": 7
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 147
+      },
+      "arquivo": "fig_zebra.webp",
+      "emojis": [
+        "🦓"
+      ],
+      "largura": 192,
+      "lugar": "grama",
+      "tipo": "objeto",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
     "icone_ajustes": {
       "altura": 96,
       "ancoras": {
@@ -6110,6 +12595,546 @@
         "y": 95
       },
       "arquivo": "icone_ajustes.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_album": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 49,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 89
+      },
+      "arquivo": "icone_album.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_alfinete": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 93
+      },
+      "arquivo": "icone_alfinete.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_aquario": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 41,
+          "y": 52
+        }
+      },
+      "apoio": {
+        "x": 44,
+        "y": 78
+      },
+      "arquivo": "icone_area_aquario.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_arvore": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 51
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_area_arvore.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_biblioteca": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 45
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 86
+      },
+      "arquivo": "icone_area_biblioteca.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_brinquedos": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 52
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 93
+      },
+      "arquivo": "icone_area_brinquedos.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_cinema": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 53
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 91
+      },
+      "arquivo": "icone_area_cinema.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_estudio": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 43,
+          "y": 53
+        }
+      },
+      "apoio": {
+        "x": 44,
+        "y": 95
+      },
+      "arquivo": "icone_area_estudio.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_estufa": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 52
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 92
+      },
+      "arquivo": "icone_area_estufa.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_fazendinha": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 90
+      },
+      "arquivo": "icone_area_fazendinha.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_festa": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 90
+      },
+      "arquivo": "icone_area_festa.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_flores": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 51,
+        "y": 95
+      },
+      "arquivo": "icone_area_flores.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_gourmet": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 49,
+        "y": 95
+      },
+      "arquivo": "icone_area_gourmet.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_horta": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 42,
+        "y": 95
+      },
+      "arquivo": "icone_area_horta.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_laboratorio": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 90
+      },
+      "arquivo": "icone_area_laboratorio.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_lago": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 93
+      },
+      "arquivo": "icone_area_lago.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_observatorio": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 58
+        }
+      },
+      "apoio": {
+        "x": 45,
+        "y": 89
+      },
+      "arquivo": "icone_area_observatorio.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_parquinho": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 44,
+          "y": 40
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 89
+      },
+      "arquivo": "icone_area_parquinho.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_pet": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 95
+      },
+      "arquivo": "icone_area_pet.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_piscina": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_area_piscina.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_quadra": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 49,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 49,
+        "y": 94
+      },
+      "arquivo": "icone_area_quadra.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_area_quarto2": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 43
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 81
+      },
+      "arquivo": "icone_area_quarto2.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_avancar": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 90
+      },
+      "arquivo": "icone_avancar.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_bau": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 49,
+          "y": 40
+        }
+      },
+      "apoio": {
+        "x": 49,
+        "y": 84
+      },
+      "arquivo": "icone_bau.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_broto": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 46
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 92
+      },
+      "arquivo": "icone_broto.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_bussola": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 53
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_bussola.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_cabelo": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 42
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 82
+      },
+      "arquivo": "icone_cabelo.webp",
       "largura": 96,
       "tipo": "item",
       "uso": {
@@ -6137,6 +13162,266 @@
         "largura": 48
       }
     },
+    "icone_casa_branca": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 90
+      },
+      "arquivo": "icone_casa_branca.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_certo": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 51
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 89
+      },
+      "arquivo": "icone_certo.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_certo_branco": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 45,
+          "y": 51
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 89
+      },
+      "arquivo": "icone_certo_branco.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_chapeus": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 45
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 89
+      },
+      "arquivo": "icone_chapeus.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_congelador": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_congelador.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_cor_do_cabelo": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 43
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 85
+      },
+      "arquivo": "icone_cor_do_cabelo.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_costas": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 90
+      },
+      "arquivo": "icone_costas.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_descer": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_descer.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_desfazer": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 53
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 89
+      },
+      "arquivo": "icone_desfazer.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_dica": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 56
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_dica.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_escrever": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 35,
+          "y": 60
+        }
+      },
+      "apoio": {
+        "x": 45,
+        "y": 95
+      },
+      "arquivo": "icone_escrever.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_espelho": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_espelho.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_estante": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 44,
+          "y": 46
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 91
+      },
+      "arquivo": "icone_estante.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
     "icone_fechar": {
       "altura": 96,
       "ancoras": {
@@ -6150,6 +13435,86 @@
         "y": 95
       },
       "arquivo": "icone_fechar.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_frutas": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 54
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_frutas.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_gravar": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 94
+      },
+      "arquivo": "icone_gravar.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_leite": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 49,
+          "y": 44
+        }
+      },
+      "apoio": {
+        "x": 49,
+        "y": 89
+      },
+      "arquivo": "icone_leite.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_lixeira": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 40
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 91
+      },
+      "arquivo": "icone_lixeira.webp",
       "largura": 96,
       "tipo": "item",
       "uso": {
@@ -6177,6 +13542,306 @@
         "largura": 48
       }
     },
+    "icone_lua": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 55,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 42,
+        "y": 95
+      },
+      "arquivo": "icone_lua.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_mao": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_mao.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_mapa": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 46
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 90
+      },
+      "arquivo": "icone_mapa.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_marcador": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 91
+      },
+      "arquivo": "icone_marcador.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_martelo": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 51,
+          "y": 53
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_martelo.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_bloqueado": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 93
+      },
+      "arquivo": "icone_no_bloqueado.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_chefao": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 82
+      },
+      "arquivo": "icone_no_chefao.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_desafio": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_no_desafio.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_fase": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 90
+      },
+      "arquivo": "icone_no_fase.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_marco": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 41,
+          "y": 51
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_no_marco.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_novidade": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 90
+      },
+      "arquivo": "icone_no_novidade.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_revisao": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_no_revisao.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_treino": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 78
+      },
+      "arquivo": "icone_no_treino.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_no_trofeu": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 91
+      },
+      "arquivo": "icone_no_trofeu.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_ouvir": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 51
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 86
+      },
+      "arquivo": "icone_ouvir.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
     "icone_pais": {
       "altura": 96,
       "ancoras": {
@@ -6190,6 +13855,246 @@
         "y": 92
       },
       "arquivo": "icone_pais.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_papel_novo": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 92
+      },
+      "arquivo": "icone_papel_novo.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_parar": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 92
+      },
+      "arquivo": "icone_parar.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_pele": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 86
+      },
+      "arquivo": "icone_pele.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_penteado": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 93
+      },
+      "arquivo": "icone_penteado.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_pes": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 46
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 74
+      },
+      "arquivo": "icone_pes.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_pescoco": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 92
+      },
+      "arquivo": "icone_pescoco.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_pintar": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 86
+      },
+      "arquivo": "icone_pintar.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_repetir": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_repetir.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_rosto": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 75
+      },
+      "arquivo": "icone_rosto.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_roupa": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 90
+      },
+      "arquivo": "icone_roupa.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_roupas": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 90
+      },
+      "arquivo": "icone_roupas.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_sol": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 95
+      },
+      "arquivo": "icone_sol.webp",
       "largura": 96,
       "tipo": "item",
       "uso": {
@@ -6230,6 +14135,46 @@
         "y": 83
       },
       "arquivo": "icone_som_ligado.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_subir": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 94
+      },
+      "arquivo": "icone_subir.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_tocar": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 41,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 95
+      },
+      "arquivo": "icone_tocar.webp",
       "largura": 96,
       "tipo": "item",
       "uso": {
@@ -6315,6 +14260,26 @@
       "uso": {
         "altura": 96,
         "largura": 96
+      }
+    },
+    "icone_vassoura": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 50,
+          "y": 46
+        }
+      },
+      "apoio": {
+        "x": 46,
+        "y": 94
+      },
+      "arquivo": "icone_vassoura.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
       }
     },
     "icone_voltar": {
@@ -8362,6 +16327,390 @@
       "uso": {
         "altura": 520,
         "largura": 400
+      }
+    },
+    "mascote_cachorrinho_dormindo": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 198,
+          "y": 87
+        }
+      },
+      "apoio": {
+        "x": 210,
+        "y": 327
+      },
+      "arquivo": "mascote_cachorrinho_dormindo.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "mascote_cachorrinho_falando": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 211,
+          "y": 84
+        }
+      },
+      "apoio": {
+        "x": 210,
+        "y": 327
+      },
+      "arquivo": "mascote_cachorrinho_falando.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "mascote_cachorrinho_feliz": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 216,
+          "y": 84
+        }
+      },
+      "apoio": {
+        "x": 210,
+        "y": 327
+      },
+      "arquivo": "mascote_cachorrinho_feliz.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "mascote_cachorrinho_parado": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 211,
+          "y": 84
+        }
+      },
+      "apoio": {
+        "x": 210,
+        "y": 327
+      },
+      "arquivo": "mascote_cachorrinho_parado.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "mascote_coruja_dormindo": {
+      "altura": 400,
+      "ancoras": {
+        "bico": {
+          "x": 183,
+          "y": 223
+        },
+        "cabeca": {
+          "x": 186,
+          "y": 163
+        }
+      },
+      "apoio": {
+        "x": 185,
+        "y": 343
+      },
+      "arquivo": "mascote_coruja_dormindo.webp",
+      "largura": 360,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 180
+      }
+    },
+    "mascote_coruja_falando": {
+      "altura": 400,
+      "ancoras": {
+        "bico": {
+          "x": 176,
+          "y": 217
+        },
+        "cabeca": {
+          "x": 186,
+          "y": 163
+        }
+      },
+      "apoio": {
+        "x": 185,
+        "y": 343
+      },
+      "arquivo": "mascote_coruja_falando.webp",
+      "largura": 360,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 180
+      }
+    },
+    "mascote_coruja_feliz": {
+      "altura": 400,
+      "ancoras": {
+        "bico": {
+          "x": 174,
+          "y": 216
+        },
+        "cabeca": {
+          "x": 186,
+          "y": 163
+        }
+      },
+      "apoio": {
+        "x": 185,
+        "y": 343
+      },
+      "arquivo": "mascote_coruja_feliz.webp",
+      "largura": 360,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 180
+      }
+    },
+    "mascote_coruja_parada": {
+      "altura": 400,
+      "ancoras": {
+        "bico": {
+          "x": 176,
+          "y": 217
+        },
+        "cabeca": {
+          "x": 186,
+          "y": 163
+        }
+      },
+      "apoio": {
+        "x": 185,
+        "y": 343
+      },
+      "arquivo": "mascote_coruja_parada.webp",
+      "largura": 360,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 180
+      }
+    },
+    "mascote_dragaozinho_dormindo": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 198,
+          "y": 87
+        }
+      },
+      "apoio": {
+        "x": 211,
+        "y": 327
+      },
+      "arquivo": "mascote_dragaozinho_dormindo.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "mascote_dragaozinho_falando": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 211,
+          "y": 84
+        }
+      },
+      "apoio": {
+        "x": 211,
+        "y": 327
+      },
+      "arquivo": "mascote_dragaozinho_falando.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "mascote_dragaozinho_feliz": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 216,
+          "y": 84
+        }
+      },
+      "apoio": {
+        "x": 211,
+        "y": 327
+      },
+      "arquivo": "mascote_dragaozinho_feliz.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "mascote_dragaozinho_parado": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 211,
+          "y": 84
+        }
+      },
+      "apoio": {
+        "x": 211,
+        "y": 327
+      },
+      "arquivo": "mascote_dragaozinho_parado.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "mascote_gatinho_dormindo": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 198,
+          "y": 87
+        }
+      },
+      "apoio": {
+        "x": 210,
+        "y": 327
+      },
+      "arquivo": "mascote_gatinho_dormindo.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "mascote_gatinho_falando": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 211,
+          "y": 84
+        }
+      },
+      "apoio": {
+        "x": 210,
+        "y": 327
+      },
+      "arquivo": "mascote_gatinho_falando.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "mascote_gatinho_feliz": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 216,
+          "y": 84
+        }
+      },
+      "apoio": {
+        "x": 210,
+        "y": 327
+      },
+      "arquivo": "mascote_gatinho_feliz.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
+      }
+    },
+    "mascote_gatinho_parado": {
+      "altura": 400,
+      "ancoras": {
+        "cabeca": {
+          "x": 211,
+          "y": 156
+        },
+        "topoDaCabeca": {
+          "x": 211,
+          "y": 84
+        }
+      },
+      "apoio": {
+        "x": 210,
+        "y": 327
+      },
+      "arquivo": "mascote_gatinho_parado.webp",
+      "largura": 400,
+      "tipo": "objeto",
+      "uso": {
+        "altura": 200,
+        "largura": 200
       }
     },
     "moeda": {
@@ -11186,730 +19535,6 @@
       "uso": {
         "altura": 260,
         "largura": 170
-      }
-    },
-    "icone_album": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 49,
-          "y": 47
-        }
-      },
-      "apoio": {
-        "x": 47,
-        "y": 89
-      },
-      "arquivo": "icone_album.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_avancar": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 47,
-          "y": 48
-        }
-      },
-      "apoio": {
-        "x": 48,
-        "y": 90
-      },
-      "arquivo": "icone_avancar.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_casa_branca": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 47,
-          "y": 48
-        }
-      },
-      "apoio": {
-        "x": 47,
-        "y": 90
-      },
-      "arquivo": "icone_casa_branca.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_desfazer": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 48,
-          "y": 53
-        }
-      },
-      "apoio": {
-        "x": 48,
-        "y": 89
-      },
-      "arquivo": "icone_desfazer.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_espelho": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 47,
-          "y": 48
-        }
-      },
-      "apoio": {
-        "x": 47,
-        "y": 95
-      },
-      "arquivo": "icone_espelho.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_estante": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 44,
-          "y": 46
-        }
-      },
-      "apoio": {
-        "x": 48,
-        "y": 91
-      },
-      "arquivo": "icone_estante.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_gravar": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 47,
-          "y": 47
-        }
-      },
-      "apoio": {
-        "x": 48,
-        "y": 94
-      },
-      "arquivo": "icone_gravar.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_lixeira": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 48,
-          "y": 40
-        }
-      },
-      "apoio": {
-        "x": 48,
-        "y": 91
-      },
-      "arquivo": "icone_lixeira.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_lua": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 55,
-          "y": 49
-        }
-      },
-      "apoio": {
-        "x": 42,
-        "y": 95
-      },
-      "arquivo": "icone_lua.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_mapa": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 47,
-          "y": 46
-        }
-      },
-      "apoio": {
-        "x": 47,
-        "y": 90
-      },
-      "arquivo": "icone_mapa.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_ouvir": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 47,
-          "y": 51
-        }
-      },
-      "apoio": {
-        "x": 46,
-        "y": 86
-      },
-      "arquivo": "icone_ouvir.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_papel_novo": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 48,
-          "y": 48
-        }
-      },
-      "apoio": {
-        "x": 48,
-        "y": 92
-      },
-      "arquivo": "icone_papel_novo.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_parar": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 47,
-          "y": 48
-        }
-      },
-      "apoio": {
-        "x": 47,
-        "y": 92
-      },
-      "arquivo": "icone_parar.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_pintar": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 47,
-          "y": 49
-        }
-      },
-      "apoio": {
-        "x": 47,
-        "y": 86
-      },
-      "arquivo": "icone_pintar.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_repetir": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 48,
-          "y": 49
-        }
-      },
-      "apoio": {
-        "x": 48,
-        "y": 95
-      },
-      "arquivo": "icone_repetir.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_sol": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 46,
-          "y": 49
-        }
-      },
-      "apoio": {
-        "x": 46,
-        "y": 95
-      },
-      "arquivo": "icone_sol.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "icone_tocar": {
-      "altura": 96,
-      "ancoras": {
-        "centro": {
-          "x": 41,
-          "y": 50
-        }
-      },
-      "apoio": {
-        "x": 48,
-        "y": 95
-      },
-      "arquivo": "icone_tocar.webp",
-      "largura": 96,
-      "tipo": "item",
-      "uso": {
-        "altura": 48,
-        "largura": 48
-      }
-    },
-    "mascote_cachorrinho_dormindo": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 198,
-          "y": 87
-        }
-      },
-      "apoio": {
-        "x": 210,
-        "y": 327
-      },
-      "arquivo": "mascote_cachorrinho_dormindo.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
-      }
-    },
-    "mascote_cachorrinho_falando": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 211,
-          "y": 84
-        }
-      },
-      "apoio": {
-        "x": 210,
-        "y": 327
-      },
-      "arquivo": "mascote_cachorrinho_falando.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
-      }
-    },
-    "mascote_cachorrinho_feliz": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 216,
-          "y": 84
-        }
-      },
-      "apoio": {
-        "x": 210,
-        "y": 327
-      },
-      "arquivo": "mascote_cachorrinho_feliz.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
-      }
-    },
-    "mascote_cachorrinho_parado": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 211,
-          "y": 84
-        }
-      },
-      "apoio": {
-        "x": 210,
-        "y": 327
-      },
-      "arquivo": "mascote_cachorrinho_parado.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
-      }
-    },
-    "mascote_coruja_dormindo": {
-      "altura": 400,
-      "ancoras": {
-        "bico": {
-          "x": 183,
-          "y": 223
-        },
-        "cabeca": {
-          "x": 186,
-          "y": 163
-        }
-      },
-      "apoio": {
-        "x": 185,
-        "y": 343
-      },
-      "arquivo": "mascote_coruja_dormindo.webp",
-      "largura": 360,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 180
-      }
-    },
-    "mascote_coruja_falando": {
-      "altura": 400,
-      "ancoras": {
-        "bico": {
-          "x": 176,
-          "y": 217
-        },
-        "cabeca": {
-          "x": 186,
-          "y": 163
-        }
-      },
-      "apoio": {
-        "x": 185,
-        "y": 343
-      },
-      "arquivo": "mascote_coruja_falando.webp",
-      "largura": 360,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 180
-      }
-    },
-    "mascote_coruja_feliz": {
-      "altura": 400,
-      "ancoras": {
-        "bico": {
-          "x": 174,
-          "y": 216
-        },
-        "cabeca": {
-          "x": 186,
-          "y": 163
-        }
-      },
-      "apoio": {
-        "x": 185,
-        "y": 343
-      },
-      "arquivo": "mascote_coruja_feliz.webp",
-      "largura": 360,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 180
-      }
-    },
-    "mascote_coruja_parada": {
-      "altura": 400,
-      "ancoras": {
-        "bico": {
-          "x": 176,
-          "y": 217
-        },
-        "cabeca": {
-          "x": 186,
-          "y": 163
-        }
-      },
-      "apoio": {
-        "x": 185,
-        "y": 343
-      },
-      "arquivo": "mascote_coruja_parada.webp",
-      "largura": 360,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 180
-      }
-    },
-    "mascote_dragaozinho_dormindo": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 198,
-          "y": 87
-        }
-      },
-      "apoio": {
-        "x": 211,
-        "y": 327
-      },
-      "arquivo": "mascote_dragaozinho_dormindo.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
-      }
-    },
-    "mascote_dragaozinho_falando": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 211,
-          "y": 84
-        }
-      },
-      "apoio": {
-        "x": 211,
-        "y": 327
-      },
-      "arquivo": "mascote_dragaozinho_falando.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
-      }
-    },
-    "mascote_dragaozinho_feliz": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 216,
-          "y": 84
-        }
-      },
-      "apoio": {
-        "x": 211,
-        "y": 327
-      },
-      "arquivo": "mascote_dragaozinho_feliz.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
-      }
-    },
-    "mascote_dragaozinho_parado": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 211,
-          "y": 84
-        }
-      },
-      "apoio": {
-        "x": 211,
-        "y": 327
-      },
-      "arquivo": "mascote_dragaozinho_parado.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
-      }
-    },
-    "mascote_gatinho_dormindo": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 198,
-          "y": 87
-        }
-      },
-      "apoio": {
-        "x": 210,
-        "y": 327
-      },
-      "arquivo": "mascote_gatinho_dormindo.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
-      }
-    },
-    "mascote_gatinho_falando": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 211,
-          "y": 84
-        }
-      },
-      "apoio": {
-        "x": 210,
-        "y": 327
-      },
-      "arquivo": "mascote_gatinho_falando.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
-      }
-    },
-    "mascote_gatinho_feliz": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 216,
-          "y": 84
-        }
-      },
-      "apoio": {
-        "x": 210,
-        "y": 327
-      },
-      "arquivo": "mascote_gatinho_feliz.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
-      }
-    },
-    "mascote_gatinho_parado": {
-      "altura": 400,
-      "ancoras": {
-        "cabeca": {
-          "x": 211,
-          "y": 156
-        },
-        "topoDaCabeca": {
-          "x": 211,
-          "y": 84
-        }
-      },
-      "apoio": {
-        "x": 210,
-        "y": 327
-      },
-      "arquivo": "mascote_gatinho_parado.webp",
-      "largura": 400,
-      "tipo": "objeto",
-      "uso": {
-        "altura": 200,
-        "largura": 200
       }
     },
     "tela_balde": {
