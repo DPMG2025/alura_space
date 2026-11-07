@@ -420,6 +420,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publicar versão parcial (Releases)
+        id: release
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA_ALVO: ${{ steps.alvo.outputs.sha }}
@@ -446,6 +448,28 @@ jobs:
           3. Toque em Instalar.
 
           Para atualizar depois, baixe e instale de novo por cima: o progresso fica guardado."
+
+      # O token do workflow não pôde criar o release (403 em /releases). Alternativa: guardar o APK no próprio repositório,
+      # onde o dono do produto baixa pelo navegador (casinha-do-saber/docs/apk-parcial/CasinhaDoSaber-parcial.apk).
+      - name: Guardar o APK no repositório (se o release falhou)
+        if: steps.release.outcome == 'failure'
+        env:
+          ALVO: ${{ steps.alvo.outputs.sha }}
+          RUN_ALVO: ${{ steps.alvo.outputs.run }}
+        run: |
+          git clone --depth 1 --branch "${GITHUB_REF_NAME}" "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" repo
+          mkdir -p repo/casinha-do-saber/docs/apk-parcial
+          cp CasinhaDoSaber.apk repo/casinha-do-saber/docs/apk-parcial/CasinhaDoSaber-parcial.apk
+          printf 'APK parcial do commit %s (execução %s). Sem o polimento final e sem os ícones e figuras 3D da segunda rodada.\nPassou no build (testes, lint, tamanho), no emulador de tablet e nos Androids 7 e 8; ainda não passou no emulador de celular do CI.\n' "$ALVO" "$RUN_ALVO" > repo/casinha-do-saber/docs/apk-parcial/LEIAME.txt
+          cd repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A casinha-do-saber/docs/apk-parcial
+          git commit -m "APK parcial (execução ${RUN_ALVO}, commit ${ALVO::7}) [skip ci]"
+          for tentativa in 1 2 3 4 5; do
+            git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break
+            sleep 7
+          done
 
   # Versão para testar no celular: um link direto do .apk na página de Releases do GitHub, sempre com o
   # último build deste branch. Só sai depois que o mesmo APK passou em todos os testes (unidade, capturas,
