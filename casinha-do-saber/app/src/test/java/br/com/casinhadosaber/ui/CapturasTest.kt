@@ -584,6 +584,8 @@ class CapturasTest {
      * cobrir o rosto. A cabeça vem da âncora do manifesto da arte 3D (`crianca_cabeca`: `cabeca` e
      * `topoDaCabeca`), posta na caixa da criança pela mesma conta que o componente usa.
      */
+    // Tela larga: com a criança 3D (85 dp de largura) a fila de chapéus não cabe nos 393 dp e os nós saem cortados.
+    @Config(qualifiers = "w1280dp-h800dp-land-xhdpi")
     @Test fun chapeuFicaNaCabeca() {
         val narrador = Narrador(RuntimeEnvironment.getApplication()).apply { ativo = false }
         val sons = Sons().apply { ativo = false }

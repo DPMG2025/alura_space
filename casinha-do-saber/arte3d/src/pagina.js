@@ -4,6 +4,7 @@
 import { THREE, palco, luzes } from './kit.js';
 import { tiposDeCamera, filtroFinal } from './cameras.js';
 import { catalogo } from './catalogo.js';
+import { carregarFonte } from './objetos/icones.js';
 
 /** Fundo preto vira transparente e os reflexos viram branco translúcido (camadas de brilho do cabelo). */
 function soOBrilho(ctx, L, A) {
@@ -168,7 +169,10 @@ window.renderizar = (id, escala, superamostra) => {
   const reduz = (q) => ({ x: Math.round(q.x / superamostra), y: Math.round(q.y / superamostra) });
   // câmera fixa: o apoio é a origem (os pés da figura), igual em todas as camadas
   const pontoDeApoio = cfg.enquadrar === 'fixo' ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(centro.x, caixa.min.y, centro.z);
-  const apoio = reduz(paraPixel(p.cam, pontoDeApoio, L, A));
+  // Peças finas e giradas (glifos da barra) podem projetar o meio da base da caixa um pouco fora do
+  // recorte; o apoio fica preso à imagem (o manifesto exige pontos dentro dela).
+  const apoioBruto = reduz(paraPixel(p.cam, pontoDeApoio, L, A));
+  const apoio = { x: Math.min(largura - 1, Math.max(0, apoioBruto.x)), y: Math.min(altura - 1, Math.max(0, apoioBruto.y)) };
   const ancoras = {};
   obj.traverse((o) => {
     if (o.userData.ancora) ancoras[o.userData.ancora] = reduz(paraPixel(p.cam, o.getWorldPosition(new THREE.Vector3()), L, A));
@@ -182,4 +186,5 @@ window.renderizar = (id, escala, superamostra) => {
 
 window.catalogo = () => catalogo.map((c) => c.id);
 await document.fonts.ready;
+await carregarFonte(); // números e letras em 3D dos ícones dos caminhos
 window.PRONTO = true;

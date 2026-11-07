@@ -2,6 +2,146 @@
   "versao": 1,
   "escala": 2,
   "imagens": {
+    "conta_amarela": {
+      "altura": 64,
+      "ancoras": {
+        "centro": {
+          "x": 32,
+          "y": 32
+        }
+      },
+      "apoio": {
+        "x": 32,
+        "y": 61
+      },
+      "arquivo": "conta_amarela.webp",
+      "largura": 64,
+      "tipo": "item",
+      "uso": {
+        "altura": 32,
+        "largura": 32
+      }
+    },
+    "conta_azul": {
+      "altura": 64,
+      "ancoras": {
+        "centro": {
+          "x": 32,
+          "y": 32
+        }
+      },
+      "apoio": {
+        "x": 32,
+        "y": 61
+      },
+      "arquivo": "conta_azul.webp",
+      "largura": 64,
+      "tipo": "item",
+      "uso": {
+        "altura": 32,
+        "largura": 32
+      }
+    },
+    "conta_laranja": {
+      "altura": 64,
+      "ancoras": {
+        "centro": {
+          "x": 32,
+          "y": 32
+        }
+      },
+      "apoio": {
+        "x": 32,
+        "y": 61
+      },
+      "arquivo": "conta_laranja.webp",
+      "largura": 64,
+      "tipo": "item",
+      "uso": {
+        "altura": 32,
+        "largura": 32
+      }
+    },
+    "conta_roxa": {
+      "altura": 64,
+      "ancoras": {
+        "centro": {
+          "x": 32,
+          "y": 32
+        }
+      },
+      "apoio": {
+        "x": 32,
+        "y": 61
+      },
+      "arquivo": "conta_roxa.webp",
+      "largura": 64,
+      "tipo": "item",
+      "uso": {
+        "altura": 32,
+        "largura": 32
+      }
+    },
+    "conta_vazia": {
+      "altura": 64,
+      "ancoras": {
+        "centro": {
+          "x": 32,
+          "y": 32
+        }
+      },
+      "apoio": {
+        "x": 32,
+        "y": 61
+      },
+      "arquivo": "conta_vazia.webp",
+      "largura": 64,
+      "tipo": "item",
+      "uso": {
+        "altura": 32,
+        "largura": 32
+      }
+    },
+    "conta_verde": {
+      "altura": 64,
+      "ancoras": {
+        "centro": {
+          "x": 32,
+          "y": 32
+        }
+      },
+      "apoio": {
+        "x": 32,
+        "y": 61
+      },
+      "arquivo": "conta_verde.webp",
+      "largura": 64,
+      "tipo": "item",
+      "uso": {
+        "altura": 32,
+        "largura": 32
+      }
+    },
+    "conta_vermelha": {
+      "altura": 64,
+      "ancoras": {
+        "centro": {
+          "x": 32,
+          "y": 32
+        }
+      },
+      "apoio": {
+        "x": 32,
+        "y": 61
+      },
+      "arquivo": "conta_vermelha.webp",
+      "largura": 64,
+      "tipo": "item",
+      "uso": {
+        "altura": 32,
+        "largura": 32
+      }
+    },
     "crianca_boca_feliz": {
       "altura": 520,
       "ancoras": {},
@@ -1244,6 +1384,306 @@
       "uso": {
         "altura": 120,
         "largura": 120
+      }
+    },
+    "estrela_brilhando": {
+      "altura": 144,
+      "ancoras": {
+        "centro": {
+          "x": 72,
+          "y": 77
+        }
+      },
+      "apoio": {
+        "x": 72,
+        "y": 143
+      },
+      "arquivo": "estrela_brilhando.webp",
+      "largura": 144,
+      "tipo": "item",
+      "uso": {
+        "altura": 72,
+        "largura": 72
+      }
+    },
+    "estrela_cheia": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 47
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 90
+      },
+      "arquivo": "estrela_cheia.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "estrela_vazia": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 91
+      },
+      "arquivo": "estrela_vazia.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_ajustes": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 49
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_ajustes.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_casa": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 90
+      },
+      "arquivo": "icone_casa.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_fechar": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 95
+      },
+      "arquivo": "icone_fechar.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_loja": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 48,
+          "y": 43
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 90
+      },
+      "arquivo": "icone_loja.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_pais": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 47,
+        "y": 92
+      },
+      "arquivo": "icone_pais.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_som_desligado": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 47,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 48,
+        "y": 80
+      },
+      "arquivo": "icone_som_desligado.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_som_ligado": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 50,
+          "y": 48
+        }
+      },
+      "apoio": {
+        "x": 56,
+        "y": 83
+      },
+      "arquivo": "icone_som_ligado.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
+      }
+    },
+    "icone_trilha_ingles": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 99
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 168
+      },
+      "arquivo": "icone_trilha_ingles.webp",
+      "largura": 192,
+      "tipo": "icone",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "icone_trilha_logica": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 96,
+          "y": 92
+        }
+      },
+      "apoio": {
+        "x": 96,
+        "y": 157
+      },
+      "arquivo": "icone_trilha_logica.webp",
+      "largura": 192,
+      "tipo": "icone",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "icone_trilha_matematica": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 93,
+          "y": 91
+        }
+      },
+      "apoio": {
+        "x": 93,
+        "y": 166
+      },
+      "arquivo": "icone_trilha_matematica.webp",
+      "largura": 192,
+      "tipo": "icone",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "icone_trilha_portugues": {
+      "altura": 192,
+      "ancoras": {
+        "centro": {
+          "x": 93,
+          "y": 91
+        }
+      },
+      "apoio": {
+        "x": 93,
+        "y": 166
+      },
+      "arquivo": "icone_trilha_portugues.webp",
+      "largura": 192,
+      "tipo": "icone",
+      "uso": {
+        "altura": 96,
+        "largura": 96
+      }
+    },
+    "icone_voltar": {
+      "altura": 96,
+      "ancoras": {
+        "centro": {
+          "x": 46,
+          "y": 50
+        }
+      },
+      "apoio": {
+        "x": 45,
+        "y": 91
+      },
+      "arquivo": "icone_voltar.webp",
+      "largura": 96,
+      "tipo": "item",
+      "uso": {
+        "altura": 48,
+        "largura": 48
       }
     },
     "irmao_boca_feliz": {
