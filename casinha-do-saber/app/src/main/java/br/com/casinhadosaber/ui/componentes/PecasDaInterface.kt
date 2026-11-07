@@ -17,9 +17,27 @@ object IconesDaBarra {
     const val PAIS = "icone_pais"
     const val CASA = "icone_casa"
     const val LOJA = "icone_loja"
+    const val MAPA = "icone_mapa"
+    const val ALBUM = "icone_album"
+    const val ESTANTE = "icone_estante"
+    const val ESPELHO = "icone_espelho"
+    const val SOL = "icone_sol"
+    const val LUA = "icone_lua"
+    const val PINTAR = "icone_pintar"
+    const val TOCAR = "icone_tocar"
+    const val PARAR = "icone_parar"
+    const val GRAVAR = "icone_gravar"
+    const val OUVIR = "icone_ouvir"
+    const val REPETIR = "icone_repetir"
+    const val DESFAZER = "icone_desfazer"
+    const val PAPEL_NOVO = "icone_papel_novo"
+    const val LIXEIRA = "icone_lixeira"
 
     /** Todos os ids que o [BotaoRedondo] pode pedir à arte. */
-    val todos = listOf(FECHAR, VOLTAR, SOM_LIGADO, SOM_DESLIGADO, AJUSTES, PAIS, CASA, LOJA)
+    val todos = listOf(
+        FECHAR, VOLTAR, SOM_LIGADO, SOM_DESLIGADO, AJUSTES, PAIS, CASA, LOJA,
+        MAPA, ALBUM, ESTANTE, ESPELHO, SOL, LUA, PINTAR, TOCAR, PARAR, GRAVAR, OUVIR, REPETIR, DESFAZER, PAPEL_NOVO, LIXEIRA,
+    )
 
     // Só emojis que o app já usa, escritos como nas telas (a lista do teste de emojis no emulador sai do código).
     private val porEmoji = mapOf(
@@ -32,16 +50,19 @@ object IconesDaBarra {
         "🔒" to IconeDaBarra(PAIS),
         "🏠" to IconeDaBarra(CASA),
         "🛒" to IconeDaBarra(LOJA), "🛍️" to IconeDaBarra(LOJA),
+        "🗺️" to IconeDaBarra(MAPA), "📒" to IconeDaBarra(ALBUM), "📚" to IconeDaBarra(ESTANTE), "🪞" to IconeDaBarra(ESPELHO),
+        "☀️" to IconeDaBarra(SOL), "🌙" to IconeDaBarra(LUA), "🎨" to IconeDaBarra(PINTAR),
+        "⏹️" to IconeDaBarra(PARAR), "⏺️" to IconeDaBarra(GRAVAR), "👂" to IconeDaBarra(OUVIR), "🔁" to IconeDaBarra(REPETIR),
+        "↩️" to IconeDaBarra(DESFAZER), "📄" to IconeDaBarra(PAPEL_NOVO), "🗑️" to IconeDaBarra(LIXEIRA),
     ).mapKeys { it.key.replace("️", "") }
 
     /**
      * O ícone 3D que substitui [emoji] num botão da barra, ou nulo (o emoji continua, até a arte dele existir).
-     * O seletor de variação (U+FE0F) é ignorado. "▶" com [descricao] de ouvir ou tocar é o "play", não "avançar":
-     * fica o emoji.
+     * O seletor de variação (U+FE0F) é ignorado. "▶" com [descricao] de ouvir ou tocar é o "play" (icone_tocar), não "avançar".
      */
     fun para(emoji: String, descricao: String = ""): IconeDaBarra? {
         val limpo = emoji.replace("️", "").trim()
-        if (limpo == "▶" && (descricao.startsWith("Ouvir") || descricao.startsWith("Tocar"))) return null
+        if (limpo == "▶" && (descricao.startsWith("Ouvir") || descricao.startsWith("Tocar"))) return IconeDaBarra(TOCAR)
         return porEmoji[limpo]
     }
 }

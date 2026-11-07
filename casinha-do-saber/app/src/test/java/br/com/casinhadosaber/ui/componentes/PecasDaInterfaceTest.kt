@@ -25,10 +25,12 @@ class PecasDaInterfaceTest {
         assertEquals(IconeDaBarra(IconesDaBarra.SOM_DESLIGADO), IconesDaBarra.para("🔇"))
         assertEquals(IconeDaBarra(IconesDaBarra.AJUSTES), IconesDaBarra.para("⚙️"))
         assertEquals(IconeDaBarra(IconesDaBarra.LOJA), IconesDaBarra.para("🛒"))
-        // "▶" de ouvir é o "play", não avançar; emojis sem arte continuam emojis.
-        assertNull(IconesDaBarra.para("▶️", "Ouvir"))
-        assertNull(IconesDaBarra.para("🗺️"))
-        assertNull(IconesDaBarra.para("🪞"))
+        // "▶" de ouvir é o "play", não avançar; emojis da Fase 8 ganharam ícone; sem arte continuam emojis.
+        assertEquals(IconeDaBarra(IconesDaBarra.TOCAR), IconesDaBarra.para("▶️", "Ouvir"))
+        assertEquals(IconeDaBarra(IconesDaBarra.MAPA), IconesDaBarra.para("🗺️"))
+        assertEquals(IconeDaBarra(IconesDaBarra.ESPELHO), IconesDaBarra.para("🪞"))
+        assertEquals(IconeDaBarra(IconesDaBarra.GRAVAR), IconesDaBarra.para("⏺️"))
+        assertNull(IconesDaBarra.para("🥁"))
     }
 
     @Test fun todoIconeDaBarraEDosCaminhosEstaNoManifesto() {
