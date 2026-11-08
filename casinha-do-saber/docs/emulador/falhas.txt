@@ -1,6 +1,6 @@
     <property name="project" value=":app" />
   </properties>
-  <testcase name="abrirMapaEAlbum" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="72.95">
+  <testcase name="abrirMapaEAlbum" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="91.837">
     <failure></failure>
   </testcase>
   <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
@@ -12,7 +12,7 @@ com.android.ddmlib.AdbCommandRejectedException: device offline
 	at com.android.ddmlib.internal.DeviceImpl.logRun1(DeviceImpl.java:1801)
     <property name="project" value=":app" />
   </properties>
-  <testcase name="jogarFase100DeCadaCaminho" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="69.503">
+  <testcase name="jogarFase100DeCadaCaminho" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="63.319">
     <failure></failure>
   </testcase>
   <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
@@ -24,7 +24,7 @@ com.android.ddmlib.AdbCommandRejectedException: device offline
 	at com.android.ddmlib.internal.DeviceImpl.logRun1(DeviceImpl.java:1801)
     <property name="project" value=":app" />
   </properties>
-  <testcase name="areaDosPaisDesafioDoDia" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="78.018">
+  <testcase name="areaDosPaisDesafioDoDia" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="90.157">
     <failure></failure>
   </testcase>
   <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
