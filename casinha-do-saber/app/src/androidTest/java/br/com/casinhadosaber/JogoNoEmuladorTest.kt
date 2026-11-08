@@ -502,7 +502,9 @@ class JogoNoEmuladorTest {
             val tipo = jogarDesafioNovo(pergunta.atividade)
             tipos += tipo
             try {
-                regra.waitUntil(45_000) { PartidaNaTela.indice == i && PartidaNaTela.acertou }
+                // O acerto dura só um instante: num aparelho rápido a partida já está na pergunta seguinte quando o
+                // teste olha (visto no tablet virtual local). Passar para a próxima também prova que acertou.
+                regra.waitUntil(45_000) { (PartidaNaTela.indice == i && PartidaNaTela.acertou) || PartidaNaTela.indice > i }
             } catch (e: Throwable) {
                 capturar("${captura}_falhou_$i")
                 throw AssertionError("fase $numero de $caminho: a pergunta ${i + 1} ($tipo, \"${pergunta.instrucao}\") não terminou. " + diagnostico(), e)
@@ -614,12 +616,21 @@ class JogoNoEmuladorTest {
 
         // Prêmio: abrir o presente e levar para a casa (é na casa que o aviso das conquistas aparece).
         esperar("Presente. Toque para abrir.", 20_000)
+        // Fase nova: a cena de vitória do chefão aparece POR CIMA do prêmio e barra os toques nele; a criança toca
+        // primeiro no botão grande da cena ("Oba!") e só depois abre o presente.
+        regra.waitUntil(15_000) { existe("historia_continuar") }
+        avancar(1_000)
+        capturar("t02a_cena_do_chefao")
+        regra.onAllNodes(hasTestTag("historia_continuar")).onFirst().performClick()
+        avancar(1_000)
+        capturar("t02b_depois_da_cena")
         regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
         avancar(400)
-        esperar("Colocar na casa", 15_000)
+        // O botão se chama "Colocar na casa" (fase com item novo) ou "Ver na casa" (sem item).
+        esperar("na casa", 15_000)
         avancar(1_000)
         capturar("t02_premio_do_chefao")
-        regra.onAllNodes(hasContentDescription("Colocar na casa")).onFirst().performClick()
+        regra.onAllNodes(hasContentDescription("na casa", substring = true)).onFirst().performClick()
 
         // O aviso de diploma novo (com a figurinha dourada junto) e a parede de diplomas.
         regra.waitUntilAtLeastOneExists(hasTestTag("aviso_conquista"), 20_000)
