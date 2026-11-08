@@ -301,6 +301,55 @@ jobs:
             mkdir -p saida-emulador/e
             cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/e/ 2>/dev/null || true
 
+      # O Gradle pendura no último teste de cada passo a falha do desligamento do emulador ("onAfterAll: device offline").
+      # Aqui se separa o que é falha de verdade do que é só essa queda no encerramento: um teste de <failure> vazio só
+      # conta como queda se o TestRunner registrou o fim dele no logcat e nenhuma falha dele.
+      - name: Avaliar falhas do emulador (falha de teste ou queda do emulador no encerramento)
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, os
+          import xml.etree.ElementTree as ET
+          if not os.path.exists("emulador-falhou.txt"):
+              raise SystemExit(0)
+          log = ""
+          for f in glob.glob("logcat-emulador-*.txt"):
+              log += open(f, errors="ignore").read()
+          reais, queda = [], []
+          for f in glob.glob("saida-emulador/**/*.xml", recursive=True):
+              if "androidTest-results" not in f:
+                  continue
+              try:
+                  raiz = ET.parse(f).getroot()
+              except ET.ParseError:
+                  reais.append(f + ": xml ilegivel")
+                  continue
+              for e in raiz.iter("system-err"):
+                  if "Test run failed to complete" in (e.text or ""):
+                      reais.append(f + ": a execucao nao completou")
+              for tc in raiz.iter("testcase"):
+                  falha = tc.find("failure")
+                  if falha is None:
+                      continue
+                  nome = tc.get("name", "?")
+                  texto = ((falha.text or "") + (falha.get("message") or "")).strip()
+                  if texto:
+                      reais.append(nome + ": " + texto[:200].replace("\n", " "))
+                  elif "failed: " + nome + "(" in log:
+                      reais.append(nome + ": o TestRunner registrou falha")
+                  elif "finished: " + nome + "(" in log:
+                      queda.append(nome)
+                  else:
+                      reais.append(nome + ": sem registro de fim no logcat")
+          open("teardown-emulador.txt", "w").write("\n".join(queda))
+          if reais:
+              open("falhas-reais-emulador.txt", "w").write("\n".join(reais))
+              print("FALHAS REAIS:", *reais, sep="\n  ")
+          else:
+              os.remove("emulador-falhou.txt")
+              print("Sem falha de teste. Queda do emulador no encerramento atribuida a:", queda)
+          PY
+
       - name: Log do emulador (avisos e erros)
         if: always()
         uses: actions/upload-artifact@v5
@@ -315,6 +364,8 @@ jobs:
           mkdir -p docs/emulador
           find docs/emulador -maxdepth 1 -type f -delete
           rm -rf docs/emulador/vozes && mkdir -p docs/emulador/vozes
+          [ -f teardown-emulador.txt ] && cp teardown-emulador.txt docs/emulador/teardown.txt || true
+          [ -f falhas-reais-emulador.txt ] && cp falhas-reais-emulador.txt docs/emulador/falhas-reais.txt || true
           for SAIDA in saida-emulador/*/connected_android_test_additional_output; do
             find $SAIDA -type f \( -name "*.png" -o -name "*.txt" \) ! -name "vozes_relatorio.txt" -exec cp {} docs/emulador/ \; 2>/dev/null || true
             find $SAIDA -type f \( -name "*.wav" -o -name "vozes_relatorio.txt" \) -exec cp {} docs/emulador/vozes/ \; 2>/dev/null || true
