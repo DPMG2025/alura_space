@@ -10,7 +10,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
@@ -192,9 +191,6 @@ class CapturasColorirEPuzzleTest {
         regra.mainClock.advanceTimeBy(ms)
     }
 
-    private fun sonda(): String =
-        regra.onNodeWithTag("puzzle_faltam").fetchSemanticsNode().config.getOrNull(SemanticsProperties.StateDescription).orEmpty()
-
     /** Tocar numa peça e depois na casa dela na moldura encaixa a peça: faltam 3 (caminho sem arrastar). */
     @Test fun puzzleTocarEncaixa() {
         val semente = 42L
@@ -212,7 +208,7 @@ class CapturasColorirEPuzzleTest {
         }
         aplicarEAvancar(800)
         val texto = regra.onNodeWithTag("puzzle_faltam").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
-        assertEquals("peça $id escolhida e casa tocada; sonda=${sonda()}", "Faltam 3", texto)
+        assertEquals("peça $id escolhida e casa tocada", "Faltam 3", texto)
         foto("s11_puzzle_uma_peca_no_lugar")
     }
 
@@ -259,7 +255,7 @@ class CapturasColorirEPuzzleTest {
         }
         aplicarEAvancar(1000)
         val texto = regra.onNodeWithTag("puzzle_faltam").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
-        assertEquals("arrastar peça $id: antes=$antes meio=$meio depois=${peca()} alvo=$alvo; sonda=${sonda()}", "Faltam 3", texto)
+        assertEquals("arrastar peça $id: antes=$antes meio=$meio depois=${peca()} alvo=$alvo", "Faltam 3", texto)
     }
 
     /** O primeiro nível está sempre aberto e o segundo só abre depois de vencer o primeiro. */
