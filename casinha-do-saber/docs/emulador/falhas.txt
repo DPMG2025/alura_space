@@ -1,12 +1,3 @@
-    <failure>java.lang.IllegalStateException: No compose hierarchies found in the app. Possible reasons include: (1) the Activity that calls setContent did not launch; (2) setContent was not called; (3) setContent was called before the ComposeTestRule ran. If setContent is called by the Activity, make sure the Activity is launched after the ComposeTestRule runs
-at androidx.compose.ui.test.TestContext.getAllSemanticsNodes$ui_test_release(TestOwner.kt:87)
-at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNodes$ui_test_release(SemanticsNodeInteraction.kt:63)
-at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:157)
-at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
-at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)
-at androidx.compose.ui.test.AndroidImageHelpers_androidKt.captureToImage(AndroidImageHelpers.android.kt:51)
-at br.com.casinhadosaber.EmojisNaFonteEmbutidaTest.todosOsEmojisDoAppTemDesenhoNaFonteEmbutida(EmojisNaFonteEmbutidaTest.kt:121)
-</failure>
     <failure></failure>
   </testcase>
   <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
@@ -16,16 +7,6 @@ com.android.ddmlib.AdbCommandRejectedException: device offline
 	at com.android.ddmlib.AdbHelper.setDevice(AdbHelper.java:1000)
 	at com.android.ddmlib.internal.DeviceImpl.lambda$executeRemoteCommand$18(DeviceImpl.java:785)
 	at com.android.ddmlib.internal.DeviceImpl.logRun1(DeviceImpl.java:1801)
-    <failure>java.lang.AssertionError: fase 100 de Números: a pergunta 1 (escolha, "4 d e 6 u = ?") não terminou
-at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFaseAlta(JogoNoEmuladorTest.kt:504)
-at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFase100DeCadaCaminho(JogoNoEmuladorTest.kt:534)
-... 54 trimmed
-Caused by: androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 45000 ms
-at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
-at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:306)
-at br.com.casinhadosaber.JogoNoEmuladorTest.jogarFaseAlta(JogoNoEmuladorTest.kt:501)
-... 56 more
---
     <failure></failure>
   </testcase>
   <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
