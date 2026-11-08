@@ -110,6 +110,8 @@ Execução 163 (77f1461): o Gradle baixou na 6ª tentativa (7 min), mas o `kotli
 
 Execução 166 (commit d3670cc, 2026-11-08): o `build` caiu de novo no passo "Baixar o Gradle" depois das 10 tentativas (HTTP 504 em `github.com/gradle/gradle-distributions/releases/download/v8.14.3/gradle-8.14.3-bin.zip`). Da máquina da sessão o mesmo endereço respondeu 502. É indisponibilidade do GitHub Releases, não do nosso código. Nenhum teste rodou desde a 164.
 
+Execução 167 (2026-11-08): disparada depois que o endereço do Gradle voltou a responder (206). Resultado a anotar aqui.
+
 Lições desta rodada (valem para qualquer tela nova):
 * Nome de classe, ponto e desenho colidiam com código existente (`QuebraCabeca`, `Ponto`, `Desenho`); conferir antes de criar tipos no pacote `dominio`.
 * Nunca usar símbolo fora da fonte embutida (☆ falhou; ⭐ 🪙 🔒 🧩 e os outros usados passam). O teste `EmojisNaFonteEmbutidaTest` varre o código.
