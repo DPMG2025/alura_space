@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -130,6 +131,23 @@ class CapturasColorirEPuzzleTest {
         assertEquals(1, obra.tracos.size)
         assertTrue("o traço deveria estar preso a uma região", obra.tracos[0].regiao >= 0)
         foto("s10_colorir_pincel")
+    }
+
+    /** Modo fácil: some o pincel e a borracha e ficam seis cores. */
+    @Test fun colorirModoFacilEscondeFerramentas() {
+        montar { TelaColorir(EstadoJogo(perfil = menina), {}, {}, {}, abrirDesenho = "gato") }
+        regra.mainClock.advanceTimeBy(1500)
+        regra.onNodeWithTag("colorir_pincel").assertExists()
+        regra.onNodeWithTag("colorir_facil").performClick()
+        regra.mainClock.advanceTimeBy(500)
+        androidx.compose.runtime.snapshots.Snapshot.sendApplyNotifications()
+        regra.mainClock.advanceTimeBy(500)
+        regra.onAllNodesWithTag("colorir_pincel").assertCountEquals(0)
+        regra.onAllNodesWithTag("colorir_borracha").assertCountEquals(0)
+        regra.onNodeWithTag("colorir_balde").assertExists()
+        regra.onAllNodesWithTag("tinta_5").assertCountEquals(0)
+        regra.onNodeWithTag("tinta_1").assertExists()
+        foto("s10_colorir_modo_facil")
     }
 
     /** Pronto com o desenho todo pintado: prêmio na tela, moedinhas e estrelas guardadas, cor nova aberta. */

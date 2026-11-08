@@ -86,6 +86,9 @@ enum class FerramentaDeCor(val emoji: String, val nome: String) {
     BORRACHA("🧽", "Borracha"),
 }
 
+/** Cores do modo fácil: seis cores fortes e bem diferentes entre si. */
+private val CORES_DO_MODO_FACIL = listOf(1, 2, 3, 4, 7, 9)
+
 /** Grossuras do pincel (fração do lado do desenho): fino, médio e grosso. */
 private val GrossurasDoPincel = listOf(0.018f, 0.04f, 0.07f)
 
@@ -219,6 +222,8 @@ private fun PintarDesenho(
     var ferramenta by remember { mutableStateOf(FerramentaDeCor.BALDE) }
     var grossura by remember { mutableIntStateOf(1) }
     var dentroDaLinha by remember { mutableStateOf(true) }
+    /** Modo fácil (2 a 3 anos): só o balde e seis cores grandes. */
+    var modoFacil by remember { mutableStateOf(false) }
     var realce by remember(d.id) { mutableIntStateOf(-1) }
     var premio by remember(d.id) { mutableStateOf<Colorir.Premio?>(null) }
     val estadoAtual by rememberUpdatedState(estado)
@@ -355,7 +360,7 @@ private fun PintarDesenho(
                     horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    for (f in FerramentaDeCor.entries) {
+                    for (f in FerramentaDeCor.entries.filter { !modoFacil || it == FerramentaDeCor.BALDE }) {
                         BotaoFofo(
                             onClick = {
                                 sons.toque()
@@ -413,6 +418,26 @@ private fun PintarDesenho(
                     BotaoFofo(
                         onClick = {
                             sons.toque()
+                            modoFacil = !modoFacil
+                            if (modoFacil) {
+                                ferramenta = FerramentaDeCor.BALDE
+                                if (tinta !in CORES_DO_MODO_FACIL) tinta = CORES_DO_MODO_FACIL.first()
+                            }
+                            narrador.falar(if (modoFacil) "Modo fácil! Só o balde e poucas cores." else "Todas as ferramentas!")
+                        },
+                        cor = if (modoFacil) Cores.Certo else Color.White,
+                        corBase = Color(0x33000000),
+                        descricao = if (modoFacil) "Modo fácil, ligado" else "Modo fácil, desligado",
+                        modifier = Modifier.testTag("colorir_facil"),
+                        profundidade = 4.dp,
+                    ) {
+                        Box(Modifier.size(width = 64.dp, height = 40.dp), contentAlignment = Alignment.Center) {
+                            Text("Fácil", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = if (modoFacil) Color.White else Cores.Texto)
+                        }
+                    }
+                    BotaoFofo(
+                        onClick = {
+                            sons.toque()
                             val r = Colorir.proximaRegiao(hist.atual)
                             if (r >= 0) {
                                 realce = r
@@ -433,7 +458,7 @@ private fun PintarDesenho(
 
                 // Estojo: as cores que já abriram e as que ainda vão abrir.
                 Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    for (linha in Tintas.todas.drop(1).chunked(10)) {
+                    for (linha in Tintas.todas.drop(1).filter { !modoFacil || it.id in CORES_DO_MODO_FACIL }.chunked(10)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally)) {
                             for (t in linha) {
                                 val aberta = terminados >= t.liberadaCom

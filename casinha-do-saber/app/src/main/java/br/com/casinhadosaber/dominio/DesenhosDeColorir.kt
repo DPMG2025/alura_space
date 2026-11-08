@@ -53,6 +53,8 @@ object Desenhos {
         "festa" to "🎈 Festa",
         "dino" to "🦖 Dinossauros",
         "castelo" to "🏰 Castelos e princesas",
+        "fazenda" to "🚜 Fazenda",
+        "natureza" to "🌈 Natureza",
     )
 
     fun nomeDaColecao(id: String): String = colecoes.firstOrNull { it.first == id }?.second ?: id
@@ -436,6 +438,103 @@ object Desenhos {
             bola(0.78f, 0.41f, 0.016f, 12)
             ret(0.34f, 0.74f, 0.44f, 0.9f, 5)
             ret(0.52f, 0.74f, 0.62f, 0.9f, 5)
+        },
+        // ---------------------------------------------------------------- Fazenda
+        desenho("vaca", "Vaquinha", "fazenda", "🐮") {
+            fundo(6)
+            chao(0.78f, 4)
+            ret(0.15f, 0.5f, 0.2f, 0.72f, 11)
+            el(0.45f, 0.6f, 0.27f, 0.18f, 11)
+            bola(0.35f, 0.55f, 0.06f, 12)
+            bola(0.55f, 0.65f, 0.05f, 12)
+            ret(0.28f, 0.72f, 0.35f, 0.9f, 11)
+            ret(0.55f, 0.72f, 0.62f, 0.9f, 11)
+            el(0.78f, 0.45f, 0.12f, 0.1f, 11)
+            tri(0.72f, 0.38f, 0.75f, 0.27f, 0.79f, 0.37f, 3)
+            el(0.85f, 0.5f, 0.07f, 0.05f, 9)
+            bola(0.8f, 0.42f, 0.015f, 12)
+        },
+        desenho("porco", "Porquinho", "fazenda", "🐷") {
+            fundo(6)
+            chao(0.78f, 4)
+            tri(0.24f, 0.58f, 0.1f, 0.5f, 0.24f, 0.66f, 9)
+            el(0.5f, 0.6f, 0.28f, 0.2f, 9)
+            ret(0.33f, 0.74f, 0.41f, 0.9f, 9)
+            ret(0.58f, 0.74f, 0.66f, 0.9f, 9)
+            bola(0.76f, 0.52f, 0.13f, 9)
+            tri(0.68f, 0.42f, 0.72f, 0.3f, 0.78f, 0.42f, 1)
+            el(0.86f, 0.56f, 0.06f, 0.05f, 2)
+            bola(0.78f, 0.48f, 0.015f, 12)
+        },
+        desenho("galinha", "Galinha", "fazenda", "🐔") {
+            fundo(6)
+            chao(0.8f, 4)
+            tri(0.3f, 0.55f, 0.18f, 0.4f, 0.3f, 0.66f, 2)
+            el(0.5f, 0.6f, 0.22f, 0.2f, 3)
+            el(0.44f, 0.6f, 0.1f, 0.07f, 2)
+            ret(0.45f, 0.77f, 0.48f, 0.9f, 2)
+            ret(0.54f, 0.77f, 0.57f, 0.9f, 2)
+            bola(0.62f, 0.35f, 0.1f, 3)
+            el(0.62f, 0.24f, 0.04f, 0.05f, 1)
+            tri(0.71f, 0.35f, 0.83f, 0.38f, 0.71f, 0.42f, 2)
+            bola(0.65f, 0.33f, 0.014f, 12)
+        },
+        desenho("trator", "Trator", "fazenda", "🚜") {
+            fundo(6)
+            chao(0.75f, 4)
+            ret(0.34f, 0.28f, 0.38f, 0.46f, 11)
+            ret(0.3f, 0.45f, 0.72f, 0.66f, 4)
+            ret(0.5f, 0.24f, 0.7f, 0.45f, 1)
+            ret(0.54f, 0.29f, 0.66f, 0.41f, 6)
+            bola(0.6f, 0.7f, 0.15f, 12)
+            bola(0.28f, 0.76f, 0.09f, 12)
+            bola(0.6f, 0.7f, 0.06f, 11)
+            bola(0.28f, 0.76f, 0.035f, 11)
+        },
+        // ---------------------------------------------------------------- Natureza
+        desenho("arco_iris", "Arco-íris", "natureza", "🌈") {
+            fundo(6)
+            nuvem(0.2f, 0.2f)
+            nuvem(0.8f, 0.22f)
+            el(0.5f, 0.6f, 0.4f, 0.4f, 1)
+            el(0.5f, 0.6f, 0.34f, 0.34f, 2)
+            el(0.5f, 0.6f, 0.28f, 0.28f, 3)
+            el(0.5f, 0.6f, 0.22f, 0.22f, 4)
+            el(0.5f, 0.6f, 0.16f, 0.16f, 7)
+            el(0.5f, 0.6f, 0.1f, 0.1f, 8)
+            ret(0f, 0.6f, 1f, 1f, 4)
+        },
+        desenho("cogumelo", "Cogumelo", "natureza", "🍄") {
+            fundo(5)
+            chao(0.8f, 4)
+            ret(0.42f, 0.5f, 0.58f, 0.82f, 3)
+            el(0.5f, 0.48f, 0.3f, 0.22f, 1)
+            bola(0.38f, 0.4f, 0.05f, 3)
+            bola(0.55f, 0.35f, 0.06f, 3)
+            bola(0.64f, 0.5f, 0.04f, 3)
+        },
+        desenho("montanha", "Montanhas", "natureza", "⛰️") {
+            fundo(6)
+            sol()
+            tri(0.1f, 0.8f, 0.4f, 0.3f, 0.7f, 0.8f, 11)
+            tri(0.33f, 0.43f, 0.4f, 0.3f, 0.47f, 0.43f, 14)
+            tri(0.5f, 0.8f, 0.75f, 0.42f, 0.95f, 0.8f, 10)
+            chao(0.78f, 4)
+        },
+        desenho("girassol", "Girassol", "natureza", "🌻") {
+            fundo(6)
+            chao(0.82f, 4)
+            ret(0.48f, 0.48f, 0.52f, 0.86f, 4)
+            el(0.4f, 0.7f, 0.07f, 0.03f, 4)
+            bola(0.5f, 0.13f, 0.07f, 3)
+            bola(0.62f, 0.18f, 0.07f, 2)
+            bola(0.67f, 0.3f, 0.07f, 3)
+            bola(0.62f, 0.42f, 0.07f, 2)
+            bola(0.5f, 0.47f, 0.07f, 3)
+            bola(0.38f, 0.42f, 0.07f, 2)
+            bola(0.33f, 0.3f, 0.07f, 3)
+            bola(0.38f, 0.18f, 0.07f, 2)
+            bola(0.5f, 0.3f, 0.1f, 10)
         },
     )
 
