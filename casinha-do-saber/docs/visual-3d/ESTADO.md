@@ -108,6 +108,8 @@ Execução 162 (commit bf8a422, 2026-11-08): caiu em 24 s com HTTP 504 ao baixar
 
 Execução 163 (77f1461): o Gradle baixou na 6ª tentativa (7 min), mas o `kotlin-compiler-embeddable` deu 504 no GitHub Releases. Execução 164 (ffc4cc5, repete o gradle em falha de rede): a rede passou e os testes rodaram; só `puzzleTravouSugereADica` falhou, por erro do teste (`assertContentDescriptionContains` sem `substring = true`); a tela já dizia "Dica sugerida: ...". Execução 165 (corrige o teste): o download do Gradle falhou nas 6 tentativas; o limite subiu para 10.
 
+Execução 166 (commit d3670cc, 2026-11-08): o `build` caiu de novo no passo "Baixar o Gradle" depois das 10 tentativas (HTTP 504 em `github.com/gradle/gradle-distributions/releases/download/v8.14.3/gradle-8.14.3-bin.zip`). Da máquina da sessão o mesmo endereço respondeu 502. É indisponibilidade do GitHub Releases, não do nosso código. Nenhum teste rodou desde a 164.
+
 Lições desta rodada (valem para qualquer tela nova):
 * Nome de classe, ponto e desenho colidiam com código existente (`QuebraCabeca`, `Ponto`, `Desenho`); conferir antes de criar tipos no pacote `dominio`.
 * Nunca usar símbolo fora da fonte embutida (☆ falhou; ⭐ 🪙 🔒 🧩 e os outros usados passam). O teste `EmojisNaFonteEmbutidaTest` varre o código.
@@ -162,6 +164,31 @@ Roteiro em `roteiro-aceite.md`. Pendentes:
 * Teste de dez minutos com a criança (fases 1, 4 e 5): pendente.
 
 * 2026-11-07, execução 134 (commit fc8d356, com K1, K2, arte da rodada 3 e polimento): build COMPLETO verde (testes de unidade, capturas, lint, APK, guarda de 150 MB), tablet verde, Android 7 e 8 verdes (desempenho: abertura 3,1 s, memória máx 113 a 134 MB). Celular em 4 emuladores: o job falhou com "device offline" em dois passos; o passo 1 levou 14 min (travou) e o passo 4 perdeu o emulador após 2 min, logo depois do teste de voz (TTS). Hipótese em prova: o motor de voz do emulador antecede quase todas as quedas (121 a 134). Decisão: tirar os dois testes que sintetizam voz (VozesGravadasTest e JogoNoEmuladorTest#vozesEmPortuguesEIngles) dos passos normais e rodá-los isolados num 5º emulador, informativo (não derruba o job).
+
+## Retomada (escrito em 2026-11-08 para a próxima sessão, que será com outro modelo)
+
+Estado do código: branch `ccr-7bf7dd82-00owm6`, último commit d3670cc. Tudo o que está nas Fases 10 e 11 abaixo como "feito" está commitado e enviado.
+
+O que está validado pelo CI e o que não está:
+* Validado (execuções 156 a 160, todas verdes, celular incluído): Livro de Colorir com 60 desenhos em 15 coleções, modo fácil, Pintor do dia, selos das criações, cartão dos pais, quebra cabeças de 8 níveis (montar, deslizar, tocar, arrastar).
+* NÃO validado: o aviso de "travou" do quebra cabeça (commit 72ad525, `esperaTravouMs`, `travou` em `TelaPuzzle.kt`, `Puzzle.sugerir(..., travou, ...)`). O teste `puzzleTravouSugereADica` falhou na execução 164 só por erro do teste (faltava `substring = true` em `assertContentDescriptionContains`); a tela já mostrava "Dica sugerida: mostra uma peça e o lugar dela, ligado". A correção está no commit 7a3b818 e nunca rodou, porque as execuções 165 e 166 caíram no download do Gradle. Os outros testes da execução 164 passaram (só esse falhou nos testes de unidade). Tablet, Android 7 e 8 e celular não rodaram com esse código.
+
+Primeiro passo da próxima sessão:
+1. Conferir se o GitHub Releases voltou: `curl -sS -o /dev/null -w "%{http_code}\n" -L -r 0-100 https://github.com/gradle/gradle-distributions/releases/download/v8.14.3/gradle-8.14.3-bin.zip` (esperado 200 ou 206).
+2. Se voltou, enviar um commit pequeno e legítimo (por exemplo, anotar aqui o resultado) SEM `[skip ci]`, para disparar a execução. A reexecução pela API não funciona (403 com o token do ambiente). Um push novo cancela a execução em andamento, então só envie outro commit depois que ela terminar.
+3. Ler o resultado: `build` (testes de unidade, Lint, APK), `emulador-tablet`, `emulador-android-antigo` e `emulador` (celular). Os logs saem por `curl -L -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/DPMG2025/alura_space/actions/jobs/<id>/logs`.
+4. Se o Gradle continuar fora do ar por horas, não mexa no código: aguarde. Alternativa só com checksum oficial: apontar `distributionUrl` para um espelho e fixar `distributionSha256Sum` (o sha256 oficial vem de gradle.org/release-checksums; não consegui buscá-lo da sessão).
+
+O que o CI já faz sozinho contra rede ruim: o passo "Baixar o Gradle (tenta de novo se a rede falhar)" (10 tentativas, espera de 20 s vezes a tentativa) nos quatro jobs de teste, e o `gradlew` do job `build` (testes, Lint, APK) repete até 4 vezes quando a falha é de rede. Os passos do emulador ainda não repetem por falha de rede nas dependências.
+
+Armadilhas já pagas (não repetir): ver "Lições desta rodada" abaixo. As principais: teste de Compose com `mainClock.autoAdvance = false` precisa de `Snapshot.sendApplyNotifications()` depois de gesto; `clickable(enabled = false)` funde a árvore de semântica; símbolos como ☆ não existem na fonte embutida (use ⭐ com alpha); `assertContentDescriptionContains` exige `substring = true` para trecho.
+
+Próximos itens, por ordem sugerida (todos dependem do CI voltar, porque Compose só é provado lá):
+* Fase 10: carimbos e fundos; galeria das obras na parede; salvar a obra como imagem; figurinha no álbum e diploma na tela de diplomas (hoje só há selos); item da casa como prêmio por marco.
+* Fase 11: peças de formato livre (jigsaw), espelho e sequência, sombras (arrastar para a silhueta), rotação nos níveis difíceis, trocar peças douradas por itens, mascote ou moldura por marco, diploma "Mestre dos quebra cabeças". Os diplomas existentes (`dominio/Conquistas.kt`, `Diploma(trilha, mundo)`) são por mundo completo; um diploma novo exige um tipo novo ou generalizar esse.
+* Aceites do dono (só ele faz, roteiro em `roteiro-aceite.md`): tela cheia no tablet Samsung e teste de dez minutos com a criança (fases 1, 4 e 5).
+
+Preferência permanente do dono: nas respostas, não usar hífen nem travessão como pontuação; nomes de arquivos e pastas ficam como estão.
 
 ## Problemas abertos (reconciliado em 2026-11-07, origem: leitura do CI e dos relatórios)
 
