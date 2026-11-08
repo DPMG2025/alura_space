@@ -57,6 +57,9 @@ object Desenhos {
         "natureza" to "🌈 Natureza",
         "frutas" to "🍎 Frutas",
         "brinquedos" to "🧸 Brinquedos",
+        "clima" to "☀️ Clima",
+        "veiculos2" to "🚌 Mais veículos",
+        "musica" to "🎶 Música",
     )
 
     fun nomeDaColecao(id: String): String = colecoes.firstOrNull { it.first == id }?.second ?: id
@@ -615,6 +618,140 @@ object Desenhos {
             bola(0.35f, 0.7f, 0.07f, 3)
             bola(0.65f, 0.7f, 0.07f, 3)
             bola(0.5f, 0.4f, 0.07f, 3)
+        },
+        // ---------------------------------------------------------------- Clima
+        desenho("sol", "Sol sorridente", "clima", "☀️") {
+            fundo(6)
+            tri(0.697f, 0.468f, 0.93f, 0.5f, 0.697f, 0.532f, 2)
+            tri(0.662f, 0.617f, 0.804f, 0.804f, 0.617f, 0.662f, 2)
+            tri(0.532f, 0.697f, 0.5f, 0.93f, 0.468f, 0.697f, 2)
+            tri(0.383f, 0.662f, 0.196f, 0.804f, 0.338f, 0.617f, 2)
+            tri(0.303f, 0.532f, 0.07f, 0.5f, 0.303f, 0.468f, 2)
+            tri(0.338f, 0.383f, 0.196f, 0.196f, 0.383f, 0.338f, 2)
+            tri(0.468f, 0.303f, 0.5f, 0.07f, 0.532f, 0.303f, 2)
+            tri(0.617f, 0.338f, 0.804f, 0.196f, 0.662f, 0.383f, 2)
+            bola(0.5f, 0.5f, 0.21f, 3)
+            bola(0.43f, 0.46f, 0.018f, 12)
+            bola(0.57f, 0.46f, 0.018f, 12)
+            el(0.5f, 0.57f, 0.08f, 0.035f, 1)
+        },
+        desenho("chuva", "Dia de chuva", "clima", "🌧️") {
+            fundo(11)
+            el(0.35f, 0.3f, 0.2f, 0.12f, 6)
+            el(0.55f, 0.26f, 0.22f, 0.14f, 6)
+            el(0.68f, 0.34f, 0.18f, 0.1f, 6)
+            el(0.3f, 0.62f, 0.025f, 0.05f, 7)
+            el(0.45f, 0.72f, 0.025f, 0.05f, 7)
+            el(0.6f, 0.6f, 0.025f, 0.05f, 7)
+            el(0.72f, 0.74f, 0.025f, 0.05f, 7)
+            el(0.2f, 0.8f, 0.025f, 0.05f, 7)
+            el(0.85f, 0.58f, 0.025f, 0.05f, 7)
+        },
+        desenho("neve", "Boneco de neve", "clima", "⛄") {
+            fundo(6)
+            chao(0.82f, 14)
+            bola(0.5f, 0.7f, 0.2f, 14)
+            bola(0.5f, 0.45f, 0.15f, 14)
+            ret(0.4f, 0.27f, 0.6f, 0.33f, 12)
+            ret(0.43f, 0.15f, 0.57f, 0.28f, 12)
+            tri(0.5f, 0.45f, 0.64f, 0.48f, 0.5f, 0.5f, 2)
+            bola(0.45f, 0.41f, 0.016f, 12)
+            bola(0.55f, 0.41f, 0.016f, 12)
+            bola(0.5f, 0.62f, 0.02f, 12)
+            bola(0.5f, 0.72f, 0.02f, 12)
+        },
+        desenho("guarda_chuva", "Guarda-chuva", "clima", "☔") {
+            fundo(5)
+            poli(1, 0.88f,0.5f,0.861f,0.383f,0.807f,0.277f,0.723f,0.193f,0.617f,0.139f,0.5f,0.12f,0.383f,0.139f,0.277f,0.193f,0.193f,0.277f,0.139f,0.383f,0.12f,0.5f)
+            tri(0.5f, 0.12f, 0.35f, 0.5f, 0.5f, 0.5f, 3)
+            tri(0.5f, 0.12f, 0.65f, 0.5f, 0.5f, 0.5f, 3)
+            ret(0.49f, 0.5f, 0.51f, 0.82f, 10)
+            el(0.45f, 0.84f, 0.05f, 0.03f, 10)
+        },
+        // ---------------------------------------------------------------- Mais veículos
+        desenho("onibus", "Ônibus", "veiculos2", "🚌") {
+            fundo(6)
+            chao(0.75f, 11)
+            ret(0.1f, 0.35f, 0.9f, 0.72f, 3)
+            ret(0.1f, 0.6f, 0.9f, 0.64f, 1)
+            ret(0.15f, 0.42f, 0.28f, 0.55f, 6)
+            ret(0.32f, 0.42f, 0.45f, 0.55f, 6)
+            ret(0.49f, 0.42f, 0.62f, 0.55f, 6)
+            ret(0.66f, 0.42f, 0.79f, 0.55f, 6)
+            ret(0.82f, 0.42f, 0.88f, 0.72f, 7)
+            bola(0.28f, 0.74f, 0.08f, 12)
+            bola(0.72f, 0.74f, 0.08f, 12)
+            bola(0.28f, 0.74f, 0.035f, 11)
+            bola(0.72f, 0.74f, 0.035f, 11)
+        },
+        desenho("caminhao", "Caminhão", "veiculos2", "🚚") {
+            fundo(6)
+            chao(0.75f, 11)
+            ret(0.08f, 0.3f, 0.6f, 0.7f, 2)
+            ret(0.6f, 0.42f, 0.9f, 0.7f, 1)
+            ret(0.7f, 0.47f, 0.85f, 0.58f, 6)
+            bola(0.22f, 0.74f, 0.08f, 12)
+            bola(0.48f, 0.74f, 0.08f, 12)
+            bola(0.78f, 0.74f, 0.08f, 12)
+        },
+        desenho("helicoptero", "Helicóptero", "veiculos2", "🚁") {
+            fundo(6)
+            nuvem(0.2f, 0.85f)
+            ret(0.15f, 0.2f, 0.85f, 0.24f, 11)
+            ret(0.48f, 0.24f, 0.52f, 0.36f, 11)
+            ret(0.65f, 0.46f, 0.92f, 0.52f, 1)
+            el(0.92f, 0.42f, 0.025f, 0.1f, 11)
+            el(0.45f, 0.5f, 0.25f, 0.16f, 1)
+            el(0.4f, 0.48f, 0.08f, 0.07f, 6)
+            ret(0.3f, 0.68f, 0.65f, 0.71f, 11)
+        },
+        desenho("bicicleta", "Bicicleta", "veiculos2", "🚲") {
+            fundo(6)
+            chao(0.82f, 4)
+            bola(0.28f, 0.65f, 0.17f, 12)
+            bola(0.72f, 0.65f, 0.17f, 12)
+            bola(0.28f, 0.65f, 0.13f, 6)
+            bola(0.72f, 0.65f, 0.13f, 6)
+            poli(1, 0.28f, 0.65f, 0.45f, 0.4f, 0.62f, 0.4f, 0.72f, 0.65f, 0.58f, 0.65f, 0.48f, 0.5f, 0.4f, 0.65f)
+            ret(0.62f, 0.3f, 0.7f, 0.34f, 11)
+            ret(0.38f, 0.35f, 0.5f, 0.39f, 11)
+        },
+        // ---------------------------------------------------------------- Música
+        desenho("tambor", "Tambor", "musica", "🥁") {
+            fundo(9)
+            el(0.5f, 0.8f, 0.25f, 0.06f, 1)
+            ret(0.25f, 0.45f, 0.75f, 0.8f, 1)
+            el(0.5f, 0.45f, 0.25f, 0.08f, 3)
+            tri(0.15f, 0.1f, 0.2f, 0.1f, 0.42f, 0.42f, 10)
+            tri(0.85f, 0.1f, 0.8f, 0.1f, 0.58f, 0.42f, 10)
+        },
+        desenho("violao", "Violão", "musica", "🎸") {
+            fundo(5)
+            ret(0.37f, 0.12f, 0.43f, 0.45f, 12)
+            ret(0.35f, 0.05f, 0.45f, 0.12f, 10)
+            el(0.4f, 0.66f, 0.2f, 0.17f, 10)
+            el(0.4f, 0.47f, 0.15f, 0.14f, 10)
+            bola(0.4f, 0.58f, 0.06f, 12)
+            ret(0.34f, 0.74f, 0.46f, 0.77f, 12)
+        },
+        desenho("sino", "Sino", "musica", "🔔") {
+            fundo(6)
+            bola(0.5f, 0.1f, 0.04f, 10)
+            poli(3, 0.5f, 0.12f, 0.65f, 0.2f, 0.7f, 0.4f, 0.75f, 0.6f, 0.85f, 0.75f, 0.15f, 0.75f, 0.25f, 0.6f, 0.3f, 0.4f, 0.35f, 0.2f)
+            ret(0.15f, 0.72f, 0.85f, 0.76f, 2)
+            bola(0.5f, 0.84f, 0.06f, 10)
+        },
+        desenho("piano", "Piano", "musica", "🎹") {
+            fundo(9)
+            ret(0.1f, 0.4f, 0.9f, 0.75f, 12)
+            ret(0.14f, 0.45f, 0.3f, 0.72f, 14)
+            ret(0.3f, 0.45f, 0.46f, 0.72f, 14)
+            ret(0.46f, 0.45f, 0.62f, 0.72f, 14)
+            ret(0.62f, 0.45f, 0.78f, 0.72f, 14)
+            ret(0.78f, 0.45f, 0.86f, 0.72f, 14)
+            ret(0.27f, 0.45f, 0.33f, 0.6f, 12)
+            ret(0.43f, 0.45f, 0.49f, 0.6f, 12)
+            ret(0.59f, 0.45f, 0.65f, 0.6f, 12)
         },
     )
 
