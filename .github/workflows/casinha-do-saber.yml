@@ -609,6 +609,22 @@ jobs:
           script: |
             ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.TelaCheiaTest || echo "FALHA_TESTES" > emulador-falhou.txt
 
+      # Relato do dono: no tablet o app fechava ao vencer fases e completar objetivos. Joga no tablet a primeira
+      # fase até o prêmio na casa e o chefão de um mundo até o aviso de diploma e a parede de diplomas.
+      - name: Vencer fases e ver as conquistas no tablet (API 34)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_tablet
+          disable-animations: true
+          working-directory: casinha-do-saber
+          script: |
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest#jogarUmaFaseEColocarOPremioNaCasa,br.com.casinhadosaber.JogoNoEmuladorTest#completarUmMundoEVerAsConquistas || echo "FALHA_TESTES" > emulador-falhou.txt
+            adb logcat -d -s AndroidRuntime:E MEM:W > logcat-tablet.txt || true
+            grep -E "FATAL EXCEPTION|MEM" logcat-tablet.txt || echo "Sem fechamento no logcat do tablet"
+
       - name: Relatório do emulador de tablet
         if: always()
         uses: actions/upload-artifact@v5

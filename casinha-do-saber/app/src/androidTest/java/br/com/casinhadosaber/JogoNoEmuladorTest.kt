@@ -580,6 +580,48 @@ class JogoNoEmuladorTest {
         assertEquals("jogar não pode pedir o microfone", 0, PedidoDoMicrofone.pedidos)
     }
 
+    /**
+     * O caminho que fechava o app no tablet (relato do dono): vencer a 10ª fase de um mundo (o chefão), abrir o
+     * presente, levar para a casa e receber o aviso de diploma e figurinha dourada, depois abrir a parede de
+     * diplomas. Roda no emulador de tablet do CI. Falha se o app fechar ou se o registro de fechamentos anotar algo.
+     */
+    @Test
+    fun completarUmMundoEVerAsConquistas() {
+        br.com.casinhadosaber.dados.GuardaDeFalhas.limpar(contexto)
+        jogarFaseAlta("MATEMATICA", "Números", 10, "t01_chefao_mundo1")
+        // A fase 10 vencida completa o mundo 1: as 10 fases com estrelas.
+        val estrelas = prefs.getString("estrelas", "").orEmpty()
+        assertTrue("o mundo 1 deveria estar completo: $estrelas", (0 until 10).all { estrelas.contains("MATEMATICA:$it=") })
+
+        // Prêmio: abrir o presente e levar para a casa (é na casa que o aviso das conquistas aparece).
+        esperar("Presente. Toque para abrir.", 20_000)
+        regra.onAllNodes(hasContentDescription("Presente. Toque para abrir.")).onFirst().performClick()
+        avancar(400)
+        esperar("Colocar na casa", 15_000)
+        avancar(1_000)
+        capturar("t02_premio_do_chefao")
+        regra.onAllNodes(hasContentDescription("Colocar na casa")).onFirst().performClick()
+
+        // O aviso de diploma novo (com a figurinha dourada junto) e a parede de diplomas.
+        regra.waitUntilAtLeastOneExists(hasTestTag("aviso_conquista"), 20_000)
+        avancar(1_500)
+        capturar("t03_aviso_de_diploma")
+        regra.onAllNodes(hasTestTag("aviso_conquista")).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("diploma"), 15_000)
+        avancar(1_500)
+        capturar("t04_parede_de_diplomas")
+        regra.onAllNodes(hasTestTag("diploma")).onFirst().performClick()
+        regra.waitUntilAtLeastOneExists(hasTestTag("diploma_aberto"), 10_000)
+        avancar(1_500)
+        capturar("t05_diploma_aberto")
+
+        val falhas = br.com.casinhadosaber.dados.GuardaDeFalhas.ler(contexto)
+        assertTrue(
+            "o app anotou um fechamento: " + falhas.joinToString { "${it.tela}: ${it.tipo}: ${it.mensagem}" },
+            falhas.isEmpty(),
+        )
+    }
+
     private companion object {
         val TIPOS_ANTIGOS = setOf("escolha", "cesta", "memoria", "montar", "tracar")
     }
