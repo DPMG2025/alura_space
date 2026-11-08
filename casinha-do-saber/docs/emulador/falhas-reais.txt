@@ -1,0 +1,3 @@
+saida-emulador/c/androidTest-results/connected/debug/TEST-emulator-5554 - 14-_app-.xml: a execucao nao completou
+saida-emulador/b/androidTest-results/connected/debug/TEST-emulator-5554 - 14-_app-.xml: a execucao nao completou
+saida-emulador/d/androidTest-results/connected/debug/TEST-emulator-5554 - 14-_app-.xml: a execucao nao completou

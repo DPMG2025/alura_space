@@ -1,0 +1,3 @@
+abrirMapaEAlbum
+jogarFase100DeCadaCaminho
+pintarNoAtelieETocarOPiano
