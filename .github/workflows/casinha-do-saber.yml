@@ -319,7 +319,7 @@ jobs:
             find $SAIDA -type f \( -name "*.png" -o -name "*.txt" \) ! -name "vozes_relatorio.txt" -exec cp {} docs/emulador/ \; 2>/dev/null || true
             find $SAIDA -type f \( -name "*.wav" -o -name "vozes_relatorio.txt" \) -exec cp {} docs/emulador/vozes/ \; 2>/dev/null || true
           done
-          find saida-emulador -path "*androidTest-results*" -name "*.xml" -exec grep -h -A8 "<failure" {} \; > docs/emulador/falhas.txt 2>/dev/null || true
+          find saida-emulador -path "*androidTest-results*" -name "*.xml" -exec grep -h -B3 -A8 "<failure" {} \; > docs/emulador/falhas.txt 2>/dev/null || true
           [ -s docs/emulador/falhas.txt ] || rm -f docs/emulador/falhas.txt
           # Quando falha, o fim do logcat (avisos e erros) vai junto, para achar a causa.
           if [ -f emulador-falhou.txt ]; then cat logcat-emulador-*.txt 2>/dev/null | tail -n 4000 > docs/emulador/logcat.txt; fi
@@ -399,7 +399,7 @@ jobs:
           DESTINO=docs/emulador/api${{ matrix.api }}
           rm -rf $DESTINO && mkdir -p $DESTINO
           find app/build/outputs/connected_android_test_additional_output -type f \( -name "*.png" -o -name "*.txt" \) -exec cp {} $DESTINO/ \; 2>/dev/null || true
-          find app/build/outputs/androidTest-results -name "*.xml" -exec grep -h -A8 "<failure" {} \; > $DESTINO/falhas.txt 2>/dev/null || true
+          find app/build/outputs/androidTest-results -name "*.xml" -exec grep -h -B3 -A8 "<failure" {} \; > $DESTINO/falhas.txt 2>/dev/null || true
           [ -s $DESTINO/falhas.txt ] || rm -f $DESTINO/falhas.txt
           if [ -f emulador-falhou.txt ]; then echo "RESULTADO: FALHOU" > $DESTINO/relatorio.txt; else echo "RESULTADO: TODOS OS TESTES PASSARAM" > $DESTINO/relatorio.txt; fi
           git config user.name "github-actions[bot]"
