@@ -102,6 +102,7 @@ Execução 157 (commit 5491f9f, 2026-11-08): SEGUNDA execução totalmente verde
 Execução 158 (commit 501ae30, 2026-11-08): TERCEIRA execução totalmente verde seguida (build completo, tablet, Android 7 e 8 e celular), com o "Pintor do dia" e 48 desenhos em 12 coleções. O avaliador do celular passou de novo.
 Execução 159 (commit 67538d8, 2026-11-08): QUARTA execução totalmente verde seguida (build completo, tablet, Android 7 e 8 e celular), com os selos das criações (🏅 por coleção de desenhos completa, 🏆 por marco de quebra cabeças, contados na área dos pais).
 Execução 160 (commit a6853a7, 2026-11-08): com os 60 desenhos em 15 coleções, o build completo (testes, Lint, APK, tamanho, permissões), o tablet e o Android 7 e 8 (que checam a fonte dos emojis dos desenhos novos) passaram. O celular também passou (passos terminados e avaliador sem falha real): QUINTA execução totalmente verde seguida.
+Execução 161 (commit 57d5477, 2026-11-08): falhou em 30 s por rede do runner, não por código: o `gradlew` não conseguiu baixar `gradle-8.14.3-bin.zip` de `services.gradle.org` ("timeout (10000ms)") e nenhum teste rodou. A reexecução pela API é recusada (403, o token do ambiente não pode reexecutar); a saída é enviar um commit novo, o que foi feito. Se o job de testes cair em poucos segundos com esse erro, é este caso.
 
 Lições desta rodada (valem para qualquer tela nova):
 * Nome de classe, ponto e desenho colidiam com código existente (`QuebraCabeca`, `Ponto`, `Desenho`); conferir antes de criar tipos no pacote `dominio`.
