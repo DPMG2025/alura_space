@@ -15,7 +15,9 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import br.com.casinhadosaber.dominio.Carimbo
 import br.com.casinhadosaber.dominio.DesenhoDeColorir
+import br.com.casinhadosaber.dominio.Fundo
 import br.com.casinhadosaber.dominio.Forma
 import br.com.casinhadosaber.dominio.Obra
 import br.com.casinhadosaber.dominio.Tinta
@@ -101,6 +103,127 @@ private fun caminhoDoTraco(t: Traco, origem: Offset, lado: Float): Path = Path()
     if (t.pontos.size == 1) lineTo(origem.x + t.pontos[0].x * lado + 0.1f, origem.y + t.pontos[0].y * lado)
 }
 
+/** O fundo da obra, no quadrado inteiro, atrás das regiões. */
+private fun DrawScope.desenharFundo(f: Fundo, origem: Offset, lado: Float) {
+    if (f == Fundo.NENHUM) return
+    val tl = origem
+    val tamanho = Size(lado, lado)
+    fun nuvem(cx: Float, cy: Float, r: Float) {
+        val branco = Color.White.copy(alpha = 0.9f)
+        drawCircle(branco, r * lado, Offset(origem.x + cx * lado, origem.y + cy * lado))
+        drawCircle(branco, r * 0.8f * lado, Offset(origem.x + (cx - r * 1.1f) * lado, origem.y + (cy + r * 0.25f) * lado))
+        drawCircle(branco, r * 0.8f * lado, Offset(origem.x + (cx + r * 1.1f) * lado, origem.y + (cy + r * 0.25f) * lado))
+    }
+    when (f) {
+        Fundo.NENHUM -> Unit
+        Fundo.CEU -> {
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF8ED1FF), Color(0xFFDFF3FF)), startY = tl.y, endY = tl.y + lado), tl, tamanho)
+            drawCircle(Color(0xFFFFD166), lado * 0.08f, Offset(tl.x + lado * 0.86f, tl.y + lado * 0.13f))
+            nuvem(0.18f, 0.14f, 0.05f)
+            nuvem(0.62f, 0.08f, 0.04f)
+            nuvem(0.82f, 0.86f, 0.045f)
+        }
+        Fundo.CAMPO -> {
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF8ED1FF), Color(0xFFDFF3FF)), startY = tl.y, endY = tl.y + lado * 0.62f), tl, Size(lado, lado * 0.62f))
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF8BD96B), Color(0xFF3DBE6B)), startY = tl.y + lado * 0.62f, endY = tl.y + lado), Offset(tl.x, tl.y + lado * 0.62f), Size(lado, lado * 0.38f))
+            drawCircle(Color(0xFFFFD166), lado * 0.07f, Offset(tl.x + lado * 0.86f, tl.y + lado * 0.12f))
+            nuvem(0.2f, 0.12f, 0.045f)
+            // Florzinhas no gramado.
+            for (k in 0 until 6) {
+                val c = Offset(tl.x + lado * (0.08f + k * 0.17f), tl.y + lado * (0.9f - (k % 2) * 0.06f))
+                drawCircle(if (k % 2 == 0) Color(0xFFFF6FAE) else Color(0xFFFFD166), lado * 0.014f, c)
+            }
+        }
+        Fundo.MAR -> {
+            drawRect(Brush.verticalGradient(listOf(Color(0xFFBFE8FF), Color(0xFF8ED1FF)), startY = tl.y, endY = tl.y + lado * 0.45f), tl, Size(lado, lado * 0.45f))
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF4D96FF), Color(0xFF2E6FD8)), startY = tl.y + lado * 0.45f, endY = tl.y + lado), Offset(tl.x, tl.y + lado * 0.45f), Size(lado, lado * 0.55f))
+            val onda = Stroke(width = lado * 0.012f, cap = StrokeCap.Round)
+            for (linha in 0 until 3) {
+                val y = tl.y + lado * (0.58f + linha * 0.14f)
+                val p = Path().apply {
+                    moveTo(tl.x, y)
+                    var x = 0f
+                    while (x < 1f) {
+                        quadraticTo(tl.x + (x + 0.05f) * lado, y - lado * 0.03f, tl.x + (x + 0.1f) * lado, y)
+                        x += 0.1f
+                    }
+                }
+                drawPath(p, Color.White.copy(alpha = 0.55f), style = onda)
+            }
+            nuvem(0.75f, 0.12f, 0.045f)
+        }
+    }
+}
+
+/** O desenho de um carimbo com centro em [c] e diâmetro [d] (em pixels), na cor [cor]. Tudo vetorial, sem fonte. */
+fun DrawScope.desenharCarimbo(tipo: Int, c: Offset, d: Float, cor: Color) {
+    val r = d / 2f
+    val borda = Stroke(width = (d * 0.06f).coerceAtLeast(1f), join = StrokeJoin.Round)
+    val contorno = ContornoDoDesenho.copy(alpha = 0.55f)
+    when (tipo) {
+        0 -> { // estrelinha de 5 pontas
+            val p = Path()
+            for (i in 0 until 10) {
+                val ang = -Math.PI / 2 + i * Math.PI / 5
+                val raio = if (i % 2 == 0) r else r * 0.45f
+                val x = c.x + (raio * kotlin.math.cos(ang)).toFloat()
+                val y = c.y + (raio * kotlin.math.sin(ang)).toFloat()
+                if (i == 0) p.moveTo(x, y) else p.lineTo(x, y)
+            }
+            p.close()
+            drawPath(p, cor)
+            drawPath(p, contorno, style = borda)
+        }
+        1 -> { // coração
+            val p = Path().apply {
+                moveTo(c.x, c.y + r * 0.85f)
+                cubicTo(c.x - r * 1.25f, c.y + r * 0.05f, c.x - r * 0.75f, c.y - r * 1.0f, c.x, c.y - r * 0.4f)
+                cubicTo(c.x + r * 0.75f, c.y - r * 1.0f, c.x + r * 1.25f, c.y + r * 0.05f, c.x, c.y + r * 0.85f)
+                close()
+            }
+            drawPath(p, cor)
+            drawPath(p, contorno, style = borda)
+        }
+        2 -> { // flor: cinco pétalas e o miolo amarelo
+            for (i in 0 until 5) {
+                val ang = -Math.PI / 2 + i * 2 * Math.PI / 5
+                val pc = Offset(c.x + (r * 0.55f * kotlin.math.cos(ang)).toFloat(), c.y + (r * 0.55f * kotlin.math.sin(ang)).toFloat())
+                drawCircle(cor, r * 0.42f, pc)
+                drawCircle(contorno, r * 0.42f, pc, style = borda)
+            }
+            drawCircle(Color(0xFFFFD166), r * 0.32f, c)
+            drawCircle(contorno, r * 0.32f, c, style = borda)
+        }
+        3 -> { // pegadas: a almofada e quatro dedinhos
+            drawOval(cor, Offset(c.x - r * 0.45f, c.y - r * 0.05f), Size(r * 0.9f, r * 0.8f))
+            for ((dx, dy) in listOf(-0.62f to -0.3f, -0.22f to -0.68f, 0.22f to -0.68f, 0.62f to -0.3f)) {
+                drawCircle(cor, r * 0.2f, Offset(c.x + dx * r, c.y + dy * r))
+            }
+        }
+        4 -> { // lua crescente
+            val lua = Path().apply { addOval(Rect(c.x - r, c.y - r, c.x + r, c.y + r)) }
+            val corte = Path().apply { addOval(Rect(c.x - r * 0.35f, c.y - r * 1.05f, c.x + r * 1.35f, c.y + r * 0.65f)) }
+            val p = Path().apply { op(lua, corte, androidx.compose.ui.graphics.PathOperation.Difference) }
+            drawPath(p, cor)
+            drawPath(p, contorno, style = borda)
+        }
+        else -> { // borboleta: quatro asas e o corpinho
+            for ((dx, dy, s) in listOf(Triple(-0.48f, -0.32f, 0.5f), Triple(0.48f, -0.32f, 0.5f), Triple(-0.38f, 0.38f, 0.36f), Triple(0.38f, 0.38f, 0.36f))) {
+                val asa = Rect(c.x + dx * r - s * r, c.y + dy * r - s * r * 0.85f, c.x + dx * r + s * r, c.y + dy * r + s * r * 0.85f)
+                drawOval(cor, asa.topLeft, asa.size)
+                drawOval(contorno, asa.topLeft, asa.size, style = borda)
+            }
+            drawOval(ContornoDoDesenho, Offset(c.x - r * 0.1f, c.y - r * 0.7f), Size(r * 0.2f, r * 1.4f))
+        }
+    }
+}
+
+private fun DrawScope.desenharCarimbos(carimbos: List<Carimbo>, origem: Offset, lado: Float) {
+    for (k in carimbos) {
+        desenharCarimbo(k.tipo, Offset(origem.x + k.x * lado, origem.y + k.y * lado), k.tamanho * lado, corDaTinta(Tintas.todas[k.tinta]))
+    }
+}
+
 /**
  * Desenha a [obra] do [desenho] num quadrado de lado [lado] com o canto em [origem]: para cada região (de baixo para
  * cima) a tinta, o pincel preso a ela e o contorno. Com [soContorno] as regiões ficam todas brancas.
@@ -114,6 +237,7 @@ fun DrawScope.desenharObra(
     soContorno: Boolean = false,
     realce: Int = -1,
 ) {
+    if (!soContorno) desenharFundo(obra.fundo, origem, lado)
     desenho.regioes.forEachIndexed { i, regiao ->
         val caminho = caminhoDa(regiao.forma, origem, lado)
         val tinta = if (soContorno) 0 else obra.tintas.getOrElse(i) { 0 }
@@ -145,6 +269,8 @@ fun DrawScope.desenharObra(
         val estilo = Stroke(width = t.largura * lado, cap = StrokeCap.Round, join = StrokeJoin.Round)
         drawPath(caminhoDoTraco(t, origem, lado), corDaTinta(cor), style = estilo)
     }
+    // Os carimbos são o último enfeite, por cima de tudo.
+    if (!soContorno) desenharCarimbos(obra.carimbos, origem, lado)
 }
 
 /** O desenho num quadrado que ocupa o espaço do [modifier]. Miniaturas, prêmio e galeria. */

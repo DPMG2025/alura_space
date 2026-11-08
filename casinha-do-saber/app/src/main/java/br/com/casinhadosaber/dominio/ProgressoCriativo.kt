@@ -91,3 +91,6 @@ val EstadoJogo.selosDeCriacao: List<SeloDeCriacao>
         val marcos = Puzzle.marcos.map { SeloDeCriacao("puzzle:${it.total}", it.nome, "🏆", puzzlesFeitos.size >= it.total) }
         return colecoes + marcos
     }
+
+/** Carimbos que a criança pode usar agora. */
+val EstadoJogo.carimbosLiberados: List<TipoDeCarimbo> get() = Carimbos.liberados(desenhosTerminados)

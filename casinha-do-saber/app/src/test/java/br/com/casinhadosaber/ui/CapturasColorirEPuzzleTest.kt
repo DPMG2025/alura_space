@@ -21,14 +21,17 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import br.com.casinhadosaber.audio.Narrador
 import br.com.casinhadosaber.audio.Sons
+import br.com.casinhadosaber.dominio.Carimbos
 import br.com.casinhadosaber.dominio.Colorir
 import br.com.casinhadosaber.dominio.Desenhos
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Forma
+import br.com.casinhadosaber.dominio.Fundo
 import br.com.casinhadosaber.dominio.Genero
 import br.com.casinhadosaber.dominio.Perfil
 import br.com.casinhadosaber.dominio.Puzzle
@@ -133,6 +136,34 @@ class CapturasColorirEPuzzleTest {
         assertEquals(1, obra.tracos.size)
         assertTrue("o traço deveria estar preso a uma região", obra.tracos[0].regiao >= 0)
         foto("s10_colorir_pincel")
+    }
+
+    /** Carimbo e fundo: tocar no desenho põe o enfeite na cor escolhida e o fundo fica guardado com a obra. */
+    @Test fun colorirCarimboEFundo() {
+        var estado by mutableStateOf(EstadoJogo(perfil = menina))
+        montar { TelaColorir(estado, { f -> estado = f(estado) }, {}, {}, abrirDesenho = "gato") }
+        regra.mainClock.advanceTimeBy(1500)
+        regra.onNodeWithTag("colorir_fundo").performClick()
+        regra.mainClock.advanceTimeBy(300)
+        regra.onNodeWithTag("fundo_campo").performClick()
+        regra.mainClock.advanceTimeBy(300)
+        regra.onNodeWithTag("colorir_carimbo").performClick()
+        regra.mainClock.advanceTimeBy(300)
+        // A lua só abre com 10 desenhos: tocar nela não troca o carimbo.
+        regra.onNodeWithTag("carimbo_4").performScrollTo().performClick()
+        regra.onNodeWithTag("carimbo_1").performScrollTo().performClick()
+        regra.onNodeWithTag("carimbo_tamanho_2").performScrollTo().performClick()
+        regra.onNodeWithTag("tinta_9").performClick()
+        regra.mainClock.advanceTimeBy(300)
+        regra.onNodeWithTag("quadro_de_colorir").performTouchInput { click(Offset(width * 0.15f, height * 0.15f)) }
+        regra.mainClock.advanceTimeBy(300)
+        regra.onNodeWithTag("quadro_de_colorir").performTouchInput { click(Offset(width * 0.85f, height * 0.2f)) }
+        regra.mainClock.advanceTimeBy(600)
+        val obra = estado.obrasDeColorir.getValue("gato")
+        assertEquals(Fundo.CAMPO, obra.fundo)
+        assertEquals("dois carimbos de coração rosa", listOf(1 to 9, 1 to 9), obra.carimbos.map { it.tipo to it.tinta })
+        assertEquals(Carimbos.tamanhos[2], obra.carimbos[0].tamanho, 1e-6f)
+        foto("s10_colorir_carimbo_e_fundo")
     }
 
     /** Pintor do dia: a faixa aparece com o desenho de hoje e some sem informar o dia. */

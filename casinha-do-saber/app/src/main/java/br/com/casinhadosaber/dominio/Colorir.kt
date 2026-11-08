@@ -112,6 +112,39 @@ object Tintas {
     fun novaCom(terminados: Int): Tinta? = todas.drop(1).firstOrNull { it.liberadaCom == terminados && it.liberadaCom > 0 }
 }
 
+/** Um enfeite que se pode carimbar por cima do desenho. [liberadoCom] = desenhos terminados para abrir (0 = já vem). */
+data class TipoDeCarimbo(val id: Int, val nome: String, val emoji: String, val liberadoCom: Int)
+
+object Carimbos {
+    val todos: List<TipoDeCarimbo> = listOf(
+        TipoDeCarimbo(0, "estrelinha", "⭐", 0),
+        TipoDeCarimbo(1, "coração", "💖", 0),
+        TipoDeCarimbo(2, "flor", "🌸", 0),
+        TipoDeCarimbo(3, "pegadas", "🐾", 0),
+        TipoDeCarimbo(4, "lua", "🌙", 10),
+        TipoDeCarimbo(5, "borboleta", "🦋", 60),
+    )
+
+    /** Tamanhos do carimbo (fração do lado do desenho): pequeno, médio e grande. */
+    val tamanhos: List<Float> = listOf(0.07f, 0.11f, 0.16f)
+
+    fun liberados(terminados: Int): List<TipoDeCarimbo> = todos.filter { terminados >= it.liberadoCom }
+
+    /** Carimbo que passa a abrir exatamente com [terminados] desenhos (para avisar "ganhou um carimbo novo"). */
+    fun novoCom(terminados: Int): TipoDeCarimbo? = todos.firstOrNull { it.liberadoCom == terminados && it.liberadoCom > 0 }
+}
+
+/** Um carimbo posto na obra: tipo, centro (no quadrado 0..1), tamanho (fração do lado) e cor (tinta). */
+data class Carimbo(val tipo: Int, val x: Float, val y: Float, val tamanho: Float, val tinta: Int)
+
+/** Fundo atrás do desenho, como enfeite. NENHUM = papel branco. */
+enum class Fundo(val nome: String, val emoji: String) {
+    NENHUM("sem fundo", "⬜"),
+    CEU("céu", "☁️"),
+    CAMPO("campo", "🌻"),
+    MAR("mar", "🌊"),
+}
+
 /** Um traço de pincel. [regiao] = onde o dedo começou (-1 = pincel livre, sem prender). Pontos no quadrado 0..1. */
 data class Traco(val regiao: Int, val tinta: Int, val largura: Float, val pontos: List<PontoDoDesenho>)
 
@@ -119,11 +152,17 @@ data class Traco(val regiao: Int, val tinta: Int, val largura: Float, val pontos
  * O que a criança fez num desenho: a tinta de cada região (balde) e os traços de pincel. Imutável: cada toque
  * devolve uma obra nova, o que dá desfazer e refazer de graça.
  */
-data class Obra(val desenhoId: String, val tintas: List<Int>, val tracos: List<Traco> = emptyList()) {
+data class Obra(
+    val desenhoId: String,
+    val tintas: List<Int>,
+    val tracos: List<Traco> = emptyList(),
+    val carimbos: List<Carimbo> = emptyList(),
+    val fundo: Fundo = Fundo.NENHUM,
+) {
     /** Regiões já pintadas com o balde ou cobertas de pincel. */
     fun pintadas(): Int = tintas.indices.count { tintas[it] != 0 }
 
-    fun vazia(): Boolean = tintas.all { it == 0 } && tracos.isEmpty()
+    fun vazia(): Boolean = tintas.all { it == 0 } && tracos.isEmpty() && carimbos.isEmpty() && fundo == Fundo.NENHUM
 
     /** Cores diferentes usadas (balde e pincel). */
     fun coresUsadas(): Set<Int> = (tintas.filter { it != 0 } + tracos.map { it.tinta }).toSet()
@@ -133,6 +172,7 @@ object Colorir {
     const val LARGURAS_DO_PINCEL = 3
     const val MAXIMO_DE_TRACOS = 80
     const val MAXIMO_DE_PONTOS = 48
+    const val MAXIMO_DE_CARIMBOS = 40
 
     fun obraVazia(d: DesenhoDeColorir) = Obra(d.id, List(d.regioes.size) { 0 })
 
@@ -148,8 +188,35 @@ object Colorir {
         return o.copy(tintas = o.tintas.toMutableList().also { it[r] = tinta }, tracos = o.tracos.filter { it.regiao != r })
     }
 
-    /** Borracha: limpa a região tocada (tinta e pincel). */
+    /**
+     * Carimbo: põe o enfeite com o centro no toque. Tipo ou tinta inexistentes não mudam nada. Guarda no máximo
+     * [MAXIMO_DE_CARIMBOS] (os mais antigos saem primeiro).
+     */
+    fun carimbar(o: Obra, tipo: Int, x: Float, y: Float, tamanho: Float, tinta: Int): Obra {
+        if (tipo !in Carimbos.todos.indices || tinta !in 1 until Tintas.todas.size) return o
+        val c = Carimbo(tipo, x.coerceIn(0f, 1f), y.coerceIn(0f, 1f), tamanho.coerceIn(0.03f, 0.3f), tinta)
+        return o.copy(carimbos = (o.carimbos + c).takeLast(MAXIMO_DE_CARIMBOS))
+    }
+
+    /** Troca o fundo atrás do desenho. */
+    fun fundo(o: Obra, f: Fundo): Obra = if (o.fundo == f) o else o.copy(fundo = f)
+
+    /** O carimbo de cima que o toque pega (dentro do raio dele), ou -1. */
+    fun carimboEm(o: Obra, x: Float, y: Float): Int {
+        for (i in o.carimbos.indices.reversed()) {
+            val c = o.carimbos[i]
+            val dx = x - c.x
+            val dy = y - c.y
+            val r = c.tamanho / 2f
+            if (dx * dx + dy * dy <= r * r) return i
+        }
+        return -1
+    }
+
+    /** Borracha: tira o carimbo tocado (se houver um por cima) ou limpa a região tocada (tinta e pincel). */
     fun borracha(d: DesenhoDeColorir, o: Obra, x: Float, y: Float): Obra {
+        val c = carimboEm(o, x, y)
+        if (c >= 0) return o.copy(carimbos = o.carimbos.filterIndexed { i, _ -> i != c })
         val r = d.regiaoEm(x, y)
         if (r < 0) return o
         if (o.tintas[r] == 0 && o.tracos.none { it.regiao == r }) return o
@@ -215,6 +282,8 @@ object Colorir {
         val tintaNova: Tinta?,
         /** Já inclui [MOEDAS_DO_PINTOR_DO_DIA] em [moedas] quando é true. */
         val pintorDoDia: Boolean = false,
+        /** Carimbo que abriu com este desenho (marcos de 10 e 60 desenhos). */
+        val carimboNovo: TipoDeCarimbo? = null,
     )
 
     /**
@@ -238,7 +307,8 @@ object Colorir {
         val daColecao = todos.filter { it.colecao == d.colecao }.map { it.id }
         val completa = primeira && daColecao.all { it in depois }
         val tintaNova = if (primeira) Tintas.novaCom(terminadosDepois).takeIf { terminadosDepois > terminadosAntes } else null
-        return Premio(moedas + if (completa) 20 else 0, e, primeira, completa, tintaNova)
+        val carimboNovo = if (primeira) Carimbos.novoCom(terminadosDepois).takeIf { terminadosDepois > terminadosAntes } else null
+        return Premio(moedas + if (completa) 20 else 0, e, primeira, completa, tintaNova, carimboNovo = carimboNovo)
     }
 
     // ----------------------------------------------------------------------------------------------
@@ -253,7 +323,10 @@ object Colorir {
             val pts = t.pontos.joinToString(";") { p -> "${centesimos(p.x)},${centesimos(p.y)}" }
             "${t.regiao}:${t.tinta}:${centesimos(t.largura)}:$pts"
         }
-        "${o.desenhoId}#$cores#$tracos"
+        val carimbos = o.carimbos.joinToString("|") { c -> "${c.tipo}:${centesimos(c.x)}:${centesimos(c.y)}:${centesimos(c.tamanho)}:${c.tinta}" }
+        // Obra sem enfeites fica no formato antigo (três partes), que as versões anteriores também leem.
+        if (o.fundo == Fundo.NENHUM && o.carimbos.isEmpty()) "${o.desenhoId}#$cores#$tracos"
+        else "${o.desenhoId}#$cores#$tracos#${o.fundo.ordinal}#$carimbos"
     }
 
     private fun centesimos(v: Float): Int = kotlin.math.round(v.coerceIn(0f, 1f) * 1000f).toInt()
@@ -269,9 +342,20 @@ object Colorir {
             val tintas = partes[1].map { DIGITOS.indexOf(it) }
             if (tintas.size != d.regioes.size || tintas.any { it !in 0 until Tintas.todas.size }) continue
             val tracos = partes.getOrNull(2).orEmpty().split("|").mapNotNull { lerTraco(it, d) }.take(MAXIMO_DE_TRACOS)
-            saida[d.id] = Obra(d.id, tintas, tracos)
+            val fundo = partes.getOrNull(3)?.toIntOrNull()?.let { Fundo.entries.getOrNull(it) } ?: Fundo.NENHUM
+            val carimbos = partes.getOrNull(4).orEmpty().split("|").mapNotNull { lerCarimbo(it) }.take(MAXIMO_DE_CARIMBOS)
+            saida[d.id] = Obra(d.id, tintas, tracos, carimbos, fundo)
         }
         return saida
+    }
+
+    private fun lerCarimbo(s: String): Carimbo? {
+        val p = s.split(":")
+        if (p.size != 5) return null
+        val n = p.map { it.toIntOrNull() ?: return null }
+        if (n[0] !in Carimbos.todos.indices || n[4] !in 1 until Tintas.todas.size) return null
+        if (n[1] !in 0..1000 || n[2] !in 0..1000 || n[3] !in 30..300) return null
+        return Carimbo(n[0], n[1] / 1000f, n[2] / 1000f, n[3] / 1000f, n[4])
     }
 
     private fun lerTraco(s: String, d: DesenhoDeColorir): Traco? {

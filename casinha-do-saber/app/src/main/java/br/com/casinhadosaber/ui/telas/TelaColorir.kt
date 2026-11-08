@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,14 +52,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.casinhadosaber.dominio.Carimbos
 import br.com.casinhadosaber.dominio.Colorir
 import br.com.casinhadosaber.dominio.DesenhoDeColorir
 import br.com.casinhadosaber.dominio.Desenhos
 import br.com.casinhadosaber.dominio.EstadoJogo
+import br.com.casinhadosaber.dominio.Fundo
 import br.com.casinhadosaber.dominio.Historico
 import br.com.casinhadosaber.dominio.Obra
 import br.com.casinhadosaber.dominio.PontoDoDesenho
 import br.com.casinhadosaber.dominio.Tintas
+import br.com.casinhadosaber.dominio.carimbosLiberados
 import br.com.casinhadosaber.dominio.desenhosTerminados
 import br.com.casinhadosaber.dominio.guardarObra
 import br.com.casinhadosaber.dominio.obraDe
@@ -74,6 +78,7 @@ import br.com.casinhadosaber.ui.componentes.DesenhoNoCanvas
 import br.com.casinhadosaber.ui.componentes.cartaoFofo
 import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
 import br.com.casinhadosaber.ui.componentes.corDaTinta
+import br.com.casinhadosaber.ui.componentes.desenharCarimbo
 import br.com.casinhadosaber.ui.componentes.desenharObra
 import br.com.casinhadosaber.ui.tema.Cores
 import br.com.casinhadosaber.ui.tema.Raios
@@ -84,6 +89,8 @@ enum class FerramentaDeCor(val emoji: String, val nome: String) {
     BALDE("🪣", "Balde mágico"),
     PINCEL("🖌️", "Pincel"),
     BORRACHA("🧽", "Borracha"),
+    CARIMBO("💮", "Carimbo"),
+    FUNDO("🏞️", "Fundo"),
 }
 
 /** Cores do modo fácil: seis cores fortes e bem diferentes entre si. */
@@ -257,6 +264,8 @@ private fun PintarDesenho(
     var ferramenta by remember { mutableStateOf(FerramentaDeCor.BALDE) }
     var grossura by remember { mutableIntStateOf(1) }
     var dentroDaLinha by remember { mutableStateOf(true) }
+    var carimbo by remember { mutableIntStateOf(0) }
+    var tamanhoDoCarimbo by remember { mutableIntStateOf(1) }
     /** Modo fácil (2 a 3 anos): só o balde e seis cores grandes. */
     var modoFacil by remember { mutableStateOf(false) }
     var realce by remember(d.id) { mutableIntStateOf(-1) }
@@ -381,6 +390,13 @@ private fun PintarDesenho(
                                             previa = null
                                             aplicar(acabado)
                                         }
+                                        FerramentaDeCor.CARIMBO -> {
+                                            val p = ponto(down.position)
+                                            val nova = Colorir.carimbar(base, carimbo, p.x, p.y, Carimbos.tamanhos[tamanhoDoCarimbo], tinta)
+                                            if (nova != base) sons.colocar()
+                                            aplicar(nova)
+                                        }
+                                        FerramentaDeCor.FUNDO -> narrador.falar("Escolha um fundo aqui embaixo!")
                                     }
                                 }
                             },
@@ -389,105 +405,159 @@ private fun PintarDesenho(
                     }
                 }
 
-                // Ferramentas
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    for (f in FerramentaDeCor.entries.filter { !modoFacil || it == FerramentaDeCor.BALDE }) {
-                        BotaoFofo(
-                            onClick = {
-                                sons.toque()
-                                ferramenta = f
-                                narrador.falar(
-                                    when (f) {
-                                        FerramentaDeCor.BALDE -> "Balde mágico! Toque num pedaço do desenho."
-                                        FerramentaDeCor.PINCEL -> "Pincel! Arraste o dedo."
-                                        FerramentaDeCor.BORRACHA -> "Borracha! Apaga a tinta do pedaço."
-                                    },
-                                )
-                            },
-                            cor = if (ferramenta == f) Cores.Estrela else Color.White,
-                            corBase = Color(0x33000000),
-                            descricao = f.nome + if (ferramenta == f) ", escolhido" else "",
-                            modifier = Modifier.testTag("colorir_${f.name.lowercase()}"),
-                            profundidade = 4.dp,
-                        ) {
-                            Box(Modifier.size(width = 56.dp, height = 48.dp), contentAlignment = Alignment.Center) { Text(f.emoji, fontSize = 26.sp) }
-                        }
-                    }
-                    if (ferramenta == FerramentaDeCor.PINCEL) {
-                        for (g in GrossurasDoPincel.indices) {
-                            Box(
-                                Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(if (grossura == g) Cores.Estrela else Color.White)
-                                    .border(2.dp, Color(0x33000000), CircleShape)
-                                    .clickable { sons.toque(); grossura = g }
-                                    .semantics { contentDescription = "Pincel ${listOf("fino", "médio", "grosso")[g]}" }
-                                    .testTag("colorir_grossura_$g"),
-                                contentAlignment = Alignment.Center,
+                // Ferramentas (rolam de lado quando a tela é estreita)
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Row(
+                        Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        for (f in FerramentaDeCor.entries.filter { !modoFacil || it == FerramentaDeCor.BALDE }) {
+                            BotaoFofo(
+                                onClick = {
+                                    sons.toque()
+                                    ferramenta = f
+                                    narrador.falar(
+                                        when (f) {
+                                            FerramentaDeCor.BALDE -> "Balde mágico! Toque num pedaço do desenho."
+                                            FerramentaDeCor.PINCEL -> "Pincel! Arraste o dedo."
+                                            FerramentaDeCor.BORRACHA -> "Borracha! Apaga a tinta do pedaço ou um carimbo."
+                                            FerramentaDeCor.CARIMBO -> "Carimbo! Escolha um enfeite e toque no desenho."
+                                            FerramentaDeCor.FUNDO -> "Fundo! Escolha o céu, o campo ou o mar."
+                                        },
+                                    )
+                                },
+                                cor = if (ferramenta == f) Cores.Estrela else Color.White,
+                                corBase = Color(0x33000000),
+                                descricao = f.nome + if (ferramenta == f) ", escolhido" else "",
+                                modifier = Modifier.testTag("colorir_${f.name.lowercase()}"),
+                                profundidade = 4.dp,
                             ) {
-                                Box(Modifier.size((8 + g * 8).dp).clip(CircleShape).background(Cores.Texto))
+                                Box(Modifier.size(width = 56.dp, height = 48.dp), contentAlignment = Alignment.Center) { Text(f.emoji, fontSize = 26.sp) }
                             }
                         }
-                        BotaoFofo(
-                            onClick = {
-                                sons.toque()
-                                dentroDaLinha = !dentroDaLinha
-                                narrador.falar(if (dentroDaLinha) "Dentro da linha! A tinta não passa do contorno." else "Pincel livre! Pinte por cima de tudo.")
-                            },
-                            cor = if (dentroDaLinha) Cores.Certo else Color.White,
-                            corBase = Color(0x33000000),
-                            descricao = if (dentroDaLinha) "Dentro da linha, ligado" else "Dentro da linha, desligado",
-                            modifier = Modifier.testTag("colorir_dentro_da_linha"),
-                            profundidade = 4.dp,
+                    }
+                }
+
+                // Opções da ferramenta escolhida: grossura do pincel, enfeites do carimbo ou o fundo.
+                if (ferramenta == FerramentaDeCor.PINCEL || ferramenta == FerramentaDeCor.CARIMBO || ferramenta == FerramentaDeCor.FUNDO) {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Row(
+                            Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp).padding(bottom = 6.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Box(Modifier.size(width = 48.dp, height = 40.dp), contentAlignment = Alignment.Center) {
-                                Text(if (dentroDaLinha) "🔒" else "🔓", fontSize = 22.sp)
+                            if (ferramenta == FerramentaDeCor.PINCEL) {
+                                for (g in GrossurasDoPincel.indices) {
+                                    Box(
+                                        Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(if (grossura == g) Cores.Estrela else Color.White)
+                                            .border(2.dp, Color(0x33000000), CircleShape)
+                                            .clickable { sons.toque(); grossura = g }
+                                            .semantics { contentDescription = "Pincel ${listOf("fino", "médio", "grosso")[g]}" }
+                                            .testTag("colorir_grossura_$g"),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Box(Modifier.size((8 + g * 8).dp).clip(CircleShape).background(Cores.Texto))
+                                    }
+                                }
+                                BotaoFofo(
+                                    onClick = {
+                                        sons.toque()
+                                        dentroDaLinha = !dentroDaLinha
+                                        narrador.falar(if (dentroDaLinha) "Dentro da linha! A tinta não passa do contorno." else "Pincel livre! Pinte por cima de tudo.")
+                                    },
+                                    cor = if (dentroDaLinha) Cores.Certo else Color.White,
+                                    corBase = Color(0x33000000),
+                                    descricao = if (dentroDaLinha) "Dentro da linha, ligado" else "Dentro da linha, desligado",
+                                    modifier = Modifier.testTag("colorir_dentro_da_linha"),
+                                    profundidade = 4.dp,
+                                ) {
+                                    Box(Modifier.size(width = 48.dp, height = 40.dp), contentAlignment = Alignment.Center) {
+                                        Text(if (dentroDaLinha) "🔒" else "🔓", fontSize = 22.sp)
+                                    }
+                                }
+                            }
+                            if (ferramenta == FerramentaDeCor.CARIMBO) {
+                                val abertos = estado.carimbosLiberados.map { it.id }.toSet()
+                                for (c in Carimbos.todos) {
+                                    val aberto = c.id in abertos
+                                    Box(
+                                        Modifier
+                                            .size(44.dp)
+                                            .clip(CircleShape)
+                                            .background(if (carimbo == c.id) Cores.Estrela else if (aberto) Color.White else Color(0xFFDDDDE6))
+                                            .border(2.dp, Color(0x33000000), CircleShape)
+                                            .clickable {
+                                                if (aberto) {
+                                                    sons.toque()
+                                                    carimbo = c.id
+                                                    narrador.falar(c.nome.replaceFirstChar { it.uppercase() })
+                                                } else {
+                                                    sons.erro()
+                                                    val faltam = c.liberadoCom - terminados
+                                                    narrador.falar(
+                                                        if (faltam == 1) "Este carimbo abre quando você terminar mais um desenho!"
+                                                        else "Este carimbo abre quando você terminar mais $faltam desenhos!",
+                                                    )
+                                                }
+                                            }
+                                            .semantics {
+                                                contentDescription = "Carimbo ${c.nome}" + when {
+                                                    !aberto -> ", ainda fechado. Termine mais ${c.liberadoCom - terminados} desenhos"
+                                                    carimbo == c.id -> ", escolhido"
+                                                    else -> ""
+                                                }
+                                            }
+                                            .testTag("carimbo_${c.id}"),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        if (aberto) {
+                                            val cor = corDaTinta(Tintas.todas[tinta])
+                                            Canvas(Modifier.size(30.dp)) { desenharCarimbo(c.id, center, size.minDimension, cor) }
+                                        } else {
+                                            Text("🔒", fontSize = 16.sp)
+                                        }
+                                    }
+                                }
+                                for (g in Carimbos.tamanhos.indices) {
+                                    Box(
+                                        Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(if (tamanhoDoCarimbo == g) Cores.Estrela else Color.White)
+                                            .border(2.dp, Color(0x33000000), CircleShape)
+                                            .clickable { sons.toque(); tamanhoDoCarimbo = g }
+                                            .semantics { contentDescription = "Carimbo ${listOf("pequeno", "médio", "grande")[g]}" }
+                                            .testTag("carimbo_tamanho_$g"),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Box(Modifier.size((10 + g * 8).dp).clip(CircleShape).background(Cores.Texto))
+                                    }
+                                }
+                            }
+                            if (ferramenta == FerramentaDeCor.FUNDO) {
+                                for (f in Fundo.entries) {
+                                    val escolhido = hist.atual.fundo == f
+                                    BotaoFofo(
+                                        onClick = {
+                                            sons.toque()
+                                            aplicar(Colorir.fundo(hist.atual, f))
+                                            narrador.falar(if (f == Fundo.NENHUM) "Sem fundo!" else f.nome.replaceFirstChar { it.uppercase() } + "!")
+                                        },
+                                        cor = if (escolhido) Cores.Estrela else Color.White,
+                                        corBase = Color(0x33000000),
+                                        descricao = "Fundo ${f.nome}" + if (escolhido) ", escolhido" else "",
+                                        modifier = Modifier.testTag("fundo_${f.name.lowercase()}"),
+                                        profundidade = 4.dp,
+                                    ) {
+                                        Box(Modifier.size(width = 52.dp, height = 44.dp), contentAlignment = Alignment.Center) { Text(f.emoji, fontSize = 24.sp) }
+                                    }
+                                }
                             }
                         }
-                    }
-                    BotaoFofo(
-                        onClick = {
-                            sons.toque()
-                            modoFacil = !modoFacil
-                            if (modoFacil) {
-                                ferramenta = FerramentaDeCor.BALDE
-                                if (tinta !in CORES_DO_MODO_FACIL) tinta = CORES_DO_MODO_FACIL.first()
-                            }
-                            narrador.falar(if (modoFacil) "Modo fácil! Só o balde e poucas cores." else "Todas as ferramentas!")
-                        },
-                        cor = if (modoFacil) Cores.Certo else Color.White,
-                        corBase = Color(0x33000000),
-                        descricao = if (modoFacil) "Modo fácil, ligado" else "Modo fácil, desligado",
-                        modifier = Modifier.testTag("colorir_facil"),
-                        profundidade = 4.dp,
-                    ) {
-                        Box(Modifier.size(width = 64.dp, height = 40.dp), contentAlignment = Alignment.Center) {
-                            Text("Fácil", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = if (modoFacil) Color.White else Cores.Texto)
-                        }
-                    }
-                    BotaoFofo(
-                        onClick = {
-                            sons.toque()
-                            val r = Colorir.proximaRegiao(hist.atual)
-                            if (r >= 0) {
-                                realce = r
-                                narrador.falar("Que tal pintar este pedacinho?")
-                            } else {
-                                narrador.falar("Tudo pintado! Toque em Pronto.")
-                            }
-                        },
-                        cor = Color.White,
-                        corBase = Color(0x33000000),
-                        descricao = "Dica: mostra o próximo pedaço para pintar",
-                        modifier = Modifier.testTag("colorir_dica"),
-                        profundidade = 4.dp,
-                    ) {
-                        Box(Modifier.size(width = 48.dp, height = 40.dp), contentAlignment = Alignment.Center) { Text("💡", fontSize = 22.sp) }
                     }
                 }
 
@@ -549,6 +619,45 @@ private fun PintarDesenho(
                         modifier = Modifier.testTag("colorir_recomecar"),
                         profundidade = 4.dp,
                     ) { Box(Modifier.size(width = 56.dp, height = 48.dp), contentAlignment = Alignment.Center) { Text("🧹", fontSize = 26.sp) } }
+                    BotaoFofo(
+                        onClick = {
+                            sons.toque()
+                            modoFacil = !modoFacil
+                            if (modoFacil) {
+                                ferramenta = FerramentaDeCor.BALDE
+                                if (tinta !in CORES_DO_MODO_FACIL) tinta = CORES_DO_MODO_FACIL.first()
+                            }
+                            narrador.falar(if (modoFacil) "Modo fácil! Só o balde e poucas cores." else "Todas as ferramentas!")
+                        },
+                        cor = if (modoFacil) Cores.Certo else Color.White,
+                        corBase = Color(0x33000000),
+                        descricao = if (modoFacil) "Modo fácil, ligado" else "Modo fácil, desligado",
+                        modifier = Modifier.testTag("colorir_facil"),
+                        profundidade = 4.dp,
+                    ) {
+                        Box(Modifier.size(width = 64.dp, height = 40.dp), contentAlignment = Alignment.Center) {
+                            Text("Fácil", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = if (modoFacil) Color.White else Cores.Texto)
+                        }
+                    }
+                    BotaoFofo(
+                        onClick = {
+                            sons.toque()
+                            val r = Colorir.proximaRegiao(hist.atual)
+                            if (r >= 0) {
+                                realce = r
+                                narrador.falar("Que tal pintar este pedacinho?")
+                            } else {
+                                narrador.falar("Tudo pintado! Toque em Pronto.")
+                            }
+                        },
+                        cor = Color.White,
+                        corBase = Color(0x33000000),
+                        descricao = "Dica: mostra o próximo pedaço para pintar",
+                        modifier = Modifier.testTag("colorir_dica"),
+                        profundidade = 4.dp,
+                    ) {
+                        Box(Modifier.size(width = 48.dp, height = 40.dp), contentAlignment = Alignment.Center) { Text("💡", fontSize = 22.sp) }
+                    }
                     BotaoFofo(
                         onClick = {
                             val atual = hist.atual
@@ -624,6 +733,10 @@ private fun PremioDoColorir(
             val nova = premio.tintaNova
             if (nova != null) {
                 Text("Cor nova: ${nova.nome}!", style = MaterialTheme.typography.titleMedium, color = Cores.Texto, fontWeight = FontWeight.Bold)
+            }
+            val carimboNovo = premio.carimboNovo
+            if (carimboNovo != null) {
+                Text("Carimbo novo: ${carimboNovo.nome}!", style = MaterialTheme.typography.titleMedium, color = Cores.Texto, fontWeight = FontWeight.Bold)
             }
             if (premio.colecaoCompleta) {
                 Text("Você terminou a coleção inteira! 🏆", style = MaterialTheme.typography.titleMedium, color = Cores.Texto, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
