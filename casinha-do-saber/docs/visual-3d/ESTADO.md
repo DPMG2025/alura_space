@@ -19,8 +19,8 @@ Situação final em 2026-11-07 (entrega pedida pelo dono do produto, sem terceir
 | 7. Guarda roupa | feito | 6 | build verde |
 | 8. Demais telas | feito | 6 | build verde |
 | 9. Acabamento | feito (duas rodadas de arte e Kotlin) | 6; geral do app 7 | build verde; terceira rodada NÃO feita |
-| 10. Livro de Colorir | feito em 2026-11-07 (domínio com 18 testes na JVM, telas, 24 desenhos); falta o CI provar as telas | a fazer | ver "Execução das fases 10 e 11" |
-| 11. Quebra cabeças | feito em 2026-11-07 (domínio com 17 testes na JVM, telas de montar e deslizar); falta o CI provar as telas | a fazer | ver "Execução das fases 10 e 11" |
+| 10. Livro de Colorir | feito em 2026-11-07 e 08 (domínio com 18 testes na JVM, telas, 24 desenhos; testes de tela e gesto verdes no CI 150) | a fazer | ver "Execução das fases 10 e 11" |
+| 11. Quebra cabeças | feito em 2026-11-07 e 08 (domínio com 18 testes na JVM, montar com arrastar e com toque, deslizar; testes verdes no CI 150) | a fazer | ver "Execução das fases 10 e 11" |
 
 ## O que ficou de fora (dono decidiu entregar assim)
 * Terceira rodada de acabamento: 30 figuras de emoji (🏊 😴 🧚 👧 🦸 ⛱ 🐞 🎾 📖), casinha de cachorro 3D, composição das áreas novas (adesivos em pares), nós da trilha todos iguais, números soltos em 33 e no v3d_15 (Álbum 14, Diplomas 1), refinamentos de layout. Lista completa em relatorios/revisao-fase9-rodada2.md.
@@ -91,10 +91,19 @@ Decisão de desenho: a arte dos desenhos é **vetorial em código** (regiões co
 Feito e testado aqui (251 testes do pacote `dominio` na JVM, compilador Kotlin 2.0.21 isolado; 41 deles novos):
 * `dominio/Colorir.kt`, `DesenhosDeColorir.kt` (24 desenhos em 6 coleções de 4), `Puzzle.kt` (8 níveis de 4 a 36 peças, montar com ímã, deslizar com solução garantida, nível adaptativo, prêmios e marcos), `ProgressoCriativo.kt` (liga ao `EstadoJogo`: moedinhas, estrelas, obra guardada, peças douradas). Estado salvo em chaves novas do `Repositorio` e da `Copia` (saves antigos ficam com o padrão).
 * Telas `TelaColorir` e `TelaPuzzle`, componente `DesenhoNoCanvas`, botões "Colorir" e "Peças" no cantinho criativo da casa por dentro, rotas `Tela.Colorir` e `Tela.Puzzle`. Prêmio do Colorir leva ao quebra cabeça da própria pintura.
-* Testes de captura e gesto em `CapturasColorirEPuzzleTest` (balde, pincel, pronto paga, arrastar peça encaixa), a provar no CI.
+* Testes de captura e gesto em `CapturasColorirEPuzzleTest` (ver abaixo o que o CI provou).
 * Nomes que colidiam com código existente (`QuebraCabeca` da atividade das fases, `Ponto` da escrita, `Desenho` dos itens da casa) foram evitados: `Puzzle`, `PontoDoDesenho`, `DesenhoDeColorir`.
 
-NÃO provado: as telas de Compose nunca foram compiladas aqui (sem Android SDK; o Google Maven está bloqueado). Quem prova é o CI.
+Provado pelo CI na execução 150 (commit 46088dd): as telas compilam; os 640 testes de unidade e capturas passam, incluindo os 9 novos de colorir e quebra cabeça (balde, pincel preso à região, Pronto paga o prêmio, Pronto sem pintar não paga, menu, montar, deslizar, tocar na peça e na casa encaixa, tocar na casa errada não encaixa, arrastar encaixa); Lint, APK, guarda de 150 MB e permissões passam; tablet passa. Android 7 e 8: FALHARAM por culpa minha, o teste de fontes embutidas achou o símbolo ☆ (estrela vazia) que a fonte do app não tem, usado em `estrelasEmTexto`; trocado por `EstrelasDoDesenho`, que desenha ⭐ com transparência (o desempenho no Android 8 ficou bom: abertura 3,4 s, pico 135 MB). Fica a provar, na execução seguinte, a remoção da sonda de diagnóstico e essa troca.
+
+Lições desta rodada (valem para qualquer tela nova):
+* Nome de classe, ponto e desenho colidiam com código existente (`QuebraCabeca`, `Ponto`, `Desenho`); conferir antes de criar tipos no pacote `dominio`.
+* Nunca usar símbolo fora da fonte embutida (☆ falhou; ⭐ 🪙 🔒 🧩 e os outros usados passam). O teste `EmojisNaFonteEmbutidaTest` varre o código.
+* Overlay de prêmio: `clickable(enabled = false)` funde a árvore de acessibilidade (o teste e o leitor de tela não achavam o conteúdo). Usar `pointerInput(Unit) { detectTapGestures { } }`.
+* Peças de arrastar: ler a posição na fase de layout (`offset { }`), e tratar o cancelamento do gesto como soltar (`onDragCancel` também larga a peça). Dar sempre o caminho alternativo de tocar (a peça escolhida vai para a casa tocada), que também serve a quem não arrasta.
+* Bandeja com uma casa por peça (sem sobreposição): o tabuleiro fica menor, mas todas as peças aparecem e podem ser pegas.
+* Em teste de Compose com `mainClock.autoAdvance = false`, estado mudado dentro de um gesto não recompõe sozinho: chamar `Snapshot.sendApplyNotifications()` antes de avançar o relógio. No aparelho o Choreographer faz isso.
+* O CI agora imprime o resumo dos testes que falharam (passo "Resumo dos testes que falharam"); usar isso em vez de ler o log inteiro. Para diagnosticar teste de UI, uma sonda em semântica (`stateDescription`) impressa na mensagem do `assertEquals` resolveu em duas execuções o que a leitura do código não resolveu em quatro.
 
 Ficou de fora do plano (a fazer):
 * Fase 10: 36 dos 60 desenhos; carimbos e fundos; modo mágico de 2 a 3 anos; galeria das obras na parede; figurinha e diploma da coleção; "pintor do dia"; salvar a obra como imagem; item da casa pelo marco. Cores especiais: 8 (dourado, prata, cobre, arco íris e 4 brilhos), com marcos em 1, 2, 3, 5, 8, 12, 18 e 25 desenhos.

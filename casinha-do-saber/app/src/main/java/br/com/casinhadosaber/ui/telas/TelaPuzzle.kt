@@ -593,7 +593,7 @@ private fun PremioDoPuzzle(
         ) {
             Text("Você montou!", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, color = Cores.Texto)
             DesenhoNoCanvas(d, obra, Modifier.fillMaxWidth(0.6f).aspectRatio(1f))
-            Text(estrelasEmTexto(estrelas), fontSize = 30.sp, modifier = Modifier.semantics { contentDescription = "$estrelas estrelas" })
+            EstrelasDoDesenho(estrelas, 30.sp)
             if (premio.moedas > 0) Text("+${premio.moedas} moedinhas 🪙", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Cores.Texto)
             if (premio.pecaDourada > 0) {
                 Text(

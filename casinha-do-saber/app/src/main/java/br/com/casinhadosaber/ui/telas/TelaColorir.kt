@@ -39,6 +39,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -88,8 +89,16 @@ enum class FerramentaDeCor(val emoji: String, val nome: String) {
 /** Grossuras do pincel (fração do lado do desenho): fino, médio e grosso. */
 private val GrossurasDoPincel = listOf(0.018f, 0.04f, 0.07f)
 
-/** Estrelas em texto: cheias e vazias, sem depender de arte. */
-internal fun estrelasEmTexto(n: Int, de: Int = 3): String = "⭐".repeat(n.coerceIn(0, de)) + "☆".repeat((de - n).coerceIn(0, de))
+/** Três estrelas: as conquistadas acesas e as outras apagadas (só o símbolo ⭐, que a fonte embutida tem). */
+@Composable
+internal fun EstrelasDoDesenho(n: Int, tamanho: androidx.compose.ui.unit.TextUnit = 14.sp, modifier: Modifier = Modifier) {
+    Row(
+        modifier.semantics(mergeDescendants = true) { contentDescription = "$n de 3 estrelas" },
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        for (i in 0 until 3) Text("⭐", fontSize = tamanho, modifier = Modifier.alpha(if (i < n) 1f else 0.22f))
+    }
+}
 
 /**
  * Livro de Colorir: a criança escolhe um desenho e pinta com o balde (toca numa região e ela enche, sem passar da
@@ -181,7 +190,7 @@ private fun EscolherDesenho(estado: EstadoJogo, onAbrir: (DesenhoDeColorir) -> U
                                 ) {
                                     DesenhoNoCanvas(d, obra, Modifier.fillMaxWidth().aspectRatio(1f), soContorno = obra.vazia())
                                     Text("${d.emoji} ${d.titulo}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Cores.Texto, textAlign = TextAlign.Center)
-                                    Text(estrelasEmTexto(estrelas), fontSize = 14.sp)
+                                    EstrelasDoDesenho(estrelas)
                                 }
                             }
                             if (linha.size == 1) Spacer(Modifier.weight(1f))
@@ -545,7 +554,7 @@ private fun PremioDoColorir(
         ) {
             Text("Que lindo!", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, color = Cores.Texto)
             DesenhoNoCanvas(d, obra, Modifier.fillMaxWidth(0.7f).aspectRatio(1f))
-            Text(estrelasEmTexto(premio.estrelas), fontSize = 30.sp, modifier = Modifier.semantics { contentDescription = "${premio.estrelas} estrelas" })
+            EstrelasDoDesenho(premio.estrelas, 30.sp)
             if (premio.moedas > 0) {
                 Text("+${premio.moedas} moedinhas 🪙", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Cores.Texto)
             }
