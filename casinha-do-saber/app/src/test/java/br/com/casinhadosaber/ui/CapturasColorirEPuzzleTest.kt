@@ -21,7 +21,6 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import br.com.casinhadosaber.audio.Narrador
@@ -154,9 +153,9 @@ class CapturasColorirEPuzzleTest {
         regra.onNodeWithTag("colorir_carimbo").performClick()
         regra.mainClock.advanceTimeBy(300)
         // A lua só abre com 10 desenhos: tocar nela não troca o carimbo.
-        regra.onNodeWithTag("carimbo_4").performScrollTo().performClick()
-        regra.onNodeWithTag("carimbo_1").performScrollTo().performClick()
-        regra.onNodeWithTag("carimbo_tamanho_2").performScrollTo().performClick()
+        // Sem performScrollTo: com o relógio parado ele trava (ver CapturasPaisTest). Os botões tocados cabem na tela.
+        regra.onNodeWithTag("carimbo_4").performClick()
+        regra.onNodeWithTag("carimbo_1").performClick()
         regra.onNodeWithTag("tinta_9").performClick()
         regra.mainClock.advanceTimeBy(300)
         regra.onNodeWithTag("quadro_de_colorir").performTouchInput { click(Offset(width * 0.15f, height * 0.15f)) }
@@ -166,7 +165,7 @@ class CapturasColorirEPuzzleTest {
         val obra = estado.obrasDeColorir.getValue("gato")
         assertEquals(Fundo.CAMPO, obra.fundo)
         assertEquals("dois carimbos de coração rosa", listOf(1 to 9, 1 to 9), obra.carimbos.map { it.tipo to it.tinta })
-        assertEquals(Carimbos.tamanhos[2], obra.carimbos[0].tamanho, 1e-6f)
+        assertEquals("tamanho médio, o padrão", Carimbos.tamanhos[1], obra.carimbos[0].tamanho, 1e-6f)
         foto("s10_colorir_carimbo_e_fundo")
     }
 
@@ -174,9 +173,7 @@ class CapturasColorirEPuzzleTest {
     @Test fun albumDoLivroDeColorir() {
         val bichos = Desenhos.daColecao("bichos").associate { it.id to 2 }
         val e = EstadoJogo(perfil = menina, coloridos = bichos)
-        montar { TelaAlbum(e, Trilha.MATEMATICA, onVoltar = {}) }
-        regra.mainClock.advanceTimeBy(600)
-        regra.onNodeWithTag("album_livro").performScrollTo().performClick()
+        montar { TelaAlbum(e, Trilha.MATEMATICA, onVoltar = {}, livroInicial = true) }
         regra.mainClock.advanceTimeBy(600)
         regra.onNodeWithTag("pagina_do_livro").assertExists()
         // Com a coleção dos bichos completa, o álbum abre na primeira coleção que falta (o mar, sem figurinha).
