@@ -1,2 +1,0 @@
-passo g: Test run failed to complete. Expected 1 tests, received 0 (logcat: iniciados=1 terminados=0 falhas=0)
-completarUmMundoEVerAsConquistas: sem registro de fim no logcat
