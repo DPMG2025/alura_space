@@ -1,6 +1,18 @@
     <property name="project" value=":app" />
   </properties>
-  <testcase name="abrirMapaEAlbum" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="52.569">
+  <testcase name="todosOsEmojisDoAppTemDesenhoNaFonteEmbutida" classname="br.com.casinhadosaber.EmojisNaFonteEmbutidaTest" time="11.636">
+    <failure>java.lang.IllegalStateException: No compose hierarchies found in the app. Possible reasons include: (1) the Activity that calls setContent did not launch; (2) setContent was not called; (3) setContent was called before the ComposeTestRule ran. If setContent is called by the Activity, make sure the Activity is launched after the ComposeTestRule runs
+at androidx.compose.ui.test.TestContext.getAllSemanticsNodes$ui_test_release(TestOwner.kt:87)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNodes$ui_test_release(SemanticsNodeInteraction.kt:63)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:157)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)
+at androidx.compose.ui.test.AndroidImageHelpers_androidKt.captureToImage(AndroidImageHelpers.android.kt:51)
+at br.com.casinhadosaber.EmojisNaFonteEmbutidaTest.todosOsEmojisDoAppTemDesenhoNaFonteEmbutida(EmojisNaFonteEmbutidaTest.kt:121)
+</failure>
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="abrirMapaEAlbum" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="58.497">
     <failure></failure>
   </testcase>
   <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
@@ -12,7 +24,7 @@ com.android.ddmlib.AdbCommandRejectedException: device offline
 	at com.android.ddmlib.internal.DeviceImpl.logRun1(DeviceImpl.java:1801)
     <property name="project" value=":app" />
   </properties>
-  <testcase name="jogarFase100DeCadaCaminho" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="56.897">
+  <testcase name="jogarFase100DeCadaCaminho" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="59.791">
     <failure></failure>
   </testcase>
   <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
@@ -22,9 +34,9 @@ com.android.ddmlib.AdbCommandRejectedException: device offline
 	at com.android.ddmlib.AdbHelper.setDevice(AdbHelper.java:1000)
 	at com.android.ddmlib.internal.DeviceImpl.lambda$executeRemoteCommand$18(DeviceImpl.java:785)
 	at com.android.ddmlib.internal.DeviceImpl.logRun1(DeviceImpl.java:1801)
+    <property name="project" value=":app" />
   </properties>
-  <testcase name="areaDosPaisDesafioDoDia" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="22.176" />
-  <testcase name="pintarNoAtelieETocarOPiano" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="66.1">
+  <testcase name="areaDosPaisDesafioDoDia" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="65.657">
     <failure></failure>
   </testcase>
   <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
