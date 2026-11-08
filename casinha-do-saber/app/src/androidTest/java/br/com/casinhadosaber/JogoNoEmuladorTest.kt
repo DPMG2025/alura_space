@@ -391,7 +391,9 @@ class JogoNoEmuladorTest {
                 // Só aceita toque depois de acenar, esconder e trocar de lugar (toque antes é ignorado).
                 avancar(5_000L + a.trocas * 1_600L)
                 var tentativas = 0
-                while (!PartidaNaTela.acertou && tentativas++ < 8) tocarPorSemantica("esconderijo_certo", 1_500)
+                // Num aparelho rápido a partida já passou para a pergunta seguinte (o esconderijo some) antes de o teste
+                // ver o acerto: sem o esconderijo na tela, não há mais o que tocar.
+                while (!PartidaNaTela.acertou && existe("esconderijo_certo") && tentativas++ < 8) tocarPorSemantica("esconderijo_certo", 1_500)
             }
             is LigarPares -> for ((i, j) in a.pares) arrastarAte("ligar_esquerda_$i", "ligar_direita_$j")
             is QuebraCabeca -> for (i in 0 until a.pecas) if (i !in a.fixas) arrastarAte("quebra_peca_$i", "quebra_lugar_$i")
