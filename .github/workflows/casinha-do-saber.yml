@@ -324,14 +324,27 @@ jobs:
               except ET.ParseError:
                   reais.append(f + ": xml ilegivel")
                   continue
+              passo = f.split("/")[1] if f.startswith("saida-emulador/") else ""
+              try:
+                  logp = open("logcat-emulador-%s.txt" % passo, errors="ignore").read()
+              except OSError:
+                  logp = ""
+              ini = set(re.findall(r"started: (\w+)\(", logp))
+              fin = set(re.findall(r"finished: (\w+)\(", logp))
+              fal = set(re.findall(r"failed: (\w+)\(", logp))
               for e in raiz.iter("system-err"):
                   m = re.search(r"Test run failed to complete[^\n]*", e.text or "")
-                  if m:
-                      n = re.search(r"Expected (\d+) tests?, received (\d+)", m.group(0))
-                      if n and int(n.group(2)) >= int(n.group(1)):
-                          queda.append("(aviso de execucao incompleta com todos os testes recebidos)")
-                      else:
-                          reais.append(os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(f)))) + ": " + m.group(0)[:200])
+                  if not m:
+                      continue
+                  n = re.search(r"Expected (\d+) tests?, received (\d+)", m.group(0))
+                  esperados = int(n.group(1)) if n else None
+                  recebidos = int(n.group(2)) if n else 0
+                  if esperados is not None and recebidos >= esperados:
+                      queda.append("passo %s: aviso com todos os testes recebidos" % passo)
+                  elif esperados is not None and not fal and len(fin) >= esperados and ini <= fin:
+                      queda.append("passo %s: %d de %d testes terminados no logcat, resultados perdidos na queda do emulador" % (passo, len(fin), esperados))
+                  else:
+                      reais.append("passo %s: %s (logcat: iniciados=%d terminados=%d falhas=%d)" % (passo, m.group(0)[:160], len(ini), len(fin), len(fal)))
               for tc in raiz.iter("testcase"):
                   falha = tc.find("failure")
                   if falha is None:
