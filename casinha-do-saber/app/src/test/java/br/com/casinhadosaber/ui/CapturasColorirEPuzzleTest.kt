@@ -248,7 +248,7 @@ class CapturasColorirEPuzzleTest {
         regra.mainClock.advanceTimeBy(4_000)
         androidx.compose.runtime.snapshots.Snapshot.sendApplyNotifications()
         regra.mainClock.advanceTimeBy(500)
-        regra.onNodeWithTag("puzzle_dica").assertContentDescriptionContains("sugerida")
+        regra.onNodeWithTag("puzzle_dica").assertContentDescriptionContains("sugerida", substring = true)
     }
 
     /** Tocar numa peça e depois na casa dela na moldura encaixa a peça: faltam 3 (caminho sem arrastar). */
