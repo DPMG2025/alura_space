@@ -1,2 +1,2 @@
-APK do commit 86cf793232cf59d9b9abaaeffc8ba1bc16a62f59 (execução 42403524634) com o visual brinquedo 3D (Fases 0 a 9 e duas rodadas de acabamento).
+APK do commit b8442ae (execução 42521266045) com o visual brinquedo 3D (Fases 0 a 9 e duas rodadas de acabamento).
 O estado dos testes desse commit está em casinha-do-saber/docs/visual-3d/ESTADO.md. Instalar: baixar o arquivo, abrir e permitir fontes desconhecidas se o Android pedir.
