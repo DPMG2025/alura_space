@@ -216,6 +216,8 @@ class CapturasColorirEPuzzleTest {
         regra.onNodeWithTag("portao_guardar_obra").assertExists()
         foto("s10_colorir_guardar_imagem")
         regra.onRoot().performTouchInput { click(Offset(10f, height - 10f)) }
+        // Estado mudado dentro de um gesto, com o relógio parado: avisar o Compose antes de avançar.
+        androidx.compose.runtime.snapshots.Snapshot.sendApplyNotifications()
         regra.mainClock.advanceTimeBy(600)
         regra.onAllNodesWithTag("portao_guardar_obra").assertCountEquals(0)
         regra.onNodeWithTag("quadro_gato").performClick()
