@@ -1,3 +1,6 @@
+passo c: 4 de 4 testes terminados no logcat, resultados perdidos na queda do emulador
 abrirMapaEAlbum
+passo b: 3 de 3 testes terminados no logcat, resultados perdidos na queda do emulador
 jogarFase100DeCadaCaminho
-areaDosPaisDesafioDoDia
+passo d: 3 de 3 testes terminados no logcat, resultados perdidos na queda do emulador
+pintarNoAtelieETocarOPiano
