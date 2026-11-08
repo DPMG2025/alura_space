@@ -4,7 +4,7 @@ Vozes de boa qualidade (400 ou mais): true
 Arquivo | idioma | duração total | com som | blocos | texto
 som_m.wav | pt-BR | 2.29 s | 1.93 s | 1 | mmmmm
 som_m_reforco.wav | pt-BR | 3.57 s | 3.33 s | 2 | mmmmm... macaco!
-som_s.wav | pt-BR | 2.38 s | 1.98 s | 1 | sssss
+som_s.wav | pt-BR | 2.45 s | 2.08 s | 6 | sssss
 som_s_reforco.wav | pt-BR | 3.51 s | 3.24 s | 3 | sssss... sapo!
 som_f.wav | pt-BR | 2.37 s | 1.97 s | 4 | fffff
 som_f_reforco.wav | pt-BR | 3.51 s | 3.21 s | 7 | fffff... foca!
