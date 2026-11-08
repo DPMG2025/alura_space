@@ -52,6 +52,7 @@ import androidx.compose.ui.semantics.stateDescription
 import br.com.casinhadosaber.ui.LocalNarrador
 import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.dominio.Pais
+import br.com.casinhadosaber.dominio.resumoDasCriacoes
 import br.com.casinhadosaber.dominio.alternarTema
 import br.com.casinhadosaber.dominio.comAniversario
 import br.com.casinhadosaber.dominio.concluirDesafioDosPais
@@ -173,6 +174,8 @@ private fun Painel(
         Pais.relatorioDaSemana(estado.sessoes, hoje) { t, n -> gerador.fases(t).getOrNull(n)?.titulo ?: Pais.nomePadrao(t, n) }
     }
     CartaoRelatorioDaSemana(relatorio)
+
+    CartaoDasCriacoes(estado.resumoDasCriacoes)
 
     CartaoDoRitmo(
         estado = estado,

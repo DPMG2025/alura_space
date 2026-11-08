@@ -51,6 +51,8 @@ object Desenhos {
         "veiculos" to "🚗 Carros e aviões",
         "espaco" to "🚀 Espaço",
         "festa" to "🎈 Festa",
+        "dino" to "🦖 Dinossauros",
+        "castelo" to "🏰 Castelos e princesas",
     )
 
     fun nomeDaColecao(id: String): String = colecoes.firstOrNull { it.first == id }?.second ?: id
@@ -338,6 +340,102 @@ object Desenhos {
             poli(3, 0.4f, 0.55f, 0.6f, 0.55f, 0.65f, 0.65f, 0.35f, 0.65f)
             poli(1, 0.33f, 0.75f, 0.67f, 0.75f, 0.7f, 0.85f, 0.3f, 0.85f)
             bola(0.5f, 0.17f, 0.06f, 2)
+        },
+        // ---------------------------------------------------------------- Dinossauros
+        desenho("trex", "Tiranossauro", "dino", "🦖") {
+            fundo(6)
+            sol()
+            chao(0.82f, 4)
+            tri(0.2f, 0.6f, 0.02f, 0.8f, 0.24f, 0.74f, 4)
+            el(0.42f, 0.58f, 0.24f, 0.2f, 4)
+            poli(4, 0.55f, 0.5f, 0.62f, 0.3f, 0.8f, 0.28f, 0.72f, 0.52f)
+            el(0.78f, 0.3f, 0.13f, 0.09f, 4)
+            bola(0.8f, 0.27f, 0.018f, 12)
+            ret(0.32f, 0.72f, 0.42f, 0.9f, 5)
+            ret(0.5f, 0.72f, 0.6f, 0.9f, 5)
+            bola(0.4f, 0.5f, 0.04f, 3)
+            bola(0.5f, 0.62f, 0.035f, 3)
+        },
+        desenho("tricerato", "Tricerátopo", "dino", "🦕") {
+            fundo(3)
+            chao(0.8f, 4)
+            ret(0.3f, 0.7f, 0.4f, 0.88f, 11)
+            ret(0.5f, 0.7f, 0.6f, 0.88f, 11)
+            el(0.42f, 0.6f, 0.26f, 0.18f, 11)
+            el(0.7f, 0.5f, 0.15f, 0.16f, 9)
+            el(0.76f, 0.58f, 0.13f, 0.1f, 11)
+            tri(0.78f, 0.5f, 0.92f, 0.3f, 0.86f, 0.52f, 1)
+            tri(0.66f, 0.46f, 0.7f, 0.28f, 0.74f, 0.46f, 1)
+            bola(0.78f, 0.55f, 0.018f, 12)
+        },
+        desenho("pterodatilo", "Pterodátilo", "dino", "🦅") {
+            fundo(6)
+            nuvem(0.2f, 0.2f)
+            nuvem(0.78f, 0.78f)
+            tri(0.45f, 0.5f, 0.02f, 0.3f, 0.12f, 0.72f, 8)
+            tri(0.55f, 0.5f, 0.98f, 0.3f, 0.88f, 0.72f, 8)
+            el(0.5f, 0.52f, 0.09f, 0.2f, 2)
+            el(0.5f, 0.3f, 0.07f, 0.08f, 2)
+            tri(0.56f, 0.28f, 0.78f, 0.32f, 0.56f, 0.35f, 3)
+            bola(0.52f, 0.27f, 0.015f, 12)
+        },
+        desenho("ovo_dino", "Ovo de dinossauro", "dino", "🥚") {
+            fundo(5)
+            chao(0.78f, 3)
+            el(0.5f, 0.8f, 0.32f, 0.1f, 10)
+            el(0.5f, 0.55f, 0.17f, 0.24f, 3)
+            bola(0.45f, 0.5f, 0.04f, 4)
+            bola(0.57f, 0.62f, 0.05f, 4)
+            bola(0.6f, 0.5f, 0.03f, 4)
+            tri(0.4f, 0.36f, 0.5f, 0.46f, 0.6f, 0.36f, 12)
+        },
+        // ---------------------------------------------------------------- Castelos e princesas
+        desenho("castelo", "Castelo", "castelo", "🏰") {
+            fundo(6)
+            sol()
+            chao(0.82f, 4)
+            ret(0.25f, 0.45f, 0.75f, 0.84f, 11)
+            ret(0.16f, 0.3f, 0.32f, 0.84f, 11)
+            ret(0.68f, 0.3f, 0.84f, 0.84f, 11)
+            tri(0.13f, 0.3f, 0.24f, 0.1f, 0.35f, 0.3f, 1)
+            tri(0.65f, 0.3f, 0.76f, 0.1f, 0.87f, 0.3f, 1)
+            poli(10, 0.43f, 0.84f, 0.43f, 0.64f, 0.5f, 0.56f, 0.57f, 0.64f, 0.57f, 0.84f)
+            ret(0.2f, 0.42f, 0.28f, 0.54f, 7)
+            ret(0.72f, 0.42f, 0.8f, 0.54f, 7)
+        },
+        desenho("coroa", "Coroa", "castelo", "👑") {
+            fundo(9)
+            ret(0.22f, 0.55f, 0.78f, 0.72f, 3)
+            poli(3, 0.22f, 0.55f, 0.22f, 0.3f, 0.36f, 0.44f, 0.5f, 0.24f, 0.64f, 0.44f, 0.78f, 0.3f, 0.78f, 0.55f)
+            bola(0.5f, 0.64f, 0.035f, 1)
+            bola(0.34f, 0.64f, 0.03f, 8)
+            bola(0.66f, 0.64f, 0.03f, 8)
+            bola(0.22f, 0.27f, 0.03f, 1)
+            bola(0.5f, 0.21f, 0.03f, 1)
+            bola(0.78f, 0.27f, 0.03f, 1)
+        },
+        desenho("princesa", "Princesa", "castelo", "👸") {
+            fundo(8)
+            chao(0.88f, 4)
+            tri(0.5f, 0.4f, 0.22f, 0.9f, 0.78f, 0.9f, 9)
+            el(0.5f, 0.44f, 0.1f, 0.12f, 9)
+            bola(0.5f, 0.28f, 0.085f, 2)
+            el(0.5f, 0.2f, 0.11f, 0.07f, 10)
+            tri(0.43f, 0.17f, 0.5f, 0.07f, 0.57f, 0.17f, 3)
+            bola(0.47f, 0.28f, 0.012f, 12)
+            bola(0.53f, 0.28f, 0.012f, 12)
+        },
+        desenho("dragao", "Dragão", "castelo", "🐉") {
+            fundo(8)
+            chao(0.82f, 4)
+            tri(0.2f, 0.62f, 0.02f, 0.5f, 0.22f, 0.74f, 4)
+            tri(0.38f, 0.5f, 0.52f, 0.2f, 0.62f, 0.5f, 1)
+            el(0.45f, 0.62f, 0.25f, 0.18f, 4)
+            el(0.75f, 0.45f, 0.12f, 0.1f, 4)
+            tri(0.84f, 0.45f, 0.98f, 0.36f, 0.98f, 0.54f, 2)
+            bola(0.78f, 0.41f, 0.016f, 12)
+            ret(0.34f, 0.74f, 0.44f, 0.9f, 5)
+            ret(0.52f, 0.74f, 0.62f, 0.9f, 5)
         },
     )
 

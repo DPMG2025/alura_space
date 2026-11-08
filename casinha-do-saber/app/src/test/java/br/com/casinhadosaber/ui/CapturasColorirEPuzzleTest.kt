@@ -158,6 +158,18 @@ class CapturasColorirEPuzzleTest {
         assertTrue(estado.coloridos.isEmpty())
     }
 
+    /** Área dos pais: o cartão com o que a criança pintou e montou. */
+    @Test fun areaDosPaisMostraAsCriacoes() {
+        montar { br.com.casinhadosaber.ui.telas.CartaoDasCriacoes(br.com.casinhadosaber.dominio.ResumoDasCriacoes(3, 32, 7, 2, 4)) }
+        regra.onNodeWithTag("cartao_das_criacoes").assertExists()
+        foto("s10_pais_criacoes")
+    }
+
+    @Test fun areaDosPaisSemCriacoesAindaNaoComecou() {
+        montar { br.com.casinhadosaber.ui.telas.CartaoDasCriacoes(br.com.casinhadosaber.dominio.ResumoDasCriacoes(0, 32, 0, 0, 0)) }
+        regra.onNodeWithTag("cartao_das_criacoes").assertExists()
+    }
+
     // ------------------------------------------------------------------ s11: quebra cabeças
 
     @Test fun puzzleMenu() {

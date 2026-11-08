@@ -51,3 +51,23 @@ fun EstadoJogo.venceuPuzzle(desenhoId: String, nivel: Int, estrelas: Int, usouDi
 
 /** Peças douradas ganhas até agora. */
 val EstadoJogo.pecasDouradas: Int get() = Puzzle.pecasDouradas(puzzlesFeitos)
+
+/** O que a criança já fez no Livro de Colorir e nos quebra cabeças (para a área dos pais). */
+data class ResumoDasCriacoes(
+    val desenhosTerminados: Int,
+    val desenhosNoLivro: Int,
+    val estrelasDeColorir: Int,
+    val quebraCabecasVencidos: Int,
+    val pecasDouradas: Int,
+) {
+    val comecou: Boolean get() = desenhosTerminados > 0 || quebraCabecasVencidos > 0 || estrelasDeColorir > 0
+}
+
+val EstadoJogo.resumoDasCriacoes: ResumoDasCriacoes
+    get() = ResumoDasCriacoes(
+        desenhosTerminados = coloridos.size,
+        desenhosNoLivro = Desenhos.todos.size,
+        estrelasDeColorir = coloridos.values.sum(),
+        quebraCabecasVencidos = puzzlesFeitos.size,
+        pecasDouradas = Puzzle.pecasDouradas(puzzlesFeitos),
+    )

@@ -100,4 +100,20 @@ class ProgressoCriativoTest {
         assertEquals(e.puzzlesFeitos, puz)
         assertEquals(3, colo[gato.id])
     }
+
+    @Test
+    fun `resumo para os pais conta desenhos, estrelas, quebra cabecas e pecas douradas`() {
+        val vazio = EstadoJogo().resumoDasCriacoes
+        assertFalse(vazio.comecou)
+        assertEquals(Desenhos.todos.size, vazio.desenhosNoLivro)
+        val e = EstadoJogo()
+            .terminarDesenho(gato, terminado(gato, listOf(1, 2, 3, 4, 13))).first
+            .venceuPuzzle("peixe", 2, 3, usouDica = false).first
+        val r = e.resumoDasCriacoes
+        assertTrue(r.comecou)
+        assertEquals(1, r.desenhosTerminados)
+        assertEquals(3, r.estrelasDeColorir)
+        assertEquals(1, r.quebraCabecasVencidos)
+        assertEquals(2, r.pecasDouradas)
+    }
 }
