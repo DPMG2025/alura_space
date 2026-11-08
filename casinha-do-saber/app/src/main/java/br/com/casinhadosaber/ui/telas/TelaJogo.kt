@@ -172,14 +172,17 @@ fun TelaJogo(
     val sons = LocalSons.current
     val escopo = rememberCoroutineScope()
     // Na rodada facilitada, a primeira pergunta é um exemplo resolvido junto (a resposta brilha e não conta).
-    val perguntas = remember(fase, facilitada) {
+    // A rodada vale do começo ao fim da partida: ao vencer, o jogo grava o resultado e a fase deixa de ser
+    // "facilitada" no estado; refazer a lista de perguntas nesse instante (6 viravam 5) fechava o app na vitória.
+    val rodadaFacilitada = remember(fase) { facilitada }
+    val perguntas = remember(fase) {
         val iniciais = when {
             treino != null -> listOf(treino(emptyList()))
             else -> {
                 // Os temas favoritos do perfil deixam as figuras de contar e das letras mais do gosto da criança.
                 val gerador = GeradorDeFases(temasFavoritos = perfil?.temasFavoritos.orEmpty())
                 val normais = perguntasProntas.ifEmpty { gerador.perguntas(fase) }
-                if (facilitada) listOf(gerador.perguntas(fase, 1).first()) + normais else normais
+                if (rodadaFacilitada) listOf(gerador.perguntas(fase, 1).first()) + normais else normais
             }
         }
         mutableStateListOf<Pergunta>().apply { addAll(iniciais) }
@@ -193,8 +196,9 @@ fun TelaJogo(
     var acertou by remember { mutableStateOf(false) }
     var humor by remember { mutableStateOf(Humor.FELIZ) }
     var confete by remember { mutableIntStateOf(0) }
-    val pergunta = perguntas[indice]
-    val exemplo = facilitada && indice == 0
+    // Nunca além da última pergunta, mesmo que a lista mude durante a recomposição.
+    val pergunta = perguntas[indice.coerceIn(0, perguntas.lastIndex)]
+    val exemplo = rodadaFacilitada && indice == 0
     val cor = Color(fase.trilha.corArgb)
     val vibracao = LocalHapticFeedback.current
     SideEffect { PartidaNaTela.mostrar(pergunta, indice, acertou) }
@@ -263,7 +267,8 @@ fun TelaJogo(
     }
 
     fun responder(i: Int) {
-        if (acertou || i in erradas) return
+        // Opção que não existe nesta pergunta (toque na pergunta que ainda está saindo da tela): ignora.
+        if (acertou || i in erradas || i !in pergunta.opcoes.indices) return
         if (i == pergunta.indiceCorreto) {
             comemorar(erradas.isEmpty())
         } else {
@@ -368,8 +373,9 @@ fun TelaJogo(
                         pergunta = p,
                         erradas = if (i == indice) erradas else emptySet(),
                         acertou = i == indice && acertou,
-                        onTocar = ::responder,
-                        mostrarCerta = facilitada && i == 0,
+                        // Só a pergunta da vez responde: durante a troca, a que está saindo ainda aparece na tela.
+                        onTocar = { opcao -> if (i == indice) responder(opcao) },
+                        mostrarCerta = rodadaFacilitada && i == 0,
                         alturaGrande = alturaGrande,
                     )
                 }
@@ -380,7 +386,7 @@ fun TelaJogo(
                         atividade = p.atividade,
                         fala = p.fala,
                         ativa = i == indice && !acertou,
-                        ajudaInicial = facilitada && i == 0,
+                        ajudaInicial = rodadaFacilitada && i == 0,
                         cor = cor,
                         onErro = { if (i == indice) humor = Humor.PENSANDO },
                         onConcluir = { semErro -> if (i == indice && !acertou) comemorar(semErro) },

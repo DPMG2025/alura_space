@@ -87,6 +87,15 @@ android {
                 keyPassword = System.getenv("CASINHA_KEY_PASSWORD")
             }
         }
+        // Chave de TESTE fixa (senha pública, no repositório): sem ela cada build ganhava uma chave de debug nova e o
+        // Android não deixava atualizar o app por cima, só desinstalar, o que apagava o progresso da criança.
+        // Não serve para a Play Store: lá vale a chave de upload acima (segredos do GitHub).
+        create("teste") {
+            storeFile = file("casinha-teste.keystore")
+            storePassword = "android"
+            keyAlias = "casinha-teste"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
@@ -98,8 +107,8 @@ android {
                 "proguard-rules.pro"
             )
             // Com a chave de upload configurada, o release sai pronto para a Play Store.
-            // Sem ela, usa a chave de debug só para permitir instalar e testar o APK.
-            signingConfig = signingConfigs.findByName("upload") ?: signingConfigs.getByName("debug")
+            // Sem ela, usa a chave de teste fixa: o APK instala e atualiza por cima do anterior sem perder o progresso.
+            signingConfig = signingConfigs.findByName("upload") ?: signingConfigs.getByName("teste")
         }
     }
 
