@@ -241,7 +241,9 @@ fun DrawScope.desenharObra(
     desenho.regioes.forEachIndexed { i, regiao ->
         val caminho = caminhoDa(regiao.forma, origem, lado)
         val tinta = if (soContorno) 0 else obra.tintas.getOrElse(i) { 0 }
-        if (tinta == 0) drawPath(caminho, Papel) else encher(caminho, limites(regiao.forma), origem, lado, Tintas.todas[tinta], i)
+        // Com um fundo escolhido, o que ainda não tem tinta fica transparente e deixa o fundo aparecer
+        // (muitos desenhos têm uma região que cobre o quadrado inteiro).
+        if (tinta == 0) { if (soContorno || obra.fundo == Fundo.NENHUM) drawPath(caminho, Papel) } else encher(caminho, limites(regiao.forma), origem, lado, Tintas.todas[tinta], i)
         if (!soContorno) {
             for (t in obra.tracos) {
                 if (t.regiao != i) continue

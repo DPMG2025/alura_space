@@ -121,8 +121,9 @@ fun TelaDiplomas(
                     // Quantos já tem: a medalha e o número, numa pílula (o total de mundos fica na descrição).
                     PilulaDeValor(
                         PecasDasTelas.MEDALHA,
-                        "${diplomas.size}",
-                        descricao = "${diplomas.size} de ${Trilha.entries.size * Mundos.todos.size} mundos completos",
+                        "${diplomas.size + doLivro.size}",
+                        descricao = "${diplomas.size} de ${Trilha.entries.size * Mundos.todos.size} mundos completos" +
+                            if (doLivro.isNotEmpty()) " e ${doLivro.size} coleções do Livro de Colorir" else "",
                     )
                 }
                 Column(
