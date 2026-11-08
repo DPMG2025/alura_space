@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -157,6 +158,9 @@ private fun Painel(
     Cartao {
         Text("🔒 Sem internet • Sem anúncios • Sem coleta de dados", style = MaterialTheme.typography.titleMedium, color = Cores.Certo)
     }
+
+    // Se o app fechou sozinho, o registro aparece aqui em cima (some quando não há nada).
+    CartaoDeFechamentos()
 
     familia?.let { CartaoDasCriancas(it) }
 
@@ -534,3 +538,65 @@ private fun Cartao(conteudo: @Composable () -> Unit) {
 
 /** Fundo da área dos pais. */
 internal val FUNDO_DOS_PAIS = Color(0xFFE4DCFF)
+
+/**
+ * Fechamentos do app guardados no aparelho ([GuardaDeFalhas]): quando e em que tela, com o botão de copiar o
+ * detalhe técnico para mandar a quem cuida do app, e o de apagar o registro.
+ */
+@Composable
+internal fun CartaoDeFechamentos() {
+    val contexto = androidx.compose.ui.platform.LocalContext.current
+    val area = androidx.compose.ui.platform.LocalClipboardManager.current
+    var falhas by remember { mutableStateOf(br.com.casinhadosaber.dados.GuardaDeFalhas.ler(contexto)) }
+    var copiado by remember { mutableStateOf(false) }
+    if (falhas.isEmpty()) return
+    val formato = remember { java.text.SimpleDateFormat("dd/MM 'às' HH:mm", java.util.Locale("pt", "BR")) }
+    Cartao {
+        Column(Modifier.testTag("cartao_fechamentos")) {
+            Text("⚠️ O app fechou sozinho", style = MaterialTheme.typography.titleLarge)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                if (falhas.size == 1) "Aconteceu 1 vez. Copie o detalhe e mande para quem cuida do app: ajuda a corrigir."
+                else "Aconteceu ${falhas.size} vezes (as mais recentes abaixo). Copie o detalhe e mande para quem cuida do app: ajuda a corrigir.",
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Spacer(Modifier.height(8.dp))
+            for (f in falhas) {
+                Text(
+                    "• ${formato.format(java.util.Date(f.quando))}, na tela ${f.tela} (${br.com.casinhadosaber.dominio.RegistroDeFalhas.nomeCurto(f)})",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                BotaoFofo(
+                    onClick = {
+                        val versao = br.com.casinhadosaber.dados.GuardaDeFalhas.versao(contexto)
+                        val aparelho = br.com.casinhadosaber.dados.GuardaDeFalhas.aparelho
+                        val texto = falhas.joinToString("\n\n") { f ->
+                            br.com.casinhadosaber.dominio.RegistroDeFalhas.textoParaCopiar(f, versao, aparelho, formato.format(java.util.Date(f.quando)))
+                        }
+                        area.setText(androidx.compose.ui.text.AnnotatedString(texto))
+                        copiado = true
+                    },
+                    cor = Color.White,
+                    corBase = Color(0xFFD9CFF0),
+                    modifier = Modifier.testTag("copiar_fechamentos"),
+                ) {
+                    Text(if (copiado) "✅ Copiado" else "📋 Copiar detalhe", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
+                }
+                BotaoFofo(
+                    onClick = {
+                        br.com.casinhadosaber.dados.GuardaDeFalhas.limpar(contexto)
+                        falhas = emptyList()
+                    },
+                    cor = Color.White,
+                    corBase = Color(0xFFD9CFF0),
+                    modifier = Modifier.testTag("apagar_fechamentos"),
+                ) {
+                    Text("🗑️ Apagar registro", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
+                }
+            }
+        }
+    }
+}

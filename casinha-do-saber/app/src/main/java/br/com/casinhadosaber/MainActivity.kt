@@ -21,6 +21,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -255,6 +256,8 @@ class MainActivity : ComponentActivity() {
                 },
             )
         }
+        // A tela aberta vai junto no registro de fechamentos (só o nome da tela, sem dados da criança).
+        SideEffect { br.com.casinhadosaber.dados.GuardaDeFalhas.telaAtual = nomeDaTela(tela) }
         val gerador = remember { GeradorDeFases() }
         /** Figurinhas e diplomas ganhos na vitória, mostrados quando a criança sai do prêmio. */
         var conquistas by remember { mutableStateOf(NovasConquistas()) }
@@ -780,4 +783,11 @@ class MainActivity : ComponentActivity() {
     private fun irParaInicio(atual: Tela, mudar: (Tela) -> Unit) {
         if (atual !is Tela.Perfil) mudar(Tela.Inicio)
     }
+}
+
+/** Nome da tela para o registro de fechamentos: o tipo e, nas fases, o caminho e o número. */
+private fun nomeDaTela(t: Tela): String = when (t) {
+    is Tela.Jogo -> "Jogo ${t.fase.trilha.name} fase ${t.fase.numero + 1}"
+    is Tela.Premio -> "Premio ${t.fase.trilha.name} fase ${t.fase.numero + 1}"
+    else -> t::class.simpleName ?: "?"
 }
