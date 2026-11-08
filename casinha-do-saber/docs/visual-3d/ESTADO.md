@@ -106,6 +106,8 @@ Execução 161 (commit 57d5477, 2026-11-08): falhou em 30 s por rede do runner, 
 
 Execução 162 (commit bf8a422, 2026-11-08): caiu em 24 s com HTTP 504 ao baixar o Gradle de `github.com/gradle/gradle-distributions` (mesmo caso da 161). Execução 163 (commit 77f1461): primeiro commit com o passo "Baixar o Gradle (tenta de novo se a rede falhar)" nos quatro jobs de teste (até 6 tentativas, espera crescente). Em andamento; o aviso de travou (72ad525) só conta como validado quando ela ficar verde.
 
+Execução 163 (77f1461): o Gradle baixou na 6ª tentativa (7 min), mas o `kotlin-compiler-embeddable` deu 504 no GitHub Releases. Execução 164 (ffc4cc5, repete o gradle em falha de rede): a rede passou e os testes rodaram; só `puzzleTravouSugereADica` falhou, por erro do teste (`assertContentDescriptionContains` sem `substring = true`); a tela já dizia "Dica sugerida: ...". Execução 165 (corrige o teste): o download do Gradle falhou nas 6 tentativas; o limite subiu para 10.
+
 Lições desta rodada (valem para qualquer tela nova):
 * Nome de classe, ponto e desenho colidiam com código existente (`QuebraCabeca`, `Ponto`, `Desenho`); conferir antes de criar tipos no pacote `dominio`.
 * Nunca usar símbolo fora da fonte embutida (☆ falhou; ⭐ 🪙 🔒 🧩 e os outros usados passam). O teste `EmojisNaFonteEmbutidaTest` varre o código.
