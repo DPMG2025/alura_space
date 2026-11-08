@@ -111,6 +111,8 @@ fun TelaPuzzle(
     fonteInicial: String? = null,
     /** Para os testes: a mesma bagunça de peças toda vez. Fora disso, sorteia. */
     semente: Long? = null,
+    /** Quanto tempo sem avançar até o jogo oferecer a dica ("travou"). */
+    esperaTravouMs: Long = 120_000L,
 ) {
     var partida by remember { mutableStateOf<Partida?>(null) }
     val p = partida
@@ -132,6 +134,7 @@ fun TelaPuzzle(
             onAtualizar = onAtualizar,
             onNovaPartida = { partida = it },
             onMenu = { partida = null },
+            esperaTravouMs = esperaTravouMs,
         )
     }
 }
@@ -295,6 +298,7 @@ private fun JogarPuzzle(
     onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit,
     onNovaPartida: (Partida) -> Unit,
     onMenu: () -> Unit,
+    esperaTravouMs: Long = 120_000L,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -317,6 +321,16 @@ private fun JogarPuzzle(
     var estrelasGanhas by remember(partida) { mutableIntStateOf(0) }
 
     LaunchedEffect(partida) { narrador.falar(if (partida.tipo == TipoDeJogo.MONTAR) "Arraste cada peça para o lugar dela." else "Deslize as peças para o espaço vazio.") }
+    /** Passou muito tempo sem avançar: o jogo oferece a dica e o próximo nível sugerido desce um degrau. */
+    var travou by remember(partida) { mutableStateOf(false) }
+    val progresso = if (partida.tipo == TipoDeJogo.MONTAR) montagem.faltam else deslizante.toques
+    LaunchedEffect(partida, progresso) {
+        if (premio == null) {
+            kotlinx.coroutines.delay(esperaTravouMs)
+            travou = true
+            narrador.falar("Está difícil? Toque na lâmpada para uma dica.")
+        }
+    }
     LaunchedEffect(dicaPeca, dicaDeslizante) {
         if (dicaPeca >= 0 || dicaDeslizante >= 0) {
             kotlinx.coroutines.delay(2200)
@@ -539,7 +553,7 @@ private fun JogarPuzzle(
                             profundidade = 4.dp,
                         ) { Box(Modifier.size(width = 56.dp, height = 48.dp), contentAlignment = Alignment.Center) { Text(emoji, fontSize = 24.sp) } }
                     }
-                    Ajuda("💡", "Dica: mostra uma peça e o lugar dela", false, "puzzle_dica") {
+                    Ajuda("💡", (if (travou) "Dica sugerida: " else "Dica: ") + "mostra uma peça e o lugar dela", travou, "puzzle_dica") {
                         sons.toque()
                         dicas++
                         if (partida.tipo == TipoDeJogo.MONTAR) {
@@ -569,7 +583,7 @@ private fun JogarPuzzle(
                     obra = obra,
                     premio = pr,
                     estrelas = estrelasGanhas,
-                    proximoNivel = Puzzle.sugerir(partida.nivel, estadoAtual.puzzleSeguidas, false, estadoAtual.nivelDePuzzleAberto(d.colecao)),
+                    proximoNivel = Puzzle.sugerir(partida.nivel, estadoAtual.puzzleSeguidas, travou, estadoAtual.nivelDePuzzleAberto(d.colecao)),
                     onProximo = { n -> onNovaPartida(partida.copy(nivel = n, semente = Random.nextLong())) },
                     onDeNovo = { onNovaPartida(partida.copy(semente = Random.nextLong())) },
                     onMenu = onMenu,

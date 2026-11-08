@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.assertContentDescriptionContains
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
@@ -235,6 +237,18 @@ class CapturasColorirEPuzzleTest {
     private fun aplicarEAvancar(ms: Long) {
         androidx.compose.runtime.snapshots.Snapshot.sendApplyNotifications()
         regra.mainClock.advanceTimeBy(ms)
+    }
+
+    /** Sem avançar por um tempo, a dica fica sugerida (lâmpada destacada); antes disso, não. */
+    @Test fun puzzleTravouSugereADica() {
+        montar { TelaPuzzle(EstadoJogo(perfil = menina), {}, {}, semente = 42L, esperaTravouMs = 3_000L) }
+        regra.onNodeWithTag("puzzle_montar").performClick()
+        regra.mainClock.advanceTimeBy(1_000)
+        regra.onNodeWithTag("puzzle_dica").assertContentDescriptionEquals("Dica: mostra uma peça e o lugar dela")
+        regra.mainClock.advanceTimeBy(4_000)
+        androidx.compose.runtime.snapshots.Snapshot.sendApplyNotifications()
+        regra.mainClock.advanceTimeBy(500)
+        regra.onNodeWithTag("puzzle_dica").assertContentDescriptionContains("sugerida")
     }
 
     /** Tocar numa peça e depois na casa dela na moldura encaixa a peça: faltam 3 (caminho sem arrastar). */
