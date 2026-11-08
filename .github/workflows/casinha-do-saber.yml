@@ -340,6 +340,27 @@ jobs:
             mkdir -p saida-emulador/d
             cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/d/ 2>/dev/null || true
 
+      # Relato do dono (app fechava ao vencer fases e completar objetivos): o chefão do mundo 1 até o diploma aberto,
+      # num emulador de celular próprio (o de tablet do CI some no meio deste teste, execuções 180 e 181).
+      - name: Testes no emulador (chefão e diploma)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          heap-size: 512M
+          cores: 4
+          disable-animations: false
+          working-directory: casinha-do-saber
+          script: |
+            adb logcat -c || true
+            nohup sh -c 'adb logcat -v time "*:W" TestRunner:I > logcat-emulador-g.txt 2>&1' > /dev/null 2>&1 &
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest#completarUmMundoEVerAsConquistas || echo "FALHA_TESTES" > emulador-falhou.txt
+            mkdir -p saida-emulador/g
+            cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/g/ 2>/dev/null || true
+
       - name: Testes de voz no emulador (6 de 6, informativo)
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -639,7 +660,7 @@ jobs:
             timeout 60 adb logcat -d -s AndroidRuntime:E MEM:W > logcat-tablet.txt || true
             grep -E "FATAL EXCEPTION|MEM" logcat-tablet.txt || echo "Sem fechamento no logcat do tablet"
 
-      - name: Chefão e diploma no tablet (API 34)
+      - name: Chefão e diploma no tablet (API 34, informativo)
         if: always()
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -653,9 +674,12 @@ jobs:
           disable-animations: true
           working-directory: casinha-do-saber
           script: |
-            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest#completarUmMundoEVerAsConquistas || echo "FALHA_TESTES" >> emulador-falhou.txt
-            timeout 60 adb logcat -d -s AndroidRuntime:E MEM:W > logcat-tablet.txt || true
-            grep -E "FATAL EXCEPTION|MEM" logcat-tablet.txt || echo "Sem fechamento no logcat do tablet"
+            # Logcat gravado o tempo todo: se o app fechar antes de o emulador sumir, o registro fica no arquivo.
+            adb logcat -c || true
+            nohup sh -c 'adb logcat -v time AndroidRuntime:E MEM:W DEBUG:E libc:E ActivityManager:W "*:S" > logcat-tablet-chefao.txt 2>&1' > /dev/null 2>&1 &
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest#completarUmMundoEVerAsConquistas || echo "chefão no tablet falhou (informativo)"
+            sleep 2
+            grep -E "FATAL|Fatal signal|MEM|br.com.casinhadosaber.*(died|crash|lowmemory|ANR)" logcat-tablet-chefao.txt || echo "Sem fechamento do app no logcat do tablet"
 
       - name: Relatório do emulador de tablet
         if: always()
