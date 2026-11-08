@@ -501,7 +501,7 @@ class JogoNoEmuladorTest {
                 regra.waitUntil(45_000) { PartidaNaTela.indice == i && PartidaNaTela.acertou }
             } catch (e: Throwable) {
                 capturar("${captura}_falhou_$i")
-                throw AssertionError("fase $numero de $caminho: a pergunta ${i + 1} ($tipo, \"${pergunta.instrucao}\") não terminou", e)
+                throw AssertionError("fase $numero de $caminho: a pergunta ${i + 1} ($tipo, \"${pergunta.instrucao}\") não terminou. " + diagnostico(), e)
             }
         }
         regra.waitUntil(20_000) {
@@ -513,6 +513,21 @@ class JogoNoEmuladorTest {
         assertEquals("fase $numero de $caminho jogada sem erro deveria valer 3 estrelas ($tipos)", "$chaveTrilha:${numero - 1}=3", estrelas)
         return tipos
     }
+
+    /**
+     * O que estava na tela quando uma pergunta não terminou: as opções (marca, posição, tamanho) e a tela anotada
+     * no registro de fechamentos. Vai na mensagem do erro, que aparece no log do CI (as capturas ficam no aparelho).
+     */
+    private fun diagnostico(): String = runCatching {
+        val raiz = regra.onRoot().fetchSemanticsNode().boundsInRoot
+        val opcoes = regra.onAllNodes(hasTestTag("opcao") or hasTestTag("opcao_certa")).fetchSemanticsNodes().joinToString("; ") { n ->
+            val tag = n.config.getOrElse(SemanticsProperties.TestTag) { "?" }
+            val b = n.boundsInRoot
+            "$tag em (${b.left.toInt()},${b.top.toInt()}) ${b.width.toInt()}x${b.height.toInt()}"
+        }
+        "Tela ${raiz.width.toInt()}x${raiz.height.toInt()}, tela do app: ${br.com.casinhadosaber.dados.GuardaDeFalhas.telaAtual}, " +
+            "partida: indice=${PartidaNaTela.indice} acertou=${PartidaNaTela.acertou}, opções: [$opcoes]"
+    }.getOrElse { "sem diagnóstico: ${it.message}" }
 
     private val relatorioDasFases = StringBuilder()
 
