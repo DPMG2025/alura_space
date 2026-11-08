@@ -56,7 +56,19 @@ jobs:
 
       - name: Testes de unidade e capturas de tela
         timeout-minutes: 35
-        run: ./gradlew --no-daemon testDebugUnitTest
+        run: |
+          # Só repete se a falha foi de rede ao baixar dependências (504, timeout); falha de teste ou de código não repete.
+          for t in 1 2 3 4; do
+            set +e
+            ./gradlew --no-daemon testDebugUnitTest 2>&1 | tee /tmp/gradle-saida.txt
+            r=${PIPESTATUS[0]}
+            set -e
+            [ "$r" = 0 ] && exit 0
+            grep -q -E "Could not (GET|download|resolve)|Received status code 5|timed out|Read timed out" /tmp/gradle-saida.txt || exit "$r"
+            echo "Falha de rede ao baixar dependências (tentativa $t); esperando"
+            sleep $((t * 30))
+          done
+          exit 1
 
       # Mostra no próprio log qual teste falhou e por quê (o log do Gradle só lista "STARTED" em ordem embaralhada).
       - name: Resumo dos testes que falharam
@@ -98,7 +110,19 @@ jobs:
           fi
 
       - name: Lint
-        run: ./gradlew --no-daemon lintDebug
+        run: |
+          # Só repete se a falha foi de rede ao baixar dependências (504, timeout); falha de teste ou de código não repete.
+          for t in 1 2 3 4; do
+            set +e
+            ./gradlew --no-daemon lintDebug 2>&1 | tee /tmp/gradle-saida.txt
+            r=${PIPESTATUS[0]}
+            set -e
+            [ "$r" = 0 ] && exit 0
+            grep -q -E "Could not (GET|download|resolve)|Received status code 5|timed out|Read timed out" /tmp/gradle-saida.txt || exit "$r"
+            echo "Falha de rede ao baixar dependências (tentativa $t); esperando"
+            sleep $((t * 30))
+          done
+          exit 1
 
       # Se os segredos da chave de upload existirem, o release sai assinado para a Play Store.
       - name: Preparar chave de upload
@@ -118,7 +142,19 @@ jobs:
           CASINHA_KEYSTORE_PASSWORD: ${{ secrets.CASINHA_KEYSTORE_PASSWORD }}
           CASINHA_KEY_ALIAS: ${{ secrets.CASINHA_KEY_ALIAS }}
           CASINHA_KEY_PASSWORD: ${{ secrets.CASINHA_KEY_PASSWORD }}
-        run: ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease
+        run: |
+          # Só repete se a falha foi de rede ao baixar dependências (504, timeout); falha de teste ou de código não repete.
+          for t in 1 2 3 4; do
+            set +e
+            ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease 2>&1 | tee /tmp/gradle-saida.txt
+            r=${PIPESTATUS[0]}
+            set -e
+            [ "$r" = 0 ] && exit 0
+            grep -q -E "Could not (GET|download|resolve)|Received status code 5|timed out|Read timed out" /tmp/gradle-saida.txt || exit "$r"
+            echo "Falha de rede ao baixar dependências (tentativa $t); esperando"
+            sleep $((t * 30))
+          done
+          exit 1
 
       # Orçamento do app (PRD visual 3D, seção 7): nenhum APK passa de 150 MB. Imprime o tamanho dos APKs e do .aab.
       - name: Conferir tamanho do APK (limite 150 MB)
