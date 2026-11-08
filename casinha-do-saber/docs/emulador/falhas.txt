@@ -1,6 +1,6 @@
-    <property name="project" value=":app" />
   </properties>
-  <testcase name="abrirMapaEAlbum" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="62.188">
+  <testcase name="abrirMapaEAlbum" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="19.399" />
+  <testcase name="arrastarACamaComODedo" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="75.392">
     <failure></failure>
   </testcase>
   <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
@@ -12,7 +12,7 @@ com.android.ddmlib.AdbCommandRejectedException: device offline
 	at com.android.ddmlib.internal.DeviceImpl.logRun1(DeviceImpl.java:1801)
     <property name="project" value=":app" />
   </properties>
-  <testcase name="jogarFase100DeCadaCaminho" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="53.795">
+  <testcase name="jogarFase100DeCadaCaminho" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="61.415">
     <failure></failure>
   </testcase>
   <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
@@ -22,9 +22,9 @@ com.android.ddmlib.AdbCommandRejectedException: device offline
 	at com.android.ddmlib.AdbHelper.setDevice(AdbHelper.java:1000)
 	at com.android.ddmlib.internal.DeviceImpl.lambda$executeRemoteCommand$18(DeviceImpl.java:785)
 	at com.android.ddmlib.internal.DeviceImpl.logRun1(DeviceImpl.java:1801)
-    <property name="project" value=":app" />
   </properties>
-  <testcase name="areaDosPaisDesafioDoDia" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="64.999">
+  <testcase name="areaDosPaisDesafioDoDia" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="16.622" />
+  <testcase name="pintarNoAtelieETocarOPiano" classname="br.com.casinhadosaber.JogoNoEmuladorTest" time="82.229">
     <failure></failure>
   </testcase>
   <system-err>Exception thrown during onAfterAll invocation of plugin AndroidTestApkInstallerPlugin: device offline
