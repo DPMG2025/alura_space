@@ -47,12 +47,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.casinhadosaber.dados.ImagemDaObra
 import br.com.casinhadosaber.dominio.Carimbos
 import br.com.casinhadosaber.dominio.Colorir
 import br.com.casinhadosaber.dominio.DesenhoDeColorir
@@ -77,6 +79,7 @@ import br.com.casinhadosaber.ui.LocalSons
 import br.com.casinhadosaber.ui.componentes.BotaoFofo
 import br.com.casinhadosaber.ui.componentes.BotaoRedondo
 import br.com.casinhadosaber.ui.componentes.DesenhoNoCanvas
+import br.com.casinhadosaber.ui.componentes.PortaoDeAdulto
 import br.com.casinhadosaber.ui.componentes.cartaoFofo
 import br.com.casinhadosaber.ui.componentes.ceuDeBrinquedo
 import br.com.casinhadosaber.ui.componentes.corDaTinta
@@ -276,8 +279,14 @@ private fun EscolherDesenho(estado: EstadoJogo, hoje: Long, onAbrir: (DesenhoDeC
 private fun GaleriaDoLivro(obras: List<Pair<DesenhoDeColorir, Obra>>, onAbrir: (DesenhoDeColorir) -> Unit, modifier: Modifier) {
     val sons = LocalSons.current
     val narrador = LocalNarrador.current
+    val contexto = LocalContext.current
+    /** A obra que um adulto quer guardar como imagem (abre a continha de adulto antes). */
+    var paraGuardar by remember { mutableStateOf<Pair<DesenhoDeColorir, Obra>?>(null) }
+    var aviso by remember { mutableStateOf<String?>(null) }
+    Box(modifier) {
     Column(
-        modifier
+        Modifier
+            .fillMaxSize()
             .background(Brush.verticalGradient(listOf(Color(0xFFF6E7D0), Color(0xFFEBD3B0))))
             .verticalScroll(rememberScrollState())
             .padding(12.dp)
@@ -324,13 +333,43 @@ private fun GaleriaDoLivro(obras: List<Pair<DesenhoDeColorir, Obra>>, onAbrir: (
                         ) {
                             DesenhoNoCanvas(d, o, Modifier.fillMaxSize())
                         }
-                        Text(d.titulo, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Cores.Texto, textAlign = TextAlign.Center)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(d.titulo, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Cores.Texto, textAlign = TextAlign.Center, modifier = Modifier.weight(1f, fill = false))
+                            Spacer(Modifier.width(4.dp))
+                            // Só para os pais (abre a continha): guardar a pintura como imagem.
+                            Box(
+                                Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White)
+                                    .border(2.dp, Color(0x33000000), CircleShape)
+                                    .clickable { sons.toque(); paraGuardar = d to o }
+                                    .semantics { contentDescription = "Guardar ${d.titulo} como imagem, para adultos" }
+                                    .testTag("guardar_${d.id}"),
+                                contentAlignment = Alignment.Center,
+                            ) { Text("📤", fontSize = 18.sp) }
+                        }
                     }
                 }
                 if (linha.size == 1) Spacer(Modifier.weight(1f))
             }
         }
+        aviso?.let { Text(it, style = MaterialTheme.typography.titleSmall, color = Cores.Texto, textAlign = TextAlign.Center) }
         Spacer(Modifier.height(12.dp))
+    }
+    paraGuardar?.let { (d, o) ->
+        Box(
+            Modifier.fillMaxSize().background(Color(0x99000000)).pointerInput(Unit) { detectTapGestures { paraGuardar = null } }.padding(20.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(Modifier.pointerInput(Unit) { detectTapGestures { } }.testTag("portao_guardar_obra")) {
+                PortaoDeAdulto(onLiberar = {
+                    paraGuardar = null
+                    aviso = if (ImagemDaObra.enviar(contexto, d, o)) null else "Não deu para abrir o envio agora. Tente de novo."
+                })
+            }
+        }
+    }
     }
 }
 

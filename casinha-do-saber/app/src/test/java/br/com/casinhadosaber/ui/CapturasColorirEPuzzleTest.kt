@@ -213,9 +213,28 @@ class CapturasColorirEPuzzleTest {
         regra.onNodeWithTag("quadro_gato").assertExists()
         regra.onNodeWithTag("quadro_casinha").assertExists()
         foto("s10_colorir_galeria")
+        // Guardar como imagem é de adulto: abre a continha antes, e tocar fora fecha.
+        regra.onNodeWithTag("guardar_gato").performClick()
+        regra.mainClock.advanceTimeBy(600)
+        regra.onNodeWithTag("portao_guardar_obra").assertExists()
+        foto("s10_colorir_guardar_imagem")
+        regra.onRoot().performTouchInput { click(Offset(10f, height - 10f)) }
+        regra.mainClock.advanceTimeBy(600)
+        regra.onAllNodesWithTag("portao_guardar_obra").assertCountEquals(0)
         regra.onNodeWithTag("quadro_gato").performClick()
         regra.mainClock.advanceTimeBy(600)
         regra.onNodeWithTag("quadro_de_colorir").assertExists()
+    }
+
+    /** A imagem que os pais guardam: o bitmap tem o tamanho pedido e mostra a pintura (não é só papel branco). */
+    @Test fun imagemDaObraDesenhaAPintura() {
+        val b = br.com.casinhadosaber.dados.ImagemDaObra.bitmap(gato, Colorir.obraModelo(gato), 128)
+        assertEquals(128, b.width)
+        assertEquals(128, b.height)
+        val pixels = IntArray(128 * 128)
+        b.getPixels(pixels, 0, 128, 0, 0, 128, 128)
+        assertTrue("a pintura aparece na imagem", pixels.count { it != android.graphics.Color.WHITE } > 128 * 128 / 10)
+        assertEquals("casinha-gato.png", br.com.casinhadosaber.dados.ImagemDaObra.nomeDoArquivo(gato))
     }
 
     /** Pintor do dia: a faixa aparece com o desenho de hoje e some sem informar o dia. */
