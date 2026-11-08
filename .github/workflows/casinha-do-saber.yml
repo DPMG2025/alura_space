@@ -597,21 +597,61 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # Relato do dono: no tablet o app fechava ao vencer fases e completar objetivos. Num emulador só (ligar o
-      # emulador duas vezes no mesmo job deixou o segundo "device offline" na execução 178): tela cheia, a primeira
-      # fase até o prêmio na casa e o chefão de um mundo até o aviso de diploma e a parede de diplomas.
-      # O logcat tem limite de tempo: com o emulador fora, "adb logcat" esperava para sempre e o job estourava.
-      - name: Tela cheia, fases e conquistas no tablet (API 34)
+      # Relato do dono: no tablet o app fechava ao vencer fases e completar objetivos. Como no celular, o emulador do
+      # CI some depois de 6 a 7 minutos de uso (execuções 178 e 179: "device offline" no meio da fase), então cada teste
+      # roda num emulador próprio e curto: tela cheia, a primeira fase até o prêmio na casa e o chefão de um mundo até
+      # o aviso de diploma e a parede de diplomas. O logcat tem limite de tempo (sem aparelho, esperava para sempre).
+      - name: Tela cheia no tablet (API 34)
+        if: always()
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           target: google_apis
           arch: x86_64
           profile: pixel_tablet
+          ram-size: 4096M
+          heap-size: 512M
+          cores: 4
           disable-animations: true
           working-directory: casinha-do-saber
           script: |
-            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.TelaCheiaTest,br.com.casinhadosaber.JogoNoEmuladorTest#jogarUmaFaseEColocarOPremioNaCasa,br.com.casinhadosaber.JogoNoEmuladorTest#completarUmMundoEVerAsConquistas || echo "FALHA_TESTES" > emulador-falhou.txt
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.TelaCheiaTest || echo "FALHA_TESTES" >> emulador-falhou.txt
+            timeout 60 adb logcat -d -s AndroidRuntime:E MEM:W > logcat-tablet.txt || true
+            grep -E "FATAL EXCEPTION|MEM" logcat-tablet.txt || echo "Sem fechamento no logcat do tablet"
+
+      - name: Fase 1 até a casa no tablet (API 34)
+        if: always()
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_tablet
+          ram-size: 4096M
+          heap-size: 512M
+          cores: 4
+          disable-animations: true
+          working-directory: casinha-do-saber
+          script: |
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest#jogarUmaFaseEColocarOPremioNaCasa || echo "FALHA_TESTES" >> emulador-falhou.txt
+            timeout 60 adb logcat -d -s AndroidRuntime:E MEM:W > logcat-tablet.txt || true
+            grep -E "FATAL EXCEPTION|MEM" logcat-tablet.txt || echo "Sem fechamento no logcat do tablet"
+
+      - name: Chefão e diploma no tablet (API 34)
+        if: always()
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_tablet
+          ram-size: 4096M
+          heap-size: 512M
+          cores: 4
+          disable-animations: true
+          working-directory: casinha-do-saber
+          script: |
+            ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest#completarUmMundoEVerAsConquistas || echo "FALHA_TESTES" >> emulador-falhou.txt
             timeout 60 adb logcat -d -s AndroidRuntime:E MEM:W > logcat-tablet.txt || true
             grep -E "FATAL EXCEPTION|MEM" logcat-tablet.txt || echo "Sem fechamento no logcat do tablet"
 
