@@ -241,9 +241,11 @@ fun DrawScope.desenharObra(
     desenho.regioes.forEachIndexed { i, regiao ->
         val caminho = caminhoDa(regiao.forma, origem, lado)
         val tinta = if (soContorno) 0 else obra.tintas.getOrElse(i) { 0 }
-        // Com um fundo escolhido, o que ainda não tem tinta fica transparente e deixa o fundo aparecer
-        // (muitos desenhos têm uma região que cobre o quadrado inteiro).
-        if (tinta == 0) { if (soContorno || obra.fundo == Fundo.NENHUM) drawPath(caminho, Papel) } else encher(caminho, limites(regiao.forma), origem, lado, Tintas.todas[tinta], i)
+        // Com um fundo escolhido, as regiões de cenário (as que vão de um lado ao outro do quadrado, como o céu e o
+        // chão de muitos desenhos) ficam transparentes enquanto não têm tinta e deixam o fundo aparecer. As figuras
+        // continuam em papel branco, para os contornos de trás não aparecerem através delas.
+        val cenario = obra.fundo != Fundo.NENHUM && !soContorno && limites(regiao.forma).width >= 0.95f
+        if (tinta == 0) { if (!cenario) drawPath(caminho, Papel) } else encher(caminho, limites(regiao.forma), origem, lado, Tintas.todas[tinta], i)
         if (!soContorno) {
             for (t in obra.tracos) {
                 if (t.regiao != i) continue
