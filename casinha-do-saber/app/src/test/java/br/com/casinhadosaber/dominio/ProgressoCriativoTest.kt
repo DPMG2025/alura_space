@@ -116,4 +116,33 @@ class ProgressoCriativoTest {
         assertEquals(1, r.quebraCabecasVencidos)
         assertEquals(2, r.pecasDouradas)
     }
+
+    @Test
+    fun `pintor do dia muda a cada dia, percorre o livro e paga extra uma vez so`() {
+        val hoje = 20_000L
+        val d = Colorir.desenhoDoDia(hoje)
+        assertTrue(Colorir.desenhoDoDia(hoje + 1) != d)
+        assertEquals(d, Colorir.desenhoDoDia(hoje + Desenhos.todos.size))
+        assertEquals(Desenhos.todos.first(), Colorir.desenhoDoDia(0))
+        assertEquals(Desenhos.todos.first(), Colorir.desenhoDoDia(-Desenhos.todos.size.toLong()))
+        val feito = Obra(d.id, List(d.regioes.size) { 1 + it % 2 })
+        // Primeira vez do dia: bônus.
+        val (e1, p1) = EstadoJogo().terminarDesenho(d, feito, hoje)
+        assertTrue(p1!!.pintorDoDia)
+        assertEquals(Colorir.premio(d, feito, emptyMap())!!.moedas + Colorir.MOEDAS_DO_PINTOR_DO_DIA, p1.moedas)
+        assertEquals(hoje, e1.diaDoPintor)
+        // Repetir no mesmo dia: sem bônus de novo.
+        val (_, p2) = e1.terminarDesenho(d, feito, hoje)
+        assertFalse(p2!!.pintorDoDia)
+        // Outro desenho no mesmo dia: sem bônus.
+        val outro = Desenhos.todos.first { it.id != d.id }
+        val (_, p3) = EstadoJogo().terminarDesenho(outro, Obra(outro.id, List(outro.regioes.size) { 1 + it % 2 }), hoje)
+        assertFalse(p3!!.pintorDoDia)
+        // Sem informar o dia (-1): nunca tem bônus.
+        assertFalse(EstadoJogo().terminarDesenho(d, feito).second!!.pintorDoDia)
+        // No dia seguinte o desenho do dia é outro e o bônus volta.
+        val d2 = Colorir.desenhoDoDia(hoje + 1)
+        val (_, p4) = e1.terminarDesenho(d2, Obra(d2.id, List(d2.regioes.size) { 1 + it % 2 }), hoje + 1)
+        assertTrue(p4!!.pintorDoDia)
+    }
 }

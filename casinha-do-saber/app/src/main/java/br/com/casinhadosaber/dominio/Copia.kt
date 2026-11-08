@@ -87,7 +87,7 @@ object Copia {
         ).forEach { put(it, 's') }
         listOf("pele", "cabelo", "roupa", "estilo_cabelo", "moedas", "moedas_hoje", "cor_telhado", "cor_porta", "papel", "clima", "timer", "puzzle_seguidas")
             .forEach { put(it, 'i') }
-        listOf("segundos", "dia_moedas", "dia_missao", "dia", "segundos_hoje").forEach { put(it, 'l') }
+        listOf("segundos", "dia_moedas", "dia_missao", "dia", "segundos_hoje", "dia_pintor").forEach { put(it, 'l') }
         listOf("crianca_x", "crianca_y").forEach { put(it, 'f') }
         listOf("viu_dica_arrastar", "som", "musica", "dormindo").forEach { put(it, 'b') }
     }

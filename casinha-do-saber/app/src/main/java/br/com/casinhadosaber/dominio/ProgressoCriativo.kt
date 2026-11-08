@@ -26,11 +26,14 @@ val EstadoJogo.tintasLiberadas: List<Tinta> get() = Tintas.liberadas(desenhosTer
  * "Pronto!": guarda a obra e, se o desenho está terminado, paga o prêmio. Devolve o estado novo e o prêmio
  * (null se ainda não terminou). Terminar de novo só paga se melhorar as estrelas.
  */
-fun EstadoJogo.terminarDesenho(d: DesenhoDeColorir, o: Obra): Pair<EstadoJogo, Colorir.Premio?> {
+fun EstadoJogo.terminarDesenho(d: DesenhoDeColorir, o: Obra, hoje: Long = -1): Pair<EstadoJogo, Colorir.Premio?> {
     val guardado = guardarObra(o)
-    val p = Colorir.premio(d, o, coloridos) ?: return guardado to null
+    val base = Colorir.premio(d, o, coloridos) ?: return guardado to null
+    // Pintor do dia: terminar o desenho sugerido de hoje paga moedinhas extras, uma vez por dia.
+    val doDia = hoje >= 0 && d.id == Colorir.desenhoDoDia(hoje).id && diaDoPintor != hoje
+    val p = if (doDia) base.copy(moedas = base.moedas + Colorir.MOEDAS_DO_PINTOR_DO_DIA, pintorDoDia = true) else base
     val melhores = if (p.estrelas > (coloridos[d.id] ?: 0)) coloridos + (d.id to p.estrelas) else coloridos
-    return guardado.copy(moedas = moedas + p.moedas, coloridos = melhores) to p
+    return guardado.copy(moedas = moedas + p.moedas, coloridos = melhores, diaDoPintor = if (doDia) hoje else diaDoPintor) to p
 }
 
 /** Nível do quebra-cabeça que a criança pode escolher na coleção, no máximo. */

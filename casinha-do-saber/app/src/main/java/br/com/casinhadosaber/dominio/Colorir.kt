@@ -200,7 +200,22 @@ object Colorir {
         }
     }
 
-    data class Premio(val moedas: Int, val estrelas: Int, val primeiraVez: Boolean, val colecaoCompleta: Boolean, val tintaNova: Tinta?)
+    /** Moedinhas extras de terminar o desenho sugerido do dia (uma vez por dia). */
+    const val MOEDAS_DO_PINTOR_DO_DIA = 5
+
+    /** O desenho sugerido de [dia] (dia época): muda todo dia e percorre o livro inteiro. */
+    fun desenhoDoDia(dia: Long, todos: List<DesenhoDeColorir> = Desenhos.todos): DesenhoDeColorir =
+        todos[Math.floorMod(dia, todos.size.toLong()).toInt()]
+
+    data class Premio(
+        val moedas: Int,
+        val estrelas: Int,
+        val primeiraVez: Boolean,
+        val colecaoCompleta: Boolean,
+        val tintaNova: Tinta?,
+        /** Já inclui [MOEDAS_DO_PINTOR_DO_DIA] em [moedas] quando é true. */
+        val pintorDoDia: Boolean = false,
+    )
 
     /**
      * O que a criança ganha ao dizer "Pronto!". [feitos] são os desenhos já terminados (id -> melhores estrelas),

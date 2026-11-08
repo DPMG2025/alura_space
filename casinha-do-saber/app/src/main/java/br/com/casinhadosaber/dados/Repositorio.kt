@@ -424,6 +424,7 @@ class Repositorio(private val context: Context) {
                 coloridos = br.com.casinhadosaber.dominio.Colorir.textoParaFeitos(prefs.getString(COLORIDOS, null)),
                 puzzlesFeitos = br.com.casinhadosaber.dominio.Puzzle.textoParaFeitos(prefs.getString(PUZZLES_FEITOS, null)),
                 puzzleSeguidas = prefs.getInt(PUZZLE_SEGUIDAS, 0).coerceIn(0, 99),
+                diaDoPintor = prefs.getLong(DIA_PINTOR, -1),
                 desafiosDosPaisFeitos = Pais.textoParaDias(prefs.getString(DESAFIOS_PAIS, null)),
                 sessoes = Pais.textoParaRegistros(prefs.getString(SESSOES, null)),
                 // Relembrar, Descobrir o nível e Livrinhos: chaves novas, saves antigos ficam com o padrão.
@@ -489,6 +490,7 @@ class Repositorio(private val context: Context) {
         putString(COLORIDOS, br.com.casinhadosaber.dominio.Colorir.feitosParaTexto(e.coloridos))
         putString(PUZZLES_FEITOS, br.com.casinhadosaber.dominio.Puzzle.feitosParaTexto(e.puzzlesFeitos))
         putInt(PUZZLE_SEGUIDAS, e.puzzleSeguidas)
+        putLong(DIA_PINTOR, e.diaDoPintor)
         putString(DESAFIOS_PAIS, Pais.diasParaTexto(e.desafiosDosPaisFeitos))
         putString(SESSOES, Pais.registrosParaTexto(e.sessoes))
         putString(REVISOES, br.com.casinhadosaber.dominio.Relembrar.paraTexto(e.revisoes))
@@ -554,5 +556,6 @@ class Repositorio(private val context: Context) {
         const val COLORIDOS = "coloridos"
         const val PUZZLES_FEITOS = "puzzles_feitos"
         const val PUZZLE_SEGUIDAS = "puzzle_seguidas"
+        const val DIA_PINTOR = "dia_pintor"
     }
 }

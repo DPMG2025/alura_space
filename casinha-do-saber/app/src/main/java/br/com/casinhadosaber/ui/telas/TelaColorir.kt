@@ -117,11 +117,13 @@ fun TelaColorir(
     onMontarPuzzle: (String) -> Unit,
     /** Para as capturas: abre já neste desenho. */
     abrirDesenho: String? = null,
+    /** Hoje (dia época), para o "Pintor do dia". -1 = sem pintor do dia. */
+    hoje: Long = -1,
 ) {
     var aberto by remember { mutableStateOf(abrirDesenho?.takeIf { it in Desenhos.porId }) }
     val desenho = aberto?.let { Desenhos.porId[it] }
     if (desenho == null) {
-        EscolherDesenho(estado, onAbrir = { aberto = it.id }, onVoltar = onVoltar)
+        EscolherDesenho(estado, hoje, onAbrir = { aberto = it.id }, onVoltar = onVoltar)
     } else {
         PintarDesenho(
             d = desenho,
@@ -129,12 +131,13 @@ fun TelaColorir(
             onAtualizar = onAtualizar,
             onOutro = { aberto = null },
             onMontarPuzzle = onMontarPuzzle,
+            hoje = hoje,
         )
     }
 }
 
 @Composable
-private fun EscolherDesenho(estado: EstadoJogo, onAbrir: (DesenhoDeColorir) -> Unit, onVoltar: () -> Unit) {
+private fun EscolherDesenho(estado: EstadoJogo, hoje: Long, onAbrir: (DesenhoDeColorir) -> Unit, onVoltar: () -> Unit) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     LaunchedEffect(Unit) { narrador.falar("Livro de colorir! Escolha um desenho para pintar.") }
@@ -161,6 +164,37 @@ private fun EscolherDesenho(estado: EstadoJogo, onAbrir: (DesenhoDeColorir) -> U
                 Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                val doDia = if (hoje >= 0) Colorir.desenhoDoDia(hoje) else null
+                if (doDia != null) {
+                    val jaFez = estado.diaDoPintor == hoje
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .cartaoFofo(raio = Raios.Grande)
+                            .clickable {
+                                sons.toque()
+                                narrador.falar("Pintor do dia: ${doDia.titulo}!")
+                                onAbrir(doDia)
+                            }
+                            .padding(10.dp)
+                            .testTag("pintor_do_dia")
+                            .semantics {
+                                contentDescription = "Pintor do dia: ${doDia.titulo}" + if (jaFez) ", já feito hoje" else ", ganha ${Colorir.MOEDAS_DO_PINTOR_DO_DIA} moedinhas a mais"
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        DesenhoNoCanvas(doDia, estado.obraDe(doDia), Modifier.size(56.dp), soContorno = estado.obraDe(doDia).vazia())
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Pintor do dia", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Cores.Texto)
+                            Text(
+                                if (jaFez) "${doDia.emoji} ${doDia.titulo}: feito hoje! Volte amanhã." else "${doDia.emoji} ${doDia.titulo}: ${Colorir.MOEDAS_DO_PINTOR_DO_DIA} moedinhas a mais hoje",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Cores.Texto,
+                            )
+                        }
+                    }
+                }
                 for ((colecao, nome) in Desenhos.colecoes) {
                     val daColecao = Desenhos.daColecao(colecao)
                     val feitos = daColecao.count { it.id in estado.coloridos }
@@ -213,6 +247,7 @@ private fun PintarDesenho(
     onAtualizar: ((EstadoJogo) -> EstadoJogo) -> Unit,
     onOutro: () -> Unit,
     onMontarPuzzle: (String) -> Unit,
+    hoje: Long = -1,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -517,13 +552,13 @@ private fun PintarDesenho(
                     BotaoFofo(
                         onClick = {
                             val atual = hist.atual
-                            val (_, p) = estadoAtual.terminarDesenho(d, atual)
+                            val (_, p) = estadoAtual.terminarDesenho(d, atual, hoje)
                             if (p == null) {
                                 sons.erro()
                                 realce = Colorir.proximaRegiao(atual)
                                 narrador.falar("Faltam uns pedacinhos! Olhe onde está piscando.")
                             } else {
-                                atualizar { it.terminarDesenho(d, atual).first }
+                                atualizar { it.terminarDesenho(d, atual, hoje).first }
                                 sons.premio()
                                 premio = p
                                 narrador.falar(
@@ -582,6 +617,9 @@ private fun PremioDoColorir(
             EstrelasDoDesenho(premio.estrelas, 30.sp)
             if (premio.moedas > 0) {
                 Text("+${premio.moedas} moedinhas 🪙", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Cores.Texto)
+            }
+            if (premio.pintorDoDia) {
+                Text("Pintor do dia! ${Colorir.MOEDAS_DO_PINTOR_DO_DIA} moedinhas a mais", style = MaterialTheme.typography.titleMedium, color = Cores.Texto, fontWeight = FontWeight.Bold)
             }
             val nova = premio.tintaNova
             if (nova != null) {

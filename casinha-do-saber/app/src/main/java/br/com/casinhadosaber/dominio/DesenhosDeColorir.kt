@@ -55,6 +55,8 @@ object Desenhos {
         "castelo" to "🏰 Castelos e princesas",
         "fazenda" to "🚜 Fazenda",
         "natureza" to "🌈 Natureza",
+        "frutas" to "🍎 Frutas",
+        "brinquedos" to "🧸 Brinquedos",
     )
 
     fun nomeDaColecao(id: String): String = colecoes.firstOrNull { it.first == id }?.second ?: id
@@ -535,6 +537,84 @@ object Desenhos {
             bola(0.33f, 0.3f, 0.07f, 3)
             bola(0.38f, 0.18f, 0.07f, 2)
             bola(0.5f, 0.3f, 0.1f, 10)
+        },
+        // ---------------------------------------------------------------- Frutas
+        desenho("maca", "Maçã", "frutas", "🍎") {
+            fundo(5)
+            chao(0.85f, 4)
+            ret(0.48f, 0.18f, 0.52f, 0.34f, 10)
+            el(0.6f, 0.2f, 0.1f, 0.05f, 4)
+            bola(0.5f, 0.58f, 0.28f, 1)
+            bola(0.4f, 0.5f, 0.05f, 9)
+        },
+        desenho("banana", "Banana", "frutas", "🍌") {
+            fundo(6)
+            chao(0.85f, 4)
+            poli(3, 0.15f, 0.4f, 0.25f, 0.55f, 0.4f, 0.7f, 0.6f, 0.78f, 0.8f, 0.72f, 0.9f, 0.6f, 0.92f, 0.5f, 0.85f, 0.55f, 0.75f, 0.65f, 0.6f, 0.68f, 0.45f, 0.6f, 0.32f, 0.45f, 0.25f, 0.32f)
+            ret(0.1f, 0.28f, 0.2f, 0.4f, 10)
+        },
+        desenho("melancia", "Melancia", "frutas", "🍉") {
+            fundo(6)
+            chao(0.82f, 3)
+            poli(4, 0.92f,0.3f,0.899f,0.43f,0.84f,0.547f,0.747f,0.64f,0.63f,0.699f,0.5f,0.72f,0.37f,0.699f,0.253f,0.64f,0.16f,0.547f,0.101f,0.43f,0.08f,0.3f)
+            poli(1, 0.85f,0.3f,0.833f,0.408f,0.783f,0.506f,0.706f,0.583f,0.608f,0.633f,0.5f,0.65f,0.392f,0.633f,0.294f,0.583f,0.217f,0.506f,0.167f,0.408f,0.15f,0.3f)
+            bola(0.4f, 0.5f, 0.025f, 12)
+            bola(0.5f, 0.56f, 0.025f, 12)
+            bola(0.6f, 0.5f, 0.025f, 12)
+        },
+        desenho("uva", "Cacho de uvas", "frutas", "🍇") {
+            fundo(5)
+            ret(0.48f, 0.08f, 0.52f, 0.24f, 10)
+            el(0.62f, 0.14f, 0.1f, 0.05f, 4)
+            bola(0.36f, 0.34f, 0.07f, 8)
+            bola(0.5f, 0.34f, 0.07f, 8)
+            bola(0.64f, 0.34f, 0.07f, 8)
+            bola(0.42f, 0.48f, 0.07f, 8)
+            bola(0.58f, 0.48f, 0.07f, 8)
+            bola(0.35f, 0.5f, 0.07f, 9)
+            bola(0.65f, 0.5f, 0.07f, 9)
+            bola(0.5f, 0.62f, 0.07f, 8)
+            bola(0.5f, 0.76f, 0.07f, 9)
+        },
+        // ---------------------------------------------------------------- Brinquedos
+        desenho("bola", "Bola", "brinquedos", "⚽") {
+            fundo(6)
+            chao(0.8f, 4)
+            bola(0.5f, 0.55f, 0.32f, 7)
+            el(0.5f, 0.55f, 0.32f, 0.1f, 3)
+            bola(0.5f, 0.55f, 0.1f, 1)
+        },
+        desenho("ursinho", "Ursinho", "brinquedos", "🧸") {
+            fundo(9)
+            bola(0.33f, 0.25f, 0.08f, 10)
+            bola(0.67f, 0.25f, 0.08f, 10)
+            el(0.5f, 0.78f, 0.22f, 0.2f, 10)
+            el(0.5f, 0.8f, 0.13f, 0.13f, 2)
+            bola(0.5f, 0.4f, 0.2f, 10)
+            el(0.5f, 0.46f, 0.09f, 0.07f, 2)
+            bola(0.5f, 0.44f, 0.02f, 12)
+            bola(0.42f, 0.35f, 0.016f, 12)
+            bola(0.58f, 0.35f, 0.016f, 12)
+        },
+        desenho("pipa", "Pipa", "brinquedos", "🪁") {
+            fundo(6)
+            nuvem(0.2f, 0.2f)
+            nuvem(0.8f, 0.85f)
+            poli(1, 0.5f, 0.1f, 0.75f, 0.4f, 0.5f, 0.75f, 0.25f, 0.4f)
+            tri(0.5f, 0.1f, 0.75f, 0.4f, 0.5f, 0.4f, 3)
+            tri(0.25f, 0.4f, 0.5f, 0.4f, 0.5f, 0.75f, 3)
+            ret(0.49f, 0.75f, 0.51f, 0.92f, 11)
+            bola(0.5f, 0.82f, 0.03f, 8)
+        },
+        desenho("blocos", "Blocos de montar", "brinquedos", "🧱") {
+            fundo(3)
+            chao(0.85f, 10)
+            ret(0.2f, 0.55f, 0.5f, 0.85f, 1)
+            ret(0.5f, 0.55f, 0.8f, 0.85f, 7)
+            ret(0.35f, 0.25f, 0.65f, 0.55f, 4)
+            bola(0.35f, 0.7f, 0.07f, 3)
+            bola(0.65f, 0.7f, 0.07f, 3)
+            bola(0.5f, 0.4f, 0.07f, 3)
         },
     )
 

@@ -533,6 +533,7 @@ class MainActivity : ComponentActivity() {
                         onAtualizar = repo::atualizar,
                         onVoltar = { irPara(Tela.CasaPorDentro) },
                         onMontarPuzzle = { fonte -> irPara(Tela.Puzzle(fonte)) },
+                        hoje = repo.hoje(),
                     )
 
                     is Tela.Puzzle -> TelaPuzzle(

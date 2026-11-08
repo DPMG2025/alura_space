@@ -92,6 +92,8 @@ data class EstadoJogo(
     /** Quebra-cabeças (Fase 11): melhores estrelas por "desenho:nível" e vitórias seguidas sem dica (para subir de nível). */
     val puzzlesFeitos: Map<String, Int> = emptyMap(),
     val puzzleSeguidas: Int = 0,
+    /** Dia (dia época) em que o bônus do "Pintor do dia" já foi pago; -1 = nunca. */
+    val diaDoPintor: Long = -1,
     /** Dias (dia época) em que o desafio dos pais foi marcado como feito (últimos [Pais.DIAS_GUARDADOS] dias). */
     val desafiosDosPaisFeitos: Set<Long> = emptySet(),
     /** Registro curto das partidas para o relatório da semana (últimos [Pais.DIAS_GUARDADOS] dias). */

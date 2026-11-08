@@ -133,6 +133,21 @@ class CapturasColorirEPuzzleTest {
         foto("s10_colorir_pincel")
     }
 
+    /** Pintor do dia: a faixa aparece com o desenho de hoje e some sem informar o dia. */
+    @Test fun colorirPintorDoDia() {
+        val hoje = 20_000L
+        montar { TelaColorir(EstadoJogo(perfil = menina), {}, {}, {}, hoje = hoje) }
+        regra.mainClock.advanceTimeBy(1500)
+        regra.onNodeWithTag("pintor_do_dia").assertExists()
+        foto("s10_colorir_pintor_do_dia")
+    }
+
+    @Test fun colorirSemDiaNaoTemPintorDoDia() {
+        montar { TelaColorir(EstadoJogo(perfil = menina), {}, {}, {}) }
+        regra.mainClock.advanceTimeBy(1500)
+        regra.onAllNodesWithTag("pintor_do_dia").assertCountEquals(0)
+    }
+
     /** Modo fácil: some o pincel e a borracha e ficam seis cores. */
     @Test fun colorirModoFacilEscondeFerramentas() {
         montar { TelaColorir(EstadoJogo(perfil = menina), {}, {}, {}, abrirDesenho = "gato") }
