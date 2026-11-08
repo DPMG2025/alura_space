@@ -1,9 +1,9 @@
 aparelho: API 26 (8.0.0), unknown Android SDK built for x86_64
 limites: memoryClass=384MB largeMemoryClass=384MB maxMemory=384MB
-abertura (1a, atividade ate a tela inicial composta): 2475ms
-memoria inicio: pss=102MB java=8MB nativo=50MB graficos=0MB
-abertura (2a, de novo no mesmo processo): 663ms
-memoria casa: pss=123MB java=20MB nativo=59MB graficos=0MB
-memoria casa_por_dentro_lojinha: pss=118MB java=11MB nativo=66MB graficos=0MB
-memoria jogo: pss=133MB java=11MB nativo=75MB graficos=0MB
-resumo: abertura=2475ms pss_maximo=133MB (jogo)
+abertura (1a, atividade ate a tela inicial composta): 3628ms
+memoria inicio: pss=102MB java=11MB nativo=48MB graficos=0MB
+abertura (2a, de novo no mesmo processo): 1326ms
+memoria casa: pss=108MB java=9MB nativo=57MB graficos=0MB
+memoria casa_por_dentro_lojinha: pss=118MB java=11MB nativo=64MB graficos=0MB
+memoria jogo: pss=126MB java=13MB nativo=66MB graficos=0MB
+resumo: abertura=3628ms pss_maximo=126MB (jogo)
