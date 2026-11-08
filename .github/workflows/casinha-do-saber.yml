@@ -308,7 +308,7 @@ jobs:
         if: always()
         run: |
           python3 - <<'PY'
-          import glob, os
+          import glob, os, re
           import xml.etree.ElementTree as ET
           if not os.path.exists("emulador-falhou.txt"):
               raise SystemExit(0)
@@ -325,8 +325,13 @@ jobs:
                   reais.append(f + ": xml ilegivel")
                   continue
               for e in raiz.iter("system-err"):
-                  if "Test run failed to complete" in (e.text or ""):
-                      reais.append(f + ": a execucao nao completou")
+                  m = re.search(r"Test run failed to complete[^\n]*", e.text or "")
+                  if m:
+                      n = re.search(r"Expected (\d+) tests?, received (\d+)", m.group(0))
+                      if n and int(n.group(2)) >= int(n.group(1)):
+                          queda.append("(aviso de execucao incompleta com todos os testes recebidos)")
+                      else:
+                          reais.append(os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(f)))) + ": " + m.group(0)[:200])
               for tc in raiz.iter("testcase"):
                   falha = tc.find("failure")
                   if falha is None:
