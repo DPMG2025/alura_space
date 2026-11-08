@@ -32,6 +32,10 @@ fun CartaoDasCriacoes(resumo: ResumoDasCriacoes, modifier: Modifier = Modifier) 
                 "Quebra cabeças: ${resumo.quebraCabecasVencidos} vencidos, ${resumo.pecasDouradas} peças douradas.",
                 style = MaterialTheme.typography.bodyLarge,
             )
+            if (resumo.selosTotal > 0) {
+                Spacer(Modifier.height(4.dp))
+                Text("Selos: ${resumo.selos} de ${resumo.selosTotal}.", style = MaterialTheme.typography.bodyLarge)
+            }
         }
     }
 }

@@ -145,4 +145,27 @@ class ProgressoCriativoTest {
         val (_, p4) = e1.terminarDesenho(d2, Obra(d2.id, List(d2.regioes.size) { 1 + it % 2 }), hoje + 1)
         assertTrue(p4!!.pintorDoDia)
     }
+
+    @Test
+    fun `selos - um por colecao de desenhos completa e um por marco de quebra cabecas`() {
+        val vazio = EstadoJogo().selosDeCriacao
+        assertEquals(Desenhos.colecoes.size + Puzzle.marcos.size, vazio.size)
+        assertTrue(vazio.none { it.ganho })
+        assertEquals(vazio.size, vazio.map { it.id }.toSet().size)
+        // Termina todos os desenhos de uma coleção: ganha o selo dela e só o dela.
+        val colecao = Desenhos.colecoes.first().first
+        val todos = Desenhos.daColecao(colecao).associate { it.id to 1 }
+        val e = EstadoJogo(coloridos = todos)
+        val ganhos = e.selosDeCriacao.filter { it.ganho }
+        assertEquals(listOf("colorir:$colecao"), ganhos.map { it.id })
+        assertEquals(1, e.resumoDasCriacoes.selos)
+        // Uma coleção só com parte dos desenhos não ganha selo.
+        val parcial = EstadoJogo(coloridos = Desenhos.daColecao(colecao).drop(1).associate { it.id to 1 })
+        assertTrue(parcial.selosDeCriacao.none { it.ganho })
+        // Marcos do quebra cabeça: 1 vitória abre o primeiro.
+        val umaVitoria = EstadoJogo(puzzlesFeitos = mapOf("gato:1" to 1))
+        assertEquals(listOf("puzzle:1"), umaVitoria.selosDeCriacao.filter { it.ganho }.map { it.id })
+        val dez = EstadoJogo(puzzlesFeitos = (1..10).associate { "gato:${it % 8 + 1}".let { k -> if (it > 8) "peixe:${it - 8}" else k } to 1 })
+        assertTrue(dez.selosDeCriacao.first { it.id == "puzzle:10" }.ganho)
+    }
 }

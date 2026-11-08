@@ -62,6 +62,8 @@ data class ResumoDasCriacoes(
     val estrelasDeColorir: Int,
     val quebraCabecasVencidos: Int,
     val pecasDouradas: Int,
+    val selos: Int = 0,
+    val selosTotal: Int = 0,
 ) {
     val comecou: Boolean get() = desenhosTerminados > 0 || quebraCabecasVencidos > 0 || estrelasDeColorir > 0
 }
@@ -73,4 +75,19 @@ val EstadoJogo.resumoDasCriacoes: ResumoDasCriacoes
         estrelasDeColorir = coloridos.values.sum(),
         quebraCabecasVencidos = puzzlesFeitos.size,
         pecasDouradas = Puzzle.pecasDouradas(puzzlesFeitos),
+        selos = selosDeCriacao.count { it.ganho },
+        selosTotal = selosDeCriacao.size,
     )
+
+/** Um selo das criações: um por coleção de desenhos terminada e um por marco de quebra cabeças. */
+data class SeloDeCriacao(val id: String, val titulo: String, val emoji: String, val ganho: Boolean)
+
+val EstadoJogo.selosDeCriacao: List<SeloDeCriacao>
+    get() {
+        val colecoes = Desenhos.colecoes.map { (id, nome) ->
+            val dela = Desenhos.daColecao(id)
+            SeloDeCriacao("colorir:$id", "Coleção " + nome.substringAfter(' '), "🏅", dela.isNotEmpty() && dela.all { it.id in coloridos })
+        }
+        val marcos = Puzzle.marcos.map { SeloDeCriacao("puzzle:${it.total}", it.nome, "🏆", puzzlesFeitos.size >= it.total) }
+        return colecoes + marcos
+    }

@@ -208,6 +208,7 @@ class CapturasColorirEPuzzleTest {
     @Test fun puzzleMenu() {
         montar { TelaPuzzle(EstadoJogo(perfil = menina), {}, {}) }
         regra.onNodeWithTag("puzzle_montar").assertExists()
+        regra.onNodeWithTag("puzzle_selos").assertExists()
         foto("s11_puzzle_menu")
     }
 

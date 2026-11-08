@@ -177,6 +177,14 @@ private fun EscolherPuzzle(
                 Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                Text(
+                    "Selos: " + Puzzle.marcos.joinToString("   ") { m ->
+                        (if (estado.puzzlesFeitos.size >= m.total) "🏆 " else "🔒 ") + m.nome
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Cores.Texto,
+                    modifier = Modifier.testTag("puzzle_selos"),
+                )
                 Text("Escolha a imagem", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Cores.Texto)
                 for (linha in Desenhos.todos.chunked(4)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

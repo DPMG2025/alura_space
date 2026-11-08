@@ -199,7 +199,7 @@ private fun EscolherDesenho(estado: EstadoJogo, hoje: Long, onAbrir: (DesenhoDeC
                     val daColecao = Desenhos.daColecao(colecao)
                     val feitos = daColecao.count { it.id in estado.coloridos }
                     Text(
-                        "$nome  $feitos de ${daColecao.size}",
+                        "$nome  $feitos de ${daColecao.size}" + if (feitos == daColecao.size) "  🏅" else "",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Cores.Texto,
