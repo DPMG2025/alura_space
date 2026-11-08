@@ -310,6 +310,8 @@ private fun JogarPuzzle(
     var estrelasGanhas by remember(partida) { mutableIntStateOf(0) }
     /** SONDA TEMPORÁRIA (diagnóstico do CI): últimos passos do fluxo de largar peças. */
     var sonda by remember(partida) { mutableStateOf("") }
+    val contadorDeComposicoes = remember { IntArray(1) }
+    contadorDeComposicoes[0]++
 
     LaunchedEffect(partida) { narrador.falar(if (partida.tipo == TipoDeJogo.MONTAR) "Arraste cada peça para o lugar dela." else "Deslize as peças para o espaço vazio.") }
     LaunchedEffect(dicaPeca, dicaDeslizante) {
@@ -358,7 +360,7 @@ private fun JogarPuzzle(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = Cores.Texto,
-                            modifier = Modifier.testTag("puzzle_faltam").semantics { stateDescription = sonda },
+                            modifier = Modifier.testTag("puzzle_faltam").semantics { stateDescription = sonda + " | composicoes=${contadorDeComposicoes[0]} montagemFaltam(semantica)=${montagem.faltam} faltaNaComposicao=$falta" },
                         )
                     }
                 }
