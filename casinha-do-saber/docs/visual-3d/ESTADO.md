@@ -121,6 +121,7 @@ Lições desta rodada (valem para qualquer tela nova):
 * Peças de arrastar: ler a posição na fase de layout (`offset { }`), e tratar o cancelamento do gesto como soltar (`onDragCancel` também larga a peça). Dar sempre o caminho alternativo de tocar (a peça escolhida vai para a casa tocada), que também serve a quem não arrasta.
 * Bandeja com uma casa por peça (sem sobreposição): o tabuleiro fica menor, mas todas as peças aparecem e podem ser pegas.
 * Em teste de Compose com `mainClock.autoAdvance = false`, estado mudado dentro de um gesto não recompõe sozinho: chamar `Snapshot.sendApplyNotifications()` antes de avançar o relógio. No aparelho o Choreographer faz isso.
+* `performScrollTo` trava o teste quando `mainClock.autoAdvance = false` (a rolagem animada nunca termina): a execução 169 e a 170 ficaram presas nos testes de unidade por isso. Em captura nova, abrir a tela já no estado desejado (parâmetro) ou tocar só no que cabe na tela; se precisar rolar, usar o `rolarAte` de `CapturasPaisTest`.
 * O CI agora imprime o resumo dos testes que falharam (passo "Resumo dos testes que falharam"); usar isso em vez de ler o log inteiro. Para diagnosticar teste de UI, uma sonda em semântica (`stateDescription`) impressa na mensagem do `assertEquals` resolveu em duas execuções o que a leitura do código não resolveu em quatro.
 
 Ficou de fora do plano (a fazer):
