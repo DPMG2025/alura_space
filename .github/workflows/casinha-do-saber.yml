@@ -358,10 +358,12 @@ jobs:
           working-directory: casinha-do-saber
           script: |
             adb logcat -c || true
-            nohup sh -c 'adb logcat -v time "*:W" TestRunner:I > logcat-emulador-g.txt 2>&1' > /dev/null 2>&1 &
+            # Arquivos com outro nome e outra pasta: o avaliador de falhas (que lê logcat-emulador-* e saida-emulador/)
+            # não conta este passo informativo.
+            nohup sh -c 'adb logcat -v time "*:W" TestRunner:I > logcat-chefao-informativo.txt 2>&1' > /dev/null 2>&1 &
             ./gradlew connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.class=br.com.casinhadosaber.JogoNoEmuladorTest#completarUmMundoEVerAsConquistas || echo "chefão no celular falhou (informativo)"
-            mkdir -p saida-emulador/g
-            cp -r app/build/outputs/connected_android_test_additional_output app/build/outputs/androidTest-results saida-emulador/g/ 2>/dev/null || true
+            sleep 2
+            grep -E "FATAL|Fatal signal|TestRunner.*(finished|failed)" logcat-chefao-informativo.txt | tail -20 || true
 
       - name: Testes de voz no emulador (6 de 6, informativo)
         uses: reactivecircus/android-emulator-runner@v2
