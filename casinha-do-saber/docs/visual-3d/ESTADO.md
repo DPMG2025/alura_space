@@ -104,6 +104,8 @@ Execução 159 (commit 67538d8, 2026-11-08): QUARTA execução totalmente verde 
 Execução 160 (commit a6853a7, 2026-11-08): com os 60 desenhos em 15 coleções, o build completo (testes, Lint, APK, tamanho, permissões), o tablet e o Android 7 e 8 (que checam a fonte dos emojis dos desenhos novos) passaram. O celular também passou (passos terminados e avaliador sem falha real): QUINTA execução totalmente verde seguida.
 Execução 161 (commit 57d5477, 2026-11-08): falhou em 30 s por rede do runner, não por código: o `gradlew` não conseguiu baixar `gradle-8.14.3-bin.zip` de `services.gradle.org` ("timeout (10000ms)") e nenhum teste rodou. A reexecução pela API é recusada (403, o token do ambiente não pode reexecutar); a saída é enviar um commit novo, o que foi feito. Se o job de testes cair em poucos segundos com esse erro, é este caso.
 
+Execução 162 (commit bf8a422, 2026-11-08): caiu em 24 s com HTTP 504 ao baixar o Gradle de `github.com/gradle/gradle-distributions` (mesmo caso da 161). Execução 163 (commit 77f1461): primeiro commit com o passo "Baixar o Gradle (tenta de novo se a rede falhar)" nos quatro jobs de teste (até 6 tentativas, espera crescente). Em andamento; o aviso de travou (72ad525) só conta como validado quando ela ficar verde.
+
 Lições desta rodada (valem para qualquer tela nova):
 * Nome de classe, ponto e desenho colidiam com código existente (`QuebraCabeca`, `Ponto`, `Desenho`); conferir antes de criar tipos no pacote `dominio`.
 * Nunca usar símbolo fora da fonte embutida (☆ falhou; ⭐ 🪙 🔒 🧩 e os outros usados passam). O teste `EmojisNaFonteEmbutidaTest` varre o código.
