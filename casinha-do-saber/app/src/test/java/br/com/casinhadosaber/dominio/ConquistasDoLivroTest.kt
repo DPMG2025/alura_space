@@ -61,4 +61,20 @@ class ConquistasDoLivroTest {
         assertTrue(f.first().comoGanhar.startsWith("Termine o desenho "))
         assertEquals("Termine todos os desenhos da coleção", f.last().comoGanhar)
     }
+
+    @Test
+    fun `galeria mostra so os desenhos terminados com pintura guardada na ordem do livro`() {
+        val gato = Desenhos.porId.getValue("gato")
+        val segundo = bichos[1]
+        val pintado = Colorir.obraModelo(gato)
+        var e = EstadoJogo(obrasDeColorir = mapOf(gato.id to pintado, segundo.id to Colorir.obraModelo(segundo)), coloridos = mapOf(gato.id to 1))
+        assertEquals(listOf(gato.id), e.obrasDaGaleria.map { it.first.id }) // o segundo está pintado, mas não terminado
+        e = e.copy(coloridos = e.coloridos + (segundo.id to 2))
+        assertEquals(Desenhos.todos.filter { it.id == gato.id || it.id == segundo.id }.map { it.id }, e.obrasDaGaleria.map { it.first.id })
+        assertEquals(pintado, e.obrasDaGaleria.first { it.first.id == gato.id }.second)
+        // Recomeçar tira da galeria, sem tirar as estrelas.
+        e = e.recomecarObra(gato)
+        assertEquals(listOf(segundo.id), e.obrasDaGaleria.map { it.first.id })
+        assertEquals(1, e.coloridos[gato.id])
+    }
 }

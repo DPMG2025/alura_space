@@ -197,6 +197,27 @@ class CapturasColorirEPuzzleTest {
         foto("s10_diploma_do_livro")
     }
 
+    /** Galeria: os desenhos terminados viram quadros; tocar num quadro abre o desenho para pintar. */
+    @Test fun colorirGaleriaDasObras() {
+        val casinha = Desenhos.porId.getValue("casinha")
+        val e = EstadoJogo(
+            perfil = menina,
+            obrasDeColorir = mapOf(gato.id to Colorir.obraModelo(gato).copy(fundo = Fundo.CEU), casinha.id to Colorir.obraModelo(casinha)),
+            coloridos = mapOf(gato.id to 3, casinha.id to 1),
+        )
+        montar { TelaColorir(e, {}, {}, {}) }
+        regra.mainClock.advanceTimeBy(600)
+        regra.onNodeWithTag("abrir_galeria").performClick()
+        regra.mainClock.advanceTimeBy(600)
+        regra.onNodeWithTag("galeria_do_livro").assertExists()
+        regra.onNodeWithTag("quadro_gato").assertExists()
+        regra.onNodeWithTag("quadro_casinha").assertExists()
+        foto("s10_colorir_galeria")
+        regra.onNodeWithTag("quadro_gato").performClick()
+        regra.mainClock.advanceTimeBy(600)
+        regra.onNodeWithTag("quadro_de_colorir").assertExists()
+    }
+
     /** Pintor do dia: a faixa aparece com o desenho de hoje e some sem informar o dia. */
     @Test fun colorirPintorDoDia() {
         val hoje = 20_000L

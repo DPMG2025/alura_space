@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
@@ -65,6 +66,7 @@ import br.com.casinhadosaber.dominio.Tintas
 import br.com.casinhadosaber.dominio.carimbosLiberados
 import br.com.casinhadosaber.dominio.desenhosTerminados
 import br.com.casinhadosaber.dominio.guardarObra
+import br.com.casinhadosaber.dominio.obrasDaGaleria
 import br.com.casinhadosaber.dominio.obraDe
 import br.com.casinhadosaber.dominio.recomecarObra
 import br.com.casinhadosaber.dominio.terminarDesenho
@@ -148,6 +150,8 @@ private fun EscolherDesenho(estado: EstadoJogo, hoje: Long, onAbrir: (DesenhoDeC
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
     LaunchedEffect(Unit) { narrador.falar("Livro de colorir! Escolha um desenho para pintar.") }
+    var galeria by remember { mutableStateOf(false) }
+    val obras = estado.obrasDaGaleria
     EscalaDeTablet {
         Column(
             Modifier
@@ -166,8 +170,28 @@ private fun EscolherDesenho(estado: EstadoJogo, hoje: Long, onAbrir: (DesenhoDeC
                     color = Cores.Texto,
                     modifier = Modifier.semantics { contentDescription = "Você terminou ${estado.desenhosTerminados} desenhos de ${Desenhos.todos.size}" },
                 )
+                Spacer(Modifier.width(8.dp))
+                BotaoRedondo(
+                    if (galeria) "📖" else "🖼️",
+                    if (galeria) "Voltar para o livro" else "Minha galeria",
+                    {
+                        sons.toque()
+                        galeria = !galeria
+                        narrador.falar(
+                            when {
+                                !galeria -> "Livro de colorir!"
+                                obras.isEmpty() -> "Sua galeria! Termine um desenho para pendurar o primeiro quadro."
+                                else -> "Sua galeria! Toque num quadro para pintar mais."
+                            },
+                        )
+                    },
+                    tamanho = 52.dp,
+                    modifier = Modifier.testTag("abrir_galeria"),
+                )
             }
-            Column(
+            if (galeria) {
+                GaleriaDoLivro(obras, onAbrir, Modifier.weight(1f).fillMaxWidth())
+            } else Column(
                 Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -244,6 +268,69 @@ private fun EscolherDesenho(estado: EstadoJogo, hoje: Long, onAbrir: (DesenhoDeC
                 Spacer(Modifier.height(16.dp))
             }
         }
+    }
+}
+
+/** A galeria: as obras terminadas penduradas na parede, em molduras de madeira. Tocar num quadro abre o desenho. */
+@Composable
+private fun GaleriaDoLivro(obras: List<Pair<DesenhoDeColorir, Obra>>, onAbrir: (DesenhoDeColorir) -> Unit, modifier: Modifier) {
+    val sons = LocalSons.current
+    val narrador = LocalNarrador.current
+    Column(
+        modifier
+            .background(Brush.verticalGradient(listOf(Color(0xFFF6E7D0), Color(0xFFEBD3B0))))
+            .verticalScroll(rememberScrollState())
+            .padding(12.dp)
+            .testTag("galeria_do_livro"),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (obras.isEmpty()) {
+            Box(
+                Modifier.size(width = 160.dp, height = 160.dp).border(10.dp, Color(0xFFC98B5B), RoundedCornerShape(6.dp)).background(Color.White.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center,
+            ) { Text("🖼️", fontSize = 48.sp, modifier = Modifier.alpha(0.4f)) }
+            Text(
+                "Termine um desenho para pendurar o primeiro quadro!",
+                style = MaterialTheme.typography.titleMedium,
+                color = Cores.Texto,
+                textAlign = TextAlign.Center,
+            )
+        }
+        for (linha in obras.chunked(2)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                for ((d, o) in linha) {
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .clickable {
+                                sons.toque()
+                                narrador.falar(d.titulo)
+                                onAbrir(d)
+                            }
+                            .semantics(mergeDescendants = true) { contentDescription = "Quadro ${d.titulo}" }
+                            .testTag("quadro_${d.id}"),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        // Pregadinho e a moldura de madeira.
+                        Box(Modifier.size(10.dp).clip(CircleShape).background(Color(0xFF8D5A3B)))
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(1f)
+                                .background(Brush.linearGradient(listOf(Color(0xFFD9A06B), Color(0xFFA8703F))), RoundedCornerShape(6.dp))
+                                .padding(10.dp)
+                                .background(Color.White),
+                        ) {
+                            DesenhoNoCanvas(d, o, Modifier.fillMaxSize())
+                        }
+                        Text(d.titulo, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Cores.Texto, textAlign = TextAlign.Center)
+                    }
+                }
+                if (linha.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+        Spacer(Modifier.height(12.dp))
     }
 }
 

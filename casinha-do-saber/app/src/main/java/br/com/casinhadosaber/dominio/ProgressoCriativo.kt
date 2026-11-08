@@ -94,3 +94,13 @@ val EstadoJogo.selosDeCriacao: List<SeloDeCriacao>
 
 /** Carimbos que a criança pode usar agora. */
 val EstadoJogo.carimbosLiberados: List<TipoDeCarimbo> get() = Carimbos.liberados(desenhosTerminados)
+
+/**
+ * As obras da galeria do Livro de Colorir: os desenhos terminados que ainda têm a pintura guardada, na ordem do
+ * livro. Desenho recomeçado (folha nova) sai da galeria até ser terminado de novo; as estrelas ficam.
+ */
+val EstadoJogo.obrasDaGaleria: List<Pair<DesenhoDeColorir, Obra>>
+    get() = Desenhos.todos.mapNotNull { d ->
+        val o = obrasDeColorir[d.id]
+        if (d.id in coloridos && o != null && !o.vazia()) d to o else null
+    }
