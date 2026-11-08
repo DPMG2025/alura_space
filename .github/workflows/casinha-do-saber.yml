@@ -601,6 +601,8 @@ jobs:
       # CI some depois de 6 a 7 minutos de uso (execuções 178 e 179: "device offline" no meio da fase), então cada teste
       # roda num emulador próprio e curto: tela cheia, a primeira fase até o prêmio na casa e o chefão de um mundo até
       # o aviso de diploma e a parede de diplomas. O logcat tem limite de tempo (sem aparelho, esperava para sempre).
+      # Os testes de jogo usam o tablet menor (Nexus 7, 800x1280, ainda tela de tablet para o app): no pixel_tablet
+      # (2560x1600, desenhado sem placa de vídeo) a foto da tela estourava o tempo e o emulador sumia (execução 180).
       - name: Tela cheia no tablet (API 34)
         if: always()
         uses: reactivecircus/android-emulator-runner@v2
@@ -626,7 +628,7 @@ jobs:
           api-level: 34
           target: google_apis
           arch: x86_64
-          profile: pixel_tablet
+          profile: "Nexus 7"
           ram-size: 4096M
           heap-size: 512M
           cores: 4
@@ -644,7 +646,7 @@ jobs:
           api-level: 34
           target: google_apis
           arch: x86_64
-          profile: pixel_tablet
+          profile: "Nexus 7"
           ram-size: 4096M
           heap-size: 512M
           cores: 4

@@ -109,8 +109,12 @@ class JogoNoEmuladorTest {
 
     private fun capturar(nome: String) {
         regra.waitForIdle()
-        val imagem = regra.onRoot().captureToImage().asAndroidBitmap()
-        armazenamento.openOutputFile("$nome.png").use { imagem.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        // A foto é só registro: no emulador de tablet o quadro às vezes não fica pronto nos 2 s que o Android espera
+        // (execução 180), e isso não pode reprovar o teste.
+        runCatching {
+            val imagem = regra.onRoot().captureToImage().asAndroidBitmap()
+            armazenamento.openOutputFile("$nome.png").use { imagem.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        }.onFailure { android.util.Log.w("CAPTURA", "sem foto de $nome: ${it.message}") }
     }
 
     /** Avança o relógio do Compose (as esperas do jogo usam esse relógio, não o tempo real). */
