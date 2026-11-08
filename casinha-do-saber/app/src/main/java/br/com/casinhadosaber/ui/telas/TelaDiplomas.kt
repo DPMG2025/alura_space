@@ -53,6 +53,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.Conquistas
+import br.com.casinhadosaber.dominio.ConquistasDoLivro
+import br.com.casinhadosaber.dominio.DiplomaDeColecao
 import br.com.casinhadosaber.dominio.Diploma
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Mundos
@@ -90,13 +92,15 @@ fun TelaDiplomas(
     val sons = LocalSons.current
     val nome = estado.perfil?.nome
     val diplomas = remember(estado.estrelas) { Conquistas.diplomas(estado.estrelas) }
+    val doLivro = remember(estado.coloridos) { ConquistasDoLivro.diplomas(estado.coloridos) }
+    var abertoDoLivro by remember { mutableStateOf<DiplomaDeColecao?>(null) }
     var aberto by remember { mutableStateOf(abrirDiploma) }
     var confete by remember { mutableIntStateOf(if (abrirDiploma != null) 1 else 0) }
 
     LaunchedEffect(Unit) {
         narrador.falar(
-            if (diplomas.isEmpty()) "Parede dos diplomas! Complete as dez fases de um mundo para ganhar o primeiro."
-            else "Parede dos diplomas! Você já tem ${diplomas.size}. Toque num diploma para ver.",
+            if (diplomas.isEmpty() && doLivro.isEmpty()) "Parede dos diplomas! Complete as dez fases de um mundo para ganhar o primeiro."
+            else "Parede dos diplomas! Você já tem ${diplomas.size + doLivro.size}. Toque num diploma para ver.",
         )
     }
 
@@ -129,7 +133,7 @@ fun TelaDiplomas(
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    if (diplomas.isEmpty()) {
+                    if (diplomas.isEmpty() && doLivro.isEmpty()) {
                         ParedeVazia(estado)
                     }
                     for (t in Trilha.entries) {
@@ -157,10 +161,34 @@ fun TelaDiplomas(
                             }
                         }
                     }
+                    // Os diplomas das coleções do Livro de Colorir.
+                    if (doLivro.isNotEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("🎨", fontSize = 28.sp)
+                            Spacer(Modifier.width(6.dp))
+                            Text("Livro de Colorir", style = MaterialTheme.typography.headlineSmall, color = CorDoLivroEscura)
+                        }
+                        for (linha in doLivro.chunked(3)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                val vazios = 3 - linha.size
+                                if (vazios > 0) Spacer(Modifier.weight(vazios / 2f))
+                                for (d in linha) {
+                                    QuadroDeDiplomaDoLivro(d, Modifier.weight(1f)) {
+                                        sons.premio()
+                                        abertoDoLivro = d
+                                        confete++
+                                        narrador.falar(d.texto(nome))
+                                    }
+                                }
+                                if (vazios > 0) Spacer(Modifier.weight(vazios / 2f))
+                            }
+                        }
+                    }
                     Spacer(Modifier.height(12.dp))
                 }
             }
             aberto?.let { d -> DiplomaGrande(d, nome) { sons.toque(); aberto = null } }
+            abertoDoLivro?.let { d -> DiplomaGrandeDoLivro(d, nome) { sons.toque(); abertoDoLivro = null } }
             Confete(confete)
         }
     }
@@ -261,6 +289,97 @@ private fun QuadroDeDiploma(d: Diploma, modifier: Modifier, onClick: () -> Unit)
                 Canvas(Modifier.size(26.dp)) {
                     desenharSelo(Offset(size.width / 2f, size.height * 0.42f), size.minDimension * 0.36f, Color(d.trilha.corArgb), comFitas = true)
                 }
+            }
+        }
+    }
+}
+
+private val CorDoLivro = Color(0xFFB36BE0)
+private val CorDoLivroEscura = Color(0xFF7E3FAE)
+
+@Composable
+private fun QuadroDeDiplomaDoLivro(d: DiplomaDeColecao, modifier: Modifier, onClick: () -> Unit) {
+    BotaoFofo(
+        onClick = onClick,
+        modifier = modifier.testTag("diploma_do_livro"),
+        cor = Color(0xFFC98B5B),
+        corBase = Color(0xFF8D5A3B),
+        forma = RoundedCornerShape(8.dp),
+        descricao = d.titulo,
+        profundidade = 4.dp,
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(6.dp)
+                .background(Brush.verticalGradient(listOf(Color(0xFFFFFAE8), Color(0xFFFBEBC4))), RoundedCornerShape(4.dp))
+                .border(1.5.dp, CorDoLivro.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
+                .padding(vertical = 8.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            FiguraLeveDoEmoji(d.emoji, 38.dp) { Text(d.emoji, fontSize = 30.sp) }
+            Text(
+                d.nome,
+                style = MaterialTheme.typography.labelLarge.copy(fontSize = 12.sp, lineHeight = 14.sp),
+                fontWeight = FontWeight.Bold,
+                color = Cores.Texto,
+                maxLines = 2,
+                minLines = 2,
+                textAlign = TextAlign.Center,
+            )
+            ImagemDeArte(PecasDasTelas.SELO, Modifier.padding(top = 2.dp).size(30.dp)) {
+                Canvas(Modifier.size(26.dp)) {
+                    desenharSelo(Offset(size.width / 2f, size.height * 0.42f), size.minDimension * 0.36f, CorDoLivro, comFitas = true)
+                }
+            }
+        }
+    }
+}
+
+/** O diploma de uma coleção do Livro de Colorir, grande, no mesmo papel dos diplomas dos mundos. */
+@Composable
+private fun DiplomaGrandeDoLivro(d: DiplomaDeColecao, nome: String?, onFechar: () -> Unit) {
+    val cor = CorDoLivro
+    val corEscura = CorDoLivroEscura
+    VeuDoModal(onTocarFora = onFechar, descricaoFora = "Fechar o diploma") {
+        Column(
+            Modifier
+                .padding(20.dp)
+                .widthIn(max = 420.dp)
+                .fillMaxWidth()
+                .drawBehind { desenharDestaqueDoDiploma() }
+                .drawBehind { desenharCertificado(cor, corEscura) }
+                .padding(horizontal = 30.dp, vertical = 26.dp)
+                .testTag("diploma_aberto"),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                Modifier
+                    .drawBehind { desenharFaixa(cor, corEscura) }
+                    .padding(start = 30.dp, end = 30.dp, top = 4.dp, bottom = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("DIPLOMA", style = MaterialTheme.typography.headlineMedium.copy(fontSize = 26.sp, letterSpacing = 4.sp), fontWeight = FontWeight.Bold, color = Color.White)
+            }
+            Row(Modifier.padding(top = 12.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("🎨", fontSize = 36.sp)
+                Spacer(Modifier.width(10.dp))
+                FiguraLeveDoEmoji(d.emoji, 48.dp) { Text(d.emoji, fontSize = 32.sp) }
+            }
+            if (!nome.isNullOrBlank()) {
+                Text(nome, style = MaterialTheme.typography.headlineMedium, color = corEscura, textAlign = TextAlign.Center)
+                Box(Modifier.padding(top = 2.dp, bottom = 8.dp).width(160.dp).height(2.dp).background(corEscura.copy(alpha = 0.35f)))
+            }
+            Text(d.texto(nome), style = MaterialTheme.typography.titleLarge, color = Cores.Texto, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(10.dp))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Spacer(Modifier.size(52.dp))
+                ImagemDeArte(PecasDasTelas.MEDALHA, Modifier.size(104.dp)) {
+                    Canvas(Modifier.size(104.dp)) {
+                        desenharSelo(Offset(size.width / 2f, size.height * 0.42f), size.minDimension * 0.34f, cor, comFitas = true)
+                    }
+                }
+                BotaoRedondo("✖", "Fechar", onFechar, tamanho = 52.dp)
             }
         }
     }

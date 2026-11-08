@@ -39,6 +39,10 @@ import br.com.casinhadosaber.ui.tema.TemaCasinha
 import br.com.casinhadosaber.ui.telas.TelaColorir
 import br.com.casinhadosaber.ui.telas.TelaPuzzle
 import com.github.takahirom.roborazzi.captureRoboImage
+import androidx.compose.ui.test.onNodeWithContentDescription
+import br.com.casinhadosaber.dominio.Trilha
+import br.com.casinhadosaber.ui.telas.TelaAlbum
+import br.com.casinhadosaber.ui.telas.TelaDiplomas
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -164,6 +168,33 @@ class CapturasColorirEPuzzleTest {
         assertEquals("dois carimbos de coração rosa", listOf(1 to 9, 1 to 9), obra.carimbos.map { it.tipo to it.tinta })
         assertEquals(Carimbos.tamanhos[2], obra.carimbos[0].tamanho, 1e-6f)
         foto("s10_colorir_carimbo_e_fundo")
+    }
+
+    /** Álbum: a aba do Livro de Colorir mostra a figurinha do desenho terminado e a dourada da coleção completa. */
+    @Test fun albumDoLivroDeColorir() {
+        val bichos = Desenhos.daColecao("bichos").associate { it.id to 2 }
+        val e = EstadoJogo(perfil = menina, coloridos = bichos)
+        montar { TelaAlbum(e, Trilha.MATEMATICA, onVoltar = {}) }
+        regra.mainClock.advanceTimeBy(600)
+        regra.onNodeWithTag("album_livro").performScrollTo().performClick()
+        regra.mainClock.advanceTimeBy(600)
+        regra.onNodeWithTag("pagina_do_livro").assertExists()
+        // Com a coleção dos bichos completa, o álbum abre na primeira coleção que falta (o mar, sem figurinha).
+        regra.onNodeWithContentDescription("Página anterior").performClick()
+        regra.mainClock.advanceTimeBy(600)
+        regra.onAllNodesWithTag("figurinha_ganha").assertCountEquals(Desenhos.daColecao("bichos").size + 1)
+        foto("s10_album_do_livro")
+    }
+
+    /** Diplomas: a coleção completa pendura o diploma do Livro de Colorir. */
+    @Test fun diplomaDaColecaoDoLivro() {
+        val bichos = Desenhos.daColecao("bichos").associate { it.id to 2 }
+        montar { TelaDiplomas(EstadoJogo(perfil = menina, coloridos = bichos), {}) }
+        regra.mainClock.advanceTimeBy(600)
+        regra.onNodeWithTag("diploma_do_livro").assertExists().performClick()
+        regra.mainClock.advanceTimeBy(600)
+        regra.onNodeWithTag("diploma_aberto").assertExists()
+        foto("s10_diploma_do_livro")
     }
 
     /** Pintor do dia: a faixa aparece com o desenho de hoje e some sem informar o dia. */

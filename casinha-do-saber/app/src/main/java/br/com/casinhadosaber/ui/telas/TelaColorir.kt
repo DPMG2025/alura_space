@@ -738,8 +738,11 @@ private fun PremioDoColorir(
             if (carimboNovo != null) {
                 Text("Carimbo novo: ${carimboNovo.nome}!", style = MaterialTheme.typography.titleMedium, color = Cores.Texto, fontWeight = FontWeight.Bold)
             }
+            if (premio.primeiraVez) {
+                Text("Figurinha nova no álbum! 📒", style = MaterialTheme.typography.titleMedium, color = Cores.Texto, fontWeight = FontWeight.Bold, modifier = Modifier.testTag("premio_figurinha"))
+            }
             if (premio.colecaoCompleta) {
-                Text("Você terminou a coleção inteira! 🏆", style = MaterialTheme.typography.titleMedium, color = Cores.Texto, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Text("Você terminou a coleção inteira! Ganhou a figurinha dourada e o diploma 🏆", style = MaterialTheme.typography.titleMedium, color = Cores.Texto, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
             }
             BotaoFofo(onClick = onMontar, cor = Cores.Roxo, modifier = Modifier.fillMaxWidth().testTag("premio_montar"), descricao = "Montar um quebra cabeça com a minha pintura") {
                 Text("🧩 Montar quebra cabeça", color = Color.White, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 4.dp))

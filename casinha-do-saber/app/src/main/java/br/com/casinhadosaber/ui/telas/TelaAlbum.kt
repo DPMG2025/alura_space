@@ -48,8 +48,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.casinhadosaber.dominio.Conquistas
+import br.com.casinhadosaber.dominio.ConquistasDoLivro
+import br.com.casinhadosaber.dominio.Desenhos
 import br.com.casinhadosaber.dominio.EstadoJogo
 import br.com.casinhadosaber.dominio.Figurinha
+import br.com.casinhadosaber.dominio.FigurinhaDoLivro
 import br.com.casinhadosaber.dominio.Mundos
 import br.com.casinhadosaber.dominio.Trilha
 import br.com.casinhadosaber.ui.EscalaDeTablet
@@ -86,6 +89,8 @@ fun TelaAlbum(
     /** Página para abrir (índice do mundo); fora da faixa abre no mundo da vez. */
     mundoInicial: Int = -1,
     onVoltar: () -> Unit,
+    /** Abre já na parte do Livro de Colorir. */
+    livroInicial: Boolean = false,
 ) {
     val narrador = LocalNarrador.current
     val sons = LocalSons.current
@@ -93,6 +98,7 @@ fun TelaAlbum(
     fun paginaDaVez(t: Trilha): Int = ((faseDaVez(estado, t) ?: (Mundos.todos.size * Mundos.FASES_POR_MUNDO - 1)) / Mundos.FASES_POR_MUNDO)
     var pagina by remember { mutableIntStateOf(if (mundoInicial in Mundos.todos.indices) mundoInicial else paginaDaVez(trilhaInicial)) }
     var dica by remember { mutableStateOf<String?>(null) }
+    var livro by remember { mutableStateOf(livroInicial) }
     val ganhas = remember(estado.estrelas) { Conquistas.figurinhasGanhas(estado.estrelas) }
     val paginas = remember(trilha, estado.estrelas) { Conquistas.album(trilha, estado.estrelas) }
     val p = paginas[pagina.coerceIn(paginas.indices)]
@@ -114,7 +120,7 @@ fun TelaAlbum(
         Column(
             Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(Color(trilha.corArgb), Cores.Fundo)))
+                .background(Brush.verticalGradient(listOf(if (livro) CorDoLivro else Color(trilha.corArgb), Cores.Fundo)))
                 .windowInsetsPadding(WindowInsets.safeDrawing),
         ) {
             Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -135,11 +141,12 @@ fun TelaAlbum(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 for (t in Trilha.entries) {
-                    val escolhido = t == trilha
+                    val escolhido = t == trilha && !livro
                     BotaoFofo(
                         onClick = {
                             sons.toque()
                             trilha = t
+                            livro = false
                             pagina = paginaDaVez(t)
                             dica = null
                             narrador.falar("Figurinhas do caminho ${t.titulo}.")
@@ -157,9 +164,32 @@ fun TelaAlbum(
                         }
                     }
                 }
+                // As figurinhas do Livro de Colorir: uma por desenho terminado.
+                BotaoFofo(
+                    onClick = {
+                        sons.toque()
+                        livro = true
+                        dica = null
+                        narrador.falar("Figurinhas do Livro de Colorir! Termine um desenho para ganhar a figurinha dele.")
+                    },
+                    cor = if (livro) Color.White else CorDoLivro,
+                    corBase = CorDoLivroEscura,
+                    forma = RoundedCornerShape(50),
+                    descricao = "Livro de Colorir" + if (livro) ", aberto" else "",
+                    modifier = Modifier.testTag("album_livro"),
+                    profundidade = 4.dp,
+                ) {
+                    Row(Modifier.height(48.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("🎨", fontSize = 24.sp)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Colorir", style = MaterialTheme.typography.titleMedium, color = if (livro) Cores.Texto else Color.White, maxLines = 1)
+                    }
+                }
             }
 
-            Column(
+            if (livro) {
+                AlbumDoLivro(estado, Modifier.weight(1f).fillMaxWidth())
+            } else Column(
                 Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -253,10 +283,57 @@ private fun corDasContas(t: Trilha): CorDaConta = when (t) {
  */
 @Composable
 private fun CartaoDeFigurinha(f: Figurinha, ganha: Boolean, corDoCaminho: Color, onClick: () -> Unit) {
-    val borda = if (f.dourada) Cores.Estrela else corDoCaminho
+    CartaoDeFigurinha(
+        emoji = f.emoji,
+        dourada = f.dourada,
+        ganha = ganha,
+        corDoCaminho = corDoCaminho,
+        trilhaDaArte = f.trilha,
+        semente = f.fase,
+        descricao = if (ganha) {
+            if (f.dourada) "Figurinha dourada do chefão" else "Figurinha da fase ${f.fase + 1}"
+        } else {
+            "Figurinha que falta. ${f.comoGanhar}"
+        },
+        onClick = onClick,
+    )
+}
+
+/** O mesmo cartão para as figurinhas do Livro de Colorir (moldura roxa, como a página do livro). */
+@Composable
+private fun CartaoDeFigurinhaDoLivro(f: FigurinhaDoLivro, ganha: Boolean, onClick: () -> Unit) {
+    val titulo = f.desenhoId?.let { Desenhos.porId[it]?.titulo }
+    CartaoDeFigurinha(
+        emoji = f.emoji,
+        dourada = f.dourada,
+        ganha = ganha,
+        corDoCaminho = CorDoLivro,
+        trilhaDaArte = Trilha.INGLES,
+        semente = f.id.hashCode() and 0xFFFF,
+        descricao = if (ganha) {
+            if (f.dourada) "Figurinha dourada da coleção" else "Figurinha do desenho ${titulo ?: ""}".trimEnd()
+        } else {
+            "Figurinha que falta. ${f.comoGanhar}"
+        },
+        onClick = onClick,
+    )
+}
+
+@Composable
+private fun CartaoDeFigurinha(
+    emoji: String,
+    dourada: Boolean,
+    ganha: Boolean,
+    corDoCaminho: Color,
+    trilhaDaArte: Trilha,
+    semente: Int,
+    descricao: String,
+    onClick: () -> Unit,
+) {
+    val borda = if (dourada) Cores.Estrela else corDoCaminho
     // Figurinha colada fica um tiquinho torta (sempre igual para a mesma fase), como no papel.
-    val torta = if (ganha && !f.dourada) ((f.fase * 37) % 7 - 3) * 0.9f else 0f
-    val id = PecasDasTelas.figurinha(f.trilha, f.dourada, ganha)
+    val torta = if (ganha && !dourada) ((semente * 37) % 7 - 3) * 0.9f else 0f
+    val id = PecasDasTelas.figurinha(trilhaDaArte, dourada, ganha)
     val contexto = LocalContext.current
     val info = remember(id) { ArteDoApp.info(contexto, id) }
     // O meio da janelinha, em relação ao meio do quadro (a arte tem a mesma proporção do quadro).
@@ -266,13 +343,7 @@ private fun CartaoDeFigurinha(f: Figurinha, ganha: Boolean, corDoCaminho: Color,
             .size(width = 72.dp, height = 86.dp)
             .graphicsLayer { rotationZ = torta }
             .testTag(if (ganha) "figurinha_ganha" else "figurinha_falta")
-            .semantics {
-                contentDescription = if (ganha) {
-                    if (f.dourada) "Figurinha dourada do chefão" else "Figurinha da fase ${f.fase + 1}"
-                } else {
-                    "Figurinha que falta. ${f.comoGanhar}"
-                }
-            }
+            .semantics { contentDescription = descricao }
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -282,7 +353,7 @@ private fun CartaoDeFigurinha(f: Figurinha, ganha: Boolean, corDoCaminho: Color,
                     .shadow(if (ganha) 4.dp else 0.dp, RoundedCornerShape(12.dp))
                     .background(
                         if (!ganha) Brush.verticalGradient(listOf(Color(0xFFEDE7DA), Color(0xFFE2DACB)))
-                        else if (f.dourada) Brush.verticalGradient(listOf(Color(0xFFFFF3B0), Color(0xFFFFC93C)))
+                        else if (dourada) Brush.verticalGradient(listOf(Color(0xFFFFF3B0), Color(0xFFFFC93C)))
                         else Brush.verticalGradient(listOf(Color.White, Color(0xFFF4F0FF))),
                         RoundedCornerShape(12.dp),
                     )
@@ -296,12 +367,100 @@ private fun CartaoDeFigurinha(f: Figurinha, ganha: Boolean, corDoCaminho: Color,
             drawRect(Color(0x66534A6B), blendMode = BlendMode.SrcIn)
         }
         FiguraLeveDoEmoji(
-            f.emoji,
+            emoji,
             40.dp,
             Modifier.offset(x = 72.dp * (cx - 0.5f), y = 86.dp * (cy - 0.5f)),
             silhueta = if (ganha) null else Color(0x66534A6B),
         ) {
-            Text(f.emoji, fontSize = 32.sp, modifier = if (ganha) Modifier else silhueta)
+            Text(emoji, fontSize = 32.sp, modifier = if (ganha) Modifier else silhueta)
         }
+    }
+}
+
+private val CorDoLivro = Color(0xFFB36BE0)
+private val CorDoLivroEscura = Color(0xFF7E3FAE)
+
+/** A parte do Livro de Colorir no álbum: uma página por coleção, com as figurinhas dos desenhos e a dourada. */
+@Composable
+private fun AlbumDoLivro(estado: EstadoJogo, modifier: Modifier) {
+    val narrador = LocalNarrador.current
+    val sons = LocalSons.current
+    val paginas = remember(estado.coloridos) { ConquistasDoLivro.paginas(estado.coloridos) }
+    // Abre na primeira coleção que ainda não está completa.
+    var pagina by remember { mutableIntStateOf(paginas.indexOfFirst { !it.completa }.coerceAtLeast(0)) }
+    var dica by remember { mutableStateOf<String?>(null) }
+    val p = paginas[pagina.coerceIn(paginas.indices)]
+
+    fun irPara(nova: Int) {
+        if (nova !in paginas.indices) return
+        sons.toque()
+        pagina = nova
+        dica = null
+        narrador.falar("Coleção ${paginas[nova].nome}.")
+    }
+
+    Column(
+        modifier.verticalScroll(rememberScrollState()).padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BotaoRedondo("◀️", "Página anterior", { irPara(pagina - 1) }, cor = if (pagina > 0) Color.White else Color(0xFFEDEDED), tamanho = 52.dp)
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    FiguraLeveDoEmoji(p.emoji, 32.dp)
+                    Spacer(Modifier.width(4.dp))
+                    Text(p.nome, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center, maxLines = 2)
+                }
+                if (p.completa) {
+                    Text("Coleção completa!", style = MaterialTheme.typography.titleSmall, color = Cores.TextoSuave)
+                } else {
+                    ContasDeProgresso(
+                        p.quantasGanhas,
+                        p.figurinhas.size,
+                        Modifier.padding(top = 4.dp),
+                        cor = CorDaConta.ROXA,
+                        tamanho = 18.dp,
+                        comAtual = false,
+                        descricao = "${p.quantasGanhas} de ${p.figurinhas.size} figurinhas",
+                    )
+                }
+            }
+            BotaoRedondo("▶️", "Próxima página", { irPara(pagina + 1) }, cor = if (pagina < paginas.lastIndex) Color.White else Color(0xFFEDEDED), tamanho = 52.dp)
+        }
+        Spacer(Modifier.height(10.dp))
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFFFFBF0), RoundedCornerShape(20.dp))
+                .border(3.dp, CorDoLivro, RoundedCornerShape(20.dp))
+                .padding(10.dp)
+                .testTag("pagina_do_livro"),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            for (linha in p.figurinhas.chunked(4)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    for (f in linha) {
+                        CartaoDeFigurinhaDoLivro(f, p.ganhou(f)) {
+                            if (p.ganhou(f)) {
+                                sons.colocar()
+                                dica = if (f.dourada) "Figurinha dourada da coleção!" else "Figurinha colada! Você terminou este desenho."
+                            } else {
+                                sons.toque()
+                                dica = f.comoGanhar
+                            }
+                            narrador.falar(dica ?: "")
+                        }
+                    }
+                }
+            }
+        }
+        Text(
+            dica ?: if (p.completa) "Você pintou todos os desenhos desta coleção!" else "Toque numa figurinha que falta para saber como ganhar.",
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+            color = if (dica != null) Cores.Texto else Cores.TextoSuave,
+            modifier = Modifier.padding(top = 12.dp).heightIn(min = 48.dp).testTag("dica_do_livro"),
+        )
     }
 }
