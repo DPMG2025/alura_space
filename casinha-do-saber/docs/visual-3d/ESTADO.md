@@ -110,7 +110,7 @@ Execução 163 (77f1461): o Gradle baixou na 6ª tentativa (7 min), mas o `kotli
 
 Execução 166 (commit d3670cc, 2026-11-08): o `build` caiu de novo no passo "Baixar o Gradle" depois das 10 tentativas (HTTP 504 em `github.com/gradle/gradle-distributions/releases/download/v8.14.3/gradle-8.14.3-bin.zip`). Da máquina da sessão o mesmo endereço respondeu 502. É indisponibilidade do GitHub Releases, não do nosso código. Nenhum teste rodou desde a 164.
 
-Execução 167 (2026-11-08, retomada): o download do Gradle voltou a responder (HTTP 206 no mesmo endereço, conferido da sessão). Commit enviado sem `[skip ci]` na branch `ccr-bcb49982-1a8ljk` (mesmo código de 15f8c52) para rodar enfim o teste `puzzleTravouSugereADica` corrigido em 7a3b818 e os jobs de emulador.
+Execução 167 (2026-11-08, retomada): o download do Gradle voltou a responder (HTTP 206 no mesmo endereço, conferido da sessão). Commit enviado sem `[skip ci]` na branch `ccr-bcb49982-1a8ljk` (mesmo código de 15f8c52) para rodar enfim o teste `puzzleTravouSugereADica` corrigido em 7a3b818 e os jobs de emulador. Resultado: TUDO VERDE (run 42474086083). `build` com testes de unidade (inclui `puzzleTravouSugereADica`), capturas, Lint, APK e guarda de 150 MB; `emulador-tablet` (API 34); `emulador-android-antigo` 24 e 26; `emulador` (celular) com os 6 passos, voz incluída. O download do Gradle levou de 2 a 8 s em cada job, sem nova tentativa.
 
 Lições desta rodada (valem para qualquer tela nova):
 * Nome de classe, ponto e desenho colidiam com código existente (`QuebraCabeca`, `Ponto`, `Desenho`); conferir antes de criar tipos no pacote `dominio`.
@@ -169,13 +169,13 @@ Roteiro em `roteiro-aceite.md`. Pendentes:
 
 ## Retomada (escrito em 2026-11-08 para a próxima sessão, que será com outro modelo)
 
-Estado do código: branch `ccr-7bf7dd82-00owm6`, último commit d3670cc. Tudo o que está nas Fases 10 e 11 abaixo como "feito" está commitado e enviado.
+Estado do código: branch `ccr-bcb49982-1a8ljk` (contém tudo da `ccr-7bf7dd82-00owm6` até 15f8c52, mais a execução 167). Tudo o que está nas Fases 10 e 11 abaixo como "feito" está commitado, enviado e validado pelo CI.
 
 O que está validado pelo CI e o que não está:
-* Validado (execuções 156 a 160, todas verdes, celular incluído): Livro de Colorir com 60 desenhos em 15 coleções, modo fácil, Pintor do dia, selos das criações, cartão dos pais, quebra cabeças de 8 níveis (montar, deslizar, tocar, arrastar).
-* NÃO validado: o aviso de "travou" do quebra cabeça (commit 72ad525, `esperaTravouMs`, `travou` em `TelaPuzzle.kt`, `Puzzle.sugerir(..., travou, ...)`). O teste `puzzleTravouSugereADica` falhou na execução 164 só por erro do teste (faltava `substring = true` em `assertContentDescriptionContains`); a tela já mostrava "Dica sugerida: mostra uma peça e o lugar dela, ligado". A correção está no commit 7a3b818 e nunca rodou, porque as execuções 165 e 166 caíram no download do Gradle. Os outros testes da execução 164 passaram (só esse falhou nos testes de unidade). Tablet, Android 7 e 8 e celular não rodaram com esse código.
+* Validado (execuções 156 a 160 e 167, todas verdes, celular incluído): Livro de Colorir com 60 desenhos em 15 coleções, modo fácil, Pintor do dia, selos das criações, cartão dos pais, quebra cabeças de 8 níveis (montar, deslizar, tocar, arrastar) e o aviso de "travou" do quebra cabeça (commit 72ad525, teste corrigido em 7a3b818).
+* Pendência de validação: nenhuma. A execução 167 (2026-11-08) fechou o aviso de "travou", que estava aberto desde a 164.
 
-Primeiro passo da próxima sessão:
+Primeiro passo da próxima sessão (os itens 1 a 3 foram cumpridos na retomada de 2026-11-08 e servem de receita se o download cair de novo):
 1. Conferir se o GitHub Releases voltou: `curl -sS -o /dev/null -w "%{http_code}\n" -L -r 0-100 https://github.com/gradle/gradle-distributions/releases/download/v8.14.3/gradle-8.14.3-bin.zip` (esperado 200 ou 206).
 2. Se voltou, enviar um commit pequeno e legítimo (por exemplo, anotar aqui o resultado) SEM `[skip ci]`, para disparar a execução. A reexecução pela API não funciona (403 com o token do ambiente). Um push novo cancela a execução em andamento, então só envie outro commit depois que ela terminar.
 3. Ler o resultado: `build` (testes de unidade, Lint, APK), `emulador-tablet`, `emulador-android-antigo` e `emulador` (celular). Os logs saem por `curl -L -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/DPMG2025/alura_space/actions/jobs/<id>/logs`.
