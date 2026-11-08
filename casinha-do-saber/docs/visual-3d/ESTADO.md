@@ -110,7 +110,7 @@ Execução 163 (77f1461): o Gradle baixou na 6ª tentativa (7 min), mas o `kotli
 
 Execução 166 (commit d3670cc, 2026-11-08): o `build` caiu de novo no passo "Baixar o Gradle" depois das 10 tentativas (HTTP 504 em `github.com/gradle/gradle-distributions/releases/download/v8.14.3/gradle-8.14.3-bin.zip`). Da máquina da sessão o mesmo endereço respondeu 502. É indisponibilidade do GitHub Releases, não do nosso código. Nenhum teste rodou desde a 164.
 
-Execução 167 (2026-11-08): disparada depois que o endereço do Gradle voltou a responder (206). Resultado a anotar aqui.
+Execução 168 (commit e9d04bb, 2026-11-08; o número 167 não apareceu, a contagem seguiu para 168): TOTALMENTE VERDE depois do apagão do Gradle. Build completo (testes de unidade, Lint, APK), tablet, Android 7 e 8 e celular, inclusive APK testado publicado. O aviso de travou (`puzzleTravouSugereADica`, commits 72ad525 e 7a3b818) está VALIDADO pelo CI. Os recuos de rede (10 tentativas no Gradle, 4 no gradlew do build) ficam no workflow.
 
 Lições desta rodada (valem para qualquer tela nova):
 * Nome de classe, ponto e desenho colidiam com código existente (`QuebraCabeca`, `Ponto`, `Desenho`); conferir antes de criar tipos no pacote `dominio`.
@@ -173,7 +173,7 @@ Estado do código: branch `ccr-7bf7dd82-00owm6`, último commit d3670cc. Tudo o 
 
 O que está validado pelo CI e o que não está:
 * Validado (execuções 156 a 160, todas verdes, celular incluído): Livro de Colorir com 60 desenhos em 15 coleções, modo fácil, Pintor do dia, selos das criações, cartão dos pais, quebra cabeças de 8 níveis (montar, deslizar, tocar, arrastar).
-* NÃO validado: o aviso de "travou" do quebra cabeça (commit 72ad525, `esperaTravouMs`, `travou` em `TelaPuzzle.kt`, `Puzzle.sugerir(..., travou, ...)`). O teste `puzzleTravouSugereADica` falhou na execução 164 só por erro do teste (faltava `substring = true` em `assertContentDescriptionContains`); a tela já mostrava "Dica sugerida: mostra uma peça e o lugar dela, ligado". A correção está no commit 7a3b818 e nunca rodou, porque as execuções 165 e 166 caíram no download do Gradle. Os outros testes da execução 164 passaram (só esse falhou nos testes de unidade). Tablet, Android 7 e 8 e celular não rodaram com esse código.
+* Validado em 2026-11-08 pela execução 168 (totalmente verde): o aviso de "travou" do quebra cabeça. O texto do primeiro passo e das tentativas abaixo é histórico; hoje basta disparar o CI só quando houver código novo.
 
 Primeiro passo da próxima sessão:
 1. Conferir se o GitHub Releases voltou: `curl -sS -o /dev/null -w "%{http_code}\n" -L -r 0-100 https://github.com/gradle/gradle-distributions/releases/download/v8.14.3/gradle-8.14.3-bin.zip` (esperado 200 ou 206).
