@@ -1,8 +1,0 @@
-    <property name="project" value=":app" />
-  </properties>
-  <testcase name="todosOsEmojisDoAppTemDesenhoNaFonteEmbutida" classname="br.com.casinhadosaber.EmojisNaFonteEmbutidaTest" time="4.874">
-    <failure></failure>
-  </testcase>
-  <system-err>Test run failed to complete. Expected 2 tests, received 0. System has crashed.
-</system-err>
-</testsuite>
