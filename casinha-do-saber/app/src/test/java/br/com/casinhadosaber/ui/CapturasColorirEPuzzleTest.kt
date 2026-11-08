@@ -183,6 +183,15 @@ class CapturasColorirEPuzzleTest {
         foto("s11_puzzle_deslizar")
     }
 
+    /**
+     * Estado mudado dentro de um gesto só vira recomposição depois que as notificações de snapshot são aplicadas;
+     * no aparelho quem faz isso é o Choreographer, e aqui o relógio do teste está parado.
+     */
+    private fun aplicarEAvancar(ms: Long) {
+        androidx.compose.runtime.snapshots.Snapshot.sendApplyNotifications()
+        regra.mainClock.advanceTimeBy(ms)
+    }
+
     private fun sonda(): String =
         regra.onNodeWithTag("puzzle_faltam").fetchSemanticsNode().config.getOrNull(SemanticsProperties.StateDescription).orEmpty()
 
@@ -194,14 +203,14 @@ class CapturasColorirEPuzzleTest {
         regra.mainClock.advanceTimeBy(800)
         val id = Puzzle.montar("modelo:gato", 1, semente).pecas.last().id
         regra.onNodeWithTag("peca_$id").performClick()
-        regra.mainClock.advanceTimeBy(400)
+        aplicarEAvancar(400)
         // Primeiro: o toque na peça a deixa escolhida (separa "o toque na peça falhou" de "o toque na casa falhou").
         regra.onNodeWithTag("peca_$id").assertIsSelected()
         // Nível 1 é 2 por 2: a casa do id está na coluna id % 2, linha id / 2.
         regra.onNodeWithTag("moldura_do_puzzle").performTouchInput {
             click(Offset(width * ((id % 2) * 0.5f + 0.25f), width * ((id / 2) * 0.5f + 0.25f)))
         }
-        regra.mainClock.advanceTimeBy(800)
+        aplicarEAvancar(800)
         val texto = regra.onNodeWithTag("puzzle_faltam").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
         assertEquals("peça $id escolhida e casa tocada; sonda=${sonda()}", "Faltam 3", texto)
         foto("s11_puzzle_uma_peca_no_lugar")
@@ -220,7 +229,7 @@ class CapturasColorirEPuzzleTest {
         regra.onNodeWithTag("moldura_do_puzzle").performTouchInput {
             click(Offset(width * ((errada % 2) * 0.5f + 0.25f), width * ((errada / 2) * 0.5f + 0.25f)))
         }
-        regra.mainClock.advanceTimeBy(800)
+        aplicarEAvancar(800)
         regra.onNodeWithTag("puzzle_faltam").assertTextEquals("Faltam 4")
     }
 
@@ -242,13 +251,13 @@ class CapturasColorirEPuzzleTest {
             moveTo(de + delta * 0.25f)
             moveTo(de + delta * 0.5f)
         }
-        regra.mainClock.advanceTimeBy(300)
+        aplicarEAvancar(300)
         val meio = peca()
         regra.onRoot().performTouchInput {
             moveTo(de + delta)
             up()
         }
-        regra.mainClock.advanceTimeBy(1000)
+        aplicarEAvancar(1000)
         val texto = regra.onNodeWithTag("puzzle_faltam").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
         assertEquals("arrastar peça $id: antes=$antes meio=$meio depois=${peca()} alvo=$alvo; sonda=${sonda()}", "Faltam 3", texto)
     }
