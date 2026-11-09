@@ -154,7 +154,7 @@ class CapturasGuardaRoupa3DTest {
 
     /** Os 16 trajes, cada um numa criança diferente (os dois gêneros, as quatro peles). */
     @Test fun guardaRoupaTrajes() {
-        val vestidas = Loja.trajesComArte3d.mapIndexed { i, t -> t.nome to crianca(i).copy(traje = t.id) }
+        val vestidas = Loja.trajes.mapIndexed { i, t -> t.nome to crianca(i).copy(traje = t.id) }
         confere(vestidas, { it.copy(traje = "") }, minimo = 60)
         val linhas = vestidas.chunked(4).map { linha -> 136.dp to linha.map { (n, p) -> Triple(n, p, Humor.FELIZ) } }
         capturar("v3d_08_guarda_roupa", "Guarda-roupa: 16 roupas", linhas)
@@ -162,12 +162,12 @@ class CapturasGuardaRoupa3DTest {
 
     /** Os 18 acessórios sozinhos e três crianças com um de cada parte (uma torcendo: o objeto da mão sobe). */
     @Test fun guardaRoupaAcessorios() {
-        val sozinhos = Loja.acessoriosComArte3d.mapIndexed { i, a -> a.nome to crianca(i + 1).copy(acessorios = mapOf(a.parte to a.id)) }
+        val sozinhos = Loja.acessorios.mapIndexed { i, a -> a.nome to crianca(i + 1).copy(acessorios = mapOf(a.parte to a.id)) }
         // Mínimo baixo: a gravata borboleta é pequenina (uns 9 pixels de amostra no composto de 85 x 130).
         confere(sozinhos, { it.copy(acessorios = emptyMap()) }, minimo = 4)
         val combinados = (0 until 3).map { k ->
             val p = crianca(k + 5, menina = k == 1).copy(
-                acessorios = ParteDoCorpo.entries.associateWith { parte -> Loja.acessoriosComArte3d.filter { it.parte == parte }[k].id },
+                acessorios = ParteDoCorpo.entries.associateWith { parte -> Loja.acessorios.filter { it.parte == parte }[k].id },
                 traje = listOf("", "fada", "medico")[k],
             )
             Triple(listOf("um de cada", "fada + um de cada", "médico + um de cada")[k], p, if (k == 2) Humor.TORCENDO else Humor.FELIZ)

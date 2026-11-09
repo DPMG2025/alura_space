@@ -7,6 +7,7 @@
 import { THREE, plastico, ouro, malha, caixa, bola, capsula, cilindro, em, naSuperficie, ancora } from '../kit.js';
 import { partes, MEDIDAS, OLHO_X, OLHO_Y } from './personagens.js';
 import { estrela3D } from './estrela3D.js';
+import { TRAJES_GATINHA, ACESSORIOS_GATINHA } from './guardaRoupaGatinha.js';
 
 const M = MEDIDAS.crianca;
 const R = M.R;
@@ -1101,8 +1102,12 @@ export const TRAJES = {
   pirata: { montar: trajePirata },
   realeza: { montar: trajeRealeza, genero: true },
   dinossauro: { montar: trajeDinossauro },
+  // gatinha fofa (guardaRoupaGatinha.js)
+  ...TRAJES_GATINHA,
 };
 export { tapaOlho, mangasCompridas };
+// utilitários de forma e material, para guardaRoupaGatinha.js
+export { tecido, fosco, brilho, grupo, torno, tubo, anel, sobre, casca, calca, mangasCurtas, sapato, lacinho, botao, naCabeca, raioNoPerfil, faixa, segmento, cupula };
 
 // ---------------------------------------------------------------------------------------------
 // Acessórios
@@ -1680,6 +1685,8 @@ export const ACESSORIOS = {
   laco: { parte: 'CABELO', montar: lacoGrande },
   tiara: { parte: 'CABELO', montar: tiara },
   presilha: { parte: 'CABELO', montar: presilha },
+  // gatinha fofa (guardaRoupaGatinha.js)
+  ...ACESSORIOS_GATINHA,
 };
 
 /** Chapéus da loja: id da camada -> emoji do Produto (Loja.kt, Categoria.CHAPEU). */

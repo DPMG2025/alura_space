@@ -69,6 +69,50 @@
         "largura": 170
       }
     },
+    "acessorio_bigodes": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "acessorio_bigodes.webp",
+      "esconde": [
+        "tapaOlho"
+      ],
+      "grupo": "rosto",
+      "largura": 340,
+      "ordem": 67,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "acessorio_bonegato": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "acessorio_bonegato.webp",
+      "esconde": [
+        "laco"
+      ],
+      "grupo": "cabelo",
+      "largura": 340,
+      "ordem": 75,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
     "acessorio_botas": {
       "altura": 520,
       "ancoras": {},
@@ -208,6 +252,28 @@
         "largura": 170
       }
     },
+    "acessorio_lacogrande": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "acessorio_lacogrande.webp",
+      "esconde": [
+        "laco"
+      ],
+      "grupo": "cabelo",
+      "largura": 340,
+      "ordem": 75,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
     "acessorio_mascara": {
       "altura": 520,
       "ancoras": {},
@@ -222,6 +288,28 @@
       "grupo": "rosto",
       "largura": 340,
       "ordem": 67,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "acessorio_mascaragata": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "acessorio_mascaragata.webp",
+      "esconde": [
+        "tapaOlho"
+      ],
+      "grupo": "rosto",
+      "largura": 340,
+      "ordem": 71,
       "personagem": "crianca",
       "tingir": null,
       "tipo": "personagem",
@@ -304,6 +392,28 @@
       "grupo": "rosto",
       "largura": 340,
       "ordem": 67,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "acessorio_orelhasgato": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "acessorio_orelhasgato.webp",
+      "esconde": [
+        "laco"
+      ],
+      "grupo": "cabelo",
+      "largura": 340,
+      "ordem": 75,
       "personagem": "crianca",
       "tingir": null,
       "tipo": "personagem",
@@ -18763,6 +18873,87 @@
         "largura": 170
       }
     },
+    "roupa_gatinha": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "roupa_gatinha.webp",
+      "esconde": [
+        "roupa",
+        "estampa",
+        "pes"
+      ],
+      "grupo": "roupa",
+      "largura": 340,
+      "ordem": 40,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "roupa_gatinha_estampa": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "roupa_gatinha_estampa.webp",
+      "grupo": "estampa",
+      "largura": 340,
+      "ordem": 45,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "roupa_gatinha_pes": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "roupa_gatinha_pes.webp",
+      "grupo": "pes",
+      "largura": 340,
+      "ordem": 35,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "roupa_gatinha_tras": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "roupa_gatinha_tras.webp",
+      "grupo": "roupaTras",
+      "largura": 340,
+      "ordem": 14,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
     "roupa_heroi_menina": {
       "altura": 520,
       "ancoras": {},
@@ -18879,6 +19070,48 @@
       "grupo": "roupaTras",
       "largura": 340,
       "ordem": 14,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "roupa_lacos": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "roupa_lacos.webp",
+      "esconde": [
+        "roupa",
+        "estampa"
+      ],
+      "grupo": "roupa",
+      "largura": 340,
+      "ordem": 40,
+      "personagem": "crianca",
+      "tingir": null,
+      "tipo": "personagem",
+      "uso": {
+        "altura": 260,
+        "largura": 170
+      }
+    },
+    "roupa_lacos_estampa": {
+      "altura": 520,
+      "ancoras": {},
+      "apoio": {
+        "x": 170,
+        "y": 466
+      },
+      "arquivo": "roupa_lacos_estampa.webp",
+      "grupo": "estampa",
+      "largura": 340,
+      "ordem": 45,
       "personagem": "crianca",
       "tingir": null,
       "tipo": "personagem",

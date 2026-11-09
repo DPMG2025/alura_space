@@ -80,7 +80,7 @@ for (const [nome, def] of Object.entries(ACESSORIOS)) {
   const id = `acessorio_${nome}`;
   switch (def.parte) {
     case 'ROSTO':
-      add(id, 'rosto', null, () => camadaDoGuardaRoupa(fig, () => ({ peca: def.montar() }), { ver: ['peca'], recorte: ['cabeca'] }), { esconde: ['tapaOlho'] });
+      add(id, 'rosto', null, () => camadaDoGuardaRoupa(fig, () => ({ peca: def.montar() }), { ver: ['peca'], recorte: ['cabeca'] }), { esconde: ['tapaOlho'], ...(def.ordem ? { ordem: def.ordem } : {}) });
       break;
     case 'PESCOCO':
       add(id, 'pescoco', null, () => camadaDoGuardaRoupa(fig, () => ({ peca: def.montar() }), { ver: ['peca'], recorte: ['cabeca', 'tronco'], sombra: ['cabeca'] }));
