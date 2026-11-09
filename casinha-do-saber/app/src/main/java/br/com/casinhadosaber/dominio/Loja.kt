@@ -156,6 +156,16 @@ object Loja {
 
     val porId = produtos.associateBy { it.id }
 
+    /**
+     * Peças que ainda não têm arte 3D pré-renderizada: enquanto a criança as veste, o app usa o desenho de reserva
+     * em código (`Crianca.kt`). Quando a arte 3D de uma delas ficar pronta, tire o id daqui: os testes passam a exigir.
+     */
+    val semArte3d: Set<String> = setOf(
+        "gatinha", "lacos", "orelhasgato", "bonegato", "lacogrande", "bigodes", "mascaragata",
+    )
+    val trajesComArte3d: List<Traje> get() = trajes.filter { it.id !in semArte3d }
+    val acessoriosComArte3d: List<Acessorio> get() = acessorios.filter { it.id !in semArte3d }
+
     /** Categorias vendidas na loja do lado de fora (a tela da casa); comidas e roupas ficam na casa por dentro. */
     val categoriasDeFora: Set<Categoria> = setOf(Categoria.TELHADO, Categoria.PORTA, Categoria.PAREDE, Categoria.CHAPEU, Categoria.VISITANTE, Categoria.CLIMA)
 

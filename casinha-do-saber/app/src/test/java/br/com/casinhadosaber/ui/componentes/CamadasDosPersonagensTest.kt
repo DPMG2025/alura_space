@@ -228,13 +228,13 @@ class CamadasDosPersonagensTest {
         val chapeus = listOf("") + CamadasDosPersonagens.CAMADAS_DOS_CHAPEUS.keys
         val perfis = Genero.entries.flatMap { g ->
             val base = Perfil("X", g, pele = 1, cabelo = 2, estiloCabelo = if (g == Genero.MENINA) 0 else 2)
-            Loja.trajes.flatMap { t -> chapeus.map { c -> base.copy(traje = t.id, chapeu = c) } } +
-                Loja.acessorios.map { a -> base.copy(acessorios = mapOf(a.parte to a.id)) } +
+            Loja.trajesComArte3d.flatMap { t -> chapeus.map { c -> base.copy(traje = t.id, chapeu = c) } } +
+                Loja.acessoriosComArte3d.map { a -> base.copy(acessorios = mapOf(a.parte to a.id)) } +
                 // Um de cada parte ao mesmo tempo, com traje e chapéu (como a captura 59).
                 (0 until 3).map { k ->
                     base.copy(
-                        acessorios = ParteDoCorpo.entries.associateWith { parte -> Loja.acessorios.filter { it.parte == parte }[k].id },
-                        traje = Loja.trajes[k * 5].id,
+                        acessorios = ParteDoCorpo.entries.associateWith { parte -> Loja.acessoriosComArte3d.filter { it.parte == parte }[k].id },
+                        traje = Loja.trajesComArte3d[k * 5].id,
                         chapeu = chapeus[k + 1],
                     )
                 }
