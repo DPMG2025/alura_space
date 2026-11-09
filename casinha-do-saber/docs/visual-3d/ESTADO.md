@@ -228,3 +228,8 @@ Verifique: rodar o render localmente; teste de unidade do manifesto.
 Aceite: uma imagem de teste aparece numa captura do CI.
 Relatório: no máximo 25 linhas. Não faça push.
 ```
+
+## Atualização de 09/11/2026
+
+- Execuções 188–190 do CI: a 188 falhou por testes que exigiam arte 3D nos itens novos; a 190 foi cancelada porque o emulador do celular travou no lote 2 de 6 (falha de infraestrutura; os demais jobs passaram).
+- Arte 3D das gatinhas pronta (fantasia, vestido de lacinhos, orelhinhas, boné, laço grande, bigodes, máscara). A arte é achada por convenção de nome (`roupa_<id>`, `acessorio_<id>`); item sem arte cai no desenho de reserva em código e o teste de cobertura exige a arte de todos os itens.
