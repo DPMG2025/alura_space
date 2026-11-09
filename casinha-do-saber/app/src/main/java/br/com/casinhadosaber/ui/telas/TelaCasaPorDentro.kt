@@ -2307,7 +2307,7 @@ private fun corDoTraje(traje: String, perfil: Perfil): Color = when (traje) {
     "heroi" -> Color(0xFFE63946)
     "fada" -> Color(0xFFD9C2FF)
     // Roupas novas do guarda-roupa: a mesma cor com que a criança aparece vestida.
-    "vestido", "macacao", "futebol", "bailarina", "chuva", "medico", "chef", "pirata", "realeza", "dinossauro" ->
+    "vestido", "macacao", "futebol", "bailarina", "chuva", "medico", "chef", "pirata", "realeza", "dinossauro", "gatinha", "lacos" ->
         br.com.casinhadosaber.ui.componentes.corDaRoupaDoTraje(traje, perfil)
     else -> clarear(Color(perfil.corDaRoupa), 0.3f)
 }

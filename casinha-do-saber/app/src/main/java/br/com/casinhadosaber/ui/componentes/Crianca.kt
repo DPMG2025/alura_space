@@ -34,6 +34,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
@@ -237,6 +238,8 @@ fun corDaRoupaDoTraje(traje: String?, perfil: Perfil): Color = when (traje) {
     "medico", "chef", "pirata" -> Color(0xFFF7F9FC)
     "realeza" -> Color(0xFF7B3FC4)
     "dinossauro" -> Color(0xFF5CC46B)
+    "gatinha" -> Color(0xFFFF9EC4)
+    "lacos" -> Color(0xFFFFE0EC)
     // Listras, herói, fada, vestido e macacão usam a cor escolhida no espelho.
     else -> Color(perfil.corDaRoupa)
 }
@@ -247,7 +250,7 @@ fun corDaRoupaDoTraje(traje: String?, perfil: Perfil): Color = when (traje) {
  * Qualquer criança pode vestir qualquer roupa.
  */
 private fun corpoComprido(traje: String?, menina: Boolean): Boolean = when (traje) {
-    "vestido", "bailarina", "chuva", "medico", "realeza" -> true
+    "vestido", "bailarina", "chuva", "medico", "realeza", "gatinha", "lacos" -> true
     "macacao", "futebol", "dinossauro", "pirata", "chef" -> false
     else -> menina
 }
@@ -363,7 +366,7 @@ private fun DrawScope.desenharFiguraDaCrianca(perfil: Perfil, aceno: Float?, olh
         "pijama" -> calca = Color(0xFF3B4C8C)
         "astronauta" -> { calca = Color(0xFFDCE1EA); sapato = Color(0xFF9AA3B5) }
         "abelha" -> if (!menina) calca = Color(0xFF2B2B2B)
-        "vestido" -> { calca = pele; meia = Color.White }
+        "vestido", "gatinha", "lacos" -> { calca = pele; meia = Color.White }
         "bailarina" -> { calca = Color(0xFFFFD6E6); meia = null; sapato = Color(0xFFFF8FB8) }
         "chuva" -> sapato = Color(0xFFF2B705)
         "medico" -> { calca = Color(0xFF6FB7C9); meia = null }
@@ -656,9 +659,51 @@ private fun DrawScope.desenharFiguraDaCrianca(perfil: Perfil, aceno: Float?, olh
             drawPath(caminhoEstrela(c, r * 0.24f), Color(0xFFFFD23F))
             drawPath(caminhoEstrela(c, r * 0.24f), Color(0xFFE0A800), style = Stroke(r * 0.04f))
         }
+        // Gatinha fofa: orelhinhas numa faixa rosa (desenho original).
+        "orelhasgato" -> {
+            drawArc(
+                Color(0xFFFF8FB8), startAngle = 200f, sweepAngle = 140f, useCenter = false,
+                topLeft = Offset(centro.x - r * 0.98f, centro.y - r * 0.98f), size = Size(r * 1.96f, r * 1.96f),
+                style = Stroke(r * 0.1f, cap = StrokeCap.Round),
+            )
+            desenharOrelhasDeGato(centro, r, Color.White, Color(0xFFFF8FB8))
+        }
+        // Boné rosa com orelhinhas e uma aba curtinha.
+        "bonegato" -> {
+            val rosa = Color(0xFFFF8FB8)
+            val domo = Path().apply {
+                arcTo(androidx.compose.ui.geometry.Rect(centro, r * 1.07f), 190f, 160f, forceMoveTo = true)
+                close()
+            }
+            drawPath(domo, rosa)
+            drawRoundRect(Color(0xFFE5709C), Offset(centro.x - r * 0.62f, centro.y - r * 0.86f), Size(r * 1.24f, r * 0.14f), CornerRadius(r * 0.07f))
+            desenharOrelhasDeGato(centro, r, rosa, Color(0xFFFFD6E6))
+            drawCircle(Color.White, r * 0.1f, Offset(centro.x, centro.y - r * 1.02f))
+        }
+        // Laço grande rosa no alto da cabeça.
+        "lacogrande" -> {
+            desenharLaco(Offset(centro.x, centro.y - r * 1.02f), r * 2.5f, Color(0xFFFF5FA2))
+            drawCircle(Color(0xFFFFD23F), r * 0.09f, Offset(centro.x, centro.y - r * 1.02f))
+        }
     }
 
     // rosto
+    if (rosto == "mascaragata") {
+        // Máscara de gatinha: faixa rosa nos olhos com orelhinhas no alto (os olhos aparecem por cima).
+        val y = centro.y + r * 0.12f
+        val rosa = Color(0xFFFF8FB8)
+        for (lado in listOf(-1f, 1f)) {
+            val orelha = Path().apply {
+                moveTo(centro.x + lado * r * 0.3f, y - r * 0.22f)
+                lineTo(centro.x + lado * r * 0.86f, y - r * 0.78f)
+                lineTo(centro.x + lado * r * 0.84f, y - r * 0.12f)
+                close()
+            }
+            drawPath(orelha, rosa)
+        }
+        drawRoundRect(rosa, Offset(centro.x - r * 0.74f, y - r * 0.24f), Size(r * 1.48f, r * 0.44f), CornerRadius(r * 0.22f))
+        for (lado in listOf(-1f, 1f)) drawOval(Color.White, Offset(centro.x + lado * r * 0.36f - r * 0.17f, y - r * 0.18f), Size(r * 0.34f, r * 0.34f))
+    }
     if (rosto == "mascara") {
         // Máscara de herói: faixa nos olhos com furinhos (os olhos aparecem por cima).
         val y = centro.y + r * 0.12f
@@ -675,7 +720,7 @@ private fun DrawScope.desenharFiguraDaCrianca(perfil: Perfil, aceno: Float?, olh
         cilios = menina,
         corDaSobrancelha = lerp(cabelo, Color(0xFF2B1A14), 0.35f),
         // Com máscara ou óculos escuros as sobrancelhas ficam escondidas (e não brigam com o acessório).
-        sobrancelhas = rosto != "mascara",
+        sobrancelhas = rosto != "mascara" && rosto != "mascaragata",
     )
     // Tapa-olho do pirata (só quando não há nada no rosto).
     if (traje == "pirata" && rosto == null) {
@@ -684,6 +729,18 @@ private fun DrawScope.desenharFiguraDaCrianca(perfil: Perfil, aceno: Float?, olh
         drawOval(Color(0xFF1E1E1E), Offset(c.x - r * 0.19f, c.y - r * 0.21f), Size(r * 0.38f, r * 0.4f))
     }
     when (rosto) {
+        // Bigodinhos de gatinho: três de cada lado e um narizinho rosa.
+        "bigodes" -> {
+            val fio = Color(0xCC5A3E36)
+            for (lado in listOf(-1f, 1f)) for (k in -1..1) {
+                drawLine(
+                    fio, Offset(centro.x + lado * r * 0.5f, centro.y + r * 0.44f + k * r * 0.05f),
+                    Offset(centro.x + lado * r * 1.02f, centro.y + r * 0.44f + k * r * 0.2f),
+                    strokeWidth = r * 0.04f, cap = StrokeCap.Round,
+                )
+            }
+            drawOval(Color(0xFFFF8FB8), Offset(centro.x - r * 0.09f, centro.y + r * 0.3f), Size(r * 0.18f, r * 0.12f))
+        }
         "oculos" -> {
             val aro = Color(0xFFE63946)
             for (lado in listOf(-1f, 1f)) {
@@ -814,6 +871,29 @@ private fun DrawScope.desenharLaco(n: Offset, r: Float, cor: Color) {
     drawCircle(cor, r * 0.1f, n)
 }
 
+/** Duas orelhinhas de gatinho no alto da cabeça (de fora [fora] e de dentro [dentro]), com contorno. */
+private fun DrawScope.desenharOrelhasDeGato(centro: Offset, r: Float, fora: Color, dentro: Color) {
+    for (lado in listOf(-1f, 1f)) {
+        val base = centro.x + lado * r * 0.62f
+        val y = centro.y - r * 0.8f
+        val orelha = Path().apply {
+            moveTo(base - r * 0.3f, y)
+            lineTo(base + lado * r * 0.1f, y - r * 0.66f)
+            lineTo(base + r * 0.3f, y)
+            close()
+        }
+        drawPath(orelha, fora)
+        drawPath(orelha, ContornoDaCrianca, style = Stroke(r * 0.05f, join = StrokeJoin.Round))
+        val miolo = Path().apply {
+            moveTo(base - r * 0.15f, y - r * 0.04f)
+            lineTo(base + lado * r * 0.08f, y - r * 0.44f)
+            lineTo(base + r * 0.15f, y - r * 0.04f)
+            close()
+        }
+        drawPath(miolo, dentro)
+    }
+}
+
 /** Estampas e detalhes da roupa especial, recortados no formato do corpo (que termina em [base]). */
 private fun DrawScope.desenharTrajeNoCorpo(traje: String, corpo: Path, base: Float) {
     val w = size.width
@@ -872,6 +952,39 @@ private fun DrawScope.desenharTrajeNoCorpo(traje: String, corpo: Path, base: Flo
                     }
                     drawCircle(Color(0xFFFFD166), w * 0.018f, c)
                 }
+            }
+            // Fantasia de gatinha: um gatinho laranja listradinho no peito e uma coleirinha com sininho (desenho original).
+            "gatinha" -> {
+                val c = Offset(w * 0.5f, h * 0.63f)
+                val rc = w * 0.13f
+                val laranja = Color(0xFFFFB45E)
+                for (lado in listOf(-1f, 1f)) {
+                    val orelha = Path().apply {
+                        moveTo(c.x + lado * rc * 0.2f, c.y - rc * 0.8f)
+                        lineTo(c.x + lado * rc * 0.9f, c.y - rc * 1.5f)
+                        lineTo(c.x + lado * rc * 1.0f, c.y - rc * 0.45f)
+                        close()
+                    }
+                    drawPath(orelha, laranja)
+                }
+                drawCircle(laranja, rc, c)
+                // Listrinhas na testa e nas bochechas.
+                for (k in -1..1) drawLine(Color(0xFFE08A2E), Offset(c.x + k * rc * 0.28f, c.y - rc * 0.98f), Offset(c.x + k * rc * 0.24f, c.y - rc * 0.62f), strokeWidth = rc * 0.1f, cap = StrokeCap.Round)
+                for (lado in listOf(-1f, 1f)) {
+                    drawCircle(Color(0xFF3D2C5E), rc * 0.11f, Offset(c.x + lado * rc * 0.42f, c.y - rc * 0.18f))
+                    drawLine(Color(0xFFE08A2E), Offset(c.x + lado * rc * 0.82f, c.y + rc * 0.1f), Offset(c.x + lado * rc * 0.55f, c.y + rc * 0.14f), strokeWidth = rc * 0.09f, cap = StrokeCap.Round)
+                }
+                drawOval(Color(0xFFFF5FA2), Offset(c.x - rc * 0.12f, c.y + rc * 0.02f), Size(rc * 0.24f, rc * 0.16f))
+                // Coleirinha com sininho no pescoço.
+                drawRect(Color(0xFFE63977), Offset(w * 0.4f, h * 0.455f), Size(w * 0.2f, h * 0.022f))
+                drawCircle(Color(0xFFFFD23F), w * 0.028f, Offset(w * 0.5f, h * 0.488f))
+            }
+            // Vestido de lacinhos: lacinhos rosa-escuro espalhados.
+            "lacos" -> {
+                for ((u, v) in listOf(0.38f to 0.52f, 0.62f to 0.54f, 0.3f to 0.68f, 0.5f to 0.7f, 0.7f to 0.68f, 0.4f to 0.8f, 0.6f to 0.8f)) {
+                    desenharLaco(Offset(w * u, h * v), w * 0.17f, Color(0xFFE63977))
+                }
+                drawRect(Color(0x33000000), Offset(0f, h * 0.58f), Size(w, h * 0.02f))
             }
             "macacao" -> {
                 val jeans = Color(0xFF3E6FB0)

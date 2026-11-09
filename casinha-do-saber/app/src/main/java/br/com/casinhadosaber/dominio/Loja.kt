@@ -83,6 +83,9 @@ object Loja {
         Traje("pirata", "Roupa de pirata", "pirate", "🏴‍☠️", 13),
         Traje("realeza", "Roupa de príncipe e princesa", "royal outfit", "🏰", 14),
         Traje("dinossauro", "Fantasia de dinossauro", "dinosaur costume", "🦖", 14),
+        // Gatinha fofa (desenho original, só no espírito de bichinhos de laço e bigodes).
+        Traje("gatinha", "Fantasia de gatinha", "kitty costume", "🐱", 12),
+        Traje("lacos", "Vestido de lacinhos", "bow dress", "🎀", 10),
     )
 
     /** Acessórios do guarda-roupa, desenhados em código na criança (Crianca.kt), um por parte do corpo. */
@@ -105,6 +108,12 @@ object Loja {
         Acessorio("laco", ParteDoCorpo.CABELO, "Laço", "bow", "🎀", 5),
         Acessorio("tiara", ParteDoCorpo.CABELO, "Tiara de brilhantes", "tiara", "💎", 8),
         Acessorio("presilha", ParteDoCorpo.CABELO, "Presilha de estrela", "hair clip", "⭐", 5),
+        // Gatinha fofa (desenhos originais): orelhinhas, boné e laço grande no cabelo; bigodes e máscara no rosto.
+        Acessorio("orelhasgato", ParteDoCorpo.CABELO, "Orelhinhas de gatinho", "kitty ears", "🐱", 7),
+        Acessorio("bonegato", ParteDoCorpo.CABELO, "Boné de gatinho", "kitty cap", "🧢", 8),
+        Acessorio("lacogrande", ParteDoCorpo.CABELO, "Laço grande rosa", "big pink bow", "🎀", 6),
+        Acessorio("bigodes", ParteDoCorpo.ROSTO, "Bigodinhos de gatinho", "kitty whiskers", "😺", 6),
+        Acessorio("mascaragata", ParteDoCorpo.ROSTO, "Máscara de gatinha", "kitty mask", "😸", 8),
     )
 
     val acessorioPorId: Map<String, Acessorio> = acessorios.associateBy { it.id }
